@@ -7,9 +7,8 @@ using System.Text;
 using System.Threading;
 using NKafka.DevConsole.DevProtocol;
 using NKafka.DevConsole.DevProtocol.API;
-using Timeout = System.Threading.Timeout;
 
-namespace KafkaNetProto
+namespace NKafka.DevConsole
 {
     public class KafkaTester
     {

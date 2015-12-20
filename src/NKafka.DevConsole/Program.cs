@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using KafkaNetProto;
 using NKafka.Producer;
 
 namespace NKafka.DevConsole

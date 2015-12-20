@@ -50,7 +50,7 @@ namespace NKafka.Producer.Internal
 
             _metadataBrokers = metadataBrokers;
             _produceCancellation = new CancellationTokenSource();            
-            _produceTimer = new Timer(Work); ;
+            _produceTimer = new Timer(Work);
         }
         
         public void AssignTopic([NotNull] KafkaProducerTopic topic)
@@ -160,13 +160,16 @@ namespace NKafka.Producer.Internal
             if (topic.Status == KafkaProducerTopicStatus.NotInitialized)
             {
                 var metadataBroker = GetMetadataBroker();
-                var metadataRequestId = metadataBroker?.RequestTopicMetadta(topic.TopicName);
-
-                if (metadataRequestId != null)
+                if (metadataBroker != null)
                 {
-                    _topicMetadataRequests[topic.TopicName] = new TopicMetadataRequest(metadataRequestId.Value, metadataBroker);                        
-                    topic.Status = KafkaProducerTopicStatus.MetadataRequested;
+                    var metadataRequestId = metadataBroker.RequestTopicMetadta(topic.TopicName);
+                    if (metadataRequestId.HasData)
+                    {
+                        _topicMetadataRequests[topic.TopicName] = new TopicMetadataRequest(metadataRequestId.Data, metadataBroker);
+                        topic.Status = KafkaProducerTopicStatus.MetadataRequested;
+                    }
                 }
+                                
             }
 
             if (topic.Status == KafkaProducerTopicStatus.MetadataRequested)
@@ -179,9 +182,9 @@ namespace NKafka.Producer.Internal
                 }
 
                 var topicMetadata = metadataRequest.Broker.GetTopicMetadata(metadataRequest.RequestId);
-                if (topicMetadata != null)
+                if (topicMetadata.HasData)
                 {
-                    var topicPartitions = CreateTopicPartitions(topicMetadata);
+                    var topicPartitions = CreateTopicPartitions(topicMetadata.Data);
                     var brokerPartitions = CreateBrokerPartitions(topicPartitions);
                     topic.Partitions = topicPartitions;
 
@@ -195,6 +198,15 @@ namespace NKafka.Producer.Internal
                         topic.Status = KafkaProducerTopicStatus.NotInitialized;
                         return;
                     }
+                }
+                else
+                {
+                    if (topicMetadata.HasError)
+                    {
+                        //todo
+                        topic.Status = KafkaProducerTopicStatus.NotInitialized;
+                        return;
+                    }                    
                 }
             }
 

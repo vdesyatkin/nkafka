@@ -2,9 +2,9 @@
 {
     internal enum KafkaBrokerErrorCode : short
     {
-        ConnectionError = 0,
-        Timeout = 1,
-        IOError = 2,
-        DataError = 3,
+        Unknown = 0,      
+        BadRequest = 1,
+        DataError = 2,
+        TransportError = 3        
     }
 }

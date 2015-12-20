@@ -42,6 +42,8 @@
   <ItemGroup>
     <Compile Include="Connection\KafkaBroker.cs" />
     <Compile Include="Connection\KafkaBrokerErrorCode.cs" />
+    <Compile Include="Connection\KafkaBrokerResult.cs" />
+    <Compile Include="Connection\KafkaBrokerStateErrorCode.cs" />
     <Compile Include="Connection\KafkaConnection.cs" />
     <Compile Include="KafkaBrokerInfo.cs" />
     <Compile Include="KafkaCodecType.cs" />

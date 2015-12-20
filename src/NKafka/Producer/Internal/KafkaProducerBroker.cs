@@ -78,15 +78,16 @@ namespace NKafka.Producer.Internal
             foreach (var produceRequestPair in _produceRequests)
             {
                 var response = _broker.Receive<KafkaProduceResponse>(produceRequestPair.Key);
-                if (response == null) continue;
+                if (!response.HasData) continue; //todo error!
+                var responseData = response.Data;
 
                 KafkaProduceRequest request;
                 _produceRequests.TryRemove(produceRequestPair.Key, out request);
 
-                var topics = response.Topics;
+                var topics = responseData.Topics;
                 if (topics == null) continue;
 
-                foreach (var topicResponse in response.Topics)
+                foreach (var topicResponse in responseData.Topics)
                 {
                     if (topicResponse == null) continue;
                     var topicName = topicResponse.TopicName;
@@ -150,27 +151,27 @@ namespace NKafka.Producer.Internal
             topic.Partitions[topicPartition.PartitionId] = topicPartition;
         }
 
-        public int? RequestTopicMetadta(string topicName)
+        public KafkaBrokerResult<int> RequestTopicMetadta(string topicName)
         {
             return _broker.Send(new KafkaTopicMetadataRequest(new[] { topicName }));
         }
-
-        [CanBeNull]
-        public KafkaTopicMetadata GetTopicMetadata(int requestId)
+        
+        public KafkaBrokerResult<KafkaTopicMetadata> GetTopicMetadata(int requestId)
         {
             return ConvertMetadata(_broker.Receive<KafkaTopicMetadataResponse>(requestId));
         }
-
-        [CanBeNull]
-        private KafkaTopicMetadata ConvertMetadata([CanBeNull] KafkaTopicMetadataResponse response)
+        
+        private KafkaBrokerResult<KafkaTopicMetadata> ConvertMetadata(KafkaBrokerResult<KafkaTopicMetadataResponse> response)
         {
-            if (response == null) return null;
-            var responseBrokers = response.Brokers ?? new KafkaTopicMetadataResponseBroker[0];
-            var responseTopics = response.Topics ?? new KafkaTopicMetadataResponseTopic[0];
+            if (!response.HasData) return response.Error;
 
-            if (responseTopics.Count < 1) return null;
+            var responseData = response.Data;
+            var responseBrokers = responseData.Brokers ?? new KafkaTopicMetadataResponseBroker[0];
+            var responseTopics = responseData.Topics ?? new KafkaTopicMetadataResponseTopic[0];
+
+            if (responseTopics.Count < 1) return KafkaBrokerErrorCode.DataError;
             var responseTopic = responseTopics[0];
-            if (string.IsNullOrEmpty(responseTopic?.TopicName)) return null;
+            if (string.IsNullOrEmpty(responseTopic?.TopicName)) return KafkaBrokerErrorCode.DataError;
 
             var responsePartitons = responseTopic.Partitions ?? new KafkaTopicMetadataResponseTopicPartition[0];
 
@@ -292,16 +293,17 @@ namespace NKafka.Producer.Internal
                 }
                 var batchRequest = new KafkaProduceRequest(_consistencyLevel, _produceTimeout, requestTopics);                
 
-                var batchRequestId = _broker.Send(batchRequest, batchByteCount*2);
-                if (batchRequestId == null)
+                var batchRequestResult = _broker.Send(batchRequest, batchByteCount*2);
+                if (!batchRequestResult.HasData)
                 {
                     //todo failure scenario     
                     continue;               
                 }
 
+                var batchRequestId = batchRequestResult.Data;
                 if (_consistencyLevel != KafkaConsistencyLevel.None)
                 {
-                    _produceRequests[batchRequestId.Value] = batchRequest;
+                    _produceRequests[batchRequestId] = batchRequest;
                 }
 
             } while (isBatchFilled);            
