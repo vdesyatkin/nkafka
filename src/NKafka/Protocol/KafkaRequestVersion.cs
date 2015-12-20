@@ -1,0 +1,9 @@
+﻿namespace NKafka.Protocol
+{
+    internal enum KafkaRequestVersion : short
+    {        
+        V0 = 0,
+        V1 = 1,
+        V2 = 2
+    }
+}

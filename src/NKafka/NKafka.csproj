@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F69401F0-F454-4971-9638-26A380B72B59}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>NKafka</RootNamespace>
+    <AssemblyName>NKafka</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Connection\KafkaBroker.cs" />
+    <Compile Include="Connection\KafkaBrokerErrorCode.cs" />
+    <Compile Include="Connection\KafkaConnection.cs" />
+    <Compile Include="KafkaBrokerInfo.cs" />
+    <Compile Include="KafkaCodecType.cs" />
+    <Compile Include="KafkaConsistencyLevel.cs" />
+    <Compile Include="KafkaMessage.cs" />
+    <Compile Include="KafkaVersion.cs" />
+    <Compile Include="Metadata\KafkaBrokerMetadata.cs" />
+    <Compile Include="Metadata\KafkaTopicMetadata.cs" />
+    <Compile Include="Metadata\KafkaTopicPartitionMetadata.cs" />
+    <Compile Include="Producer\IKafkaProducerPartitioner.cs" />
+    <Compile Include="Producer\IKafkaProducerSerializer.cs" />
+    <Compile Include="Producer\IKafkaProducerTopic.cs" />
+    <Compile Include="Producer\Internal\IKafkaProducerMessageQueue.cs" />
+    <Compile Include="Producer\Internal\IKafkaProducerTopicBuffer.cs" />
+    <Compile Include="Producer\Internal\KafkaProducerBroker.cs" />
+    <Compile Include="Producer\Internal\KafkaProducerBrokerPartition.cs" />
+    <Compile Include="Producer\Internal\KafkaProducerBrokerPartitionStatus.cs" />
+    <Compile Include="Producer\Internal\KafkaProducerBrokerTopic.cs" />
+    <Compile Include="Producer\Internal\KafkaProducerTopic.cs" />
+    <Compile Include="Producer\Internal\KafkaProducerTopicBuffer.cs" />
+    <Compile Include="Producer\Internal\KafkaProducerTopicPartition.cs" />
+    <Compile Include="Producer\Internal\KafkaProducerTopicStatus.cs" />
+    <Compile Include="Producer\Internal\KafkaProducerWorker.cs" />
+    <Compile Include="Producer\KafkaProducer.cs" />
+    <Compile Include="Producer\KafkaProducerSettings.cs" />
+    <Compile Include="Producer\KafkaProducerSettingsBuilder.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol\API\Produce\KafkaProduceApi.cs" />
+    <Compile Include="Protocol\API\Produce\KafkaProduceRequest.cs" />
+    <Compile Include="Protocol\API\Produce\KafkaProduceRequestTopic.cs" />
+    <Compile Include="Protocol\API\Produce\KafkaProduceRequestTopicPartition.cs" />
+    <Compile Include="Protocol\API\Produce\KafkaProduceResponse.cs" />
+    <Compile Include="Protocol\API\Produce\KafkaProduceResponseTopic.cs" />
+    <Compile Include="Protocol\API\Produce\KafkaProduceResponseTopicPartition.cs" />
+    <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataApi.cs" />
+    <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataRequest.cs" />
+    <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataResponse.cs" />
+    <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataResponseBroker.cs" />
+    <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataResponseTopic.cs" />
+    <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataResponseTopicPartition.cs" />
+    <Compile Include="Protocol\IKafkaRequest.cs" />
+    <Compile Include="Protocol\IKafkaResponse.cs" />
+    <Compile Include="Protocol\KafkaProtocol.cs" />
+    <Compile Include="Protocol\KafkaRequestType.cs" />
+    <Compile Include="Protocol\KafkaRequestVersion.cs" />
+    <Compile Include="Protocol\KafkaResponseErrorCode.cs" />
+    <Compile Include="Protocol\KafkaResponseHeader.cs" />
+    <Compile Include="Protocol\Serialization\KafkaBinaryReader.cs" />
+    <Compile Include="Protocol\Serialization\KafkaBinaryWriter.cs" />
+    <Compile Include="Protocol\Serialization\KafkaCrc32.cs" />
+    <Compile Include="ResharperAnnotations.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

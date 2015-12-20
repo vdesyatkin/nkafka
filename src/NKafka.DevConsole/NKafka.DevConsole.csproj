@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{14B15A89-395B-4D7A-BF35-3FFE41CBC3EC}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>NKafka.DevConsole</RootNamespace>
+    <AssemblyName>NKafka.DevConsole</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DevProtocol\API\FetchRequest.cs" />
+    <Compile Include="DevProtocol\API\FetchRequestTopic.cs" />
+    <Compile Include="DevProtocol\API\FetchRequestTopicPartition.cs" />
+    <Compile Include="DevProtocol\API\FetchResponse.cs" />
+    <Compile Include="DevProtocol\API\FetchResponseTopic.cs" />
+    <Compile Include="DevProtocol\API\FetchResponseTopicPartition.cs" />
+    <Compile Include="DevProtocol\API\GroupCoordinatorRequest.cs" />
+    <Compile Include="DevProtocol\API\GroupCoordinatorResponse.cs" />
+    <Compile Include="DevProtocol\API\HeartbeatRequest.cs" />
+    <Compile Include="DevProtocol\API\HeartbeatResponse.cs" />
+    <Compile Include="DevProtocol\API\JoinGroupRequest.cs" />
+    <Compile Include="DevProtocol\API\JoinGroupRequestProtocol.cs" />
+    <Compile Include="DevProtocol\API\JoinGroupResponse.cs" />
+    <Compile Include="DevProtocol\API\JoinGroupResponseMember.cs" />
+    <Compile Include="DevProtocol\API\LeaveGroupRequest.cs" />
+    <Compile Include="DevProtocol\API\LeaveGroupResponse.cs" />
+    <Compile Include="DevProtocol\API\Message.cs" />
+    <Compile Include="DevProtocol\API\MessageAndOffset.cs" />
+    <Compile Include="DevProtocol\API\MessageSet.cs" />
+    <Compile Include="DevProtocol\API\OffsetCommitRequest.cs" />
+    <Compile Include="DevProtocol\API\OffsetCommitRequestTopic.cs" />
+    <Compile Include="DevProtocol\API\OffsetCommitRequestTopicPartition.cs" />
+    <Compile Include="DevProtocol\API\OffsetCommitResponse.cs" />
+    <Compile Include="DevProtocol\API\OffsetCommitResponseTopic.cs" />
+    <Compile Include="DevProtocol\API\OffsetCommitResponseTopicPartition.cs" />
+    <Compile Include="DevProtocol\API\OffsetFetchRequest.cs" />
+    <Compile Include="DevProtocol\API\OffsetFetchRequestTopic.cs" />
+    <Compile Include="DevProtocol\API\OffsetFetchResponse.cs" />
+    <Compile Include="DevProtocol\API\OffsetFetchResponseTopic.cs" />
+    <Compile Include="DevProtocol\API\OffsetFetchResponseTopicPartition.cs" />
+    <Compile Include="DevProtocol\API\OffsetRequest.cs" />
+    <Compile Include="DevProtocol\API\OffsetRequestTopic.cs" />
+    <Compile Include="DevProtocol\API\OffsetRequestTopicPartition.cs" />
+    <Compile Include="DevProtocol\API\OffsetResponse.cs" />
+    <Compile Include="DevProtocol\API\OffsetResponseTopic.cs" />
+    <Compile Include="DevProtocol\API\OffsetResponseTopicPartition.cs" />
+    <Compile Include="DevProtocol\API\ProduceRequest.cs" />
+    <Compile Include="DevProtocol\API\ProduceRequestTopic.cs" />
+    <Compile Include="DevProtocol\API\ProduceRequestTopicPartition.cs" />
+    <Compile Include="DevProtocol\API\ProduceResponse.cs" />
+    <Compile Include="DevProtocol\API\ProduceResponseTopic.cs" />
+    <Compile Include="DevProtocol\API\ProduceResponseTopicPartition.cs" />
+    <Compile Include="DevProtocol\API\SyncGroupRequest.cs" />
+    <Compile Include="DevProtocol\API\SyncGroupRequestMember.cs" />
+    <Compile Include="DevProtocol\API\SyncGroupRequestMemberTopic.cs" />
+    <Compile Include="DevProtocol\API\SyncGroupResponse.cs" />
+    <Compile Include="DevProtocol\API\SyncGroupResponseAssignment.cs" />
+    <Compile Include="DevProtocol\API\SyncGroupResponseAssignmentTopic.cs" />
+    <Compile Include="DevProtocol\API\TopicMetadataRequest.cs" />
+    <Compile Include="DevProtocol\API\TopicMetadataResponse.cs" />
+    <Compile Include="DevProtocol\API\TopicMetadataResponseBroker.cs" />
+    <Compile Include="DevProtocol\API\TopicMetadataResponseTopic.cs" />
+    <Compile Include="DevProtocol\API\TopicMetdataResponseTopicPartition.cs" />
+    <Compile Include="DevProtocol\Compression.cs" />
+    <Compile Include="DevProtocol\Constants.cs" />
+    <Compile Include="DevProtocol\Crc32.cs" />
+    <Compile Include="DevProtocol\OffsetTime.cs" />
+    <Compile Include="DevProtocol\PartitionAssignmentStrategy.cs" />
+    <Compile Include="DevProtocol\ReplicaId.cs" />
+    <Compile Include="DevProtocol\KafkaTimeout.cs" />
+    <Compile Include="KafkaTester.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NKafka\NKafka.csproj">
+      <Project>{F69401F0-F454-4971-9638-26A380B72B59}</Project>
+      <Name>NKafka</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
