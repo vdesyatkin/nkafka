@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/src/NKafka/obj/Debug
+/src/NKafka.DevConsole/obj/Debug
+/src/NKafka/bin/Debug
+/src/NKafka.DevConsole/bin/Debug
+/src/NKafka.sln.DotSettings.user
+/src/.vs
