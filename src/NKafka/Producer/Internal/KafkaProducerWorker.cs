@@ -348,7 +348,7 @@ namespace NKafka.Producer.Internal
             var port = brokerMetadata.Port;
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{brokerId} ({host}:{port})";
-            var broker = new KafkaBroker(connection, _protocol, brokerName);
+            var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
             return new KafkaProducerBroker(broker, _settings);
         }
 
@@ -359,7 +359,7 @@ namespace NKafka.Producer.Internal
             var port = brokerInfo.Port;
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{host}:{port})";
-            var broker = new KafkaBroker(connection, _protocol, brokerName);
+            var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
             return new KafkaProducerBroker(broker, _settings);
         }
 

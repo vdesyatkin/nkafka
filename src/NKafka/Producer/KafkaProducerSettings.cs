@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Connection;
 
 namespace NKafka.Producer
 {
@@ -19,7 +20,9 @@ namespace NKafka.Producer
         public readonly int BatchByteCountLimit;
         public readonly int BatchMessageCountLimit;
 
-        public readonly TimeSpan ProduceTimeout;        
+        public readonly TimeSpan ProduceTimeout;
+
+        public readonly KafkaConnectionSettings ConnectionSettings;
 
         public KafkaProducerSettings(
             KafkaVersion kafkaVersion,
@@ -34,7 +37,8 @@ namespace NKafka.Producer
             int batchByteCountLimit,
             int batchMessageCountLimit,
 
-            TimeSpan produceTimeout
+            TimeSpan produceTimeout,
+            [CanBeNull] KafkaConnectionSettings connectionSettings
             )
         {
             KafkaVersion = kafkaVersion;
@@ -49,7 +53,8 @@ namespace NKafka.Producer
             BatchByteCountLimit = batchByteCountLimit;
             BatchMessageCountLimit = batchMessageCountLimit;
 
-            ProduceTimeout = produceTimeout;            
+            ProduceTimeout = produceTimeout;
+            ConnectionSettings = connectionSettings;
         }
     }
 }

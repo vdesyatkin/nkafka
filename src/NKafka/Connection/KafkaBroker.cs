@@ -14,11 +14,13 @@ namespace NKafka.Connection
 
         [PublicAPI]
         public KafkaBrokerStateErrorCode? Error => _sendError ?? _receiveError;
+
         [PublicAPI]
         public string Name { get; }
 
         [NotNull] private readonly KafkaConnection _connection;
-        [NotNull] private readonly KafkaProtocol _kafkaProtocol;        
+        [NotNull] private readonly KafkaProtocol _kafkaProtocol;
+        [CanBeNull] private readonly KafkaConnectionSettings _settings;
 
         [NotNull] private readonly ConcurrentDictionary<int, RequestState> _requests;
         [NotNull] private readonly ResponseState _responseState;
@@ -26,13 +28,14 @@ namespace NKafka.Connection
         private KafkaBrokerStateErrorCode? _sendError;
         private KafkaBrokerStateErrorCode? _receiveError;
 
-        private int _currentRequestId;        
+        private int _currentRequestId;      
 
         public KafkaBroker([NotNull] KafkaConnection connection, [NotNull] KafkaProtocol kafkaProtocol,
-            [CanBeNull] string name)
+            [CanBeNull] string name, [NotNull] KafkaConnectionSettings settings)
         {
             _connection = connection;
             _kafkaProtocol = kafkaProtocol;
+            _settings = settings;
             Name = name;
             
             _requests = new ConcurrentDictionary<int, RequestState>();
@@ -58,13 +61,26 @@ namespace NKafka.Connection
         public void Maintenance()
         {
             if (!IsOpenned) return;
-            //todo set timeout error as response
+
+            foreach (var requestPair in _requests)
+            {
+                var request = requestPair.Value;
+                if (request.Response == null && request.Error == null)
+                {
+                    var requestTimestampUtc = request.SentTimestampUtc ?? request.CreateTimestampUtc;
+                    if (DateTime.UtcNow >= requestTimestampUtc + request.Timeout)
+                    {
+                        request.Error = KafkaBrokerErrorCode.Timeout;
+                    }
+                    continue;
+                }
+            }            
             //todo reconnect on error
             //todo heartbeat
             //todo clear old requests?
         }
 
-        public KafkaBrokerResult<int> Send<TRequest>(TRequest request, int? dataCapacity = null) where TRequest : class, IKafkaRequest
+        public KafkaBrokerResult<int> Send<TRequest>(TRequest request, TimeSpan timeout, int? dataCapacity = null) where TRequest : class, IKafkaRequest
         {
             if (request == null) return KafkaBrokerErrorCode.BadRequest;
 
@@ -88,7 +104,7 @@ namespace NKafka.Connection
                 return KafkaBrokerErrorCode.TransportError;
             }
             
-            var requestState = new RequestState(request, stream);
+            var requestState = new RequestState(request, stream, DateTime.UtcNow, timeout);
             _requests[requestId] = requestState;
 
             try
@@ -135,6 +151,7 @@ namespace NKafka.Connection
             try
             {
                 requestState.Stream.EndWrite(result);
+                requestState.SentTimestampUtc = DateTime.UtcNow;
                 _sendError = null;
             }
             catch (Exception)
@@ -315,15 +332,21 @@ namespace NKafka.Connection
         private sealed class RequestState
         {            
             [NotNull] public readonly IKafkaRequest Request;            
-            [NotNull] public readonly Stream Stream;       
+            [NotNull] public readonly Stream Stream;
+            public readonly TimeSpan Timeout;
+
+            public readonly DateTime CreateTimestampUtc;
+            public DateTime? SentTimestampUtc;
 
             [CanBeNull] public IKafkaResponse Response;
             public KafkaBrokerErrorCode? Error;
 
-            public RequestState([NotNull] IKafkaRequest request, [NotNull] Stream stream)
+            public RequestState([NotNull] IKafkaRequest request, [NotNull] Stream stream, DateTime createTimestampUtc, TimeSpan timeout)
             {
                 Request = request;                
-                Stream = stream;                
+                Stream = stream;
+                CreateTimestampUtc = createTimestampUtc;
+                Timeout = timeout;
             }
         }
 

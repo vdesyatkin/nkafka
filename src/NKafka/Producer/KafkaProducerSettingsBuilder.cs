@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Connection;
 
 namespace NKafka.Producer
 {
@@ -19,7 +20,8 @@ namespace NKafka.Producer
         private int? _batchByteCountLimit;
         private int? _batchMessageCountLimit;
 
-        private TimeSpan? _produceTimeout;        
+        private TimeSpan? _produceTimeout;
+        private KafkaConnectionSettings _connectionSettings;        
 
         public KafkaProducerSettingsBuilder([NotNull] KafkaBrokerInfo metadataBroker)
         {
@@ -93,7 +95,14 @@ namespace NKafka.Producer
         {
             _produceTimeout = produceTimeout;
             return this;
-        }      
+        }
+
+        [PublicAPI]
+        public KafkaProducerSettingsBuilder StConnectionSettings(KafkaConnectionSettings connectionSettings)
+        {
+            _connectionSettings = connectionSettings;
+            return this;
+        }
 
         [NotNull]
         public KafkaProducerSettings Build()
@@ -110,12 +119,13 @@ namespace NKafka.Producer
             var batchByteCountLimit = _batchByteCountLimit ?? 200 * 200;
             var batchMessageCountLimit = _batchMessageCountLimit ?? 200;
 
-            var produceTimeout = _produceTimeout ?? TimeSpan.FromSeconds(1);            
+            var produceTimeout = _produceTimeout ?? TimeSpan.FromSeconds(1);
+            var connectionSettings = _connectionSettings ?? new KafkaConnectionSettings(TimeSpan.FromMinutes(30), TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
 
             return new KafkaProducerSettings(kafkaVersion, clientId, metadataBrokers,
                 consistencyLevel, codecType,
                 produceThreadCount, producePeriod, batchByteCountLimit, batchMessageCountLimit,
-                produceTimeout);
+                produceTimeout, connectionSettings);
         }
     }
 }
