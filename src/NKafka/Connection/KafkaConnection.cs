@@ -51,14 +51,14 @@ namespace NKafka.Connection
         public Stream GetStream()
         {
             try
-            {                
+            {
                 return _tcpClient?.GetStream();
-            }
+            }            
             catch (Exception)
             {
                 //todo errors
                 return null;
-            }
+            }            
         }
     }
 }

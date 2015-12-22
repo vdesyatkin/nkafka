@@ -77,8 +77,7 @@ namespace NKafka.Connection
                 if (data == null) return KafkaBrokerErrorCode.DataError;
             }
             catch (Exception)
-            {
-                //todo errors
+            {                
                 return KafkaBrokerErrorCode.DataError;
             }
 

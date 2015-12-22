@@ -6,6 +6,6 @@
         ConnectionError = 1,
         IOError = 2,
         DataError = 3,
-        Timeout      
+        Timeout = 4    
     }
 }

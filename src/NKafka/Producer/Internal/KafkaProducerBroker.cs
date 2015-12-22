@@ -27,8 +27,7 @@ namespace NKafka.Producer.Internal
         private readonly KafkaCodecType _codecType;
         private readonly TimeSpan _produceTimeout;
 
-        [NotNull] private readonly ConcurrentDictionary<int, KafkaProduceRequest> _produceRequests;
-
+        [NotNull] private readonly Dictionary<int, ProduceBatch> _produceRequests;
 
         private int _produceOffset;
 
@@ -46,7 +45,7 @@ namespace NKafka.Producer.Internal
                 _produceTimeout = TimeSpan.FromSeconds(1); //todo range?
             }
             
-            _produceRequests = new ConcurrentDictionary<int, KafkaProduceRequest>();
+            _produceRequests = new Dictionary<int, ProduceBatch>();
 
             //todo validate range
         }
@@ -73,53 +72,7 @@ namespace NKafka.Producer.Internal
                         partition.Status = KafkaProducerBrokerPartitionStatus.Plugged;
                     }                    
                 }
-            }
-
-            foreach (var produceRequestPair in _produceRequests)
-            {
-                var response = _broker.Receive<KafkaProduceResponse>(produceRequestPair.Key);
-                if (!response.HasData) continue; //todo error!
-                var responseData = response.Data;
-
-                KafkaProduceRequest request;
-                _produceRequests.TryRemove(produceRequestPair.Key, out request);
-
-                var topics = responseData.Topics;
-                if (topics == null) continue;
-
-                foreach (var topicResponse in responseData.Topics)
-                {
-                    if (topicResponse == null) continue;
-                    var topicName = topicResponse.TopicName;
-                    if (string.IsNullOrEmpty(topicName)) continue;
-                    var partitions = topicResponse.Partitions;
-                    if (partitions == null) continue;
-
-                    KafkaProducerBrokerTopic topic;
-                    if (!Topics.TryGetValue(topicName, out topic)) continue;
-
-                    foreach (var partitionResponse in partitions)
-                    {
-                        if (partitionResponse == null) continue;
-                        var partitionId = partitionResponse.PartitionId;
-                        KafkaProducerBrokerPartition partition;
-                        if (!topic.Partitions.TryGetValue(partitionId, out partition)) continue;
-
-                        var error = partitionResponse.ErrorCode;                        
-
-                        if (error != KafkaResponseErrorCode.NoError)
-                        {
-                            //todo failure scenario - rollback request data to partition
-                            //todo errors
-
-                            if (error == KafkaResponseErrorCode.NotLeaderForPartition)
-                            {
-                                partition.Status = KafkaProducerBrokerPartitionStatus.NeedRearrange;
-                            }
-                        }
-                    }
-                }
-            }
+            }           
         }
 
         public void Open()
@@ -194,6 +147,8 @@ namespace NKafka.Producer.Internal
 
         public void PerformProduce()
         {
+            if (!CheckAllRequestsAreReceived()) return;
+
             var produceOffset = _produceOffset; 
             
             var partitionList = new List<KafkaProducerBrokerPartition>(100);
@@ -215,7 +170,7 @@ namespace NKafka.Producer.Internal
             do
             {
                 isBatchFilled = false;
-                var batchTopics = new Dictionary<string, Dictionary<int, List<KafkaMessage>>>();
+                var batch = new ProduceBatch();
                 var batchByteCount = 0;
                 var batchMessageCount = 0;
 
@@ -234,7 +189,7 @@ namespace NKafka.Producer.Internal
                     }
 
                     KafkaMessage message;
-                    while (partition.Queue.TryDequeueMessage(out message))
+                    while (partition.TryDequeueMessage(out message))
                     {
                         batchMessageCount++;
                         if (message.Key != null)
@@ -246,18 +201,18 @@ namespace NKafka.Producer.Internal
                             batchByteCount += message.Data.Length;
                         }
 
-                        Dictionary<int, List<KafkaMessage>> topicPartitions;
-                        if (!batchTopics.TryGetValue(partition.TopicName, out topicPartitions))
+                        ProduceBatchTopic batcTopic;
+                        if (!batch.TryGetValue(partition.TopicName, out batcTopic))
                         {
-                            topicPartitions = new Dictionary<int, List<KafkaMessage>>();
-                            batchTopics[partition.TopicName] = topicPartitions;
+                            batcTopic = new ProduceBatchTopic();
+                            batch[partition.TopicName] = batcTopic;
                         }
 
                         List<KafkaMessage> topicPartionMessages;
-                        if (!topicPartitions.TryGetValue(partition.PartitionId, out topicPartionMessages))
+                        if (!batcTopic.TryGetValue(partition.PartitionId, out topicPartionMessages))
                         {
                             topicPartionMessages = new List<KafkaMessage>(_batchMessageCountLimit);
-                            topicPartitions[partition.PartitionId] = topicPartionMessages;
+                            batcTopic[partition.PartitionId] = topicPartionMessages;
                         }
                         topicPartionMessages.Add(message);
 
@@ -275,40 +230,140 @@ namespace NKafka.Producer.Internal
                     }                    
                 }
 
-                var requestTopics = new List<KafkaProduceRequestTopic>(batchTopics.Count);
-                foreach (var batchTopic in batchTopics)
-                {
-                    var topicName = batchTopic.Key;
-                    var batchTopicPartitons = batchTopic.Value;
-                    var requestPartitions = new List<KafkaProduceRequestTopicPartition>(batchTopicPartitons.Count);
-                    foreach (var batchPartiton in batchTopicPartitons)
-                    {
-                        var partitonId = batchPartiton.Key;
-                        var messages = batchPartiton.Value;
-                        var requestPartiton =new KafkaProduceRequestTopicPartition(partitonId, _codecType, messages);
-                        requestPartitions.Add(requestPartiton);
-                    }
-                    var requestTopic = new KafkaProduceRequestTopic(topicName, requestPartitions);
-                    requestTopics.Add(requestTopic);
-                }
-                var batchRequest = new KafkaProduceRequest(_consistencyLevel, _produceTimeout, requestTopics);                
-
+                var batchRequest = CreateBatchRequest(batch);
                 var batchRequestResult = _broker.Send(batchRequest, batchByteCount*2);
                 if (!batchRequestResult.HasData)
                 {
-                    //todo failure scenario     
-                    continue;               
+                    RollbackBatch(batchRequest);
+                    break;
                 }
 
                 var batchRequestId = batchRequestResult.Data;
                 if (_consistencyLevel != KafkaConsistencyLevel.None)
                 {
-                    _produceRequests[batchRequestId] = batchRequest;
+                    _produceRequests[batchRequestId] = batch;
+                    break;
                 }
 
             } while (isBatchFilled);            
 
             _produceOffset = produceOffset;
-        }        
+        }
+
+        private bool CheckAllRequestsAreReceived()
+        {
+            foreach (var produceRequestPair in _produceRequests)
+            {                
+                var batch = produceRequestPair.Value;
+                var response = _broker.Receive<KafkaProduceResponse>(produceRequestPair.Key);
+                if (!response.HasData) continue; //todo error!
+                var responseData = response.Data;
+
+                _produceRequests.Remove(produceRequestPair.Key);
+
+                var responseTopics = responseData.Topics;
+                if (responseTopics == null) continue;                
+
+                foreach (var responseTopic in responseTopics)
+                {
+                    if (responseTopic == null) continue;
+                    var topicName = responseTopic.TopicName;
+                    if (string.IsNullOrEmpty(topicName)) continue;
+
+                    var responsePartitions = responseTopic.Partitions;
+                    if (responsePartitions == null) continue;
+
+                    KafkaProducerBrokerTopic topic;
+                    if (!Topics.TryGetValue(topicName, out topic)) continue;
+
+                    ProduceBatchTopic batchTopic;
+                    if (!batch.TryGetValue(topicName, out batchTopic)) continue;
+
+                    foreach (var partitionResponse in responsePartitions)
+                    {
+                        if (partitionResponse == null) continue;
+                        var partitionId = partitionResponse.PartitionId;
+
+                        KafkaProducerBrokerPartition partition;
+                        if (!topic.Partitions.TryGetValue(partitionId, out partition)) continue;
+
+                        List<KafkaMessage> batchMessages;
+                        if (!batchTopic.TryGetValue(partitionId, out batchMessages)) continue;
+
+                        var error = partitionResponse.ErrorCode;
+
+                        if (error != KafkaResponseErrorCode.NoError)
+                        {
+                            partition.RollbackMessags(batchMessages);                            
+
+                            if (error == KafkaResponseErrorCode.NotLeaderForPartition)
+                            {
+                                partition.Status = KafkaProducerBrokerPartitionStatus.NeedRearrange;                                
+                            }
+
+                            //todo other errors
+                        }
+                    }
+                }
+            }
+
+            return _produceRequests.Count == 0;
+        }
+
+        private void RollbackBatch([NotNull] KafkaProduceRequest request)
+        {
+            foreach (var requestTopic in request.Topics)
+            {
+                KafkaProducerBrokerTopic topic;
+                if (!Topics.TryGetValue(requestTopic.TopicName, out topic))
+                {
+                    continue;
+                }
+                foreach (var requestPartition in requestTopic.Partitions)
+                {
+                    KafkaProducerBrokerPartition partition;
+                    if (!topic.Partitions.TryGetValue(requestPartition.PartitionId, out partition))
+                    {
+                        continue;
+                    }
+
+                    partition.RollbackMessags(requestPartition.Messages);
+                }
+            }
+        }
+
+        [NotNull]
+        private KafkaProduceRequest CreateBatchRequest([NotNull] ProduceBatch batch)
+        {
+            var requestTopics = new List<KafkaProduceRequestTopic>(batch.Count);
+            foreach (var batchTopic in batch)
+            {
+                var topicName = batchTopic.Key;
+                var batchTopicPartitons = batchTopic.Value;
+                var requestPartitions = new List<KafkaProduceRequestTopicPartition>(batchTopicPartitons.Count);
+                foreach (var batchPartiton in batchTopicPartitons)
+                {
+                    var partitonId = batchPartiton.Key;
+                    var messages = batchPartiton.Value;
+                    var requestPartiton = new KafkaProduceRequestTopicPartition(partitonId, _codecType, messages);
+                    requestPartitions.Add(requestPartiton);
+                }
+                var requestTopic = new KafkaProduceRequestTopic(topicName, requestPartitions);
+                requestTopics.Add(requestTopic);
+            }
+
+            var batchRequest = new KafkaProduceRequest(_consistencyLevel, _produceTimeout, requestTopics);
+            return batchRequest;
+        }
+
+        private class ProduceBatch: Dictionary<String, ProduceBatchTopic>
+        {
+             
+        }
+
+        private class ProduceBatchTopic : Dictionary<int, List<KafkaMessage>>
+        {
+            
+        }
     }
 }
