@@ -81,7 +81,7 @@ namespace NKafka.Protocol
                 var dataSize = reader.ReadInt32();
                 if (dataSize < 4)
                 {
-                    return null; //todo (E004) protocol error
+                    return null; //todo (E007) protocol error
                 }
                 var correlationId = reader.ReadInt32();
 

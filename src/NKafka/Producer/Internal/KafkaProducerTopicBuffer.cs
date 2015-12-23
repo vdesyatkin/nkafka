@@ -52,8 +52,7 @@ namespace NKafka.Producer.Internal
                     partitionIndex = _partitioner.GetPartitionIndex(message.Key, message.Data, partitionCount);                    
                 }
                 catch (Exception)
-                {
-                    //todo (E004) partitioner errors
+                {                    
                     partitionIndex = 0;
                 }
 
@@ -126,8 +125,7 @@ namespace NKafka.Producer.Internal
                     data = _serializer.SerializeValue(message.Data);
                 }
                 catch (Exception)
-                {
-                    //todo (E004) serializer errors
+                {                 
                     continue;
                 }
 
@@ -137,8 +135,7 @@ namespace NKafka.Producer.Internal
                     partitionIndex = _partitioner.GetPartitionIndex(message.Key, message.Data, partitionCount);
                 }
                 catch (Exception)
-                {
-                    //todo (E004) partitioner errors
+                {                    
                     partitionIndex = 0;
                 }
 
