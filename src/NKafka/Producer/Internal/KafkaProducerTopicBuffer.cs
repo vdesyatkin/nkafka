@@ -53,7 +53,7 @@ namespace NKafka.Producer.Internal
                 }
                 catch (Exception)
                 {
-                    //todo errors
+                    //todo (E004) partitioner errors
                     partitionIndex = 0;
                 }
 
@@ -127,7 +127,7 @@ namespace NKafka.Producer.Internal
                 }
                 catch (Exception)
                 {
-                    //todo errors
+                    //todo (E004) serializer errors
                     continue;
                 }
 
@@ -138,7 +138,7 @@ namespace NKafka.Producer.Internal
                 }
                 catch (Exception)
                 {
-                    //todo errors
+                    //todo (E004) partitioner errors
                     partitionIndex = 0;
                 }
 

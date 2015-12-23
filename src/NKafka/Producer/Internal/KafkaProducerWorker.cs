@@ -91,8 +91,7 @@ namespace NKafka.Producer.Internal
             }            
             
             try
-            {
-                //todo sync and close brokers
+            {                
                 var produceTimer = _produceTimer;
                 lock (produceTimer)
                 {
@@ -162,10 +161,11 @@ namespace NKafka.Producer.Internal
                 var metadataBroker = GetMetadataBroker();
                 if (metadataBroker != null)
                 {
-                    var metadataRequestId = metadataBroker.RequestTopicMetadta(topic.TopicName);
-                    if (metadataRequestId.HasData)
+                    var metadataResponse = metadataBroker.RequestTopicMetadata(topic.TopicName);
+                    var metadataRequestId = metadataResponse.HasData ? metadataResponse.Data : null;
+                    if (metadataRequestId.HasValue)
                     {
-                        _topicMetadataRequests[topic.TopicName] = new TopicMetadataRequest(metadataRequestId.Data, metadataBroker);
+                        _topicMetadataRequests[topic.TopicName] = new TopicMetadataRequest(metadataRequestId.Value, metadataBroker);
                         topic.Status = KafkaProducerTopicStatus.MetadataRequested;
                     }
                 }
@@ -202,8 +202,7 @@ namespace NKafka.Producer.Internal
                 else
                 {
                     if (topicMetadata.HasError)
-                    {
-                        //todo
+                    {                        
                         topic.Status = KafkaProducerTopicStatus.NotInitialized;
                         return;
                     }                    

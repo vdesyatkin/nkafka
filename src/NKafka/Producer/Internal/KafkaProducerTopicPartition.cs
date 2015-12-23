@@ -33,11 +33,5 @@ namespace NKafka.Producer.Internal
         {
             return _messageQueue.TryDequeue(out message);
         }
-
-        public void RollbackMessages(IReadOnlyList<KafkaMessage> messages)
-        {
-            //todo failure produce scenario
-        }
-
     }
 }

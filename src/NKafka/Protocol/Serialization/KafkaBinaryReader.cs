@@ -24,7 +24,7 @@ namespace NKafka.Protocol.Serialization
         public IReadOnlyList<T> ReadCollection<T>(Func<KafkaBinaryReader, T> itemReadMethod)
         {
             var size = ReadInt32();
-            if (size == NullValue || size < 0) return null; //todo upper limit
+            if (size == NullValue || size < 0) return null; //todo (E007) huge collections
 
             var items = new List<T>(size);
             if (itemReadMethod != null)
@@ -43,7 +43,7 @@ namespace NKafka.Protocol.Serialization
         public IReadOnlyList<T> ReadCollection<T>(Func<T> itemReadMethod)
         {
             var size = ReadInt32();
-            if (size == NullValue || size < 0) return null; //todo upper limit
+            if (size == NullValue || size < 0) return null; //todo (E007) huge collections
 
             var items = new List<T>(size);
             if (itemReadMethod != null)
@@ -218,7 +218,7 @@ namespace NKafka.Protocol.Serialization
         public byte[] ReadByteArray()
         {
             var size = ReadInt32();
-            if (size == NullValue || size < 0) return null; //todo upper limit
+            if (size == NullValue || size < 0) return null; //todo (E007) huge collections
 
             var bytes = new byte[size];
             _stream.Read(bytes, 0, size);

@@ -23,9 +23,16 @@ namespace NKafka.Protocol
             ResponseHeaderSize = 8;          
         }
 
+        [CanBeNull]
         public byte[] WriteRequest([NotNull] IKafkaRequest request, int correlationId, int? dataCapacity = null)
         {
-            //todo check input data
+            // ReSharper disable HeuristicUnreachableCode
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse            
+            if (request == null)
+            {
+                return null;
+            }
+            // ReSharper enable HeuristicUnreachableCode
 
             KafkaRequestConfiguration requestConfiguration;
             if (!_configuration.Requests.TryGetValue(request.GetType(), out requestConfiguration))
@@ -50,16 +57,31 @@ namespace NKafka.Protocol
             }            
         }
 
+        [CanBeNull]
         public KafkaResponseHeader ReadResponseHeader([NotNull] byte[] data, int offset, int count)
         {
-            //todo check input data
+            // ReSharper disable HeuristicUnreachableCode
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse            
+            if (data == null)
+            {
+                return null;
+            }
+            if (offset < 0 || offset >= data.Length)
+            {
+                return null;
+            }
+            if (count < 1 || count > (data.Length - offset))
+            {
+                return null;
+            }
+            // ReSharper enable HeuristicUnreachableCode
 
             using (var reader = new KafkaBinaryReader(data, offset, count))
             {
                 var dataSize = reader.ReadInt32();
                 if (dataSize < 4)
                 {
-                    return null; //todo errors
+                    return null; //todo (E004) protocol error
                 }
                 var correlationId = reader.ReadInt32();
 
@@ -67,21 +89,36 @@ namespace NKafka.Protocol
             }
         }
 
+        [CanBeNull]
         public IKafkaResponse ReadResponse([NotNull] IKafkaRequest request, [NotNull] byte[] data, int offset, int count)
         {
-            //todo check input data
+            // ReSharper disable HeuristicUnreachableCode
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse            
+            if (request == null || data == null)
+            {
+                return null;
+            }
+            if (offset < 0 || offset >= data.Length)
+            {
+                return null;
+            }
+            if (count < 1 || count > (data.Length - offset))
+            {
+                return null;
+            }
+            // ReSharper enable HeuristicUnreachableCode
 
             KafkaRequestConfiguration requestConfiguration;
             if (!_configuration.Requests.TryGetValue(request.GetType(), out requestConfiguration))
             {
                 return null;
-            }            
+            }
 
             using (var reader = new KafkaBinaryReader(data, offset, count))
             {
                 return requestConfiguration.ReadResponseMethod.Invoke(reader);                
             }
-        }        
+        }
 
         #region Configuration
 

@@ -18,7 +18,7 @@ namespace NKafka.Connection
             _port = port;            
         }
 
-        public bool TryOpen() //todo errors
+        public bool TryOpen() //todo (E002) socket errors
         {                       
             try
             {
@@ -29,7 +29,7 @@ namespace NKafka.Connection
             }
             catch (Exception)
             {
-                //todo errors
+                //todo (E002) socket errors
                 return false;
             }                        
         }
@@ -56,9 +56,9 @@ namespace NKafka.Connection
             }            
             catch (Exception)
             {
-                //todo errors
+                //todo (E002) socket errors
                 return null;
-            }            
+            }
         }
     }
 }

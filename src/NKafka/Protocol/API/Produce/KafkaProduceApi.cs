@@ -115,7 +115,7 @@ namespace NKafka.Protocol.API.Produce
         {
             var partitionId = reader.ReadInt32();
 
-            var messages = new List<KafkaMessage>();//todo capacity
+            var messages = new List<KafkaMessage>();
             reader.BeginReadSize();
 
             var codec = KafkaCodecType.CodecNone;
@@ -146,8 +146,8 @@ namespace NKafka.Protocol.API.Produce
                         var nestedKey = reader.ReadByteArray();
                         var nestedValue = reader.ReadByteArray();
 
-                        var nestedIsCrcValid = reader.EndReadCrc32(); //todo errors
-                        var nestedIsSizeValid = reader.EndReadSize(); //todo errors
+                        var nestedIsCrcValid = reader.EndReadCrc32(); //todo (E005) invalid CRC
+                        var nestedIsSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
 
                         var nestedMessage = new KafkaMessage(nestedKey, nestedValue);
                         messages.Add(nestedMessage);
@@ -158,8 +158,8 @@ namespace NKafka.Protocol.API.Produce
                     //ordinary message
                     var value = reader.ReadByteArray();
 
-                    var isCrcValid = reader.EndReadCrc32(); //todo errors
-                    var isSizeValid = reader.EndReadSize(); //todo errors
+                    var isCrcValid = reader.EndReadCrc32(); //todo (E005) invalid CRC
+                    var isSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
 
                     var message = new KafkaMessage(key, value);
                     messages.Add(message);
