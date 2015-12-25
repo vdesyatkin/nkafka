@@ -15,7 +15,7 @@ namespace NKafka.Producer
         }
 
         [PublicAPI, CanBeNull]
-        public IKafkaProducerTopic AddTopic([NotNull] string topicName, [NotNull] IKafkaProducerPartitioner partitioner)
+        public IKafkaProducerTopic TryAddTopic([NotNull] string topicName, [NotNull] IKafkaProducerPartitioner partitioner)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
             if (string.IsNullOrEmpty(topicName) || (partitioner == null)) return null;
@@ -28,7 +28,7 @@ namespace NKafka.Producer
         }
 
         [PublicAPI, CanBeNull]
-        public IKafkaProducerTopic<TKey, TData> AddTopic<TKey, TData>([NotNull] string topicName,
+        public IKafkaProducerTopic<TKey, TData> TryAddTopic<TKey, TData>([NotNull] string topicName,
            [NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner, 
            [NotNull] IKafkaProducerSerializer<TKey, TData> serializer)
         {

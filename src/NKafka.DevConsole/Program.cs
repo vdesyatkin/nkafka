@@ -15,7 +15,7 @@ namespace NKafka.DevConsole
             var configBuilder = new KafkaProducerSettingsBuilder(metadataBroker);
             configBuilder.SetClientId("nkafka").SetProduceTimeout(TimeSpan.FromSeconds(5));
             var producerBuilder = new KafkaProducerBuilder();
-            var topic = producerBuilder.AddTopic("test", new TestPartitioner(), new TestSerializer());
+            var topic = producerBuilder.TryAddTopic("test", new TestPartitioner(), new TestSerializer());
             var producer = producerBuilder.Build(configBuilder);
 
             producer.Start();
@@ -44,7 +44,7 @@ namespace NKafka.DevConsole
                 return Encoding.UTF8.GetBytes(key);
             }
 
-            public byte[] SerializeValue(string value)
+            public byte[] SerializeData(string value)
             {
                 return Encoding.UTF8.GetBytes(value);
             }

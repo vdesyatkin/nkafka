@@ -122,7 +122,7 @@ namespace NKafka.Producer.Internal
                 try
                 {
                     key = _serializer.SerializeKey(message.Key);
-                    data = _serializer.SerializeValue(message.Data);
+                    data = _serializer.SerializeData(message.Data);
                 }
                 catch (Exception)
                 {                 

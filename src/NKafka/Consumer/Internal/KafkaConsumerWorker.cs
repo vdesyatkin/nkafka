@@ -7,41 +7,49 @@ using NKafka.Connection;
 using NKafka.Metadata;
 using NKafka.Protocol;
 
-namespace NKafka.Producer.Internal
+namespace NKafka.Consumer.Internal
 {
-    internal sealed class KafkaProducerWorker
+    internal sealed class KafkaConsumerWorker
     {
-        [NotNull] private readonly KafkaProtocol _protocol;
-        [NotNull] private readonly KafkaProducerSettings _settings;        
+        [NotNull]
+        private readonly KafkaProtocol _protocol;
+        [NotNull]
+        private readonly KafkaConsumerSettings _settings;
 
-        [NotNull] private readonly ConcurrentDictionary<string, KafkaProducerTopic> _topics;
-        [NotNull] private readonly ConcurrentDictionary<string, TopicMetadataRequest> _topicMetadataRequests;
-        [NotNull] private readonly ConcurrentDictionary<int, KafkaProducerBroker> _brokers;
-        [NotNull, ItemNotNull] private readonly IReadOnlyCollection<KafkaProducerBroker> _metadataBrokers;
-        
-        [NotNull] private Timer _produceTimer;
-        private readonly TimeSpan _producePeriod;
-        [NotNull] private CancellationTokenSource _produceCancellation;      
-        
-        public delegate void ArrangeTopicDelegate([NotNull] string topicName, [NotNull, ItemNotNull] IReadOnlyCollection<KafkaProducerBrokerPartition> partitions);
+        [NotNull]
+        private readonly ConcurrentDictionary<string, KafkaConsumerTopic> _topics;
+        [NotNull]
+        private readonly ConcurrentDictionary<string, TopicMetadataRequest> _topicMetadataRequests;
+        [NotNull]
+        private readonly ConcurrentDictionary<int, KafkaConsumerBroker> _brokers;
+        [NotNull, ItemNotNull]
+        private readonly IReadOnlyCollection<KafkaConsumerBroker> _metadataBrokers;
+
+        [NotNull]
+        private Timer _consumeTimer;
+        private readonly TimeSpan _consumePeriod;
+        [NotNull]
+        private CancellationTokenSource _consumeCancellation;
+
+        public delegate void ArrangeTopicDelegate([NotNull] string topicName, [NotNull, ItemNotNull] IReadOnlyCollection<KafkaConsumerBrokerPartition> partitions);
         public event ArrangeTopicDelegate ArrangeTopic;
 
-        public KafkaProducerWorker([NotNull] KafkaProducerSettings settings)
+        public KafkaConsumerWorker([NotNull] KafkaConsumerSettings settings)
         {
             _settings = settings;
             _protocol = new KafkaProtocol(_settings.KafkaVersion, _settings.ClientId);
-            _producePeriod = settings.ProducePeriod;
-            if (_producePeriod < TimeSpan.FromMilliseconds(100))
+            _consumePeriod = settings.ConsumePeriod;
+            if (_consumePeriod < TimeSpan.FromMilliseconds(100))
             {
-                _producePeriod = TimeSpan.FromMilliseconds(100);
+                _consumePeriod = TimeSpan.FromMilliseconds(100);
             }
 
-            _brokers = new ConcurrentDictionary<int, KafkaProducerBroker>();
-            _topics = new ConcurrentDictionary<string, KafkaProducerTopic>();
+            _brokers = new ConcurrentDictionary<int, KafkaConsumerBroker>();
+            _topics = new ConcurrentDictionary<string, KafkaConsumerTopic>();
             _topicMetadataRequests = new ConcurrentDictionary<string, TopicMetadataRequest>();
 
             var metadataBrokerInfos = _settings.MetadataBrokers ?? new KafkaBrokerInfo[0];
-            var metadataBrokers = new List<KafkaProducerBroker>(metadataBrokerInfos.Count);
+            var metadataBrokers = new List<KafkaConsumerBroker>(metadataBrokerInfos.Count);
             foreach (var metadataBrokerInfo in metadataBrokerInfos)
             {
                 if (metadataBrokerInfo == null) continue;
@@ -49,19 +57,19 @@ namespace NKafka.Producer.Internal
             }
 
             _metadataBrokers = metadataBrokers;
-            _produceCancellation = new CancellationTokenSource();            
-            _produceTimer = new Timer(Work);
+            _consumeCancellation = new CancellationTokenSource();
+            _consumeTimer = new Timer(Work);
         }
-        
-        public void AssignTopic([NotNull] KafkaProducerTopic topic)
+
+        public void AssignTopic([NotNull] KafkaConsumerTopic topic)
         {
             _topics[topic.TopicName] = topic;
         }
 
-        public void AssignTopicPartition([NotNull] string topicName, [NotNull] KafkaProducerBrokerPartition topicPartition)
+        public void AssignTopicPartition([NotNull] string topicName, [NotNull] KafkaConsumerBrokerPartition topicPartition)
         {
             var brokerId = topicPartition.BrokerMetadata.BrokerId;
-            KafkaProducerBroker broker;
+            KafkaConsumerBroker broker;
             if (!_brokers.TryGetValue(brokerId, out broker))
             {
                 broker = CreateBroker(topicPartition.BrokerMetadata);
@@ -72,30 +80,30 @@ namespace NKafka.Producer.Internal
         }
 
         public void Start()
-        {            
-            _produceCancellation = new CancellationTokenSource();
-            var produceTimer = new Timer(Work);
-            _produceTimer = produceTimer;
-            produceTimer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+        {
+            _consumeCancellation = new CancellationTokenSource();
+            var consumeTimer = new Timer(Work);
+            _consumeTimer = consumeTimer;
+            consumeTimer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
         }
 
         public void Stop()
         {
             try
             {
-                _produceCancellation.Cancel();
+                _consumeCancellation.Cancel();
             }
             catch (Exception)
             {
                 //ignored
-            }            
-            
+            }
+
             try
-            {                
-                var produceTimer = _produceTimer;
-                lock (produceTimer)
+            {
+                var consumeTimer = _consumeTimer;
+                lock (consumeTimer)
                 {
-                    produceTimer.Dispose();
+                    consumeTimer.Dispose();
                 }
             }
             catch (Exception)
@@ -103,9 +111,9 @@ namespace NKafka.Producer.Internal
                 //ignored
             }
             foreach (var broker in _brokers)
-            {                
+            {
                 broker.Value.Close();
-            }            
+            }
         }
 
         private void Work(object state)
@@ -113,7 +121,7 @@ namespace NKafka.Producer.Internal
             var hasTopics = false;
             foreach (var topic in _topics)
             {
-                if (_produceCancellation.IsCancellationRequested) return;
+                if (_consumeCancellation.IsCancellationRequested) return;
                 ProcessTopic(topic.Value);
                 hasTopics = true;
             }
@@ -122,7 +130,7 @@ namespace NKafka.Producer.Internal
             bool isAvailableRegularBrokers = false;
             foreach (var brokerPair in _brokers)
             {
-                if (_produceCancellation.IsCancellationRequested) return;
+                if (_consumeCancellation.IsCancellationRequested) return;
                 ProcessBroker(brokerPair.Value, isBrokersRequired);
                 if (brokerPair.Value.IsEnabled)
                 {
@@ -133,19 +141,19 @@ namespace NKafka.Producer.Internal
             var isMetadataBrokersRequired = hasTopics && !isAvailableRegularBrokers;
             foreach (var metadataBroker in _metadataBrokers)
             {
-                if (_produceCancellation.IsCancellationRequested) return;
+                if (_consumeCancellation.IsCancellationRequested) return;
                 ProcessMetadataBroker(metadataBroker, isMetadataBrokersRequired);
             }
 
-            if (_produceCancellation.IsCancellationRequested) return;
-            var produceTimer = _produceTimer;
-            lock (produceTimer)
+            if (_consumeCancellation.IsCancellationRequested) return;
+            var consumeTimer = _consumeTimer;
+            lock (consumeTimer)
             {
-                if (_produceCancellation.IsCancellationRequested) return;
+                if (_consumeCancellation.IsCancellationRequested) return;
 
                 try
                 {
-                    produceTimer.Change(_producePeriod, Timeout.InfiniteTimeSpan);
+                    consumeTimer.Change(_consumePeriod, Timeout.InfiniteTimeSpan);
                 }
                 catch (Exception)
                 {
@@ -154,9 +162,9 @@ namespace NKafka.Producer.Internal
             }
         }
 
-        private void ProcessTopic([NotNull] KafkaProducerTopic topic)
-        {            
-            if (topic.Status == KafkaProducerTopicStatus.NotInitialized)
+        private void ProcessTopic([NotNull] KafkaConsumerTopic topic)
+        {
+            if (topic.Status == KafkaConsumerTopicStatus.NotInitialized)
             {
                 var metadataBroker = GetMetadataBroker();
                 if (metadataBroker != null)
@@ -166,18 +174,18 @@ namespace NKafka.Producer.Internal
                     if (metadataRequestId.HasValue)
                     {
                         _topicMetadataRequests[topic.TopicName] = new TopicMetadataRequest(metadataRequestId.Value, metadataBroker);
-                        topic.Status = KafkaProducerTopicStatus.MetadataRequested;
+                        topic.Status = KafkaConsumerTopicStatus.MetadataRequested;
                     }
                 }
-                                
+
             }
 
-            if (topic.Status == KafkaProducerTopicStatus.MetadataRequested)
+            if (topic.Status == KafkaConsumerTopicStatus.MetadataRequested)
             {
                 TopicMetadataRequest metadataRequest;
                 if (!_topicMetadataRequests.TryGetValue(topic.TopicName, out metadataRequest))
                 {
-                    topic.Status = KafkaProducerTopicStatus.NotInitialized;
+                    topic.Status = KafkaConsumerTopicStatus.NotInitialized;
                     return;
                 }
 
@@ -185,7 +193,7 @@ namespace NKafka.Producer.Internal
                 if (topicMetadata.HasData)
                 {
                     topic.ApplyMetadata(topicMetadata.Data);
-                    var brokerPartitions = new List<KafkaProducerBrokerPartition>(topic.Partitions.Count);
+                    var brokerPartitions = new List<KafkaConsumerBrokerPartition>(topic.Partitions.Count);
                     foreach (var topicPartition in topic.Partitions)
                     {
                         brokerPartitions.Add(topicPartition.BrokerPartition);
@@ -194,45 +202,43 @@ namespace NKafka.Producer.Internal
                     try
                     {
                         ArrangeTopic?.Invoke(topic.TopicName, brokerPartitions);
-                        topic.Status = KafkaProducerTopicStatus.Ready;
+                        topic.Status = KafkaConsumerTopicStatus.Ready;
                     }
                     catch (Exception)
-                    {                                             
-                        topic.Status = KafkaProducerTopicStatus.NotInitialized;
+                    {
+                        topic.Status = KafkaConsumerTopicStatus.NotInitialized;
                         return;
                     }
                 }
                 else
                 {
                     if (topicMetadata.HasError)
-                    {                        
-                        topic.Status = KafkaProducerTopicStatus.NotInitialized;
+                    {
+                        topic.Status = KafkaConsumerTopicStatus.NotInitialized;
                         return;
-                    }                    
+                    }
                 }
             }
 
-            if (topic.Status == KafkaProducerTopicStatus.Ready)
-            {        
-                topic.Flush();
-                        
+            if (topic.Status == KafkaConsumerTopicStatus.Ready)
+            {                
                 foreach (var paritition in topic.Partitions)
                 {
-                    if (paritition.BrokerPartition.Status == KafkaProducerBrokerPartitionStatus.NeedRearrange)
+                    if (paritition.BrokerPartition.Status == KafkaConsumerBrokerPartitionStatus.NeedRearrange)
                     {
-                        topic.Status = KafkaProducerTopicStatus.RearrangeRequired;                            
+                        topic.Status = KafkaConsumerTopicStatus.RearrangeRequired;
                         break;
-                    }                    
+                    }
                 }
             }
 
-            if (topic.Status == KafkaProducerTopicStatus.RearrangeRequired)
-            {                
+            if (topic.Status == KafkaConsumerTopicStatus.RearrangeRequired)
+            {
                 var areAllUnplugged = true;
                 foreach (var paritition in topic.Partitions)
                 {
                     paritition.BrokerPartition.IsUnplugRequired = true;
-                    if (paritition.BrokerPartition.Status != KafkaProducerBrokerPartitionStatus.Unplugged)
+                    if (paritition.BrokerPartition.Status != KafkaConsumerBrokerPartitionStatus.Unplugged)
                     {
                         areAllUnplugged = false;
                     }
@@ -240,12 +246,12 @@ namespace NKafka.Producer.Internal
 
                 if (areAllUnplugged)
                 {
-                    topic.Status = KafkaProducerTopicStatus.NotInitialized;
+                    topic.Status = KafkaConsumerTopicStatus.NotInitialized;
                 }
             }
         }
 
-        private void ProcessBroker([NotNull]KafkaProducerBroker broker, bool isBrokerRequired)
+        private void ProcessBroker([NotNull]KafkaConsumerBroker broker, bool isBrokerRequired)
         {
             if (!isBrokerRequired)
             {
@@ -259,13 +265,13 @@ namespace NKafka.Producer.Internal
             if (!broker.IsOpenned)
             {
                 broker.Open();
-            }                        
+            }
 
             broker.Maintenance();
-            broker.PerformProduce();            
+            broker.PerformConsume();
         }
 
-        private void ProcessMetadataBroker([NotNull] KafkaProducerBroker metadataBroker, bool isMetadataBrokerRequired)
+        private void ProcessMetadataBroker([NotNull] KafkaConsumerBroker metadataBroker, bool isMetadataBrokerRequired)
         {
             if (!isMetadataBrokerRequired)
             {
@@ -274,17 +280,17 @@ namespace NKafka.Producer.Internal
                     metadataBroker.Close();
                 }
             }
-            
+
             if (!metadataBroker.IsOpenned)
             {
                 metadataBroker.Open();
             }
 
-            metadataBroker.Maintenance();            
+            metadataBroker.Maintenance();
         }
 
         [CanBeNull]
-        private KafkaProducerBroker GetMetadataBroker()
+        private KafkaConsumerBroker GetMetadataBroker()
         {
             foreach (var broker in _brokers)
             {
@@ -303,10 +309,10 @@ namespace NKafka.Producer.Internal
             }
 
             return null;
-        }
+        }        
 
         [NotNull]
-        private KafkaProducerBroker CreateBroker([NotNull]KafkaBrokerMetadata brokerMetadata)
+        private KafkaConsumerBroker CreateBroker([NotNull]KafkaBrokerMetadata brokerMetadata)
         {
             var brokerId = brokerMetadata.BrokerId;
             var host = brokerMetadata.Host ?? string.Empty;
@@ -314,26 +320,27 @@ namespace NKafka.Producer.Internal
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{brokerId} ({host}:{port})";
             var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
-            return new KafkaProducerBroker(broker, _settings);
+            return new KafkaConsumerBroker(broker, _settings);
         }
 
         [NotNull]
-        private KafkaProducerBroker CreateMetadataBroker([NotNull]KafkaBrokerInfo brokerInfo)
+        private KafkaConsumerBroker CreateMetadataBroker([NotNull]KafkaBrokerInfo brokerInfo)
         {
             var host = brokerInfo.Host ?? string.Empty;
             var port = brokerInfo.Port;
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{host}:{port})";
             var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
-            return new KafkaProducerBroker(broker, _settings);
+            return new KafkaConsumerBroker(broker, _settings);
         }
 
         private sealed class TopicMetadataRequest
         {
             public readonly int RequestId;
-            [NotNull] public readonly KafkaProducerBroker Broker;
+            [NotNull]
+            public readonly KafkaConsumerBroker Broker;
 
-            public TopicMetadataRequest(int requestId, KafkaProducerBroker broker)
+            public TopicMetadataRequest(int requestId, KafkaConsumerBroker broker)
             {
                 RequestId = requestId;
                 Broker = broker;

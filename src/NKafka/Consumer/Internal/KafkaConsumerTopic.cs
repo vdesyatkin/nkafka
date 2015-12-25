@@ -2,30 +2,27 @@
 using JetBrains.Annotations;
 using NKafka.Metadata;
 
-namespace NKafka.Producer.Internal
+namespace NKafka.Consumer.Internal
 {
-    internal class KafkaProducerTopic
-    {     
-        [NotNull] public readonly string TopicName;        
-
-        [NotNull] public IReadOnlyList<KafkaProducerTopicPartition> Partitions { get; private set; }
-
-        public KafkaProducerTopicStatus Status;
+    internal sealed class KafkaConsumerTopic
+    {
+        [NotNull]
+        public readonly string TopicName;
 
         [NotNull]
-        private readonly IKafkaProducerTopicBuffer _buffer;
+        public IReadOnlyList<KafkaConsumerTopicPartition> Partitions { get; private set; }        
 
-        public KafkaProducerTopic([NotNull] string topicName, [NotNull] IKafkaProducerTopicBuffer buffer)
+        public KafkaConsumerTopicStatus Status;
+
+        [NotNull]
+        private readonly IKafkaConsumerTopic _dataConsumer;
+
+        public KafkaConsumerTopic([NotNull] string topicName, [NotNull] IKafkaConsumerTopic dataConsumer)
         {
             TopicName = topicName;
-            _buffer = buffer;
-            Status = KafkaProducerTopicStatus.NotInitialized;
-            Partitions = new KafkaProducerTopicPartition[0];
-        }        
-
-        public void Flush()
-        {
-            _buffer.Flush(Partitions);
+            _dataConsumer = dataConsumer;
+            Status = KafkaConsumerTopicStatus.NotInitialized;
+            Partitions = new KafkaConsumerTopicPartition[0];
         }
 
         public void ApplyMetadata([NotNull] KafkaTopicMetadata topicMetadata)
@@ -38,7 +35,7 @@ namespace NKafka.Producer.Internal
 
             var topicName = topicMetadata.TopicName;
 
-            var topicPartitions = new List<KafkaProducerTopicPartition>(topicMetadata.Partitions.Count);
+            var topicPartitions = new List<KafkaConsumerTopicPartition>(topicMetadata.Partitions.Count);
             foreach (var partitionMetadata in topicMetadata.Partitions)
             {
                 var brokerId = partitionMetadata.LeaderBrokerId;
@@ -47,11 +44,10 @@ namespace NKafka.Producer.Internal
                 {
                     continue;
                 }
-                var partition = new KafkaProducerTopicPartition(topicName, partitionMetadata.PartitionId, brokerMetadata);
+                var partition = new KafkaConsumerTopicPartition(topicName, partitionMetadata.PartitionId, brokerMetadata, _dataConsumer);
                 topicPartitions.Add(partition);
             }
-
             Partitions = topicPartitions;
         }
-    }  
+    }
 }

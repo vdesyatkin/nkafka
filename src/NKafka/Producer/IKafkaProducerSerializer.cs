@@ -1,8 +1,8 @@
 ﻿namespace NKafka.Producer
 {
-    public interface IKafkaProducerSerializer<TKey, TData>
+    public interface IKafkaProducerSerializer<in TKey, in TData>
     {
         byte[] SerializeKey(TKey key);
-        byte[] SerializeValue(TData data);
+        byte[] SerializeData(TData data);
     }
 }

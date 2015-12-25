@@ -15,7 +15,7 @@ namespace NKafka.Producer.Internal
 
         [NotNull] public readonly KafkaProducerBrokerPartition BrokerPartition;
 
-        public KafkaProducerTopicPartition(string topicName, int partitionId, KafkaBrokerMetadata brokerMetadata)
+        public KafkaProducerTopicPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaBrokerMetadata brokerMetadata)
         {
             TopicName = topicName;
             PartitonId = partitionId;
