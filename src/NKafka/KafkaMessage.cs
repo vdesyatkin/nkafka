@@ -2,8 +2,8 @@
 {
     public sealed class KafkaMessage
     {
-        public byte[] Key { get; private set; }
-        public byte[] Data { get; private set; }
+        public readonly byte[] Key;
+        public readonly byte[] Data;
 
         public KafkaMessage(byte[] key, byte[] data)
         {

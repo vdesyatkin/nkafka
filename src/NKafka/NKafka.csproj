@@ -46,14 +46,18 @@
     <Compile Include="Connection\KafkaConnectionSettings.cs" />
     <Compile Include="Connection\KafkaBrokerStateErrorCode.cs" />
     <Compile Include="Connection\KafkaConnection.cs" />
+    <Compile Include="Consumer\IKafkaConsumer.cs" />
+    <Compile Include="Consumer\Internal\KafkaConsumerBrokerPartition.cs" />
     <Compile Include="KafkaBrokerInfo.cs" />
     <Compile Include="KafkaCodecType.cs" />
     <Compile Include="KafkaConsistencyLevel.cs" />
     <Compile Include="KafkaMessage.cs" />
+    <Compile Include="KafkaMessageAndOffset.cs" />
     <Compile Include="KafkaVersion.cs" />
     <Compile Include="Metadata\KafkaBrokerMetadata.cs" />
     <Compile Include="Metadata\KafkaTopicMetadata.cs" />
     <Compile Include="Metadata\KafkaTopicPartitionMetadata.cs" />
+    <Compile Include="Producer\IKafkaProducer.cs" />
     <Compile Include="Producer\IKafkaProducerPartitioner.cs" />
     <Compile Include="Producer\IKafkaProducerSerializer.cs" />
     <Compile Include="Producer\IKafkaProducerTopic.cs" />
@@ -69,6 +73,7 @@
     <Compile Include="Producer\Internal\KafkaProducerTopicStatus.cs" />
     <Compile Include="Producer\Internal\KafkaProducerWorker.cs" />
     <Compile Include="Producer\KafkaProducer.cs" />
+    <Compile Include="Producer\KafkaProducerBuilder.cs" />
     <Compile Include="Producer\KafkaProducerSettings.cs" />
     <Compile Include="Producer\KafkaProducerSettingsBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -97,6 +102,7 @@
     <Compile Include="Protocol\Serialization\KafkaCrc32.cs" />
     <Compile Include="ResharperAnnotations.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
