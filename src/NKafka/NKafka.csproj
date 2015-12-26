@@ -40,12 +40,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\KafkaClientSettings.cs" />
+    <Compile Include="Client\KafkaClientSettingsBuilder.cs" />
+    <Compile Include="Client\Consumer\KafkaConsumerSettings.cs" />
+    <Compile Include="Client\Consumer\KafkaConsumerSettingsBuilder.cs" />
+    <Compile Include="Client\Producer\KafkaProducerSettings.cs" />
+    <Compile Include="Client\Producer\KafkaProducerSettingsBuilder.cs" />
     <Compile Include="Connection\KafkaBroker.cs" />
     <Compile Include="Connection\KafkaBrokerErrorCode.cs" />
     <Compile Include="Connection\KafkaBrokerResult.cs" />
     <Compile Include="Connection\KafkaConnectionSettings.cs" />
     <Compile Include="Connection\KafkaBrokerStateErrorCode.cs" />
     <Compile Include="Connection\KafkaConnection.cs" />
+    <Compile Include="Connection\KafkaConnectionSettingsBuilder.cs" />
     <Compile Include="Consumer\IKafkaConsumer.cs" />
     <Compile Include="Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Consumer\IKafkaConsumerTopic.cs" />

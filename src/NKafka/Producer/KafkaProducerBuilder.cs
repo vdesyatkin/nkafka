@@ -14,7 +14,7 @@ namespace NKafka.Producer
             _topics = new List<KafkaProducerTopic>();
         }
 
-        [PublicAPI, CanBeNull]
+        [PublicAPI]
         public IKafkaProducerTopic TryAddTopic([NotNull] string topicName, [NotNull] IKafkaProducerPartitioner partitioner)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -27,14 +27,14 @@ namespace NKafka.Producer
             return topicBuffer;
         }
 
-        [PublicAPI, CanBeNull]
+        [PublicAPI]
         public IKafkaProducerTopic<TKey, TData> TryAddTopic<TKey, TData>([NotNull] string topicName,
            [NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner, 
            [NotNull] IKafkaProducerSerializer<TKey, TData> serializer)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             if (string.IsNullOrEmpty(topicName) || (partitioner == null) || (serializer == null)) return null;
-            // ReSharper restore ConditionIsAlwaysTrueOrFalse          
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
             
             var topicBuffer = new KafkaProducerTopicBuffer<TKey, TData>(partitioner, serializer);
             var topic = new KafkaProducerTopic(topicName, topicBuffer);            

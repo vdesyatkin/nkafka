@@ -10,21 +10,19 @@ namespace NKafka.DevConsole
         {
             var host = "192.168.137.196";
             var port = 9092;
-
             var metadataBroker = new KafkaBrokerInfo(host, port);
+
             var configBuilder = new KafkaProducerSettingsBuilder(metadataBroker);
             configBuilder.SetClientId("nkafka").SetProduceTimeout(TimeSpan.FromSeconds(5));
+
             var producerBuilder = new KafkaProducerBuilder();
             var topic = producerBuilder.TryAddTopic("test", new TestPartitioner(), new TestSerializer());
             var producer = producerBuilder.Build(configBuilder);
 
             producer.Start();
 
-            if (topic != null)
-            {
-                topic.EnqueueMessage("1", "12345");
-                topic.EnqueueMessage("2", "Вышел зайчик погулять");
-            }
+            topic.EnqueueMessage("1", "12345");
+            topic.EnqueueMessage("2", "Вышел зайчик погулять");            
 
             Console.ReadLine();
 

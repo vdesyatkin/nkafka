@@ -98,7 +98,7 @@ namespace NKafka.Producer
         }
 
         [PublicAPI]
-        public KafkaProducerSettingsBuilder StConnectionSettings(KafkaConnectionSettings connectionSettings)
+        public KafkaProducerSettingsBuilder SetConnectionSettings(KafkaConnectionSettings connectionSettings)
         {
             _connectionSettings = connectionSettings;
             return this;

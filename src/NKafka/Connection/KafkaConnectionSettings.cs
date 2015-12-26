@@ -2,7 +2,7 @@
 
 namespace NKafka.Connection
 {
-    public class KafkaConnectionSettings
+    public sealed class KafkaConnectionSettings
     {
         public readonly TimeSpan RegularReconnectPeriod;
         public readonly TimeSpan ErrorStateReconnectPeriod;
