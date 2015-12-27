@@ -1,4 +1,4 @@
-﻿namespace NKafka.Consumer
+﻿namespace NKafka.Client.Consumer
 {
     public interface IKafkaConsumer
     {

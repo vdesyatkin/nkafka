@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using NKafka.Client.Consumer.Internal;
 using NKafka.Client.Producer.Internal;
 using NKafka.Metadata;
 
@@ -18,19 +19,23 @@ namespace NKafka.Client.Internal
         [PublicAPI, CanBeNull]
         public readonly KafkaProducerBrokerPartition Producer;
 
+        [PublicAPI, CanBeNull]
+        public readonly KafkaConsumerBrokerPartition Consumer;
+
         [PublicAPI]
         public bool IsUnplugRequired;
 
         [PublicAPI]
-        public KafkaClientBrokerPartitionStatus Status;        
+        public KafkaClientBrokerPartitionStatus Status;   
 
         public KafkaClientBrokerPartition([NotNull]string topicName, int partitionId, [NotNull] KafkaBrokerMetadata brokerMetadata,
-            [CanBeNull] KafkaProducerBrokerPartition producerPartition)
+            [CanBeNull] KafkaProducerBrokerPartition producerPartition, [CanBeNull] KafkaConsumerBrokerPartition consumerPartition)
         {
             TopicName = topicName;
             PartitionId = partitionId;
             BrokerMetadata = brokerMetadata;
             Producer = producerPartition;
+            Consumer = consumerPartition;
         }
     }
 }

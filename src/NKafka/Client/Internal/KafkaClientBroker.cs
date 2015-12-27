@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Internal;
 using NKafka.Client.Producer.Internal;
 using NKafka.Connection;
 using NKafka.Metadata;
@@ -17,12 +18,15 @@ namespace NKafka.Client.Internal
         [NotNull] private readonly KafkaBroker _broker;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;
         [CanBeNull] private readonly KafkaProducerBroker _producer;
+        [CanBeNull] private readonly KafkaConsumerBroker _consumer;
 
-        public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaClientSettings settings, bool hasProducer)
+        public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaClientSettings settings, 
+            bool hasProducer, bool hasConsumer)
         {
             _broker = broker;
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
             _producer = hasProducer ? new KafkaProducerBroker(broker, settings.ProducerSettings) : null;
+            _consumer = hasConsumer ? new KafkaConsumerBroker(broker, settings.ConsumerSettings) : null;
         }
 
         public void Work()
@@ -40,6 +44,7 @@ namespace NKafka.Client.Internal
                         partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
                         topic.Partitions.TryRemove(partitionPair.Key, out partition);
                         _producer?.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
+                        _consumer?.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
                         continue;
                     }
 
@@ -48,7 +53,7 @@ namespace NKafka.Client.Internal
                         partition.Status = KafkaClientBrokerPartitionStatus.Plugged;
                     }
 
-                    if (partition.Producer?.NeedRearrange == true)
+                    if (partition.Producer?.NeedRearrange == true || partition.Consumer?.NeedRearrange == true)
                     {
                         partition.Status = KafkaClientBrokerPartitionStatus.NeedRearrange;
                     }
@@ -56,6 +61,7 @@ namespace NKafka.Client.Internal
             }
             
             _producer?.Work();
+            _consumer?.Work();
             //todo (C002) consumer broker work
         }
 
@@ -90,6 +96,11 @@ namespace NKafka.Client.Internal
             if (topicPartition.Producer != null)
             {
                 _producer?.AddTopicPartition(topicName, topicPartition.Producer);
+            }
+
+            if (topicPartition.Consumer != null)
+            {
+                _consumer?.AddTopicPartition(topicName, topicPartition.Consumer);
             }
         }
 

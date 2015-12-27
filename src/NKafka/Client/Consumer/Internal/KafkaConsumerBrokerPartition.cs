@@ -1,30 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using NKafka.Metadata;
 
-namespace NKafka.Consumer.Internal
+namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerBrokerPartition
     {
+        [PublicAPI, NotNull]
         public readonly string TopicName;
 
+        [PublicAPI]
         public readonly int PartitionId;
 
-        [NotNull] private readonly IKafkaConsumerTopic _consumer;
-
         [NotNull]
-        public readonly KafkaBrokerMetadata BrokerMetadata;        
+        private readonly IKafkaConsumerTopic _consumer;
 
-        public bool IsUnplugRequired;
+        public bool NeedRearrange;
 
-        public KafkaConsumerBrokerPartitionStatus Status;
-
-        public KafkaConsumerBrokerPartition(string topicName, int partitionId, [NotNull] KafkaBrokerMetadata brokerMetadata, [NotNull] IKafkaConsumerTopic consumer)
+        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] IKafkaConsumerTopic consumer)
         {
             TopicName = topicName;
             PartitionId = partitionId;
-            BrokerMetadata = brokerMetadata;
             _consumer = consumer;
         }
 

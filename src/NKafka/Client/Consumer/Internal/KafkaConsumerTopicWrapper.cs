@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace NKafka.Consumer.Internal
+namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopicWrapper<TKey, TData> : IKafkaConsumerTopic
     {
@@ -50,6 +50,6 @@ namespace NKafka.Consumer.Internal
             {
                 //ignored
             }
-        }        
+        }
     }
 }

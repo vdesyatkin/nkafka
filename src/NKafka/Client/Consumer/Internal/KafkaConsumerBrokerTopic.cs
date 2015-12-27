@@ -1,14 +1,14 @@
 ﻿using System.Collections.Concurrent;
 using JetBrains.Annotations;
 
-namespace NKafka.Consumer.Internal
+namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerBrokerTopic
     {
-        [NotNull]
+        [PublicAPI, NotNull]
         public readonly string TopicName;
 
-        [NotNull]
+        [PublicAPI, NotNull]
         public readonly ConcurrentDictionary<int, KafkaConsumerBrokerPartition> Partitions;
 
         public KafkaConsumerBrokerTopic([NotNull]string topicName)

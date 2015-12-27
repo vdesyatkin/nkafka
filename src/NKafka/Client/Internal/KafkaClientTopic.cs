@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Internal;
 using NKafka.Client.Producer.Internal;
 using NKafka.Metadata;
 
@@ -17,11 +18,13 @@ namespace NKafka.Client.Internal
         public KafkaClientTopicStatus Status;
 
         [CanBeNull] private readonly KafkaProducerTopic _producer;
+        [CanBeNull] private readonly KafkaConsumerTopic _consumer;
 
-        public KafkaClientTopic([NotNull] string topicName, [CanBeNull] KafkaProducerTopic producer)
+        public KafkaClientTopic([NotNull] string topicName, [CanBeNull] KafkaProducerTopic producer, [CanBeNull] KafkaConsumerTopic consumer)
         {
             TopicName = topicName;
             _producer = producer;
+            _consumer = consumer;
             Status = KafkaClientTopicStatus.NotInitialized;
             Partitions = new KafkaClientTopicPartition[0];
         }
@@ -51,7 +54,9 @@ namespace NKafka.Client.Internal
                 var producerPartiton = _producer?.CreatePartition(partitionId);
                 producerPartitions.Add(producerPartiton);
 
-                var partition = new KafkaClientTopicPartition(topicName, partitionId, brokerMetadata, producerPartiton);
+                var consumerPartition = _consumer?.CreatePartition(partitionId);
+
+                var partition = new KafkaClientTopicPartition(topicName, partitionId, brokerMetadata, producerPartiton, consumerPartition);
                 topicPartitions.Add(partition);
             }
 
@@ -59,9 +64,9 @@ namespace NKafka.Client.Internal
             _producer?.ApplyPartitions(producerPartitions);
         }
 
-        public void Work()
+        public void Flush()
         {
-            _producer?.Flush();
+            _producer?.Flush();            
         }
     }
 }

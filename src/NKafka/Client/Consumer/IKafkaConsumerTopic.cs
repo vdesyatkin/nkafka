@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 
-namespace NKafka.Consumer
+namespace NKafka.Client.Consumer
 {
     public interface IKafkaConsumerTopic
-    {        
+    {
         //todo (C001) return-value
         void Consume(IReadOnlyList<KafkaMessageAndOffset> messages);
     }

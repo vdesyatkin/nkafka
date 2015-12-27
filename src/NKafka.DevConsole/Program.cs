@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
-using NKafka.Producer;
+using NKafka.Client;
+using NKafka.Client.Producer;
 
 namespace NKafka.DevConsole
 {
@@ -12,21 +14,22 @@ namespace NKafka.DevConsole
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);
 
-            var configBuilder = new KafkaProducerSettingsBuilder(metadataBroker);
-            configBuilder.SetClientId("nkafka").SetProduceTimeout(TimeSpan.FromSeconds(5));
+            var configBuilder = new KafkaClientSettingsBuilder(metadataBroker);
+            configBuilder.SetClientId("nkafka");
+            configBuilder.Producer.SetProduceTimeout(TimeSpan.FromSeconds(5));
 
-            var producerBuilder = new KafkaProducerBuilder();
-            var topic = producerBuilder.TryAddTopic("test", new TestPartitioner(), new TestSerializer());
-            var producer = producerBuilder.Build(configBuilder);
+            var clientBuilder = new KafkaClientBuilder();
+            var topicProducer = clientBuilder.TryAddTopicProducer("test", new TestPartitioner(), new TestSerializer());
+            var client = clientBuilder.Build(configBuilder);
 
-            producer.Start();
+            client.Start();
 
-            topic.EnqueueMessage("1", "12345");
-            topic.EnqueueMessage("2", "Вышел зайчик погулять");            
+            topicProducer.EnqueueMessage("1", "12345");
+            topicProducer.EnqueueMessage("2", "Вышел зайчик погулять");            
 
             Console.ReadLine();
 
-            producer.Stop();
+            client.Stop();
 
             Console.ReadLine();
 
@@ -49,12 +52,12 @@ namespace NKafka.DevConsole
         }
 
         private class TestPartitioner : IKafkaProducerPartitioner<string, string>
-        {
-            public int GetPartitionIndex(string key, string data, int partitionCount)
+        {            
+            public int GetPartition(string key, string data, IReadOnlyList<int> partitions)
             {
                 if (key == null) return 0;
-                if (partitionCount == 0) return 0;
-                return key.GetHashCode() % partitionCount;
+                if (partitions.Count == 0) return 0;
+                return partitions[key.GetHashCode() % partitions.Count];
             }
         }
     }

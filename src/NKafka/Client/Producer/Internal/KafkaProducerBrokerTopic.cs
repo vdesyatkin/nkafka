@@ -5,10 +5,10 @@ namespace NKafka.Client.Producer.Internal
 {
     internal sealed class KafkaProducerBrokerTopic
     {
-        [NotNull]
+        [PublicAPI, NotNull]
         public readonly string TopicName;
 
-        [NotNull]
+        [PublicAPI, NotNull]
         public readonly ConcurrentDictionary<int, KafkaProducerBrokerPartition> Partitions;
 
         public KafkaProducerBrokerTopic([NotNull]string topicName)
