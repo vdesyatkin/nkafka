@@ -11,18 +11,23 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentDictionary<string, KafkaConsumerBrokerTopic> _topics;      
 
         private readonly int _batchMinSizeBytes;        
-        private readonly TimeSpan _consumeOnServerTimeout;        
+        private readonly TimeSpan _consumeServerTimeout;
+        private readonly TimeSpan _consumeClientTimeout;
 
-        public KafkaConsumerBroker([NotNull] KafkaBroker broker, [NotNull] KafkaConsumerSettings settings)
+        public KafkaConsumerBroker([NotNull] KafkaBroker broker, TimeSpan consumePeriod, [NotNull] KafkaConsumerSettings settings)
         {
             _broker = broker;
             _topics = new ConcurrentDictionary<string, KafkaConsumerBrokerTopic>();
             _batchMinSizeBytes = settings.ConsumeBatchMinSizeBytes;            
-            _consumeOnServerTimeout = settings.ConsumeTimeout;
-            if (_consumeOnServerTimeout < TimeSpan.Zero)
+            _consumeServerTimeout = settings.ConsumeServerTimeout;
+            if (_consumeServerTimeout < TimeSpan.Zero)
             {
-                _consumeOnServerTimeout = TimeSpan.Zero; //todo (E006) settings server-side validation
-            }            
+                _consumeServerTimeout = TimeSpan.Zero; //todo (E006) settings server-side validation
+            }
+
+            _consumeClientTimeout = _consumeServerTimeout +
+                                   TimeSpan.FromMilliseconds(consumePeriod.TotalMilliseconds * 2) +
+                                   TimeSpan.FromSeconds(1);
         }
 
         public void AddTopicPartition([NotNull] string topicName, [NotNull] KafkaConsumerBrokerPartition topicPartition)
@@ -48,9 +53,9 @@ namespace NKafka.Client.Consumer.Internal
             topic.Partitions.TryRemove(partitionId, out partition);
         }
 
-        public void Work()
+        public void Consume()
         {
-            //todo (C001)
+            //todo (C005) fetch request
         }
     }
 }

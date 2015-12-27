@@ -16,9 +16,9 @@ namespace NKafka.Client.Consumer
         }
 
         [PublicAPI]
-        public KafkaConsumerSettingsBuilder SetConsumeTimeout(TimeSpan consumeTimeout)
+        public KafkaConsumerSettingsBuilder SetConsumeServerTimeout(TimeSpan timeout)
         {
-            _consumeTimeout = consumeTimeout;
+            _consumeTimeout = timeout;
             return this;
         }
 

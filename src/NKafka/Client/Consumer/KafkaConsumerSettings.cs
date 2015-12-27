@@ -5,15 +5,15 @@ namespace NKafka.Client.Consumer
     public sealed class KafkaConsumerSettings
     {        
         public readonly int ConsumeBatchMinSizeBytes;
-        public readonly TimeSpan ConsumeTimeout;
+        public readonly TimeSpan ConsumeServerTimeout;
 
         public KafkaConsumerSettings(          
           int consumeBatchMinSizeBytes,
-          TimeSpan consumeTimeout
+          TimeSpan consumeServerTimeout
           )
         {            
             ConsumeBatchMinSizeBytes = consumeBatchMinSizeBytes;
-            ConsumeTimeout = consumeTimeout;
+            ConsumeServerTimeout = consumeServerTimeout;
         }
     }
 }

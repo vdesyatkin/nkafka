@@ -32,9 +32,9 @@ namespace NKafka.Client.Producer
         }
 
         [PublicAPI]
-        public KafkaProducerSettingsBuilder SetProduceTimeout(TimeSpan produceTimeout)
+        public KafkaProducerSettingsBuilder SetProduceServerTimeout(TimeSpan timeout)
         {
-            _produceTimeout = produceTimeout;
+            _produceTimeout = timeout;
             return this;
         }
 

@@ -19,7 +19,6 @@ namespace NKafka.Connection
         [PublicAPI]
         public KafkaBrokerStateErrorCode? Error => _sendError ?? _receiveError;
 
-
         [PublicAPI]
         public string Name { get; }
 
@@ -85,7 +84,7 @@ namespace NKafka.Connection
             foreach (var requestPair in _requests)
             {
                 var request = requestPair.Value;
-                if (request.Response == null && request.Error == null)
+                if (request.Timeout.HasValue && request.Response == null && request.Error == null)
                 {
                     var requestTimestampUtc = request.SentTimestampUtc ?? request.CreateTimestampUtc;
                     if (DateTime.UtcNow >= requestTimestampUtc + request.Timeout)
@@ -175,10 +174,17 @@ namespace NKafka.Connection
             }
         }
 
-        public KafkaBrokerResult<int?> Send<TRequest>(TRequest request, TimeSpan timeout, int? dataCapacity = null) where TRequest : class, IKafkaRequest
+        public KafkaBrokerResult<int?> Send<TRequest>(TRequest request, TimeSpan? timeout, int? dataCapacity = null) where TRequest : class, IKafkaRequest
         {
             if (request == null) return KafkaBrokerErrorCode.BadRequest;
             if (!IsEnabled) return KafkaBrokerErrorCode.InvalidState;
+
+            if (timeout.HasValue && _settings != null && _settings.TransportLatency > TimeSpan.Zero)
+            {
+                timeout = timeout.Value +
+                    _settings.TransportLatency + //request
+                    _settings.TransportLatency; //response
+            }
 
             var requestId = Interlocked.Increment(ref _currentRequestId);
 
@@ -198,16 +204,57 @@ namespace NKafka.Connection
             {
                 _sendError = KafkaBrokerStateErrorCode.ConnectionError;
                 return KafkaBrokerErrorCode.TransportError;
-            }
-            
+            }            
+
             var requestState = new RequestState(request, DateTime.UtcNow, timeout);
-            _requests[requestId] = requestState;
+            if (timeout > TimeSpan.Zero)
+            {
+                _requests[requestId] = requestState; // may be separated method
+            }
 
             _lastActivityTimestampUtc = DateTime.UtcNow;
             try
             {
                 stream.Write(data, 0, data.Length);
                 requestState.SentTimestampUtc = DateTime.UtcNow;
+                _sendError = null;
+                return requestId;
+            }
+            catch (Exception)
+            {
+                _sendError = KafkaBrokerStateErrorCode.IOError;
+                return KafkaBrokerErrorCode.TransportError;
+            }
+        }
+
+        public KafkaBrokerResult<int?> SendWithoutResponse<TRequest>(TRequest request, int? dataCapacity = null) where TRequest : class, IKafkaRequest
+        {
+            if (request == null) return KafkaBrokerErrorCode.BadRequest;
+            if (!IsEnabled) return KafkaBrokerErrorCode.InvalidState;            
+
+            var requestId = Interlocked.Increment(ref _currentRequestId);
+
+            byte[] data;
+            try
+            {
+                data = _kafkaProtocol.WriteRequest(request, requestId, dataCapacity);
+                if (data == null) return KafkaBrokerErrorCode.DataError;
+            }
+            catch (Exception)
+            {
+                return KafkaBrokerErrorCode.DataError;
+            }
+
+            var stream = _connection.GetStream();
+            if (stream == null)
+            {
+                _sendError = KafkaBrokerStateErrorCode.ConnectionError;
+                return KafkaBrokerErrorCode.TransportError;
+            }
+                        
+            try
+            {
+                stream.Write(data, 0, data.Length);
                 _sendError = null;
                 return requestId;
             }
@@ -409,7 +456,7 @@ namespace NKafka.Connection
         private sealed class RequestState
         {            
             [NotNull] public readonly IKafkaRequest Request;            
-            public readonly TimeSpan Timeout;
+            public readonly TimeSpan? Timeout;
 
             public readonly DateTime CreateTimestampUtc;
             public DateTime? SentTimestampUtc;
@@ -417,7 +464,7 @@ namespace NKafka.Connection
             [CanBeNull] public IKafkaResponse Response;
             public KafkaBrokerErrorCode? Error;
 
-            public RequestState([NotNull] IKafkaRequest request, DateTime createTimestampUtc, TimeSpan timeout)
+            public RequestState([NotNull] IKafkaRequest request, DateTime createTimestampUtc, TimeSpan? timeout)
             {
                 Request = request;                
                 CreateTimestampUtc = createTimestampUtc;

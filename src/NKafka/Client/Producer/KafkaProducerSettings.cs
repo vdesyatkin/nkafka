@@ -7,19 +7,19 @@ namespace NKafka.Client.Producer
         public readonly KafkaConsistencyLevel ConsistencyLevel;
         public readonly KafkaCodecType CodecType;             
         public readonly int ProduceBatchMaxSizeBytes;
-        public readonly TimeSpan ProduceTimeout;
+        public readonly TimeSpan ProduceServerTimeout;
 
         public KafkaProducerSettings(         
           KafkaConsistencyLevel consistencyLevel,
           KafkaCodecType codecType,          
           int produceBatchMaxSizeLimit,         
-          TimeSpan produceTimeout
+          TimeSpan produceServerTimeout
           )
         {
             ConsistencyLevel = consistencyLevel;
             CodecType = codecType;            
             ProduceBatchMaxSizeBytes = produceBatchMaxSizeLimit;
-            ProduceTimeout = produceTimeout;
+            ProduceServerTimeout = produceServerTimeout;
         }
     }
 }

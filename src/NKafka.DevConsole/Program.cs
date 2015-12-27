@@ -16,7 +16,7 @@ namespace NKafka.DevConsole
 
             var configBuilder = new KafkaClientSettingsBuilder(metadataBroker);
             configBuilder.SetClientId("nkafka");
-            configBuilder.Producer.SetProduceTimeout(TimeSpan.FromSeconds(5));
+            configBuilder.Producer.SetProduceServerTimeout(TimeSpan.FromSeconds(5));
 
             var clientBuilder = new KafkaClientBuilder();
             var topicProducer = clientBuilder.TryAddTopicProducer("test", new TestPartitioner(), new TestSerializer());

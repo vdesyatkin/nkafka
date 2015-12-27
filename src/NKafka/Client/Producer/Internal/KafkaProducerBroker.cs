@@ -17,26 +17,29 @@ namespace NKafka.Client.Producer.Internal
         private readonly int _batchMaxSizeBytes;        
         private readonly KafkaConsistencyLevel _consistencyLevel;
         private readonly KafkaCodecType _codecType;
-        private readonly TimeSpan _produceOnServerTimeout;
-        private readonly TimeSpan _produceTotalTimeout;
+        private readonly TimeSpan _produceServerTimeout;
+        private readonly TimeSpan _produceClientTimeout;
 
         private int _produceOffset;
 
-        public KafkaProducerBroker([NotNull] KafkaBroker broker, [NotNull] KafkaProducerSettings settings)
+        public KafkaProducerBroker([NotNull] KafkaBroker broker, TimeSpan producePeriod, [NotNull] KafkaProducerSettings settings)
         {
             _broker = broker;
             _topics = new ConcurrentDictionary<string, KafkaProducerBrokerTopic>();
             _batchMaxSizeBytes = settings.ProduceBatchMaxSizeBytes;            
             _consistencyLevel = settings.ConsistencyLevel;
             _codecType = settings.CodecType;
-            _produceOnServerTimeout = settings.ProduceTimeout;
-            if (_produceOnServerTimeout < TimeSpan.FromSeconds(1))
+            _produceServerTimeout = settings.ProduceServerTimeout;
+            if (_produceServerTimeout < TimeSpan.FromSeconds(1))
             {
-                _produceOnServerTimeout = TimeSpan.FromSeconds(1); //todo (E006) settings server-side validation
+                _produceServerTimeout = TimeSpan.FromSeconds(1); //todo (E006) settings server-side validation
             }
-            _produceTotalTimeout = _produceOnServerTimeout +
-                                   TimeSpan.FromMilliseconds(settings.ProduceTimeout.TotalMilliseconds * 2) + //todo (C002) which settings should I use?
-                                   TimeSpan.FromSeconds(1);
+
+            
+            _produceClientTimeout = _produceServerTimeout +
+                                    TimeSpan.FromMilliseconds(producePeriod.TotalMilliseconds * 2) +
+                                    TimeSpan.FromSeconds(1);
+                        
 
             _produceRequests = new Dictionary<int, ProduceBatch>();
 
@@ -66,7 +69,7 @@ namespace NKafka.Client.Producer.Internal
             topic.Partitions.TryRemove(partitionId, out partition);
         }
 
-        public void Work()
+        public void Produce()
         {
             if (!CheckAllRequestsAreReceived()) return;
 
@@ -130,7 +133,7 @@ namespace NKafka.Client.Producer.Internal
                         List<KafkaMessage> topicPartionMessages;
                         if (!batcTopic.TryGetValue(partition.PartitionId, out topicPartionMessages))
                         {
-                            topicPartionMessages = new List<KafkaMessage>(200); //todo (C002) default capacity?
+                            topicPartionMessages = new List<KafkaMessage>(200);
                             batcTopic[partition.PartitionId] = topicPartionMessages;
                         }
                         topicPartionMessages.Add(message);
@@ -149,8 +152,11 @@ namespace NKafka.Client.Producer.Internal
                     }
                 }
 
-                var batchRequest = CreateBatchRequest(batch);
-                var batchRequestResult = _broker.Send(batchRequest, _produceTotalTimeout, batchSizeBytes * 2);
+                var batchRequest = CreateBatchRequest(batch);                
+                var batchRequestResult = _consistencyLevel == KafkaConsistencyLevel.None
+                    ? _broker.SendWithoutResponse(batchRequest, batchSizeBytes * 2)
+                    : _broker.Send(batchRequest, _produceClientTimeout, batchSizeBytes * 2);
+
                 if (!batchRequestResult.HasData)
                 {
                     RollbackBatch(batchRequest);
@@ -310,7 +316,7 @@ namespace NKafka.Client.Producer.Internal
                 requestTopics.Add(requestTopic);
             }
 
-            var batchRequest = new KafkaProduceRequest(_consistencyLevel, _produceOnServerTimeout, requestTopics);
+            var batchRequest = new KafkaProduceRequest(_consistencyLevel, _produceServerTimeout, requestTopics);
             return batchRequest;
         }
 
