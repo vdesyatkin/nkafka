@@ -32,18 +32,35 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\IKafkaClient.cs" />
+    <Compile Include="Client\Internal\KafkaClient.cs" />
+    <Compile Include="Client\Internal\KafkaClientBrokerPartition.cs" />
+    <Compile Include="Client\Internal\KafkaClientBrokerPartitionStatus.cs" />
+    <Compile Include="Client\Internal\KafkaClientBrokerTopic.cs" />
+    <Compile Include="Client\Internal\KafkaClientTopic.cs" />
+    <Compile Include="Client\Internal\KafkaClientTopicPartition.cs" />
+    <Compile Include="Client\Internal\KafkaClientTopicStatus.cs" />
+    <Compile Include="Client\Internal\KafkaClientWorker.cs" />
+    <Compile Include="Client\KafkaClientBuilder.cs" />
     <Compile Include="Client\KafkaClientSettings.cs" />
     <Compile Include="Client\KafkaClientSettingsBuilder.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettings.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettingsBuilder.cs" />
+    <Compile Include="Client\Producer\IKafkaProducer.cs" />
+    <Compile Include="Client\Producer\IKafkaProducerPartitioner.cs" />
+    <Compile Include="Client\Producer\IKafkaProducerSerializer.cs" />
+    <Compile Include="Client\Producer\IKafkaProducerTopic.cs" />
+    <Compile Include="Client\Producer\Internal\IKafkaProducerMessageQueue.cs" />
+    <Compile Include="Client\Producer\Internal\IKafkaProducerTopicBuffer.cs" />
+    <Compile Include="Client\Internal\KafkaClientBroker.cs" />
+    <Compile Include="Client\Producer\Internal\KafkaProducerBrokerPartition.cs" />
+    <Compile Include="Client\Producer\Internal\KafkaProducerTopic.cs" />
+    <Compile Include="Client\Producer\Internal\KafkaProducerTopicBuffer.cs" />
+    <Compile Include="Client\Producer\Internal\KafkaProducerTopicPartition.cs" />
     <Compile Include="Client\Producer\KafkaProducerSettings.cs" />
     <Compile Include="Client\Producer\KafkaProducerSettingsBuilder.cs" />
     <Compile Include="Connection\KafkaBroker.cs" />
@@ -123,7 +140,9 @@
     <Compile Include="Protocol\Serialization\KafkaCrc32.cs" />
     <Compile Include="ResharperAnnotations.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Client\Consumer\Internal\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

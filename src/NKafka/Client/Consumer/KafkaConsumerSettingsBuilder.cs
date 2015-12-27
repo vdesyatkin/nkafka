@@ -4,17 +4,9 @@ using JetBrains.Annotations;
 namespace NKafka.Client.Consumer
 {
     public sealed class KafkaConsumerSettingsBuilder
-    {
-        private TimeSpan? _consumePeriod;
+    {        
         private int? _consumeBatchMinSizeBytes;
-        private TimeSpan? _consumeTimeout;
-
-        [PublicAPI]
-        public KafkaConsumerSettingsBuilder SetConsumePeriod(TimeSpan consumePeriod)
-        {
-            _consumePeriod = consumePeriod;
-            return this;
-        }
+        private TimeSpan? _consumeTimeout;        
 
         [PublicAPI]
         public KafkaConsumerSettingsBuilder SetBatchByteMinSizeBytes(int batchMinSizeBytes)
@@ -31,13 +23,11 @@ namespace NKafka.Client.Consumer
         }
 
         public KafkaConsumerSettings Build()
-        {
-            var consumePeriod = _consumePeriod ?? TimeSpan.FromSeconds(1);
+        {            
             var batchMinSizeBytes = _consumeBatchMinSizeBytes ?? 200 * 200;
             var consumeTimeout = _consumeTimeout ?? TimeSpan.Zero;
 
-            return new KafkaConsumerSettings(
-                consumePeriod,
+            return new KafkaConsumerSettings(                
                 batchMinSizeBytes,
                 consumeTimeout);
         }

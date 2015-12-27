@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer;
+using NKafka.Client.Producer;
 using NKafka.Connection;
-using NKafka.Producer;
-using KafkaProducerSettingsBuilder = NKafka.Client.Producer.KafkaProducerSettingsBuilder;
 
 namespace NKafka.Client
 {
@@ -12,14 +11,15 @@ namespace NKafka.Client
     {
         private KafkaVersion? _kafkaVersion;
         private string _clientId;
+
         private int? _workerThreadCount;
+        private TimeSpan? _workerPeriod;
 
         [NotNull] private readonly List<KafkaBrokerInfo> _metadataBrokers;
+
         [NotNull] public readonly KafkaProducerSettingsBuilder Producer;
         [NotNull] public readonly KafkaConsumerSettingsBuilder Consumer;
-        [NotNull] public readonly KafkaConnectionSettingsBuilder Connection;
-
-        private KafkaConnectionSettings _connectionSettings;
+        [NotNull] public readonly KafkaConnectionSettingsBuilder Connection;        
 
         public KafkaClientSettingsBuilder([NotNull] KafkaBrokerInfo metadataBroker)
         {
@@ -58,9 +58,9 @@ namespace NKafka.Client
         }
 
         [PublicAPI]
-        public KafkaClientSettingsBuilder StConnectionSettings(KafkaConnectionSettings connectionSettings)
+        public KafkaClientSettingsBuilder SetWorkerPeriod(TimeSpan workerPeriod)
         {
-            _connectionSettings = connectionSettings;
+            _workerPeriod = workerPeriod;
             return this;
         }
 
@@ -70,13 +70,17 @@ namespace NKafka.Client
             var kafkaVersion = _kafkaVersion ?? KafkaVersion.V0_9;
             var clientId = _clientId;
             var metadataBrokers = _metadataBrokers.ToArray();
+
             var workerThreadCount = _workerThreadCount ?? 0;
+            var workerPeriod = _workerPeriod ?? TimeSpan.FromSeconds(1);
 
             var connectionSettings = Connection.Build();
             var producerSettings = Producer.Build();
             var consumerSettings = Consumer.Build();
 
-            return new KafkaClientSettings(kafkaVersion, clientId, metadataBrokers, workerThreadCount, connectionSettings, producerSettings, consumerSettings);
+            return new KafkaClientSettings(kafkaVersion, clientId, metadataBrokers, 
+                workerThreadCount, workerPeriod,
+                connectionSettings, producerSettings, consumerSettings);
         }        
     }
 }
