@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Producer.Internal;
 using NKafka.Connection;
 using NKafka.Metadata;
+using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Client.Internal
 {
@@ -11,16 +14,15 @@ namespace NKafka.Client.Internal
         public bool IsEnabled => _broker.IsEnabled;
         public bool IsOpenned => _broker.IsOpenned;
 
-        [NotNull]
-        private readonly KafkaBroker _broker;
+        [NotNull] private readonly KafkaBroker _broker;
+        [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;
+        [CanBeNull] private readonly KafkaProducerBroker _producer;
 
-        [NotNull]
-        private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;        
-
-        public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaClientSettings settings)
+        public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaClientSettings settings, bool hasProducer)
         {
             _broker = broker;
-            _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();          
+            _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
+            _producer = hasProducer ? new KafkaProducerBroker(broker, settings.ProducerSettings) : null;
         }
 
         public void Work()
@@ -37,6 +39,7 @@ namespace NKafka.Client.Internal
                     {
                         partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
                         topic.Partitions.TryRemove(partitionPair.Key, out partition);
+                        _producer?.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
                         continue;
                     }
 
@@ -44,10 +47,16 @@ namespace NKafka.Client.Internal
                     {
                         partition.Status = KafkaClientBrokerPartitionStatus.Plugged;
                     }
+
+                    if (partition.Producer?.NeedRearrange == true)
+                    {
+                        partition.Status = KafkaClientBrokerPartitionStatus.NeedRearrange;
+                    }
                 }
             }
             
-            //todo (C002) producer borker work
+            _producer?.Work();
+            //todo (C002) consumer broker work
         }
 
         public void Open()
@@ -77,16 +86,55 @@ namespace NKafka.Client.Internal
             }
 
             topic.Partitions[topicPartition.PartitionId] = topicPartition;
+
+            if (topicPartition.Producer != null)
+            {
+                _producer?.AddTopicPartition(topicName, topicPartition.Producer);
+            }
         }
 
         public KafkaBrokerResult<int?> RequestTopicMetadata([NotNull] string topicName)
         {
-            return _broker.RequestTopicMetadata(topicName, TimeSpan.FromSeconds(5)); //todo (C002) which settings should I use?
+            return _broker.Send(new KafkaTopicMetadataRequest(new[] { topicName }), TimeSpan.FromSeconds(5)); //todo (C002) which settings should I use?
         }
 
         public KafkaBrokerResult<KafkaTopicMetadata> GetTopicMetadata(int requestId)
         {
-            return _broker.GetTopicMetadata(requestId);
+            var response = _broker.Receive<KafkaTopicMetadataResponse>(requestId);
+            return ConvertMetadata(response);
+        }        
+
+        private static KafkaBrokerResult<KafkaTopicMetadata> ConvertMetadata(KafkaBrokerResult<KafkaTopicMetadataResponse> response)
+        {
+            if (!response.HasData) return response.Error;
+
+            var responseData = response.Data;
+            var responseBrokers = responseData.Brokers ?? new KafkaTopicMetadataResponseBroker[0];
+            var responseTopics = responseData.Topics ?? new KafkaTopicMetadataResponseTopic[0];
+
+            if (responseTopics.Count < 1) return KafkaBrokerErrorCode.DataError;
+            var responseTopic = responseTopics[0];
+            if (string.IsNullOrEmpty(responseTopic?.TopicName)) return KafkaBrokerErrorCode.DataError;
+
+            //todo (E009) handling standard errors (responseTopic.ErrorCode)
+            var responsePartitons = responseTopic.Partitions ?? new KafkaTopicMetadataResponseTopicPartition[0];
+
+            var brokers = new List<KafkaBrokerMetadata>(responseBrokers.Count);
+            foreach (var responseBroker in responseBrokers)
+            {
+                if (responseBroker == null) continue;
+                brokers.Add(new KafkaBrokerMetadata(responseBroker.BrokerId, responseBroker.Host, responseBroker.Port));
+            }
+
+            var partitions = new List<KafkaTopicPartitionMetadata>(responsePartitons.Count);
+            foreach (var responsePartition in responsePartitons)
+            {
+                if (responsePartition == null) continue;
+                //todo (E009) handling standard errors (responsePartition.ErrorCode)
+                partitions.Add(new KafkaTopicPartitionMetadata(responsePartition.PartitionId, responsePartition.LeaderId));
+            }
+
+            return new KafkaTopicMetadata(responseTopic.TopicName, brokers, partitions);
         }
     }
 }

@@ -72,7 +72,7 @@ namespace NKafka.Client.Internal
             KafkaClientBroker broker;
             if (!_brokers.TryGetValue(brokerId, out broker))
             {
-                broker = CreateBroker(topicPartition.BrokerMetadata);
+                broker = CreateBroker(topicPartition.BrokerMetadata, topicPartition.Producer != null);
                 _brokers[brokerId] = broker;
             }
 
@@ -313,7 +313,7 @@ namespace NKafka.Client.Internal
         }
 
         [NotNull]
-        private KafkaClientBroker CreateBroker([NotNull]KafkaBrokerMetadata brokerMetadata)
+        private KafkaClientBroker CreateBroker([NotNull]KafkaBrokerMetadata brokerMetadata, bool hasProducer)
         {
             var brokerId = brokerMetadata.BrokerId;
             var host = brokerMetadata.Host ?? string.Empty;
@@ -321,7 +321,7 @@ namespace NKafka.Client.Internal
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{brokerId} ({host}:{port})";
             var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker, _settings);
+            return new KafkaClientBroker(broker, _settings, hasProducer);
         }
 
         [NotNull]
@@ -332,7 +332,7 @@ namespace NKafka.Client.Internal
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{host}:{port})";
             var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker, _settings);
+            return new KafkaClientBroker(broker, _settings, false);
         }
 
         private sealed class TopicMetadataRequest

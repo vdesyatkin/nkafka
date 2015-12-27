@@ -57,7 +57,9 @@
     <Compile Include="Client\Producer\Internal\IKafkaProducerMessageQueue.cs" />
     <Compile Include="Client\Producer\Internal\IKafkaProducerTopicBuffer.cs" />
     <Compile Include="Client\Internal\KafkaClientBroker.cs" />
+    <Compile Include="Client\Producer\Internal\KafkaProducerBroker.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerBrokerPartition.cs" />
+    <Compile Include="Client\Producer\Internal\KafkaProducerBrokerTopic.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerTopic.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerTopicBuffer.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerTopicPartition.cs" />

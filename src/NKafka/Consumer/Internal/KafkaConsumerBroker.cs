@@ -93,17 +93,16 @@ namespace NKafka.Consumer.Internal
 
         public KafkaBrokerResult<int?> RequestTopicMetadata(string topicName)
         {
-            return _broker.RequestTopicMetadata(topicName, _consumeTotalTimeout);
+            return (int?)null;
         }
 
         public KafkaBrokerResult<KafkaTopicMetadata> GetTopicMetadata(int requestId)
         {
-            return _broker.GetTopicMetadata(requestId);
+            return (KafkaTopicMetadata)null;
         }
 
         public void PerformConsume()
-        {
-
+        {            
         }
     }
 }

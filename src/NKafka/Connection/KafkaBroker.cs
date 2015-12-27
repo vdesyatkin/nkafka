@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using JetBrains.Annotations;
-using NKafka.Metadata;
 using NKafka.Protocol;
 using NKafka.Protocol.API.TopicMetadata;
 
@@ -125,8 +123,8 @@ namespace NKafka.Connection
             var heartbeatRequestId = _heartbeatRequestId;
             if (heartbeatRequestId.HasValue)
             {
-                var heartbeatResult = GetTopicMetadata(heartbeatRequestId.Value);
-                if (heartbeatResult.HasData || heartbeatResult.HasError)
+                var heartbeatResponse = Receive<KafkaTopicMetadataResponse>(heartbeatRequestId.Value);
+                if (heartbeatResponse.HasData || heartbeatResponse.HasError)
                 {
                     _heartbeatRequestId = null;
                 }
@@ -138,8 +136,9 @@ namespace NKafka.Connection
                 : null;
 
             if (heartbeatPeriod != null && DateTime.UtcNow - _lastActivityTimestampUtc >= heartbeatPeriod.Value)
-            {                
-                _heartbeatRequestId = RequestTopicMetadata("_hearbeat", heartbeatPeriod.Value).Data;
+            {
+                var heartbeatReqeust = new KafkaTopicMetadataRequest(new [] {"_hearbeat"});
+                _heartbeatRequestId = Send(heartbeatReqeust, heartbeatPeriod.Value).Data;
             }
         }
 
@@ -201,7 +200,7 @@ namespace NKafka.Connection
                 return KafkaBrokerErrorCode.TransportError;
             }
             
-            var requestState = new RequestState(request, stream, DateTime.UtcNow, timeout);
+            var requestState = new RequestState(request, DateTime.UtcNow, timeout);
             _requests[requestId] = requestState;
 
             _lastActivityTimestampUtc = DateTime.UtcNow;
@@ -403,62 +402,13 @@ namespace NKafka.Connection
             }
         }
 
-        #endregion Async receive
-
-        #region Metadata
-
-        public KafkaBrokerResult<int?> RequestTopicMetadata(string topicName, TimeSpan timeout)
-        {
-            return Send(new KafkaTopicMetadataRequest(new[] { topicName }), timeout);
-        }
-
-        public KafkaBrokerResult<KafkaTopicMetadata> GetTopicMetadata(int requestId)
-        {
-            var response = Receive<KafkaTopicMetadataResponse>(requestId);
-            return ConvertMetadata(response);
-        }
-
-        private static KafkaBrokerResult<KafkaTopicMetadata> ConvertMetadata(KafkaBrokerResult<KafkaTopicMetadataResponse> response)
-        {
-            if (!response.HasData) return response.Error;
-
-            var responseData = response.Data;            
-            var responseBrokers = responseData.Brokers ?? new KafkaTopicMetadataResponseBroker[0];
-            var responseTopics = responseData.Topics ?? new KafkaTopicMetadataResponseTopic[0];
-
-            if (responseTopics.Count < 1) return KafkaBrokerErrorCode.DataError;
-            var responseTopic = responseTopics[0];
-            if (string.IsNullOrEmpty(responseTopic?.TopicName)) return KafkaBrokerErrorCode.DataError;
-
-            //todo (E009) handling standard errors (responseTopic.ErrorCode)
-            var responsePartitons = responseTopic.Partitions ?? new KafkaTopicMetadataResponseTopicPartition[0];
-
-            var brokers = new List<KafkaBrokerMetadata>(responseBrokers.Count);
-            foreach (var responseBroker in responseBrokers)
-            {
-                if (responseBroker == null) continue;                
-                brokers.Add(new KafkaBrokerMetadata(responseBroker.BrokerId, responseBroker.Host, responseBroker.Port));
-            }
-
-            var partitions = new List<KafkaTopicPartitionMetadata>(responsePartitons.Count);
-            foreach (var responsePartition in responsePartitons)
-            {
-                if (responsePartition == null) continue;
-                //todo (E009) handling standard errors (responsePartition.ErrorCode)
-                partitions.Add(new KafkaTopicPartitionMetadata(responsePartition.PartitionId, responsePartition.LeaderId));
-            }
-
-            return new KafkaTopicMetadata(responseTopic.TopicName, brokers, partitions);
-        }
-
-        #endregion Metadata
+        #endregion Async receive      
 
         #region State classes
 
         private sealed class RequestState
         {            
             [NotNull] public readonly IKafkaRequest Request;            
-            [NotNull] public readonly Stream Stream;
             public readonly TimeSpan Timeout;
 
             public readonly DateTime CreateTimestampUtc;
@@ -467,10 +417,9 @@ namespace NKafka.Connection
             [CanBeNull] public IKafkaResponse Response;
             public KafkaBrokerErrorCode? Error;
 
-            public RequestState([NotNull] IKafkaRequest request, [NotNull] Stream stream, DateTime createTimestampUtc, TimeSpan timeout)
+            public RequestState([NotNull] IKafkaRequest request, DateTime createTimestampUtc, TimeSpan timeout)
             {
                 Request = request;                
-                Stream = stream;
                 CreateTimestampUtc = createTimestampUtc;
                 Timeout = timeout;
             }
