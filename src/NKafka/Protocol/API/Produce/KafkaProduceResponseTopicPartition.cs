@@ -3,17 +3,21 @@
     internal sealed class KafkaProduceResponseTopicPartition
     {
         /// <summary>
-        /// The partition the offset came from.
+        /// The partition this response entry corresponds to.
         /// </summary>
-        public int PartitionId { get; private set; }
+        public readonly int PartitionId;
+
         /// <summary>
-        /// ErrorCode response code.  0 is success.
+        /// The error from this partition, if any. 
+        /// Errors are given on a per-partition basis because a given partition may be unavailable or maintained on a different host, 
+        /// while others may have successfully accepted the produce request.
         /// </summary>
-        public KafkaResponseErrorCode ErrorCode { get; private set; }
+        public readonly KafkaResponseErrorCode ErrorCode;
+
         /// <summary>
-        /// The offset number to commit as completed.
+        /// The offset assigned to the first message in the message set appended to this partition.
         /// </summary>
-        public long Offset { get; private set; }
+        public readonly long Offset;
 
         public KafkaProduceResponseTopicPartition(int partitionId, KafkaResponseErrorCode errorCode, long offset)
         {

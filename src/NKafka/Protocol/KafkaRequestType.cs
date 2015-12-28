@@ -4,7 +4,7 @@
     {
         Produce = 0,
         Fetch = 1,
-        Offsets = 2,
+        Offset = 2,
         TopicMetadata = 3,
 
         LeaderAndIsrs = 4,

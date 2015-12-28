@@ -93,6 +93,13 @@
     <Compile Include="Metadata\KafkaTopicMetadata.cs" />
     <Compile Include="Metadata\KafkaTopicPartitionMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol\API\Offset\KafkaOffsetApi.cs" />
+    <Compile Include="Protocol\API\Offset\KafkaOffsetRequest.cs" />
+    <Compile Include="Protocol\API\Offset\KafkaOffsetRequestTopic.cs" />
+    <Compile Include="Protocol\API\Offset\KafkaOffsetRequestTopicPartition.cs" />
+    <Compile Include="Protocol\API\Offset\KafkaOffsetResponse.cs" />
+    <Compile Include="Protocol\API\Offset\KafkaOffsetResponseTopicPartition.cs" />
+    <Compile Include="Protocol\API\Offset\KafkaOffsetResponseTopic.cs" />
     <Compile Include="Protocol\API\Produce\KafkaProduceApi.cs" />
     <Compile Include="Protocol\API\Produce\KafkaProduceRequest.cs" />
     <Compile Include="Protocol\API\Produce\KafkaProduceRequestTopic.cs" />

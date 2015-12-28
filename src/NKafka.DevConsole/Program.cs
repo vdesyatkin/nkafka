@@ -12,29 +12,29 @@ namespace NKafka.DevConsole
         {
             var host = "192.168.137.196";
             var port = 9092;
-            var metadataBroker = new KafkaBrokerInfo(host, port);
+            //var metadataBroker = new KafkaBrokerInfo(host, port);
 
-            var configBuilder = new KafkaClientSettingsBuilder(metadataBroker);
-            configBuilder.SetClientId("nkafka");
-            configBuilder.Producer.SetProduceServerTimeout(TimeSpan.FromSeconds(5));
+            //var configBuilder = new KafkaClientSettingsBuilder(metadataBroker);
+            //configBuilder.SetClientId("nkafka");
+            //configBuilder.Producer.SetProduceServerTimeout(TimeSpan.FromSeconds(5));
 
-            var clientBuilder = new KafkaClientBuilder();
-            var topicProducer = clientBuilder.TryAddTopicProducer("test", new TestPartitioner(), new TestSerializer());
-            var client = clientBuilder.Build(configBuilder);
+            //var clientBuilder = new KafkaClientBuilder();
+            //var topicProducer = clientBuilder.CreateTopicProducer("test2", new TestPartitioner(), new TestSerializer());
+            //var client = clientBuilder.Build(configBuilder);
 
-            client.Start();
+            //client.Start();
 
-            topicProducer.EnqueueMessage("1", "12345");
-            topicProducer.EnqueueMessage("2", "Вышел зайчик погулять");            
+            //topicProducer.EnqueueMessage("1", "12345");
+            //topicProducer.EnqueueMessage("2", "Вышел зайчик погулять");
 
-            Console.ReadLine();
+            //Console.ReadLine();
 
-            client.Stop();
+            //client.Stop();
 
-            Console.ReadLine();
+            //Console.ReadLine();
 
             var tester = new KafkaTester();
-            tester.Test(host, port, "test");
+            tester.Test(host, port, "test2");
             Console.ReadLine();
         }
 

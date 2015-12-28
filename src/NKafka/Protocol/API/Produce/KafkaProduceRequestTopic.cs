@@ -5,11 +5,11 @@ namespace NKafka.Protocol.API.Produce
     internal sealed class KafkaProduceRequestTopic
     {
         /// <summary>
-        /// The name of the topic.
+        /// The topic that data is being published to.
         /// </summary>
-        public string TopicName { get; private set; }
+        public readonly string TopicName;
 
-        public IReadOnlyList<KafkaProduceRequestTopicPartition> Partitions { get; private set; }
+        public readonly IReadOnlyList<KafkaProduceRequestTopicPartition> Partitions;
 
         public KafkaProduceRequestTopic(string topicName, IReadOnlyList<KafkaProduceRequestTopicPartition> partitions)
         {

@@ -4,7 +4,10 @@ namespace NKafka.Protocol.API.Produce
 {
     internal sealed class KafkaProduceResponse: IKafkaResponse
     {
-        public IReadOnlyList<KafkaProduceResponseTopic> Topics { get; private set; }
+        /// <summary>
+        /// Topics.
+        /// </summary>
+        public readonly IReadOnlyList<KafkaProduceResponseTopic> Topics;
 
         public KafkaProduceResponse(IReadOnlyList<KafkaProduceResponseTopic> topics)
         {

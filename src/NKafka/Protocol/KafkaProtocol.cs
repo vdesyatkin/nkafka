@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Protocol.API.Offset;
 using NKafka.Protocol.API.Produce;
 using NKafka.Protocol.API.TopicMetadata;
 using NKafka.Protocol.Serialization;
@@ -135,7 +136,7 @@ namespace NKafka.Protocol
                 [KafkaRequestType.SyncGroup] = KafkaRequestVersion.V0,
                 [KafkaRequestType.Heartbeat] = KafkaRequestVersion.V0,
 
-                [KafkaRequestType.Offsets] = KafkaRequestVersion.V0,
+                [KafkaRequestType.Offset] = KafkaRequestVersion.V0,
                 [KafkaRequestType.OffsetFetch] = KafkaRequestVersion.V1,
 
                 [KafkaRequestType.Fetch] = KafkaRequestVersion.V0,
@@ -201,19 +202,12 @@ namespace NKafka.Protocol
                 case KafkaRequestType.Produce:
                     return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaProduceRequest),
                         KafkaProduceApi.WriteRequest, KafkaProduceApi.ReadResponse);
+                case KafkaRequestType.Offset:
+                    return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaOffsetRequest),
+                        KafkaOffsetApi.WriteRequest, KafkaOffsetApi.ReadResponse);
             }
             return null;
-        }
-
-        private static Action<KafkaBinaryWriter, IKafkaRequest> GetRequestWriteMethod(KafkaRequestType requestType)
-        {
-            switch (requestType)
-            {
-                case KafkaRequestType.TopicMetadata:
-                    return KafkaTopicMetadataApi.WriteRequest;
-            }
-            return null;
-        }
+        }        
 
         private sealed class KafkaRequestConfiguration
         {
