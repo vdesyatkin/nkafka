@@ -1,6 +1,6 @@
 ﻿namespace NKafka
 {
-    public sealed class KafkaMessageAndOffset
+    internal sealed class KafkaMessageAndOffset
     {
         public readonly long Offset;
         public readonly byte[] Key;
@@ -14,7 +14,7 @@
         }
     }
 
-    public sealed class KafkaMessageAndOffset<TKey, TData>
+    internal sealed class KafkaMessageAndOffset<TKey, TData>
     {
         public readonly long Offset;
         public readonly TKey Key;

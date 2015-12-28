@@ -4,27 +4,29 @@ using JetBrains.Annotations;
 
 namespace NKafka.Client.Consumer.Internal
 {
-    internal sealed class KafkaConsumerTopicWrapper<TKey, TData> : IKafkaConsumerTopic
+    internal sealed class KafkaConsumerTopicWrapper<TKey, TData> : IKafkaConsumerTopic<TKey, TData>
     {
         [NotNull]
-        private readonly IKafkaConsumerTopic<TKey, TData> _dataConsumer;
+        private readonly KafkaConsumerTopic _topic;
 
         [NotNull]
         private readonly IKafkaConsumerSerializer<TKey, TData> _serializer;
 
         public KafkaConsumerTopicWrapper(
-            [NotNull] IKafkaConsumerTopic<TKey, TData> dataConsumer,
+            [NotNull] KafkaConsumerTopic topic,
             [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer)
         {
-            _dataConsumer = dataConsumer;
+            _topic = topic;
             _serializer = serializer;
         }
 
-        public void Consume(IReadOnlyList<KafkaMessageAndOffset> messages)
+        public KafkaMessagePackage<TKey, TData> Consume()
         {
-            if (messages == null) return;
+            var package = _topic.Consume();
+            var messages = package?.Messages;
+            if (messages == null) return null;
 
-            var genericMessages = new List<KafkaMessageAndOffset<TKey, TData>>(messages.Count);
+            var genericMessages = new List<KafkaMessage<TKey, TData>>(messages.Count);
             foreach (var message in messages)
             {
                 if (message == null) continue;
@@ -33,7 +35,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     var key = _serializer.DeserializeKey(message.Key);
                     var data = _serializer.DeserializeData(message.Data);
-                    var genericMessage = new KafkaMessageAndOffset<TKey, TData>(message.Offset, key, data);
+                    var genericMessage = new KafkaMessage<TKey, TData>(key, data);
                     genericMessages.Add(genericMessage);
                 }
                 catch (Exception)
@@ -42,14 +44,12 @@ namespace NKafka.Client.Consumer.Internal
                 }
             }
 
-            try
-            {
-                _dataConsumer.Consume(genericMessages);
-            }
-            catch (Exception)
-            {
-                //ignored
-            }
+            return new KafkaMessagePackage<TKey, TData>(package.PackageNumber, genericMessages);
+        }
+
+        public void Commit(int packageNumber)
+        {
+            _topic.Commit(packageNumber);
         }
     }
 }

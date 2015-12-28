@@ -41,6 +41,7 @@ namespace NKafka.Client.Internal
 
             var topicPartitions = new List<KafkaClientTopicPartition>(topicMetadata.Partitions.Count);
             var producerPartitions = new List<KafkaProducerTopicPartition>(topicMetadata.Partitions.Count);
+            var consumerPartitions = new List<KafkaConsumerTopicPartition>(topicMetadata.Partitions.Count);
             foreach (var partitionMetadata in topicMetadata.Partitions)
             {
                 var partitionId = partitionMetadata.PartitionId;
@@ -55,6 +56,7 @@ namespace NKafka.Client.Internal
                 producerPartitions.Add(producerPartiton);
 
                 var consumerPartition = _consumer?.CreatePartition(partitionId);
+                consumerPartitions.Add(consumerPartition);
 
                 var partition = new KafkaClientTopicPartition(topicName, partitionId, brokerMetadata, producerPartiton, consumerPartition);
                 topicPartitions.Add(partition);
@@ -62,6 +64,7 @@ namespace NKafka.Client.Internal
 
             Partitions = topicPartitions;
             _producer?.ApplyPartitions(producerPartitions);
+            _consumer?.ApplyPartitions(consumerPartitions);
         }
 
         public void Flush()

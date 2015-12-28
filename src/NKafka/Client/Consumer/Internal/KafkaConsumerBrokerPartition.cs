@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using JetBrains.Annotations;
 
 namespace NKafka.Client.Consumer.Internal
@@ -13,26 +14,39 @@ namespace NKafka.Client.Consumer.Internal
         public readonly int PartitionId;
 
         [NotNull]
-        private readonly IKafkaConsumerTopic _consumer;
+        private readonly IKafkaConsumerMessageQueue _messageQueue;
 
         public bool NeedRearrange;
 
-        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] IKafkaConsumerTopic consumer)
+        private long _lastEnqueuedOffset;
+        private long _lastCommittedOffsetRequired;
+        private long _lastCommittedOffset;
+
+
+        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] IKafkaConsumerMessageQueue messageQueue)
         {
             TopicName = topicName;
             PartitionId = partitionId;
-            _consumer = consumer;
+            _messageQueue = messageQueue;
         }
 
-        public void Consume([NotNull] IReadOnlyList<KafkaMessageAndOffset> messages)
+        public void EnqueueMessages([NotNull, ItemNotNull] IReadOnlyList<KafkaMessageAndOffset> messages)
         {
             try
             {
-                _consumer.Consume(messages);
+                _messageQueue.Enqueue(messages);
             }
             catch (Exception)
             {
                 // ignored
+            }
+        }
+
+        public void CommitOffset(long offset)
+        {
+            if (offset > _lastCommittedOffsetRequired)
+            {
+                Interlocked.CompareExchange(ref _lastCommittedOffsetRequired, offset, _lastCommittedOffsetRequired);
             }
         }
     }

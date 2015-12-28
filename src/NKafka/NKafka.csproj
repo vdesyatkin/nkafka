@@ -39,12 +39,14 @@
     <Compile Include="Client\Consumer\IKafkaConsumer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
+    <Compile Include="Client\Consumer\Internal\IKafkaConsumerMessageQueue.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBroker.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerPartition.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicPartition.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicWrapper.cs" />
+    <Compile Include="Client\Consumer\KafkaMessagePackage.cs" />
     <Compile Include="Client\IKafkaClient.cs" />
     <Compile Include="Client\Internal\KafkaClient.cs" />
     <Compile Include="Client\Internal\KafkaClientBrokerPartition.cs" />

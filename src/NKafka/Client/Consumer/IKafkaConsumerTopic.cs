@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using JetBrains.Annotations;
 
 namespace NKafka.Client.Consumer
 {
     public interface IKafkaConsumerTopic
-    {        
-        void Consume(IReadOnlyList<KafkaMessageAndOffset> messages);
+    {
+        [CanBeNull] KafkaMessagePackage Consume();        
+        void Commit(int packageNumber);
     }
 
     public interface IKafkaConsumerTopic<TKey, TData>
-    {     
-        void Consume(IReadOnlyList<KafkaMessageAndOffset<TKey, TData>> messages);
+    {
+        [CanBeNull] KafkaMessagePackage<TKey,TData> Consume();
+        void Commit(int packageNumber);
     }
 }

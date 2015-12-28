@@ -20,7 +20,7 @@ namespace NKafka.Client
         }
 
         [PublicAPI]
-        public IKafkaProducerTopic TryAddTopicProducer([NotNull] string topicName, [NotNull] IKafkaProducerPartitioner partitioner)
+        public IKafkaProducerTopic CreateTopicProducer([NotNull] string topicName, [NotNull] IKafkaProducerPartitioner partitioner)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
             if (string.IsNullOrEmpty(topicName) || (partitioner == null)) return null;
@@ -33,7 +33,7 @@ namespace NKafka.Client
         }
 
         [PublicAPI]
-        public IKafkaProducerTopic<TKey, TData> TryAddTopicProducer<TKey, TData>([NotNull] string topicName,
+        public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,
            [NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
            [NotNull] IKafkaProducerSerializer<TKey, TData> serializer)
         {
@@ -48,29 +48,29 @@ namespace NKafka.Client
         }
 
         [PublicAPI]
-        public bool TryAddTopicConsumer([NotNull] string topicName, [NotNull] IKafkaConsumerTopic dataConsumer)
+        public IKafkaConsumerTopic CreateTopicConsumer([NotNull] string topicName)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
-            if (string.IsNullOrEmpty(topicName) || dataConsumer == null) return false;
+            if (string.IsNullOrEmpty(topicName)) return null;
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
 
-            var topic = new KafkaConsumerTopic(topicName, dataConsumer);
+            var topic = new KafkaConsumerTopic(topicName);
             _topicConsumers.Add(topic);
-            return true;
+            return topic;
         }
 
         [PublicAPI]
-        public bool TryAddTopicConsumer<TKey, TData>([NotNull] string topicName,
-           [NotNull] IKafkaConsumerTopic<TKey, TData> dataConsumer,
+        public IKafkaConsumerTopic<TKey,TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName,           
            [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
-            if (string.IsNullOrEmpty(topicName) || (dataConsumer == null) || (serializer == null)) return false;
+            if (string.IsNullOrEmpty(topicName) || (serializer == null)) return null;
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
 
-            var topic = new KafkaConsumerTopic(topicName, new KafkaConsumerTopicWrapper<TKey, TData>(dataConsumer, serializer));
+            var topic = new KafkaConsumerTopic(topicName);
+            var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer);
             _topicConsumers.Add(topic);
-            return true;
+            return wrapper;
         }
 
         [PublicAPI, NotNull]

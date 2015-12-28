@@ -32,7 +32,7 @@ namespace NKafka.DevConsole
                 {
                     WriteHeader(writer, ApiKeyRequestType.LeaveGroup);
 
-                    writer.Write(PackString16(request.GroupId));                    
+                    writer.Write(PackString16(request.GroupId));
                     writer.Write(PackString16(request.MemberId));
                 }
                 return stream.ToArray();
@@ -1096,11 +1096,13 @@ namespace NKafka.DevConsole
                 //var messageText = DateTime.Now.ToString();
                 //var message0 = new Message { Key = Encoding.UTF8.GetBytes("key"), Value = Encoding.UTF8.GetBytes(messageText) };
                 //var message1 = new Message {Key = Encoding.UTF8.GetBytes("1"), Value = Encoding.UTF8.GetBytes("12345")};
-                //var message2 = new Message { Key = Encoding.UTF8.GetBytes("1"), Value = Encoding.UTF8.GetBytes("Вышел зайчик погулять") };
-                //var messageSet = CreateMessageSet(new[] { message1, message2 }, MessageCodec.CodecNone);
-                //var partitionPackage = new ProduceRequestTopicPartition { PartitionId = partitionId, MessageSet = messageSet };
-                //var topicPackage = new ProduceRequestTopic { TopicName = testTopicName, Partitions = new[] { partitionPackage } };
-                //var produceRequest = new ProduceRequest { AckMode = AckMode.WrittenToLeader, Timeout = new Timeout(TimeSpan.FromSeconds(5)), Topics = new[] { topicPackage } };
+                //var message2 = new Message { Key = Encoding.UTF8.GetBytes("2"), Value = Encoding.UTF8.GetBytes("Вышел зайчик погулять") };
+                //var messageSet0 = CreateMessageSet(new[] { message0 }, MessageCodec.CodecNone);
+                //var messageSet1 = CreateMessageSet(new[] { message1, message2 }, MessageCodec.CodecNone);
+                //var partitionPackage0 = new ProduceRequestTopicPartition { PartitionId = partitionIds[0], MessageSet = messageSet0 };
+                //var partitionPackage1 = new ProduceRequestTopicPartition { PartitionId = partitionIds[1], MessageSet = messageSet1 };
+                //var topicPackage = new ProduceRequestTopic { TopicName = testTopicName, Partitions = new[] { partitionPackage0, partitionPackage1 } };
+                //var produceRequest = new ProduceRequest { AckMode = AckMode.WrittenToLeader, Timeout = new KafkaTimeout(TimeSpan.FromSeconds(5)), Topics = new[] { topicPackage } };
                 //Send(stream, PackProduceRequest(produceRequest));
                 //var produceResponse = UnpackProduceResponse(Receive(stream));                   
 
@@ -1108,80 +1110,83 @@ namespace NKafka.DevConsole
                 Send(stream, PackGroupCoordinatorRequest(groupCoordinatorRequest));
                 var groupCoordinatorResponse = UnpackGroupCoordinatorResponse(Receive(stream));
 
-                var offsetRequestTopicPartition = new OffsetRequestTopicPartition { PartitionId = partitionId, Time = OffsetTime.TheLatest, MaxNumberOfOffsets = 1000 };
-                var offsetRequestTopic = new OffsetRequestTopic { TopicName = testTopicName, Partitions = new[] { offsetRequestTopicPartition } };
+                var offsetRequestTopicPartition0 = new OffsetRequestTopicPartition { PartitionId = partitionIds[0], Time = OffsetTime.TheLatest, MaxNumberOfOffsets = 1000 };
+                var offsetRequestTopicPartition1 = new OffsetRequestTopicPartition { PartitionId = partitionIds[1], Time = OffsetTime.TheLatest, MaxNumberOfOffsets = 1000 };
+                var offsetRequestTopic = new OffsetRequestTopic { TopicName = testTopicName, Partitions = new[] { offsetRequestTopicPartition0, offsetRequestTopicPartition1 } };
                 var offsetRequest = new OffsetRequest { Topics = new[] { offsetRequestTopic } };
                 Send(stream, PackOffsetRequest(offsetRequest));
                 var offsetResponse = UnpackOffsetResponse(Receive(stream));
-                var offset = offsetResponse.Topics[0].Partitions[0].Offsets.Min();
+                var offset0 = offsetResponse.Topics[0].Partitions[0].Offsets.Min();
+                var offset1 = offsetResponse.Topics[0].Partitions[1].Offsets.Min();
 
-                var joinGroupRequest = new JoinGroupRequest
-                {
-                    GroupId = groupId,
-                    MemberId = "",
-                    SessionTimeout = new KafkaTimeout(TimeSpan.FromSeconds(30)),                    
-                    Protocols = new []
-                    {
-                        new JoinGroupRequestProtocol
-                        {
-                            ProtocolName = "my_consuming",
-                            Version = 1,
-                            TopicNames = new [] { testTopicName },
-                            AssignmentStrategies = new []
-                            {
-                                PartitionAssignmentStrategy.Range.ToString().ToLower(),
-                                PartitionAssignmentStrategy.RoundRobin.ToString().ToLower()                                
-                            },
-                            CustomData = Encoding.UTF8.GetBytes("data=100")                       
-                        }
-                    }
-                };
-                Send(stream, PackJoinGroupRequest(joinGroupRequest));
-                var joinGroupResponse = UnpackJoinGroupResponse(Receive(stream));
-                var groupGenerationId = joinGroupResponse.GroupGenerationId;
-                var memberId = joinGroupResponse.MemberId;
+                //var joinGroupRequest = new JoinGroupRequest
+                //{
+                //    GroupId = groupId,
+                //    MemberId = "",
+                //    SessionTimeout = new KafkaTimeout(TimeSpan.FromSeconds(30)),                    
+                //    Protocols = new []
+                //    {
+                //        new JoinGroupRequestProtocol
+                //        {
+                //            ProtocolName = "my_consuming",
+                //            Version = 1,
+                //            TopicNames = new [] { testTopicName },
+                //            AssignmentStrategies = new []
+                //            {
+                //                PartitionAssignmentStrategy.Range.ToString().ToLower(),
+                //                PartitionAssignmentStrategy.RoundRobin.ToString().ToLower()                                
+                //            },
+                //            CustomData = Encoding.UTF8.GetBytes("data=100")                       
+                //        }
+                //    }
+                //};
+                //Send(stream, PackJoinGroupRequest(joinGroupRequest));
+                //var joinGroupResponse = UnpackJoinGroupResponse(Receive(stream));
+                //var groupGenerationId = joinGroupResponse.GroupGenerationId;
+                //var memberId = joinGroupResponse.MemberId;
 
-                var syncGroupRequest = new SyncGroupRequest
-                {
-                    GroupId = groupId,
-                    GroupGenerationId = groupGenerationId,
-                    MemberId = memberId,
-                    Members = new[]
-                    {
-                        new SyncGroupRequestMember
-                        {
-                            MemberId = memberId,
-                            AssignedTopics = new[]
-                            {
-                                new SyncGroupRequestMemberTopic
-                                {
-                                    TopicName = testTopicName,
-                                    PartitionIds = partitionIds
-                                }
-                            }
-                        }
-                    }
-                };
-                Send(stream, PackSyncGroupReuest(syncGroupRequest));
-                var syncGroupResponse = UnpackSyncGroupResponse(Receive(stream));
+                //var syncGroupRequest = new SyncGroupRequest
+                //{
+                //    GroupId = groupId,
+                //    GroupGenerationId = groupGenerationId,
+                //    MemberId = memberId,
+                //    Members = new[]
+                //    {
+                //        new SyncGroupRequestMember
+                //        {
+                //            MemberId = memberId,
+                //            AssignedTopics = new[]
+                //            {
+                //                new SyncGroupRequestMemberTopic
+                //                {
+                //                    TopicName = testTopicName,
+                //                    PartitionIds = partitionIds
+                //                }
+                //            }
+                //        }
+                //    }
+                //};
+                //Send(stream, PackSyncGroupReuest(syncGroupRequest));
+                //var syncGroupResponse = UnpackSyncGroupResponse(Receive(stream));
 
-                var heartbeatRequest = new HeartbeatRequest
-                {
-                    GroupId = groupId,
-                    GroupGenerationId = groupGenerationId,
-                    MemberId = memberId,
-                };
-                Send(stream, PackHeartbeatReuest(heartbeatRequest));
-                var heartbeatResponse = UnpackHeartbeatResponse(Receive(stream));
+                //var heartbeatRequest = new HeartbeatRequest
+                //{
+                //    GroupId = groupId,
+                //    GroupGenerationId = groupGenerationId,
+                //    MemberId = memberId,
+                //};
+                //Send(stream, PackHeartbeatReuest(heartbeatRequest));
+                //var heartbeatResponse = UnpackHeartbeatResponse(Receive(stream));
 
-                var offsetFetchRequestTopic = new OffsetFetchRequestTopic { TopicName = testTopicName, PartitionIds = new[] { partitionId } };
-                var offsetFetchRequest = new OffsetFetchRequest { GroupId = groupId, Topics = new[] { offsetFetchRequestTopic } };
-                Send(stream, PackOffsetFetchRequest(offsetFetchRequest));
-                var offsetFetchResponse = UnpackOffsetFetchResponse(Receive(stream));
-                offset = Math.Max(offset, offsetFetchResponse.Topics[0].Partitions[0].Offset + 1);
+                //var offsetFetchRequestTopic = new OffsetFetchRequestTopic { TopicName = testTopicName, PartitionIds = new[] { partitionId } };
+                //var offsetFetchRequest = new OffsetFetchRequest { GroupId = groupId, Topics = new[] { offsetFetchRequestTopic } };
+                //Send(stream, PackOffsetFetchRequest(offsetFetchRequest));
+                //var offsetFetchResponse = UnpackOffsetFetchResponse(Receive(stream));
+                //offset = Math.Max(offset, offsetFetchResponse.Topics[0].Partitions[0].Offset + 1);
 
-                var fetchRequestTopicPartition = new FetchRequestTopicPartition { PartitionId = partitionId, FetchOffset = offset, MaxBytes = 100000 };
-                var fetchRequestTopic = new FetchRequestTopic { TopicName = testTopicName, Partitions = new[] { fetchRequestTopicPartition } };
+                var fetchRequestTopicPartition0 = new FetchRequestTopicPartition { PartitionId = partitionIds[0], FetchOffset = offset0, MaxBytes = 100000 };
+                var fetchRequestTopicPartition1 = new FetchRequestTopicPartition { PartitionId = partitionIds[1], FetchOffset = offset1, MaxBytes = 100000 };
+                var fetchRequestTopic = new FetchRequestTopic { TopicName = testTopicName, Partitions = new[] { fetchRequestTopicPartition0, fetchRequestTopicPartition1 } };
                 var fetchRequest = new FetchRequest { ReplicaId = ReplicaId.AnyReplica, MaxWaitTimeMs = 10000, MinBytes = 1, Topics = new[] { fetchRequestTopic } };
                 Send(stream, PackFetchRequest(fetchRequest));
                 var fetchResponse = UnpackFetchResponse(Receive(stream));
@@ -1189,29 +1194,36 @@ namespace NKafka.DevConsole
                 long? maxOffset = null;
                 foreach (var message in fetchResponse.Topics[0].Partitions[0].MessageSet.Messages)
                 {
-                    var text = Encoding.UTF8.GetString(message.Message.Value);
+                    var text = string.Format("{0}: {1}", message.Offset, Encoding.UTF8.GetString(message.Message.Value));
                     maxOffset = message.Offset;
                     Console.WriteLine(text);
                 }
 
-                if (maxOffset.HasValue)
+                foreach (var message in fetchResponse.Topics[0].Partitions[1].MessageSet.Messages)
                 {
-                    var offsetCommitRequestTopicPartition = new OffsetCommitRequestTopicPartition { PartitionId = partitionId, Offset = maxOffset.Value, Metadata = "test" };
-                    var offsetCommitRequestTopic = new OffsetCommitRequestTopic { TopicName = testTopicName, Partitions = new[] { offsetCommitRequestTopicPartition } };
-                    var offsetCommitRequest = new OffsetCommitRequest
-                    {
-                        GroupId = groupId,
-                        GroupGenerationId = groupGenerationId,
-                        MemberId = memberId,                        
-                        Topics = new[] {offsetCommitRequestTopic}
-                    };
-                    Send(stream, PackOffsetCommitRequestV2(offsetCommitRequest));
-                    var offsetCommitResponse = UnpackOffsetCommitResponse(Receive(stream));
+                    var text = string.Format("{0}: {1}", message.Offset, Encoding.UTF8.GetString(message.Message.Value));
+                    maxOffset = message.Offset;
+                    Console.WriteLine(text);
                 }
-                
-                var leaveGroupRequest = new LeaveGroupRequest { GroupId = groupId, MemberId = memberId};
-                Send(stream, PackLeaveGroupRequest(leaveGroupRequest));
-                var liveGroupResponse = UnpackLeaveGroupResponse(Receive(stream));                
+
+                //if (maxOffset.HasValue)
+                //{
+                //    var offsetCommitRequestTopicPartition = new OffsetCommitRequestTopicPartition { PartitionId = partitionId, Offset = maxOffset.Value, Metadata = "test" };
+                //    var offsetCommitRequestTopic = new OffsetCommitRequestTopic { TopicName = testTopicName, Partitions = new[] { offsetCommitRequestTopicPartition } };
+                //    var offsetCommitRequest = new OffsetCommitRequest
+                //    {
+                //        GroupId = groupId,
+                //        GroupGenerationId = groupGenerationId,
+                //        MemberId = memberId,                        
+                //        Topics = new[] {offsetCommitRequestTopic}
+                //    };
+                //    Send(stream, PackOffsetCommitRequestV2(offsetCommitRequest));
+                //    var offsetCommitResponse = UnpackOffsetCommitResponse(Receive(stream));
+                //}
+
+                //var leaveGroupRequest = new LeaveGroupRequest { GroupId = groupId, MemberId = memberId};
+                //Send(stream, PackLeaveGroupRequest(leaveGroupRequest));
+                //var liveGroupResponse = UnpackLeaveGroupResponse(Receive(stream));
 
                 tcpClient.Close();
             }
