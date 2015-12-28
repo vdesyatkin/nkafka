@@ -15,8 +15,10 @@ namespace NKafka.Client.Consumer.Internal
 
         [NotNull]
         private readonly IKafkaConsumerMessageQueue _messageQueue;
+        
+        public KafkaConsumerBrokerPartitionStatus Status;
 
-        public bool NeedRearrange;
+        public int? OffsetRequestId;
 
         private long _lastEnqueuedOffset;
         private long _lastCommittedOffsetRequired;
@@ -48,6 +50,20 @@ namespace NKafka.Client.Consumer.Internal
             {
                 Interlocked.CompareExchange(ref _lastCommittedOffsetRequired, offset, _lastCommittedOffsetRequired);
             }
+        }
+
+        public void InitOffsets(long initialOffset)
+        {
+            _lastEnqueuedOffset = initialOffset;
+            _lastCommittedOffsetRequired = initialOffset;
+            _lastCommittedOffset = initialOffset;
+        }
+
+        public void Reset()
+        {
+            OffsetRequestId = null;            
+            Status = KafkaConsumerBrokerPartitionStatus.NotInitialized;
+            InitOffsets(-1);
         }
     }
 }

@@ -42,6 +42,7 @@
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerMessageQueue.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBroker.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerPartition.cs" />
+    <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerPartitionStatus.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicPartition.cs" />

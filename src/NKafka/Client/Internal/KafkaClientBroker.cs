@@ -66,10 +66,21 @@ namespace NKafka.Client.Internal
 
                     if (partition.Status == KafkaClientBrokerPartitionStatus.Unplugged)
                     {
-                        partition.Status = KafkaClientBrokerPartitionStatus.Plugged;
-                    }
+                        if (partition.Producer != null)
+                        {
+                            _producer?.AddTopicPartition(partition.TopicName, partition.Producer);
+                        }
 
-                    if (partition.Producer?.NeedRearrange == true || partition.Consumer?.NeedRearrange == true)
+                        if (partition.Consumer != null)
+                        {
+                            _consumer?.AddTopicPartition(partition.TopicName, partition.Consumer);
+                        }
+                        
+                        partition.Status = KafkaClientBrokerPartitionStatus.Plugged;            
+                    }                   
+
+                    if (partition.Producer?.NeedRearrange == true || 
+                        partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.NeedRearrage)
                     {
                         partition.Status = KafkaClientBrokerPartitionStatus.NeedRearrange;
                     }
@@ -106,18 +117,10 @@ namespace NKafka.Client.Internal
                 topic = _topics.AddOrUpdate(topicName, new KafkaClientBrokerTopic(topicName), (oldKey, oldValue) => oldValue);
             }
 
-            topic.Partitions[topicPartition.PartitionId] = topicPartition;
-
-            if (topicPartition.Producer != null)
-            {
-                _producer?.AddTopicPartition(topicName, topicPartition.Producer);
-            }
-
-            if (topicPartition.Consumer != null)
-            {
-                _consumer?.AddTopicPartition(topicName, topicPartition.Consumer);
-            }
+            topic.Partitions[topicPartition.PartitionId] = topicPartition;            
         }
+
+        #region Topic metadata
 
         public KafkaBrokerResult<int?> RequestTopicMetadata([NotNull] string topicName)
         {           
@@ -162,5 +165,8 @@ namespace NKafka.Client.Internal
 
             return new KafkaTopicMetadata(responseTopic.TopicName, brokers, partitions);
         }
+
+        #endregion Topic metadata
+        
     }
 }
