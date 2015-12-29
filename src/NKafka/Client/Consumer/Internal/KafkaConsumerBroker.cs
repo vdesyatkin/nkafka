@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Connection;
 using NKafka.Protocol;
+using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.Offset;
 
 namespace NKafka.Client.Consumer.Internal
@@ -10,14 +12,16 @@ namespace NKafka.Client.Consumer.Internal
     internal sealed class KafkaConsumerBroker
     {
         [NotNull] private readonly KafkaBroker _broker;
-        [NotNull] private readonly ConcurrentDictionary<string, KafkaConsumerBrokerTopic> _topics;      
-        
+        [NotNull] private readonly ConcurrentDictionary<string, KafkaConsumerBrokerTopic> _topics;
+        [NotNull] private readonly Dictionary<string, FetchRequestInfo> _fetchRequests;
+
         private readonly TimeSpan _consumeClientTimeout;
 
         public KafkaConsumerBroker([NotNull] KafkaBroker broker, TimeSpan consumePeriod)
         {
             _broker = broker;
-            _topics = new ConcurrentDictionary<string, KafkaConsumerBrokerTopic>();            
+            _topics = new ConcurrentDictionary<string, KafkaConsumerBrokerTopic>();         
+            _fetchRequests = new Dictionary<string, FetchRequestInfo>();   
             _consumeClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;
         }
 
@@ -51,21 +55,56 @@ namespace NKafka.Client.Consumer.Internal
             {
                 var topic = topicPair.Value;
 
-                foreach (var partitionPair in topic.Partitions)
-                {
-                    var partition = partitionPair.Value;
-
-                    var isPartitionReady = TryPreparePartition(partition);
-                    if (!isPartitionReady)
-                    {
-                        continue;
-                    }
-
-                    //todo (C005) use partition for fetch request
-                }
+                ConsumeTopic(topic);
             }
         }
 
+        private void ConsumeTopic([NotNull] KafkaConsumerBrokerTopic topic)
+        {
+            var oldFetchBatch = new Dictionary<int, long>();
+            var newFetchBatch = new Dictionary<int, long>();
+
+            // process requests that have already sent
+            FetchRequestInfo currentRequest;
+            if (_fetchRequests.TryGetValue(topic.TopicName, out currentRequest))
+            {
+                var response = _broker.Receive<KafkaFetchResponse>(currentRequest.RequestId);
+                if (!response.HasData && !response.HasError) // has not received
+                {
+                    oldFetchBatch = currentRequest.PartitionOffsets;
+                }
+                else
+                {
+                    ProcessFetchResponse(topic, response);
+                    _fetchRequests.Remove(topic.TopicName);
+                }
+            }
+
+            // prepare new fetch batch
+            foreach (var partitionPair in topic.Partitions)
+            {
+                var partitionId = partitionPair.Key;
+                var partition = partitionPair.Value;
+
+                if (oldFetchBatch.ContainsKey(partitionId)) continue;                
+                if (!TryPreparePartition(partition)) continue;                
+
+                newFetchBatch[partitionId] = partition.CurrentOffset;                
+            }
+            if (newFetchBatch.Count == 0) return;
+
+            //send new fetch batch
+            var fetchRequest = CreateFetchRequest(topic, newFetchBatch);
+            var fetchResult = _broker.Send(fetchRequest, _consumeClientTimeout + topic.Settings.ConsumeServerWaitTime);
+            if (fetchResult.HasData)
+            {
+                var fetchRequestId = fetchResult.Data;
+                if (fetchRequestId.HasValue)
+                {
+                    _fetchRequests[topic.TopicName] = new FetchRequestInfo(fetchRequestId.Value, newFetchBatch);
+                }
+            }
+        }
 
         private bool TryPreparePartition([NotNull] KafkaConsumerBrokerPartition partition)
         {
@@ -120,9 +159,60 @@ namespace NKafka.Client.Consumer.Internal
             return false;
         }
 
+        private void ProcessFetchResponse([NotNull] KafkaConsumerBrokerTopic topic,
+            KafkaBrokerResult<KafkaFetchResponse> response)
+        {
+            if (!response.HasData && !response.HasError) return;
+
+            if (response.HasError)
+            {
+                //todo (E009)
+                return;
+            }
+
+            var responseTopics = response.Data?.Topics;
+            if (responseTopics == null) return;
+
+            foreach (var responseTopic in responseTopics)
+            {
+                var topicName = responseTopic?.TopicName;
+                if (topicName != topic.TopicName) continue;
+
+                var responsePartitions = responseTopic.Partitions;
+                if (responsePartitions == null) continue;
+
+                foreach (var partitionResponse in responsePartitions)
+                {
+                    if (partitionResponse == null) continue;
+                    var partitionId = partitionResponse.PartitionId;                    
+
+                    KafkaConsumerBrokerPartition partition;
+                    if (!topic.Partitions.TryGetValue(partitionId, out partition))
+                    {
+                        continue;
+                    }
+
+                    var errorCode = partitionResponse.ErrorCode;
+
+                    //todo (E009)
+                    if (errorCode == KafkaResponseErrorCode.NotLeaderForPartition)
+                    {
+                        partition.Status = KafkaConsumerBrokerPartitionStatus.NeedRearrage;                        
+                        continue;
+                    }
+
+                    if (errorCode == KafkaResponseErrorCode.NoError)
+                    {
+                        partition.EnqueueMessages(partitionResponse.Messages);
+                    }
+                }
+            }
+        }
+
         #region Topic offsets
 
-        private KafkaBrokerResult<int?> RequestOffsets([NotNull] string topicName, int partitionId)
+            private
+            KafkaBrokerResult<int?> RequestOffsets([NotNull] string topicName, int partitionId)
         {
             var partitionRequest = new KafkaOffsetRequestTopicPartition(partitionId, null, 1000); // 1000 is overkill, in fact there will be 2 items.
             var topicRequest = new KafkaOffsetRequestTopic(topicName, new [] { partitionRequest });
@@ -178,5 +268,37 @@ namespace NKafka.Client.Consumer.Internal
         }
 
         #endregion Topic offsets
+
+        #region Fetch
+
+        private KafkaFetchRequest CreateFetchRequest([NotNull] KafkaConsumerBrokerTopic topic,
+            [NotNull] Dictionary<int, long> partitionBatch)
+        {
+            var partitionRequests = new List<KafkaFetchRequestTopicPartition>(partitionBatch.Count);
+            foreach (var paritionPair in partitionBatch)
+            {
+                var partitionId = paritionPair.Key;
+                var patitionOffset = paritionPair.Value;
+                partitionRequests.Add(new KafkaFetchRequestTopicPartition(partitionId, patitionOffset, topic.Settings.ConsumeBatchMaxSizeBytes));
+            }
+            var topicRequest = new KafkaFetchRequestTopic(topic.TopicName, partitionRequests);
+            var fetchRequest = new KafkaFetchRequest(topic.Settings.ConsumeServerWaitTime, topic.Settings.ConsumeBatchMinSizeBytes, new [] { topicRequest});
+            return fetchRequest;
+        }
+
+        private class FetchRequestInfo
+        {
+            public readonly int RequestId;
+            [NotNull]
+            public readonly Dictionary<int, long> PartitionOffsets;
+
+            public FetchRequestInfo(int requsetId, Dictionary<int, long> partitionOffsets)
+            {
+                RequestId = requsetId;
+                PartitionOffsets = partitionOffsets;
+            }
+        }
+
+        #endregion Fetch        
     }
 }

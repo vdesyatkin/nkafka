@@ -1,5 +1,8 @@
-﻿namespace NKafka.Connection
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Connection
 {
+    [PublicAPI]
     internal struct KafkaBrokerResult<TData>
     {
         public readonly bool HasData;        

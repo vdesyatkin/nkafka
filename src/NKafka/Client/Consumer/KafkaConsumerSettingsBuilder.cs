@@ -7,7 +7,8 @@ namespace NKafka.Client.Consumer
     public sealed class KafkaConsumerSettingsBuilder
     {        
         private int? _consumeBatchMinSizeBytes;
-        private TimeSpan? _consumeTimeout;        
+        private int? _consumeBatchMaxSizeBytes;
+        private TimeSpan? _consumeServerWaitTime;        
 
         [PublicAPI]
         public KafkaConsumerSettingsBuilder SetBatchByteMinSizeBytes(int batchMinSizeBytes)
@@ -17,20 +18,29 @@ namespace NKafka.Client.Consumer
         }
 
         [PublicAPI]
-        public KafkaConsumerSettingsBuilder SetConsumeServerTimeout(TimeSpan timeout)
+        public KafkaConsumerSettingsBuilder SetBatchByteMaxSizeBytes(int batchMaxSizeBytes)
         {
-            _consumeTimeout = timeout;
+            _consumeBatchMaxSizeBytes = batchMaxSizeBytes;
+            return this;
+        }
+
+        [PublicAPI]
+        public KafkaConsumerSettingsBuilder SetConsumeServerTimeout(TimeSpan waitTime)
+        {
+            _consumeServerWaitTime = waitTime;
             return this;
         }
 
         public KafkaConsumerSettings Build()
         {            
-            var batchMinSizeBytes = _consumeBatchMinSizeBytes ?? 200 * 200;
-            var consumeTimeout = _consumeTimeout ?? TimeSpan.Zero;
+            var batchMinSizeBytes = _consumeBatchMinSizeBytes ?? 0;
+            var batchMaxSizeBytes = _consumeBatchMaxSizeBytes ?? 200 * 200;
+            var consumerServerWaitTime = _consumeServerWaitTime ?? TimeSpan.Zero;
 
             return new KafkaConsumerSettings(                
                 batchMinSizeBytes,
-                consumeTimeout);
+                batchMaxSizeBytes,
+                consumerServerWaitTime);
         }
     }
 }

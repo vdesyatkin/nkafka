@@ -1,5 +1,8 @@
-﻿namespace NKafka.Metadata
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Metadata
 {
+    [PublicAPI]
     internal sealed class KafkaTopicPartitionMetadata
     {
         public readonly int PartitionId;

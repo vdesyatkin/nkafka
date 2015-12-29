@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 
 namespace NKafka.Metadata
 {
+    [PublicAPI]
     internal sealed class KafkaTopicMetadata
     {
         [NotNull]

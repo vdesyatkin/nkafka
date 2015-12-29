@@ -16,17 +16,18 @@ namespace NKafka.Client.Consumer.Internal
         [PublicAPI, NotNull]
         public readonly KafkaConsumerSettings Settings;
 
+        [PublicAPI]
+        public KafkaConsumerBrokerPartitionStatus Status;
+
+        public long CurrentOffset => _lastEnqueuedOffset;
+
         [NotNull]
         private readonly IKafkaConsumerMessageQueue _messageQueue;
         
-        public KafkaConsumerBrokerPartitionStatus Status;
-
         public int? OffsetRequestId;
 
         private long _lastEnqueuedOffset;
         private long _lastCommittedOffsetRequired;
-        private long _lastCommittedOffset;
-
 
         public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaConsumerSettings settings, [NotNull] IKafkaConsumerMessageQueue messageQueue)
         {
@@ -36,8 +37,12 @@ namespace NKafka.Client.Consumer.Internal
             _messageQueue = messageQueue;
         }
 
-        public void EnqueueMessages([NotNull, ItemNotNull] IReadOnlyList<KafkaMessageAndOffset> messages)
+        public void EnqueueMessages(IReadOnlyList<KafkaMessageAndOffset> messages)
         {
+            if (messages == null) return;
+            if (messages.Count == 0) return;
+            _lastEnqueuedOffset = messages[messages.Count - 1].Offset;
+
             try
             {
                 _messageQueue.Enqueue(messages);
@@ -59,8 +64,7 @@ namespace NKafka.Client.Consumer.Internal
         public void InitOffsets(long initialOffset)
         {
             _lastEnqueuedOffset = initialOffset;
-            _lastCommittedOffsetRequired = initialOffset;
-            _lastCommittedOffset = initialOffset;
+            _lastCommittedOffsetRequired = initialOffset;            
         }
 
         public void Reset()

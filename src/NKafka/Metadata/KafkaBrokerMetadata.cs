@@ -1,5 +1,8 @@
-﻿namespace NKafka.Metadata
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Metadata
 {
+    [PublicAPI]
     public class KafkaBrokerMetadata
     {
         public readonly int BrokerId;

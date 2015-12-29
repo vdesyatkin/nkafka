@@ -8,6 +8,7 @@ using NKafka.Client.Producer.Internal;
 
 namespace NKafka.Client
 {
+    [PublicAPI]
     public class KafkaClientBuilder
     {
         [NotNull, ItemNotNull] private readonly List<KafkaProducerTopic> _topicProducers;
@@ -21,8 +22,7 @@ namespace NKafka.Client
             // ReSharper disable once ConstantNullCoalescingCondition
             _settings = settings ?? new KafkaClientSettingsBuilder(null).Build();
         }
-
-        [PublicAPI]
+        
         public IKafkaProducerTopic CreateTopicProducer([NotNull] string topicName, 
             [NotNull] KafkaProducerSettings settings,
             [NotNull] IKafkaProducerPartitioner partitioner)
@@ -39,8 +39,7 @@ namespace NKafka.Client
             _topicProducers.Add(topic);            
             return topicBuffer;
         }
-
-        [PublicAPI]
+        
         public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,
            [NotNull] KafkaProducerSettings settings,
            [NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
@@ -58,8 +57,7 @@ namespace NKafka.Client
             _topicProducers.Add(topic);
             return topicBuffer;
         }
-
-        [PublicAPI]
+        
         public IKafkaConsumerTopic CreateTopicConsumer([NotNull] string topicName, 
             [NotNull] KafkaConsumerSettings settings)
         {
@@ -74,8 +72,7 @@ namespace NKafka.Client
             _topicConsumers.Add(topic);
             return topic;
         }
-
-        [PublicAPI]
+        
         public IKafkaConsumerTopic<TKey,TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName,
            [NotNull] KafkaConsumerSettings settings,
            [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer)
@@ -93,7 +90,7 @@ namespace NKafka.Client
             return wrapper;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public IKafkaClient Build()
         {            
             var topicNames = new HashSet<string>();
