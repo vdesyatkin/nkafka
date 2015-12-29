@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NKafka.Protocol.API.Produce
 {
     /// <summary>
     /// The produce API is used to send message sets to the server. For efficiency it allows sending message sets intended for many topic partitions in a single request.
     /// </summary>
+    [PublicAPI]
     internal sealed class KafkaProduceRequest : IKafkaRequest
     {
         /// <summary>

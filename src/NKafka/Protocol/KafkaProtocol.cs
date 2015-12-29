@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.Offset;
 using NKafka.Protocol.API.Produce;
 using NKafka.Protocol.API.TopicMetadata;
@@ -29,10 +30,7 @@ namespace NKafka.Protocol
         {
             // ReSharper disable HeuristicUnreachableCode
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse            
-            if (request == null)
-            {
-                return null;
-            }
+            if (request == null) return null;            
             // ReSharper enable HeuristicUnreachableCode
 
             KafkaRequestConfiguration requestConfiguration;
@@ -59,12 +57,10 @@ namespace NKafka.Protocol
         }
 
         [CanBeNull]
-        public KafkaResponseHeader ReadResponseHeader([NotNull] byte[] data, int offset, int count)
-        {
-            // ReSharper disable HeuristicUnreachableCode
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse            
-            if (data == null)
-            {
+        public KafkaResponseHeader ReadResponseHeader(byte[] data, int offset, int count)
+        {            
+            if (data == null)                
+            {                       
                 return null;
             }
             if (offset < 0 || offset >= data.Length)
@@ -74,8 +70,7 @@ namespace NKafka.Protocol
             if (count < 1 || count > (data.Length - offset))
             {
                 return null;
-            }
-            // ReSharper enable HeuristicUnreachableCode
+            }         
 
             using (var reader = new KafkaBinaryReader(data, offset, count))
             {
@@ -91,9 +86,8 @@ namespace NKafka.Protocol
         }
 
         [CanBeNull]
-        public IKafkaResponse ReadResponse([NotNull] IKafkaRequest request, [NotNull] byte[] data, int offset, int count)
-        {
-            // ReSharper disable HeuristicUnreachableCode
+        public IKafkaResponse ReadResponse([NotNull] IKafkaRequest request, byte[] data, int offset, int count)
+        {            
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse            
             if (request == null || data == null)
             {
@@ -106,8 +100,7 @@ namespace NKafka.Protocol
             if (count < 1 || count > (data.Length - offset))
             {
                 return null;
-            }
-            // ReSharper enable HeuristicUnreachableCode
+            }            
 
             KafkaRequestConfiguration requestConfiguration;
             if (!_configuration.Requests.TryGetValue(request.GetType(), out requestConfiguration))
@@ -205,6 +198,9 @@ namespace NKafka.Protocol
                 case KafkaRequestType.Offset:
                     return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaOffsetRequest),
                         KafkaOffsetApi.WriteRequest, KafkaOffsetApi.ReadResponse);
+                case KafkaRequestType.Fetch:
+                    return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaFetchRequest),
+                        KafkaFetchApi.WriteRequest, KafkaFetchApi.ReadResponse);
             }
             return null;
         }        
@@ -213,7 +209,7 @@ namespace NKafka.Protocol
         {
             public readonly KafkaRequestType RequestType;
             public readonly KafkaRequestVersion RequestVersion;
-            [NotNull] public Type RequestClassType;
+            [NotNull] public readonly Type RequestClassType;
             [NotNull] public readonly Action<KafkaBinaryWriter, IKafkaRequest> WriteRequestMethod;
             [NotNull] public readonly Func<KafkaBinaryReader, IKafkaResponse> ReadResponseMethod;
 

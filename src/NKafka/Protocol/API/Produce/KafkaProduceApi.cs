@@ -5,6 +5,7 @@ using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.Produce
 {
+    [PublicAPI]
     internal static class KafkaProduceApi
     {        
         const byte MessageMagicNumber = 0;
@@ -13,8 +14,7 @@ namespace NKafka.Protocol.API.Produce
         const byte MessageGZipAttribute = 0x00 | (MessageAttributeCodeMask & (byte)KafkaCodecType.CodecGzip);
 
         #region ProduceRequest
-
-        [PublicAPI]
+        
         public static void WriteRequest([NotNull] KafkaBinaryWriter writer, [NotNull] IKafkaRequest request)
         {
             WriteProduceRequest(writer, (KafkaProduceRequest)request);
@@ -113,6 +113,8 @@ namespace NKafka.Protocol.API.Produce
 
         private static KafkaProduceRequestTopicPartition ReadProduceRequestTopicPartition([NotNull] KafkaBinaryReader reader)
         {
+            // ReSharper disable UnusedVariable
+
             var partitionId = reader.ReadInt32();
 
             var messages = new List<KafkaMessage>();
@@ -167,6 +169,7 @@ namespace NKafka.Protocol.API.Produce
             }
 
             return new KafkaProduceRequestTopicPartition(partitionId, codec, messages);
+            // ReSharper enable UnusedVariable
         }
 
         #endregion ProduceRequest

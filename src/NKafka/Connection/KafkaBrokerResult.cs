@@ -10,7 +10,7 @@
 
         public bool HasError => Error != null;
 
-        public KafkaBrokerResult(bool hasData, TData data, KafkaBrokerErrorCode? error)
+        private KafkaBrokerResult(bool hasData, TData data, KafkaBrokerErrorCode? error)
         {
             Data = data;
             HasData = hasData;

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NKafka.Protocol.API.TopicMetadata
 {
@@ -19,7 +20,8 @@ namespace NKafka.Protocol.API.TopicMetadata
     /// </summary>
     /// <remarks>
     /// Note: If "auto.create.topics.enable" is set in the broker configuration, a topic metadata request will create the topic with the default replication factor and number of partitions.
-    /// </remarks>    
+    /// </remarks>   
+    [PublicAPI]
     internal sealed class KafkaTopicMetadataRequest : IKafkaRequest
     {
         /// <summary>

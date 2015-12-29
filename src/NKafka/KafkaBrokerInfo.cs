@@ -2,6 +2,7 @@
 
 namespace NKafka
 {
+    [PublicAPI]
     public sealed class KafkaBrokerInfo
     {
         public readonly string Host;

@@ -1,8 +1,11 @@
-﻿namespace NKafka.Protocol
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Protocol
 {
     /// <summary>
     /// Enumeration of error codes that might be returned from a Kafka server
     /// </summary>
+    [PublicAPI]
     internal enum KafkaResponseErrorCode : short
     {
         /// <summary>

@@ -3,11 +3,11 @@ using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.TopicMetadata
 {
+    [PublicAPI]
     internal static class KafkaTopicMetadataApi
     {
         #region TopicMetadataRequest
-
-        [PublicAPI]
+        
         public static void WriteRequest([NotNull] KafkaBinaryWriter writer, [NotNull] IKafkaRequest request)
         {
             WriteTopicMetadataRequest(writer, (KafkaTopicMetadataRequest)request);
@@ -17,8 +17,7 @@ namespace NKafka.Protocol.API.TopicMetadata
         {            
             writer.WriteCollection(request.TopicNames, writer.WriteString);
         }
-
-        [PublicAPI]
+       
         public static KafkaTopicMetadataRequest ReadRequest([NotNull] KafkaBinaryReader reader)
         {
             var topicNames = reader.ReadCollection(reader.ReadString);

@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 
 namespace NKafka.Connection
 {
+    [PublicAPI]
     public sealed class KafkaConnectionSettingsBuilder
     {
         private TimeSpan? _regularReconnectPeriod;

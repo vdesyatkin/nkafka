@@ -1,7 +1,9 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace NKafka.Connection
 {
+    [PublicAPI]
     public sealed class KafkaConnectionSettings
     {        
         public readonly TimeSpan RegularReconnectPeriod;

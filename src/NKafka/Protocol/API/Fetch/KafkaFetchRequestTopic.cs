@@ -1,22 +1,22 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace NKafka.Protocol.API.Offset
+namespace NKafka.Protocol.API.Fetch
 {
     [PublicAPI]
-    internal sealed class KafkaOffsetRequestTopic
+    internal sealed class KafkaFetchRequestTopic
     {
         /// <summary>
-        /// The topic name.
+        /// The name of the topic.
         /// </summary>
         public readonly string TopicName;
 
         /// <summary>
         /// Partitions.
         /// </summary>
-        public readonly IReadOnlyList<KafkaOffsetRequestTopicPartition> Partitions;
+        public readonly IReadOnlyList<KafkaFetchRequestTopicPartition> Partitions;
 
-        public KafkaOffsetRequestTopic(string topicName, IReadOnlyList<KafkaOffsetRequestTopicPartition> partitions)
+        public KafkaFetchRequestTopic(string topicName, IReadOnlyList<KafkaFetchRequestTopicPartition> partitions)
         {
             TopicName = topicName;
             Partitions = partitions;

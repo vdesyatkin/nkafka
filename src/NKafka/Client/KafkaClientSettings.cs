@@ -5,6 +5,7 @@ using NKafka.Connection;
 
 namespace NKafka.Client
 {
+    [PublicAPI]
     public sealed class KafkaClientSettings
     {
         public readonly KafkaVersion KafkaVersion;

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NKafka.Protocol.API.Produce
 {
+    [PublicAPI]
     internal sealed class KafkaProduceResponseTopic
     {
         /// <summary>

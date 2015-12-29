@@ -1,7 +1,9 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace NKafka.Client.Producer
 {
+    [PublicAPI]
     public sealed class KafkaProducerSettings
     {        
         public readonly KafkaConsistencyLevel ConsistencyLevel;

@@ -1,7 +1,9 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace NKafka.Protocol.API.Offset
 {
+    [PublicAPI]
     internal sealed class KafkaOffsetRequestTopicPartition
     {
         public readonly int PartitionId;

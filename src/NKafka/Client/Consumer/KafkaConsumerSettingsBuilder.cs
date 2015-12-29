@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 
 namespace NKafka.Client.Consumer
 {
+    [PublicAPI]
     public sealed class KafkaConsumerSettingsBuilder
     {        
         private int? _consumeBatchMinSizeBytes;

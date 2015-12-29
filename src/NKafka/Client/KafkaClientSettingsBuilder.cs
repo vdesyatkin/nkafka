@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using NKafka.Client.Consumer;
-using NKafka.Client.Producer;
 using NKafka.Connection;
 
 namespace NKafka.Client
 {
+    [PublicAPI]
     public sealed class KafkaClientSettingsBuilder
     {
         private KafkaVersion? _kafkaVersion;

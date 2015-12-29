@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NKafka.Protocol.API.Offset
 {
@@ -6,6 +7,7 @@ namespace NKafka.Protocol.API.Offset
     /// This API describes the valid offset range available for a set of topic-partitions. 
     /// As with the produce and fetch APIs requests must be directed to the broker that is currently the leader for the partitions in question. This can be determined using the metadata API.
     /// </summary>
+    [PublicAPI]
     internal sealed class KafkaOffsetRequest : IKafkaRequest
     {
         /// <summary>

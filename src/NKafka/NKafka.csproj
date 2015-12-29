@@ -36,7 +36,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client\Consumer\IKafkaConsumer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerMessageQueue.cs" />
@@ -62,7 +61,6 @@
     <Compile Include="Client\KafkaClientSettingsBuilder.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettings.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettingsBuilder.cs" />
-    <Compile Include="Client\Producer\IKafkaProducer.cs" />
     <Compile Include="Client\Producer\IKafkaProducerPartitioner.cs" />
     <Compile Include="Client\Producer\IKafkaProducerSerializer.cs" />
     <Compile Include="Client\Producer\IKafkaProducerTopic.cs" />
@@ -94,6 +92,13 @@
     <Compile Include="Metadata\KafkaTopicMetadata.cs" />
     <Compile Include="Metadata\KafkaTopicPartitionMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol\API\Fetch\KafkaFetchApi.cs" />
+    <Compile Include="Protocol\API\Fetch\KafkaFetchRequest.cs" />
+    <Compile Include="Protocol\API\Fetch\KafkaFetchRequestTopic.cs" />
+    <Compile Include="Protocol\API\Fetch\KafkaFetchRequestTopicPartition.cs" />
+    <Compile Include="Protocol\API\Fetch\KafkaFetchResponse.cs" />
+    <Compile Include="Protocol\API\Fetch\KafkaFetchResponseTopic.cs" />
+    <Compile Include="Protocol\API\Fetch\KafkaFetchResponseTopicPartition.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetApi.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetRequest.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetRequestTopic.cs" />

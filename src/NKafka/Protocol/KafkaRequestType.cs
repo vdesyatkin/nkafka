@@ -1,5 +1,8 @@
-﻿namespace NKafka.Protocol
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Protocol
 {
+    [PublicAPI]
     internal enum KafkaRequestType : short
     {
         Produce = 0,

@@ -1,8 +1,5 @@
-﻿using System;
-
-namespace NKafka.Protocol.Serialization
+﻿namespace NKafka.Protocol.Serialization
 {
-
     /// <summary>
     /// Implements a 32-bit CRC hash algorithm compatible with Zip etc.
     /// </summary>
@@ -15,35 +12,35 @@ namespace NKafka.Protocol.Serialization
     /// </remarks>
     internal static class KafkaCrc32
     {
-        public const UInt32 DefaultPolynomial = 0xedb88320u;
-        public const UInt32 DefaultSeed = 0xffffffffu;
+        private const uint DefaultPolynomial = 0xedb88320u;
+        private const uint DefaultSeed = 0xffffffffu;
 
-        static UInt32[] _defaultTable;
+        static readonly uint[] DefaultTable;
 
         static KafkaCrc32()
         {
-            _defaultTable = InitializeTable(DefaultPolynomial);
+            DefaultTable = InitializeTable(DefaultPolynomial);
         }
 
-        public static UInt32 Compute(byte[] buffer, long offset, long count)
+        public static uint Compute(byte[] buffer, long offset, long count)
         {
             var crc = DefaultSeed;
             for (var i = offset; i < offset + count; i++)
             {
                 unchecked
                 {
-                    crc = (crc >> 8) ^ _defaultTable[buffer[i] ^ crc & 0xff];
+                    crc = (crc >> 8) ^ DefaultTable[buffer[i] ^ crc & 0xff];
                 }
             }
             return ~crc;
         }
 
-        static UInt32[] InitializeTable(UInt32 polynomial)
+        static uint[] InitializeTable(uint polynomial)
         {            
-            var createTable = new UInt32[256];
+            var createTable = new uint[256];
             for (var i = 0; i < 256; i++)
             {
-                var entry = (UInt32)i;
+                var entry = (uint)i;
                 for (var j = 0; j < 8; j++)
                     if ((entry & 1) == 1)
                         entry = (entry >> 1) ^ polynomial;

@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 
 namespace NKafka.Client.Consumer
 {
+    [PublicAPI]
     public sealed class KafkaMessagePackage
     {
         public readonly int PackageNumber;
@@ -16,6 +17,7 @@ namespace NKafka.Client.Consumer
         }
     }
 
+    [PublicAPI]
     public sealed class KafkaMessagePackage<TKey, TData>
     {
         public readonly int PackageNumber;

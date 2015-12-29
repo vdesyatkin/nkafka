@@ -1,5 +1,8 @@
-﻿namespace NKafka
+﻿using JetBrains.Annotations;
+
+namespace NKafka
 {
+    [PublicAPI]
     public sealed class KafkaMessage
     {
         /// <summary>
@@ -19,6 +22,7 @@
         }
     }
 
+    [PublicAPI]
     public sealed class KafkaMessage<TKey, TData>
     {
         /// <summary>

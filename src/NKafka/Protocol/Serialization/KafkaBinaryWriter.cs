@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace NKafka.Protocol.Serialization
 {
+    [PublicAPI]
     internal class KafkaBinaryWriter : IDisposable
     {        
         private readonly MemoryStream _stream;

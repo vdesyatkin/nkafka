@@ -1,5 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.Offset
@@ -29,7 +28,7 @@ namespace NKafka.Protocol.API.Offset
         private static void WriteOffsetRequestTopicPartition([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaOffsetRequestTopicPartition partition)
         {
             writer.WriteInt32(partition.PartitionId);
-            writer.WriteNullableInt64(partition.Period != null ? (long)Math.Round(partition.Period.Value.TotalMilliseconds) : (long?)null);
+            writer.WriteNullableInt64(partition.Period != null ? (long)(partition.Period.Value.TotalMilliseconds) : (long?)null);
             writer.WriteInt32(partition.MaxNumberOfOffsets);
         }
 

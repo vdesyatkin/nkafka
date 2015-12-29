@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 
 namespace NKafka.Client.Producer
 {
+    [PublicAPI]
     public sealed class KafkaProducerSettingsBuilder
     {
         private KafkaConsistencyLevel? _consistencyLevel;

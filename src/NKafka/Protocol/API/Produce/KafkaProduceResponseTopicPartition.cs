@@ -1,5 +1,8 @@
-﻿namespace NKafka.Protocol.API.Produce
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Protocol.API.Produce
 {
+    [PublicAPI]
     internal sealed class KafkaProduceResponseTopicPartition
     {
         /// <summary>

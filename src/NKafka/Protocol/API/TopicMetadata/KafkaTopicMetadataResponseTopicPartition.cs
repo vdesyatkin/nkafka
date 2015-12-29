@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NKafka.Protocol.API.TopicMetadata
 {
     /// <summary>
     /// Topic partition metadata.
     /// </summary>
+    [PublicAPI]
     internal sealed class KafkaTopicMetadataResponseTopicPartition
     {
         /// <summary>

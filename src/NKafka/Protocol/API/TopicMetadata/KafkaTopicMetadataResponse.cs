@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NKafka.Protocol.API.TopicMetadata
 {
@@ -6,6 +7,7 @@ namespace NKafka.Protocol.API.TopicMetadata
     /// The response contains metadata for each partition, with partitions grouped together by topic.<br/>
     /// This metadata refers to brokers by their broker id. The brokers each have a host and port.
     /// </summary>
+    [PublicAPI]
     internal sealed class KafkaTopicMetadataResponse : IKafkaResponse
     {
         /// <summary>

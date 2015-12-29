@@ -65,10 +65,10 @@ namespace NKafka.Client
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
             // ReSharper disable ConstantNullCoalescingCondition
-            if (string.IsNullOrEmpty(topicName)) return null;                        
+            if (string.IsNullOrEmpty(topicName)) return null;            
             settings = settings ?? new KafkaConsumerSettingsBuilder().Build();
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
-            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+            // ReSharper restore ConstantNullCoalescingCondition
 
             var topic = new KafkaConsumerTopic(topicName, settings);
             _topicConsumers.Add(topic);
@@ -85,7 +85,7 @@ namespace NKafka.Client
             if (string.IsNullOrEmpty(topicName) || (serializer == null)) return null;
             settings = settings ?? new KafkaConsumerSettingsBuilder().Build();
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
-            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+            // ReSharper restore ConstantNullCoalescingCondition
 
             var topic = new KafkaConsumerTopic(topicName, settings);
             var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer);

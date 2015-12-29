@@ -1,8 +1,11 @@
-﻿namespace NKafka.Protocol.API.TopicMetadata
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Protocol.API.TopicMetadata
 {
     /// <summary>
     /// Topic broker metadata.
     /// </summary>
+    [PublicAPI]
     internal sealed class KafkaTopicMetadataResponseBroker
     {
         /// <summary>

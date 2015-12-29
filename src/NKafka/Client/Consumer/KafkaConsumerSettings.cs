@@ -1,7 +1,9 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace NKafka.Client.Consumer
 {
+    [PublicAPI]
     public sealed class KafkaConsumerSettings
     {        
         public readonly int ConsumeBatchMinSizeBytes;

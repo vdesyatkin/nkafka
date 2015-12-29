@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace NKafka.Protocol.Serialization
 {
+    [PublicAPI]
     internal class KafkaBinaryReader : IDisposable
     {
         private const int NullValue = -1;

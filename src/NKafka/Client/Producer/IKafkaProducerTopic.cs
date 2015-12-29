@@ -2,6 +2,7 @@
 
 namespace NKafka.Client.Producer
 {
+    [PublicAPI]
     public interface IKafkaProducerTopic
     {
         void EnqueueMessage([NotNull] KafkaMessage message);
@@ -9,6 +10,7 @@ namespace NKafka.Client.Producer
         void EnqueueMessage([NotNull] byte[] data);
     }
 
+    [PublicAPI]
     public interface IKafkaProducerTopic<TKey, TData>
     {
         void EnqueueMessage([NotNull] KafkaMessage<TKey, TData> message);
