@@ -11,7 +11,7 @@ namespace NKafka.Connection
         private TimeSpan? _transportLatency;
 
         [PublicAPI]
-        public KafkaConnectionSettingsBuilder SetReuglarReconnectPeriod(TimeSpan period)
+        public KafkaConnectionSettingsBuilder SetRegularReconnectPeriod(TimeSpan period)
         {
             _regularReconnectPeriod = period;
             return this;

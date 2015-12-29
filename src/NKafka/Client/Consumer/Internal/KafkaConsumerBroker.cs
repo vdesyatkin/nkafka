@@ -11,28 +11,14 @@ namespace NKafka.Client.Consumer.Internal
     {
         [NotNull] private readonly KafkaBroker _broker;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaConsumerBrokerTopic> _topics;      
-
-        private readonly int _batchMinSizeBytes;        
-        private readonly TimeSpan _consumeServerTimeout;
+        
         private readonly TimeSpan _consumeClientTimeout;
-        private readonly TimeSpan _offsetClientTimeout;
 
-        public KafkaConsumerBroker([NotNull] KafkaBroker broker, TimeSpan consumePeriod, [NotNull] KafkaConsumerSettings settings)
+        public KafkaConsumerBroker([NotNull] KafkaBroker broker, TimeSpan consumePeriod)
         {
             _broker = broker;
-            _topics = new ConcurrentDictionary<string, KafkaConsumerBrokerTopic>();
-            _batchMinSizeBytes = settings.ConsumeBatchMinSizeBytes;            
-            _consumeServerTimeout = settings.ConsumeServerTimeout;
-            if (_consumeServerTimeout < TimeSpan.Zero)
-            {
-                _consumeServerTimeout = TimeSpan.Zero; //todo (E006) settings server-side validation
-            }
-
-            _consumeClientTimeout = _consumeServerTimeout +
-                                   TimeSpan.FromMilliseconds(consumePeriod.TotalMilliseconds * 2) +
-                                   TimeSpan.FromSeconds(1);
-
-            _offsetClientTimeout = TimeSpan.FromMilliseconds(consumePeriod.TotalMilliseconds * 2) + TimeSpan.FromSeconds(1);
+            _topics = new ConcurrentDictionary<string, KafkaConsumerBrokerTopic>();            
+            _consumeClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;
         }
 
         public void AddTopicPartition([NotNull] string topicName, [NotNull] KafkaConsumerBrokerPartition topicPartition)
@@ -40,7 +26,7 @@ namespace NKafka.Client.Consumer.Internal
             KafkaConsumerBrokerTopic topic;
             if (!_topics.TryGetValue(topicName, out topic))
             {
-                topic = _topics.AddOrUpdate(topicName, new KafkaConsumerBrokerTopic(topicName), (oldKey, oldValue) => oldValue);
+                topic = _topics.AddOrUpdate(topicName, new KafkaConsumerBrokerTopic(topicName, topicPartition.Settings), (oldKey, oldValue) => oldValue);
             }
             topicPartition.Reset();            
 
@@ -140,7 +126,7 @@ namespace NKafka.Client.Consumer.Internal
         {
             var partitionRequest = new KafkaOffsetRequestTopicPartition(partitionId, null, 1000); // 1000 is overkill, in fact there will be 2 items.
             var topicRequest = new KafkaOffsetRequestTopic(topicName, new [] { partitionRequest });
-            return _broker.Send(new KafkaOffsetRequest(new[] { topicRequest }), _offsetClientTimeout);
+            return _broker.Send(new KafkaOffsetRequest(new[] { topicRequest }), _consumeClientTimeout);
         }
 
         private KafkaBrokerResult<KafkaOffsetResponse> GetOffsetsResponse(int requestId)

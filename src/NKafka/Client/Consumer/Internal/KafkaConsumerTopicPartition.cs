@@ -14,6 +14,9 @@ namespace NKafka.Client.Consumer.Internal
         public readonly int PartitonId;
 
         [PublicAPI, NotNull]
+        public readonly KafkaConsumerSettings Settings;
+
+        [PublicAPI, NotNull]
         public readonly KafkaConsumerBrokerPartition BrokerPartition;
 
         [PublicAPI]
@@ -22,11 +25,12 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentQueue<KafkaMessageAndOffset> _messageQueue;
         private int _enqueuedCount;
 
-        public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId)
+        public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaConsumerSettings settings)
         {
             TopicName = topicName;
-            PartitonId = partitionId;            
-            BrokerPartition = new KafkaConsumerBrokerPartition(TopicName, PartitonId, this);
+            PartitonId = partitionId;
+            Settings = settings;
+            BrokerPartition = new KafkaConsumerBrokerPartition(TopicName, PartitonId, settings, this);
             _messageQueue = new ConcurrentQueue<KafkaMessageAndOffset>();
         }
 

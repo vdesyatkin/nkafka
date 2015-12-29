@@ -13,6 +13,9 @@ namespace NKafka.Client.Consumer.Internal
         [PublicAPI]
         public readonly int PartitionId;
 
+        [PublicAPI, NotNull]
+        public readonly KafkaConsumerSettings Settings;
+
         [NotNull]
         private readonly IKafkaConsumerMessageQueue _messageQueue;
         
@@ -25,9 +28,10 @@ namespace NKafka.Client.Consumer.Internal
         private long _lastCommittedOffset;
 
 
-        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] IKafkaConsumerMessageQueue messageQueue)
+        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaConsumerSettings settings, [NotNull] IKafkaConsumerMessageQueue messageQueue)
         {
             TopicName = topicName;
+            Settings = settings;
             PartitionId = partitionId;
             _messageQueue = messageQueue;
         }

@@ -20,29 +20,22 @@ namespace NKafka.Client.Internal
         [CanBeNull] private readonly KafkaProducerBroker _producer;
         [CanBeNull] private readonly KafkaConsumerBroker _consumer;
 
-        private readonly TimeSpan _metadataClientTimeout;
+        private readonly TimeSpan _clientTimeout;
 
         public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaClientSettings settings, 
             bool hasProducer, bool hasConsumer)
         {
             _broker = broker;
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
-            _producer = hasProducer ? new KafkaProducerBroker(broker, settings.WorkerPeriod, settings.ProducerSettings) : null;
-            _consumer = hasConsumer ? new KafkaConsumerBroker(broker, settings.WorkerPeriod, settings.ConsumerSettings) : null;
-
-            var metadataServerTimeout = settings.ProducerSettings.ProduceServerTimeout; //todo (E006) separated property?
-            if (metadataServerTimeout < TimeSpan.Zero) //todo (E006) settings rage validation?
-            {
-                metadataServerTimeout = TimeSpan.Zero;
-            }
+            _producer = hasProducer ? new KafkaProducerBroker(broker, settings.WorkerPeriod) : null;
+            _consumer = hasConsumer ? new KafkaConsumerBroker(broker, settings.WorkerPeriod) : null;
+            
             var workerPeriod = settings.WorkerPeriod;
-            if (workerPeriod < TimeSpan.Zero) //todo (E006) settings rage validation?
+            if (workerPeriod < TimeSpan.FromMilliseconds(100)) //todo (E006) settings rage validation?
             {
-                workerPeriod = TimeSpan.Zero;                
+                workerPeriod = TimeSpan.FromMilliseconds(100);
             }
-            _metadataClientTimeout = metadataServerTimeout +
-                                    TimeSpan.FromMilliseconds(workerPeriod.TotalMilliseconds * 2) +
-                                    TimeSpan.FromSeconds(1);
+            _clientTimeout = workerPeriod + TimeSpan.FromSeconds(1) + workerPeriod;
         }
 
         public void Work()
@@ -124,7 +117,7 @@ namespace NKafka.Client.Internal
 
         public KafkaBrokerResult<int?> RequestTopicMetadata([NotNull] string topicName)
         {           
-            return _broker.Send(new KafkaTopicMetadataRequest(new[] { topicName }), _metadataClientTimeout);
+            return _broker.Send(new KafkaTopicMetadataRequest(new[] { topicName }), _clientTimeout);
         }
 
         public KafkaBrokerResult<KafkaTopicMetadata> GetTopicMetadata(int requestId)

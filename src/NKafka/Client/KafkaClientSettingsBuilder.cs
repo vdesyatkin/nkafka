@@ -16,16 +16,12 @@ namespace NKafka.Client
         private TimeSpan? _workerPeriod;
 
         [NotNull] private readonly List<KafkaBrokerInfo> _metadataBrokers;
-
-        [NotNull] public readonly KafkaProducerSettingsBuilder Producer;
-        [NotNull] public readonly KafkaConsumerSettingsBuilder Consumer;
+        
         [NotNull] public readonly KafkaConnectionSettingsBuilder Connection;        
 
         public KafkaClientSettingsBuilder([NotNull] KafkaBrokerInfo metadataBroker)
         {
             _metadataBrokers = new List<KafkaBrokerInfo> { metadataBroker };
-            Producer = new KafkaProducerSettingsBuilder();
-            Consumer = new KafkaConsumerSettingsBuilder();
             Connection = new KafkaConnectionSettingsBuilder();
         }
 
@@ -74,13 +70,11 @@ namespace NKafka.Client
             var workerThreadCount = _workerThreadCount ?? 0;
             var workerPeriod = _workerPeriod ?? TimeSpan.FromSeconds(1);
 
-            var connectionSettings = Connection.Build();
-            var producerSettings = Producer.Build();
-            var consumerSettings = Consumer.Build();
+            var connectionSettings = Connection.Build();            
 
             return new KafkaClientSettings(kafkaVersion, clientId, metadataBrokers, 
                 workerThreadCount, workerPeriod,
-                connectionSettings, producerSettings, consumerSettings);
+                connectionSettings);
         }        
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using NKafka.Client.Consumer;
-using NKafka.Client.Producer;
 using NKafka.Connection;
 
 namespace NKafka.Client
@@ -15,9 +13,7 @@ namespace NKafka.Client
         public readonly TimeSpan WorkerPeriod;
 
         public readonly IReadOnlyCollection<KafkaBrokerInfo> MetadataBrokers;
-
-        public readonly KafkaProducerSettings ProducerSettings;
-        public readonly KafkaConsumerSettings ConsumerSettings;        
+        
         public readonly KafkaConnectionSettings ConnectionSettings;
 
         public KafkaClientSettings(
@@ -28,9 +24,7 @@ namespace NKafka.Client
             int workerThreadCount,
             TimeSpan workerPeriod,
                         
-            [CanBeNull] KafkaConnectionSettings connectionSettings,
-            [CanBeNull] KafkaProducerSettings producerSettings,
-            [CanBeNull] KafkaConsumerSettings consumerSettings
+            [CanBeNull] KafkaConnectionSettings connectionSettings            
             )
         {
             KafkaVersion = kafkaVersion;
@@ -38,9 +32,7 @@ namespace NKafka.Client
             MetadataBrokers = metadataBrokers;
             WorkerThreadCount = workerThreadCount;
             WorkerPeriod = workerPeriod;
-            ConnectionSettings = connectionSettings;
-            ProducerSettings = producerSettings;
-            ConsumerSettings = consumerSettings;
+            ConnectionSettings = connectionSettings;            
         }
     }
 }

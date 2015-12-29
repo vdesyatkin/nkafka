@@ -9,17 +9,21 @@ namespace NKafka.Client.Producer.Internal
         public readonly string TopicName;
 
         [PublicAPI]
-        public readonly int PartitionId;        
+        public readonly int PartitionId;
+
+        [PublicAPI, NotNull]
+        public readonly KafkaProducerSettings Settings;
 
         [NotNull] private readonly IKafkaProducerMessageQueue _mainQueue;
         [NotNull] private readonly Queue<KafkaMessage> _retryQueue;
 
         public bool NeedRearrange;
 
-        public KafkaProducerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] IKafkaProducerMessageQueue mainQueue)
+        public KafkaProducerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaProducerSettings settings, [NotNull] IKafkaProducerMessageQueue mainQueue)
         {
             TopicName = topicName;
-            PartitionId = partitionId;            
+            PartitionId = partitionId;
+            Settings = settings;
             _mainQueue = mainQueue;
             _retryQueue = new Queue<KafkaMessage>();
         }

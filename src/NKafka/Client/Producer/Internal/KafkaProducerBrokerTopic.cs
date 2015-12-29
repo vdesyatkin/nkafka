@@ -9,11 +9,17 @@ namespace NKafka.Client.Producer.Internal
         public readonly string TopicName;
 
         [PublicAPI, NotNull]
+        public readonly KafkaProducerSettings Settings;
+
+        [PublicAPI, NotNull]
         public readonly ConcurrentDictionary<int, KafkaProducerBrokerPartition> Partitions;
 
-        public KafkaProducerBrokerTopic([NotNull]string topicName)
+        public int ProducePartitionIndex;      
+
+        public KafkaProducerBrokerTopic([NotNull]string topicName, [NotNull] KafkaProducerSettings settings)
         {
             TopicName = topicName;
+            Settings = settings;
             Partitions = new ConcurrentDictionary<int, KafkaProducerBrokerPartition>();
         }
     }

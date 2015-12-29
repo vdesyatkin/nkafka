@@ -9,21 +9,25 @@ namespace NKafka.Client.Consumer.Internal
     {
         [PublicAPI, NotNull]
         public readonly string TopicName;
-        
+
+        [PublicAPI, NotNull]
+        public readonly KafkaConsumerSettings Settings;
+
         [NotNull] private IReadOnlyDictionary<int, KafkaConsumerTopicPartition> _topicPartitions;
         [NotNull] private readonly ConcurrentDictionary<int, PackageInfo> _packages;
         private int _currentPackageId;
 
-        public KafkaConsumerTopic([NotNull] string topicName)
-        {
+        public KafkaConsumerTopic([NotNull] string topicName, [NotNull] KafkaConsumerSettings settings)
+        { 
             TopicName = topicName;
+            Settings = settings;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
-            _packages = new ConcurrentDictionary<int, PackageInfo>();
+            _packages = new ConcurrentDictionary<int, PackageInfo>();            
         }
 
         public KafkaConsumerTopicPartition CreatePartition(int partitionId)
         {
-            return new KafkaConsumerTopicPartition(TopicName, partitionId);
+            return new KafkaConsumerTopicPartition(TopicName, partitionId, Settings);
         }
 
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartition> partitions)
