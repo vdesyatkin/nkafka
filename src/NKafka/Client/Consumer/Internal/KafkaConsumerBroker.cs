@@ -89,7 +89,7 @@ namespace NKafka.Client.Consumer.Internal
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;                
                 if (!TryPreparePartition(partition)) continue;                
 
-                newFetchBatch[partitionId] = partition.CurrentOffset;                
+                newFetchBatch[partitionId] = partition.CurrentOffset + 1;                
             }
             if (newFetchBatch.Count == 0) return;
 

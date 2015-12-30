@@ -15,13 +15,14 @@ namespace NKafka.DevConsole
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);
             var topicName = "test2";
-            
+
             var clientConfigBuilder = new KafkaClientSettingsBuilder(metadataBroker)
                 .SetClientId("nkafka")
                 .SetKafkaVersion(KafkaVersion.V0_9)
                 .SetWorkerThreadCount(1)
                 .SetWorkerPeriod(TimeSpan.FromMilliseconds(500));
             var producerConfigBuilder = new KafkaProducerSettingsBuilder()
+                .SetConsistencyLevel(KafkaConsistencyLevel.OneReplica)
                 .SetProduceServerTimeout(TimeSpan.FromSeconds(5))
                 .SetBatchMaxSizeBytes(10000);
             var consumerConfigBuilder = new KafkaConsumerSettingsBuilder()
@@ -29,15 +30,15 @@ namespace NKafka.DevConsole
                 .SetBatchMaxSizeBytes(10000)
                 .SetConsumeServerWaitTime(TimeSpan.FromSeconds(5));
 
-            var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());            
-            var topicProducer = clientBuilder.CreateTopicProducer(topicName, 
+            var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());
+            var topicProducer = clientBuilder.CreateTopicProducer(topicName,
                 producerConfigBuilder.Build(), new TestPartitioner(), new TestSerializer());
             var topicConsumer = clientBuilder.CreateTopicConsumer(topicName,
                 consumerConfigBuilder.Build(), new TestSerializer());
             var client = clientBuilder.Build();
 
             client.Start();
-            
+
             string userText;
             do
             {
@@ -52,7 +53,7 @@ namespace NKafka.DevConsole
 
                 var command = data[0].Trim();
                 if (command == "produce" || command == "p")
-                {                    
+                {
                     if (data.Length < 3)
                     {
                         Console.WriteLine("Key and data required");
@@ -84,10 +85,10 @@ namespace NKafka.DevConsole
 
             Console.ReadLine();
 
-            client.Stop();            
+            client.Stop();
 
             //var tester = new KafkaTester();
-            //tester.Test(host, port, "test2");
+            //tester.Test(host, port, topicName);
             //Console.ReadLine();
         }
 

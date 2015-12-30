@@ -35,6 +35,7 @@ namespace NKafka.Client.Consumer.Internal
             Settings = settings;
             PartitionId = partitionId;
             _messageQueue = messageQueue;
+            Reset();
         }
 
         public void EnqueueMessages(IReadOnlyList<KafkaMessageAndOffset> messages)

@@ -20,7 +20,7 @@ namespace NKafka.Protocol.Serialization
 
         public KafkaBinaryReader(byte[] data, int offset, int count)
         {
-            _stream = new MemoryStream(data, offset, count);
+            _stream = new MemoryStream(data, offset, count, false, true);
         }      
 
         public IReadOnlyList<T> ReadCollection<T>(Func<KafkaBinaryReader, T> itemReadMethod)
@@ -97,7 +97,7 @@ namespace NKafka.Protocol.Serialization
             var beginPosition = _beginPositions.Pop();
             var endPosition = _stream.Position;
 
-            var actualCrc32 = KafkaCrc32.Compute(_stream.GetBuffer(), beginPosition, endPosition);
+            var actualCrc32 = KafkaCrc32.Compute(_stream.GetBuffer(), beginPosition, endPosition - beginPosition);
 
             return crc32 == actualCrc32;
         }

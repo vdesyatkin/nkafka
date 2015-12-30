@@ -101,6 +101,7 @@ namespace NKafka.Protocol.API.Fetch
                         var nestedIsCrcValid = reader.EndReadCrc32(); //todo (E005) invalid CRC
                         var nestedIsSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
 
+                        if (!nestedIsCrcValid || !nestedIsSizeValid) continue;
                         var nestedMessage = new KafkaMessageAndOffset(nestedOffset, nestedKey, nestedValue);
                         messages.Add(nestedMessage);
                     }
@@ -113,6 +114,7 @@ namespace NKafka.Protocol.API.Fetch
                     var isCrcValid = reader.EndReadCrc32(); //todo (E005) invalid CRC
                     var isSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
 
+                    if (!isCrcValid || !isSizeValid) continue;
                     var message = new KafkaMessageAndOffset(offset, key, value);
                     messages.Add(message);
                 }
