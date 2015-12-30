@@ -24,6 +24,7 @@ namespace NKafka.Client.Consumer.Internal
 
         [NotNull] private readonly ConcurrentQueue<KafkaMessageAndOffset> _messageQueue;
         private int _enqueuedCount;
+        private long _maxOffset;
 
         public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaConsumerSettings settings)
         {
@@ -32,6 +33,7 @@ namespace NKafka.Client.Consumer.Internal
             Settings = settings;
             BrokerPartition = new KafkaConsumerBrokerPartition(TopicName, PartitonId, settings, this);
             _messageQueue = new ConcurrentQueue<KafkaMessageAndOffset>();
+            _maxOffset = -1;
         }
 
         public void Enqueue(IReadOnlyList<KafkaMessageAndOffset> messages)
@@ -40,6 +42,8 @@ namespace NKafka.Client.Consumer.Internal
             foreach (var message in messages)
             {
                 if (message == null) continue;
+                if (message.Offset <= _maxOffset) continue;
+                _maxOffset = message.Offset;
                 Interlocked.Increment(ref _enqueuedCount);
                 _messageQueue.Enqueue(message);
             }

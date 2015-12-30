@@ -42,7 +42,13 @@ namespace NKafka.Client.Consumer.Internal
         {
             if (messages == null) return;
             if (messages.Count == 0) return;
-            _lastEnqueuedOffset = messages[messages.Count - 1].Offset;
+
+            var newOffset = messages[messages.Count - 1].Offset;
+
+            if (newOffset > _lastEnqueuedOffset)
+            {
+                _lastCommittedOffsetRequired = newOffset;
+            }
 
             try
             {
