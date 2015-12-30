@@ -26,7 +26,7 @@ namespace NKafka.Client.Producer
         }        
 
         [PublicAPI]
-        public KafkaProducerSettingsBuilder SetBatchByteMaxSizeBytes(int batchMaxSizeBytes)
+        public KafkaProducerSettingsBuilder SetBatchMaxSizeBytes(int batchMaxSizeBytes)
         {
             _produceBatchMaxSizeBytes = batchMaxSizeBytes;
             return this;

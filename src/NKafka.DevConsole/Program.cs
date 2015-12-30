@@ -22,10 +22,11 @@ namespace NKafka.DevConsole
                 .SetWorkerThreadCount(1)
                 .SetWorkerPeriod(TimeSpan.FromMilliseconds(500));
             var producerConfigBuilder = new KafkaProducerSettingsBuilder()
-                .SetProduceServerTimeout(TimeSpan.FromSeconds(5));
+                .SetProduceServerTimeout(TimeSpan.FromSeconds(5))
+                .SetBatchMaxSizeBytes(10000);
             var consumerConfigBuilder = new KafkaConsumerSettingsBuilder()
-                .SetBatchByteMinSizeBytes(1)
-                .SetBatchByteMaxSizeBytes(10000)
+                .SetBatchMinSizeBytes(1)
+                .SetBatchMaxSizeBytes(10000)
                 .SetConsumeServerWaitTime(TimeSpan.FromSeconds(5));
 
             var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());            
