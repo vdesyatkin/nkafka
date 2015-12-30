@@ -46,7 +46,7 @@ namespace NKafka.Client
         }
 
         [PublicAPI]
-        public KafkaClientSettingsBuilder SetProduceThreadCount(int threadCount)
+        public KafkaClientSettingsBuilder SetWorkerThreadCount(int threadCount)
         {
             _workerThreadCount = threadCount;
             return this;

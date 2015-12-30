@@ -13,8 +13,8 @@ namespace NKafka.Client.Producer
     [PublicAPI]
     public interface IKafkaProducerTopic<TKey, TData>
     {
-        void EnqueueMessage([NotNull] KafkaMessage<TKey, TData> message);
-        void EnqueueMessage([NotNull] TKey key, [NotNull] TData data);
-        void EnqueueMessage([NotNull] TData data);
+        void Produce([NotNull] KafkaMessage<TKey, TData> message);
+        void Produce([NotNull] TKey key, [NotNull] TData data);
+        void Produce([NotNull] TData data);
     }
 }

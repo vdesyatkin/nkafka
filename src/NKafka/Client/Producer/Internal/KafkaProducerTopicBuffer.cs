@@ -89,21 +89,21 @@ namespace NKafka.Client.Producer.Internal
             _messageQueue = new ConcurrentQueue<KafkaMessage<TKey, TData>>();
         }
 
-        public void EnqueueMessage([CanBeNull] KafkaMessage<TKey, TData> message)
+        public void Produce([CanBeNull] KafkaMessage<TKey, TData> message)
         {
             if (message == null) return;
             _messageQueue.Enqueue(message);
             Interlocked.Increment(ref _enqueuedCount);
         }
 
-        public void EnqueueMessage([CanBeNull] TKey key, [CanBeNull] TData data)
+        public void Produce([CanBeNull] TKey key, [CanBeNull] TData data)
         {
-            EnqueueMessage(new KafkaMessage<TKey, TData>(key, data));
+            Produce(new KafkaMessage<TKey, TData>(key, data));
         }
 
-        public void EnqueueMessage([CanBeNull] TData data)
+        public void Produce([CanBeNull] TData data)
         {
-            EnqueueMessage(new KafkaMessage<TKey, TData>(default(TKey), data));
+            Produce(new KafkaMessage<TKey, TData>(default(TKey), data));
         }
         
         public void Flush(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions)

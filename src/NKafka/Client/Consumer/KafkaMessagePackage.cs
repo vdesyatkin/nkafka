@@ -8,9 +8,10 @@ namespace NKafka.Client.Consumer
     {
         public readonly int PackageNumber;
 
+        [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaMessage> Messages;
 
-        public KafkaMessagePackage(int packageNumber, [NotNull] IReadOnlyList<KafkaMessage> messages)
+        public KafkaMessagePackage(int packageNumber, [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> messages)
         {
             Messages = messages;
             PackageNumber = packageNumber;
@@ -22,9 +23,10 @@ namespace NKafka.Client.Consumer
     {
         public readonly int PackageNumber;
 
+        [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaMessage<TKey,TData>> Messages;
 
-        public KafkaMessagePackage(int packageNumber, [NotNull] IReadOnlyList<KafkaMessage<TKey, TData>> messages)
+        public KafkaMessagePackage(int packageNumber, [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage<TKey, TData>> messages)
         {
             Messages = messages;
             PackageNumber = packageNumber;
