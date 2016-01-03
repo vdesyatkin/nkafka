@@ -1,0 +1,302 @@
+h1. ZooKeeper
+
+# [[ZooKeeper#1. Основная информация|Основная информация]]
+# [[ZooKeeper#2. Назначение|Назначение]]
+# [[ZooKeeper#3. Установка|Установка]]
+# [[ZooKeeper#4. Схема использования|Схема использования]]
+# [[ZooKeeper#5. Практики программной реализации|Практики программной реализации]]
+
+h2. 1. Основная информация
+
+Распределённая система координации.
+
+https://en.wikipedia.org/wiki/Apache_ZooKeeper
+https://zookeeper.apache.org
+http://zookeeper.apache.org/doc/r3.4.6/zookeeperOver.html
+
+h2. 2. Назначение
+
+Планируется развёртывание на [[Центральная шина|Центральной шине]] для следующих целей:
+* Мониторинг всех компонентов системы - кто в системе есть и в каком состоянии;
+* Централизованное конфигурирование;
+* Синхронизация распределённых процедур (например, массовое обновление).
+
+h2. 3. Установка
+
+Все действия необходимо производить под root:
+
+# Создать основную папку (*mkdir /opt/zookeeper*);
+# Распаковать zookeeper в */opt/zookeeper*;
+# Создать пользователя zookeeper (*adduser zookeeper*);
+# Назначить пользователя zookeeper владельцем основной папки (*chown -R zookeeper /opt/zookeeper*);
+# Создать папки логов и данных (*mkdir /var/log/zookeeper*, *mkdir /var/data/zookeeper*);
+# Назначить zookeeper владельцем созданных папок (*chown -R zookeeper /var/log/zookeeper*, *chown -R zookeeper /var/data/zookeeper*);
+# Назначить права для основной папки (*chmod -R 771 /opt/zookeeper*);
+# Назначить права для папок логов и данных (*chmod -R 775 /var/log/zookeeper*, *chmod -R 775 /var/data/zookeeper*);
+# Перезайти под пользователем zookeeper;
+# Создать (изменить) файл конфигурации */opt/zookeeper/conf/zoo.cfg*;
+# Запустить */opt/zookeeper/bin/zkServer.sh start /opt/zookeeper/conf/zoo.cfg --daemon *;
+# Запустить для проверки */opt/zookeeper/bin/zkCli.sh -server 127.0.0.1:2181* (конкретный IP);
+## В случае успешного подключения набрать команду *ls /* (должно вывести корневые элементы, по умолчанию только zookeeper);
+## Завершить проверку набрав команду *quit*;
+# При необходимости остановки следует запустить */opt/zookeeper/bin/zkSever.sh stop*.
+
+Полная версия файла конфигурации zoo.cfg:
+
+<pre>
+# The number of milliseconds of each tick
+tickTime=2000
+# The number of ticks that the initial 
+# synchronization phase can take
+initLimit=10
+# The number of ticks that can pass between 
+# sending a request and getting an acknowledgement
+syncLimit=5
+# the directory where the snapshot is stored.
+# do not use /tmp for storage, /tmp here is just 
+# example sakes.
+dataDir=/var/data/zookeeper
+dataLogDir=/var/log/zookeeper
+# the port at which the clients will connect
+clientPort=2181
+# the maximum number of client connections.
+# increase this if you need to handle more clients
+#maxClientCnxns=60
+#
+# Be sure to read the maintenance section of the 
+# administrator guide before turning on autopurge.
+#
+# http://zookeeper.apache.org/doc/current/zookeeperAdmin.html#sc_maintenance
+#
+# The number of snapshots to retain in dataDir
+#autopurge.snapRetainCount=3
+# Purge task interval in hours
+# Set to "0" to disable auto purge feature
+#autopurge.purgeInterval=1
+</pre>
+
+Полезные ссылки:
+http://zookeeper.apache.org/doc/r3.4.6/zookeeperStarted.html
+http://zookeeper.apache.org/doc/trunk/zookeeperAdmin.html
+
+h2. 4. Схема использования
+
+h3. 4.1. Мониторинг
+
+Мониторинг компонентов системы в сети осуществляется путём создания (при запуске) в zookeeper _эфемерных_ узлов в папках, соответствующих типу компонента.
+Эфемерность узлов означает, что как только компонент будет отключен, узел, с некоторой задержкой, автоматически будет удалён.
+Таким образом, для того, чтобы узнать перечень активных компонентов определённого типа - необходимо обратиться в zookeeper в папку, соответствующей типу компонента, и посмотреть перечень существующих узлов.
+В качестве формата названия узла предлагается "[ip]_[datetime_utc]".
+
+h3. 4.2. Конфигурирование
+
+h3. 4.3. Синхронизация
+
+h2. 5. Практики программной реализации
+
+h3. 5.1. Java
+
+Для Java предлагается использовать библиотеку Curator:
+
+http://curator.apache.org
+http://mvnrepository.com/artifact/org.apache.curator
+
+Maven:
+<pre><code class="xml">
+<dependencies>
+    <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-framework</artifactId>
+        <version>2.8.0</version>
+    </dependency>
+</dependencies>
+</code></pre>
+
+Пример проекта 
+
+Генерация названий узлов:
+
+<pre><code class="java">
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
+public final class MonitoringNodeInfo {
+
+    public String getType() { return _type; }
+    private final String _type;
+
+    public String getAddress() { return _address;}
+    private final String _address;
+
+    public String getTimestamp() { return _timestamp;}
+    private final String _timestamp;
+
+    protected MonitoringNodeInfo(String type, String address, String timestamp)
+    {
+        _type = type;
+        _address = address;
+        _timestamp = timestamp;
+    }
+}
+
+public final class MonitoringFactory {
+
+    private static final String _zooKeeperUrl = "192.168.20.52:2181";
+    private static final String _rootNode = "/kafker";
+
+    public static MonitoringAgent CreateAgent(String nodeType) {
+        StringBuilder text = new StringBuilder();
+        text.append(_rootNode);
+        text.append("/");
+        text.append(nodeType);
+        text.append("/");
+
+        String address;
+        try {
+            address = Inet4Address.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            address = "unknown";
+        }
+        text.append(address);
+        text.append("_");
+
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        f.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String timestamp = f.format(new Date());
+        text.append(timestamp.replace(' ', '_'));
+
+        MonitoringNodeInfo node = new MonitoringNodeInfo(nodeType, address, timestamp);
+
+        return new MonitoringAgent(_zooKeeperUrl, node, text.toString());
+    }
+
+    public static MonitoringClient CreateClient() {
+        return new MonitoringClient(_zooKeeperUrl, _rootNode);
+    }
+}
+</code></pre>
+
+Реализован пример (https://bitbucket.org/vdesyatkin/kafker)
+
+<pre><code class="java">
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.zookeeper.CreateMode;
+
+public final class MonitoringAgent {
+
+    public MonitoringNodeInfo getNode() { return _node;}
+    private final MonitoringNodeInfo _node;
+    private final String _nodeName;
+    private final String _zooKeeperUrl;
+
+    private CuratorFramework _client;
+
+    protected MonitoringAgent(String zooKeeperUrl, MonitoringNodeInfo node, String nodeName) {
+        _node = node;
+        _nodeName = nodeName;
+        _zooKeeperUrl = zooKeeperUrl;
+    }
+
+    public boolean tryStart() {
+        CuratorFramework client = null;
+        try {
+            client = CuratorFrameworkFactory.newClient(_zooKeeperUrl, new ExponentialBackoffRetry(1000, 3));
+            _client = client;
+            if (client == null) return false;
+            client.start();
+            client.create().withMode(CreateMode.EPHEMERAL).forPath(_nodeName);
+            return true;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+    }
+}
+</code></pre>
+
+Пример загрузки списка узлов через Curator
+
+<pre><code class="java">
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
+public final class MonitoringClient {
+
+    private final String _rootNode;
+    private final String _zooKeeperUrl;
+
+    private CuratorFramework _client;
+
+    protected MonitoringClient(String zooKeeperUrl, String rootNode) {
+        _rootNode = rootNode;
+        _zooKeeperUrl = zooKeeperUrl;
+    }
+
+    public boolean tryStart() {
+        CuratorFramework client = null;
+        try {
+            client = CuratorFrameworkFactory.newClient(_zooKeeperUrl, new ExponentialBackoffRetry(1000, 3));
+            _client = client;
+            if (client == null) return false;
+            client.start();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<MonitoringNodeInfo> getNodes(String nodeType) {
+        CuratorFramework client = _client;
+        if (client == null) {
+            return new ArrayList<MonitoringNodeInfo>();
+        }
+
+        StringBuilder nodeName = new StringBuilder();
+        nodeName.append(_rootNode);
+        nodeName.append("/");
+        nodeName.append(nodeType);
+
+
+        try {
+            List<String> zNodes = client.getChildren().forPath(nodeName.toString());
+            if (zNodes == null) return new ArrayList<MonitoringNodeInfo>();
+            ArrayList<MonitoringNodeInfo> result = new ArrayList<MonitoringNodeInfo>(zNodes.size());
+
+            for (String zNode : zNodes) {
+                if (zNode == null) continue;
+                if (!zNode.contains("_")) continue;
+
+                String[] items = zNode.split("_");
+                if (items.length != 3) continue;
+
+                String address = items[0];
+                String timestamp = items[1] + " " + items[2];
+
+                MonitoringNodeInfo node = new MonitoringNodeInfo(nodeType, address, timestamp);
+                result.add(node);
+            }
+
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<MonitoringNodeInfo>();
+        }
+    }
+}
+</code></pre>
