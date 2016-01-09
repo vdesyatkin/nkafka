@@ -16,18 +16,17 @@ namespace NKafka.Client.Internal
         [NotNull] private readonly KafkaClientSettings _settings;
 
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientTopic> _topics;
-        [NotNull] private readonly ConcurrentDictionary<string, TopicMetadataRequest> _topicMetadataRequests;
+        [NotNull] private readonly ConcurrentDictionary<string, MetadataRequestInfo> _topicMetadataRequests;
 
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientGroup> _groups;
+        [NotNull] private readonly ConcurrentDictionary<string, MetadataRequestInfo> _groupMetadataRequests;
 
         [NotNull] private readonly ConcurrentDictionary<int, KafkaClientBroker> _brokers;
         [NotNull, ItemNotNull] private readonly IReadOnlyCollection<KafkaClientBroker> _metadataBrokers;
 
-        [NotNull]
-        private Timer _workerTimer;
+        [NotNull] private Timer _workerTimer;
         private readonly TimeSpan _workerPeriod;
-        [NotNull]
-        private CancellationTokenSource _workerCancellation;
+        [NotNull] private CancellationTokenSource _workerCancellation;
 
         public delegate void ArrangeTopicDelegate([NotNull] string topicName, [NotNull, ItemNotNull] IReadOnlyCollection<KafkaClientBrokerPartition> partitions);
         public event ArrangeTopicDelegate ArrangeTopic;
@@ -45,9 +44,10 @@ namespace NKafka.Client.Internal
             _brokers = new ConcurrentDictionary<int, KafkaClientBroker>();
 
             _topics = new ConcurrentDictionary<string, KafkaClientTopic>();
-            _topicMetadataRequests = new ConcurrentDictionary<string, TopicMetadataRequest>();
+            _topicMetadataRequests = new ConcurrentDictionary<string, MetadataRequestInfo>();
 
             _groups = new ConcurrentDictionary<string, KafkaClientGroup>();
+            _groupMetadataRequests = new ConcurrentDictionary<string, MetadataRequestInfo>();
 
 
             var metadataBrokerInfos = _settings.MetadataBrokers ?? new KafkaBrokerInfo[0];
@@ -120,6 +120,14 @@ namespace NKafka.Client.Internal
 
         private void Work(object state)
         {
+            var hasGroups = false;
+            foreach (var group in _groups)
+            {
+                if (_workerCancellation.IsCancellationRequested) return;
+                ProcessGroup(group.Value);
+                hasGroups = true;
+            }
+
             var hasTopics = false;
             foreach (var topic in _topics)
             {
@@ -129,22 +137,22 @@ namespace NKafka.Client.Internal
             }
 
             var isBrokersRequired = hasTopics;
-            bool isAvailableRegularBrokers = false;
+            bool isRegularBrokerAvailable = false;
             foreach (var brokerPair in _brokers)
             {
                 if (_workerCancellation.IsCancellationRequested) return;
                 ProcessBroker(brokerPair.Value, isBrokersRequired);
                 if (brokerPair.Value.IsEnabled)
                 {
-                    isAvailableRegularBrokers = true;
+                    isRegularBrokerAvailable = true;
                 }
             }
 
-            var isMetadataBrokersRequired = hasTopics && !isAvailableRegularBrokers;
+            var isMetadataBrokerRequired = (hasTopics || hasGroups) && !isRegularBrokerAvailable;
             foreach (var metadataBroker in _metadataBrokers)
             {
                 if (_workerCancellation.IsCancellationRequested) return;
-                ProcessMetadataBroker(metadataBroker, isMetadataBrokersRequired);
+                ProcessMetadataBroker(metadataBroker, isMetadataBrokerRequired);
             }
 
             if (_workerCancellation.IsCancellationRequested) return;
@@ -175,7 +183,7 @@ namespace NKafka.Client.Internal
                     var metadataRequestId = metadataResponse.HasData ? metadataResponse.Data : null;
                     if (metadataRequestId.HasValue)
                     {
-                        _topicMetadataRequests[topic.TopicName] = new TopicMetadataRequest(metadataRequestId.Value, metadataBroker);
+                        _topicMetadataRequests[topic.TopicName] = new MetadataRequestInfo(metadataRequestId.Value, metadataBroker);
                         topic.Status = KafkaClientTopicStatus.MetadataRequested;
                     }
                 }
@@ -184,7 +192,7 @@ namespace NKafka.Client.Internal
 
             if (topic.Status == KafkaClientTopicStatus.MetadataRequested)
             {
-                TopicMetadataRequest metadataRequest;
+                MetadataRequestInfo metadataRequest;
                 if (!_topicMetadataRequests.TryGetValue(topic.TopicName, out metadataRequest))
                 {
                     topic.Status = KafkaClientTopicStatus.NotInitialized;
@@ -251,6 +259,97 @@ namespace NKafka.Client.Internal
                 if (areAllUnplugged)
                 {
                     topic.Status = KafkaClientTopicStatus.NotInitialized;
+                }
+            }
+        }
+
+        private void ProcessGroup([NotNull] KafkaClientGroup group)
+        {
+            if (group.Status == KafkaClientGroupStatus.NotInitialized)
+            {
+                var metadataBroker = GetMetadataBroker();
+                if (metadataBroker != null)
+                {
+                    var metadataResponse = metadataBroker.RequestGroupMetadata(group.GroupName);
+                    var metadataRequestId = metadataResponse.HasData ? metadataResponse.Data : null;
+                    if (metadataRequestId.HasValue)
+                    {
+                        _topicMetadataRequests[group.GroupName] = new MetadataRequestInfo(metadataRequestId.Value, metadataBroker);
+                        group.Status = KafkaClientGroupStatus.MetadataRequested;
+                    }
+                }
+
+            }
+
+            if (group.Status == KafkaClientGroupStatus.MetadataRequested)
+            {
+                MetadataRequestInfo metadataRequest;
+                if (!_topicMetadataRequests.TryGetValue(group.GroupName, out metadataRequest))
+                {
+                    group.Status = KafkaClientGroupStatus.NotInitialized;
+                    return;
+                }
+
+                var topicMetadata = metadataRequest.Broker.GetGroupMetadata(metadataRequest.RequestId);
+                if (topicMetadata.HasData)
+                {
+                    group.ApplyMetadata(topicMetadata.Data);
+                    var brokerPartitions = new List<KafkaClientBrokerPartition>(group.Partitions.Count);
+                    foreach (var topicPartition in group.Partitions)
+                    {
+                        brokerPartitions.Add(topicPartition.BrokerPartition);
+                    }
+
+                    try
+                    {
+                        ArrangeTopic?.Invoke(group.GroupName, brokerPartitions);
+                        group.Status = KafkaClientGroupStatus.Ready;
+                    }
+                    catch (Exception)
+                    {
+                        group.Status = KafkaClientGroupStatus.NotInitialized;
+                        return;
+                    }
+                }
+                else
+                {
+                    if (topicMetadata.HasError)
+                    {
+                        group.Status = KafkaClientGroupStatus.NotInitialized;
+                        return;
+                    }
+                }
+            }
+
+            if (group.Status == KafkaClientGroupStatus.Ready)
+            {
+                group.Flush();
+
+                foreach (var paritition in group.Partitions)
+                {
+                    if (paritition.BrokerPartition.Status == KafkaClientBrokerPartitionStatus.NeedRearrange)
+                    {
+                        group.Status = KafkaClientTopicStatus.RearrangeRequired;
+                        break;
+                    }
+                }
+            }
+
+            if (group.Status == KafkaClientGroupStatus.RearrangeRequired)
+            {
+                var areAllUnplugged = true;
+                foreach (var paritition in group.Partitions)
+                {
+                    paritition.BrokerPartition.IsUnplugRequired = true;
+                    if (paritition.BrokerPartition.Status != KafkaClientBrokerPartitionStatus.Unplugged)
+                    {
+                        areAllUnplugged = false;
+                    }
+                }
+
+                if (areAllUnplugged)
+                {
+                    group.Status = KafkaClientGroupStatus.NotInitialized;
                 }
             }
         }
@@ -337,17 +436,17 @@ namespace NKafka.Client.Internal
             return new KafkaClientBroker(broker, _settings, false, false);
         }
 
-        private sealed class TopicMetadataRequest
+        private sealed class MetadataRequestInfo
         {
             public readonly int RequestId;
             [NotNull]
             public readonly KafkaClientBroker Broker;
 
-            public TopicMetadataRequest(int requestId, KafkaClientBroker broker)
+            public MetadataRequestInfo(int requestId, KafkaClientBroker broker)
             {
                 RequestId = requestId;
                 Broker = broker;
             }
-        }
+        }       
     }
 }

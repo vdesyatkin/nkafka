@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Protocol.API.Fetch;
+using NKafka.Protocol.API.GroupCoordinator;
 using NKafka.Protocol.API.Offset;
 using NKafka.Protocol.API.Produce;
 using NKafka.Protocol.API.TopicMetadata;
@@ -192,6 +193,9 @@ namespace NKafka.Protocol
                 case KafkaRequestType.TopicMetadata:
                     return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaTopicMetadataRequest),
                         KafkaTopicMetadataApi.WriteRequest, KafkaTopicMetadataApi.ReadResponse);
+                case KafkaRequestType.GroupCoordinator:
+                    return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaGroupCoordinatorRequest),
+                        KafkaGroupCoordinatorApi.WriteRequest, KafkaGroupCoordinatorApi.ReadResponse);
                 case KafkaRequestType.Produce:
                     return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaProduceRequest),
                         KafkaProduceApi.WriteRequest, KafkaProduceApi.ReadResponse);

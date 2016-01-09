@@ -6,6 +6,8 @@ using NKafka.Client.Consumer.Internal;
 using NKafka.Client.Producer.Internal;
 using NKafka.Connection;
 using NKafka.Metadata;
+using NKafka.Protocol;
+using NKafka.Protocol.API.GroupCoordinator;
 using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Client.Internal.Broker
@@ -153,6 +155,7 @@ namespace NKafka.Client.Internal.Broker
             {
                 if (responsePartition == null) continue;
                 //todo (E009) handling standard errors (responsePartition.ErrorCode)
+                if (responsePartition.ErrorCode != KafkaResponseErrorCode.NoError) continue;
                 partitions.Add(new KafkaTopicPartitionMetadata(responsePartition.PartitionId, responsePartition.LeaderId));
             }
 
@@ -160,6 +163,36 @@ namespace NKafka.Client.Internal.Broker
         }
 
         #endregion Topic metadata
-        
+
+        #region Group metadata
+
+        public KafkaBrokerResult<int?> RequestGroupMetadata([NotNull] string groupName)
+        {
+            return _broker.Send(new KafkaGroupCoordinatorRequest(groupName), _clientTimeout);
+        }
+
+        public KafkaBrokerResult<KafkaBrokerMetadata> GetGroupMetadata(int requestId)
+        {
+            var response = _broker.Receive<KafkaGroupCoordinatorResponse>(requestId);
+            return ConvertMetadata(response);
+        }
+
+        private static KafkaBrokerResult<KafkaBrokerMetadata> ConvertMetadata(KafkaBrokerResult<KafkaGroupCoordinatorResponse> response)
+        {
+            if (!response.HasData) return response.Error;
+
+            var responseData = response.Data;            
+                       
+            if (responseData.ErrorCode != KafkaResponseErrorCode.NoError)
+            {
+                //todo (E009) handling standard errors
+                return KafkaBrokerErrorCode.DataError;
+            }
+
+            return new KafkaBrokerMetadata(responseData.BrokerId, responseData.Host, responseData.Port);                
+        }
+
+        #endregion Group metadata
+
     }
 }

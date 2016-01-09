@@ -53,6 +53,7 @@
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerPartitionStatus.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerTopic.cs" />
     <Compile Include="Client\Internal\KafkaClientGroup.cs" />
+    <Compile Include="Client\Internal\KafkaClientGroupStatus.cs" />
     <Compile Include="Client\Internal\KafkaClientTopic.cs" />
     <Compile Include="Client\Internal\KafkaClientTopicPartition.cs" />
     <Compile Include="Client\Internal\KafkaClientTopicStatus.cs" />
@@ -100,6 +101,9 @@
     <Compile Include="Protocol\API\Fetch\KafkaFetchResponse.cs" />
     <Compile Include="Protocol\API\Fetch\KafkaFetchResponseTopic.cs" />
     <Compile Include="Protocol\API\Fetch\KafkaFetchResponseTopicPartition.cs" />
+    <Compile Include="Protocol\API\GroupCoordinator\KafkaGroupCoordinatorApi.cs" />
+    <Compile Include="Protocol\API\GroupCoordinator\KafkaGroupCoordinatorRequest.cs" />
+    <Compile Include="Protocol\API\GroupCoordinator\KafkaGroupCoordinatorResponse.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetApi.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetRequest.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetRequestTopic.cs" />

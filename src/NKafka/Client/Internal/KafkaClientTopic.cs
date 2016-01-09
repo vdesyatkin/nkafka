@@ -8,11 +8,9 @@ namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClientTopic
     {
-        [NotNull]
-        public readonly string TopicName;
+        [NotNull] public readonly string TopicName;
 
-        [NotNull]
-        public IReadOnlyList<KafkaClientTopicPartition> Partitions { get; private set; }
+        [NotNull] public IReadOnlyList<KafkaClientTopicPartition> Partitions { get; private set; }
         
         public KafkaClientTopicStatus Status;
 
@@ -23,8 +21,7 @@ namespace NKafka.Client.Internal
         {
             TopicName = topicName;
             _producer = producer;
-            _consumer = consumer;
-            Status = KafkaClientTopicStatus.NotInitialized;
+            _consumer = consumer;            
             Partitions = new KafkaClientTopicPartition[0];
         }
         

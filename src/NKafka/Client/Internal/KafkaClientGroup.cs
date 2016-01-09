@@ -1,10 +1,14 @@
-﻿namespace NKafka.Client.Internal
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClientGroup
     {
-        public readonly string GroupName;
+        [NotNull] public readonly string GroupName;
 
-        public KafkaClientGroup(string groupName)
+        public KafkaClientGroupStatus Status;
+
+        public KafkaClientGroup([NotNull] string groupName)
         {
             GroupName = groupName;
         }
