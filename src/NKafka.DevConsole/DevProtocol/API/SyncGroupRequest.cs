@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NKafka.DevConsole.DevProtocol.API
 {
+    [PublicAPI]
     public class SyncGroupRequest
     {
         public string GroupId { get; set; }

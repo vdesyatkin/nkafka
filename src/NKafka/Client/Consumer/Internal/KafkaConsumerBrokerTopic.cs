@@ -5,14 +5,11 @@ namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerBrokerTopic
     {
-        [PublicAPI, NotNull]
-        public readonly string TopicName;
+        [NotNull] public readonly string TopicName;
 
-        [PublicAPI, NotNull]
-        public readonly KafkaConsumerSettings Settings;
+        [NotNull] public readonly KafkaConsumerSettings Settings;
 
-        [PublicAPI, NotNull]
-        public readonly ConcurrentDictionary<int, KafkaConsumerBrokerPartition> Partitions;
+        [NotNull] public readonly ConcurrentDictionary<int, KafkaConsumerBrokerPartition> Partitions;
 
         public KafkaConsumerBrokerTopic([NotNull]string topicName, [NotNull] KafkaConsumerSettings settings)
         {

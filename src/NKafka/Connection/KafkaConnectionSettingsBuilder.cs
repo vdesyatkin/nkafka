@@ -10,29 +10,25 @@ namespace NKafka.Connection
         private TimeSpan? _errorStateReconnectPeriod;
         private TimeSpan? _heartbeatPeriod;
         private TimeSpan? _transportLatency;
-
-        [PublicAPI]
+        
         public KafkaConnectionSettingsBuilder SetRegularReconnectPeriod(TimeSpan period)
         {
             _regularReconnectPeriod = period;
             return this;
         }
 
-        [PublicAPI]
         public KafkaConnectionSettingsBuilder SetErrorStateReconnectPeriod(TimeSpan period)
         {
             _errorStateReconnectPeriod = period;
             return this;
         }
-
-        [PublicAPI]
+        
         public KafkaConnectionSettingsBuilder SetHeartbeatPeriod(TimeSpan period)
         {
             _heartbeatPeriod = period;
             return this;
         }
 
-        [PublicAPI]
         public KafkaConnectionSettingsBuilder SetTransportLatency(TimeSpan latency)
         {
             _transportLatency = latency;

@@ -7,22 +7,18 @@ namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerBrokerPartition
     {
-        [PublicAPI, NotNull]
+        [NotNull]
         public readonly string TopicName;
-
-        [PublicAPI]
+        
         public readonly int PartitionId;
 
-        [PublicAPI, NotNull]
-        public readonly KafkaConsumerSettings Settings;
-
-        [PublicAPI]
+        [NotNull] public readonly KafkaConsumerSettings Settings;
+        
         public KafkaConsumerBrokerPartitionStatus Status;
 
         public long CurrentOffset => _lastEnqueuedOffset;
 
-        [NotNull]
-        private readonly IKafkaConsumerMessageQueue _messageQueue;
+        [NotNull] private readonly IKafkaConsumerMessageQueue _messageQueue;
         
         public int? OffsetRequestId;
 

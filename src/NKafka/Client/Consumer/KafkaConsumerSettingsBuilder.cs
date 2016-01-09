@@ -9,22 +9,19 @@ namespace NKafka.Client.Consumer
         private int? _consumeBatchMinSizeBytes;
         private int? _consumeBatchMaxSizeBytes;
         private TimeSpan? _consumeServerWaitTime;        
-
-        [PublicAPI]
+        
         public KafkaConsumerSettingsBuilder SetBatchMinSizeBytes(int batchMinSizeBytes)
         {
             _consumeBatchMinSizeBytes = batchMinSizeBytes;
             return this;
         }
 
-        [PublicAPI]
         public KafkaConsumerSettingsBuilder SetBatchMaxSizeBytes(int batchMaxSizeBytes)
         {
             _consumeBatchMaxSizeBytes = batchMaxSizeBytes;
             return this;
         }
-
-        [PublicAPI]
+        
         public KafkaConsumerSettingsBuilder SetConsumeServerWaitTime(TimeSpan waitTime)
         {
             _consumeServerWaitTime = waitTime;

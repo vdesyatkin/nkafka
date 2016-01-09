@@ -49,9 +49,10 @@
     <Compile Include="Client\Consumer\KafkaMessagePackage.cs" />
     <Compile Include="Client\IKafkaClient.cs" />
     <Compile Include="Client\Internal\KafkaClient.cs" />
-    <Compile Include="Client\Internal\KafkaClientBrokerPartition.cs" />
-    <Compile Include="Client\Internal\KafkaClientBrokerPartitionStatus.cs" />
-    <Compile Include="Client\Internal\KafkaClientBrokerTopic.cs" />
+    <Compile Include="Client\Internal\Broker\KafkaClientBrokerPartition.cs" />
+    <Compile Include="Client\Internal\Broker\KafkaClientBrokerPartitionStatus.cs" />
+    <Compile Include="Client\Internal\Broker\KafkaClientBrokerTopic.cs" />
+    <Compile Include="Client\Internal\KafkaClientGroup.cs" />
     <Compile Include="Client\Internal\KafkaClientTopic.cs" />
     <Compile Include="Client\Internal\KafkaClientTopicPartition.cs" />
     <Compile Include="Client\Internal\KafkaClientTopicStatus.cs" />
@@ -66,7 +67,7 @@
     <Compile Include="Client\Producer\IKafkaProducerTopic.cs" />
     <Compile Include="Client\Producer\Internal\IKafkaProducerMessageQueue.cs" />
     <Compile Include="Client\Producer\Internal\IKafkaProducerTopicBuffer.cs" />
-    <Compile Include="Client\Internal\KafkaClientBroker.cs" />
+    <Compile Include="Client\Internal\Broker\KafkaClientBroker.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerBroker.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerBrokerPartition.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerBrokerTopic.cs" />

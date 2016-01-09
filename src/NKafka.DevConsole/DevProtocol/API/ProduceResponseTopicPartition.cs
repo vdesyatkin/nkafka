@@ -1,5 +1,8 @@
-﻿namespace NKafka.DevConsole.DevProtocol.API
+﻿using JetBrains.Annotations;
+
+namespace NKafka.DevConsole.DevProtocol.API
 {
+    [PublicAPI]
     public class ProduceResponseTopicPartition
     {
         /// <summary>

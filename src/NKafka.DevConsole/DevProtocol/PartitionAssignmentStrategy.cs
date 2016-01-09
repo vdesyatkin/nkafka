@@ -1,5 +1,8 @@
-﻿namespace NKafka.DevConsole.DevProtocol
+﻿using JetBrains.Annotations;
+
+namespace NKafka.DevConsole.DevProtocol
 {
+    [PublicAPI]
     public enum PartitionAssignmentStrategy : byte
     {   
         Unknown = 0,     

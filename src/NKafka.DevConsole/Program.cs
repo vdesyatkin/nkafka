@@ -4,12 +4,13 @@ using System.Text;
 using NKafka.Client;
 using NKafka.Client.Consumer;
 using NKafka.Client.Producer;
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace NKafka.DevConsole
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             var host = "192.168.137.196";
             var port = 9092;

@@ -10,29 +10,25 @@ namespace NKafka.Client.Producer
         private KafkaCodecType? _codecType;        
         private int? _produceBatchMaxSizeBytes;
         private TimeSpan? _produceTimeout;
-
-        [PublicAPI]
+        
         public KafkaProducerSettingsBuilder SetConsistencyLevel(KafkaConsistencyLevel consistencyLevel)
         {
             _consistencyLevel = consistencyLevel;
             return this;
         }
 
-        [PublicAPI]
         public KafkaProducerSettingsBuilder SetCodecType(KafkaCodecType codecType)
         {
             _codecType = codecType;
             return this;
         }        
 
-        [PublicAPI]
         public KafkaProducerSettingsBuilder SetBatchMaxSizeBytes(int batchMaxSizeBytes)
         {
             _produceBatchMaxSizeBytes = batchMaxSizeBytes;
             return this;
         }
 
-        [PublicAPI]
         public KafkaProducerSettingsBuilder SetProduceServerTimeout(TimeSpan timeout)
         {
             _produceTimeout = timeout;

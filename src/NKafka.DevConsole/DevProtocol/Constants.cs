@@ -1,5 +1,8 @@
-﻿namespace NKafka.DevConsole.DevProtocol
+﻿using JetBrains.Annotations;
+
+namespace NKafka.DevConsole.DevProtocol
 {
+    [PublicAPI]
     public enum ApiVersion : short
     {
         V0 = 0,
@@ -11,6 +14,7 @@
     /// <summary>
     /// Enumeration of numeric codes that the ApiKey in the request can take for each request types. 
     /// </summary>
+    [PublicAPI]
     public enum ApiKeyRequestType : short
     {
         Produce = 0,
@@ -36,6 +40,7 @@
         ListGroups = 16
     }
 
+    [PublicAPI]
     public enum AckMode : short
     {
         AllReplicas = -1,
@@ -47,7 +52,8 @@
         WrittenToFiveReplicas = 5,
     }
 
-    public enum ReplicaIdMode : int
+    [PublicAPI]
+    public enum ReplicaIdMode
     {
         AnyReplica = -1
     }
@@ -69,6 +75,7 @@
     /// <summary>
     /// Enumeration of error codes that might be returned from a Kafka server
     /// </summary>
+    [PublicAPI]
     public enum ErrorResponseCode : short
     {
         /// <summary>
@@ -230,11 +237,12 @@
         /// Returned by the broker when the client is not authorized to use an inter-broker or administrative API.
         /// </summary>
         ClusterAuthorizationFailed = 31
-    }   
+    }
 
     /// <summary>
     /// Enumeration which specifies the compression type of messages
     /// </summary>
+    [PublicAPI]
     public enum MessageCodec
     {
         CodecNone = 0x00,

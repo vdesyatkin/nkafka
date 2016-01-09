@@ -7,11 +7,9 @@ namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopic : IKafkaConsumerTopic
     {
-        [PublicAPI, NotNull]
-        public readonly string TopicName;
+        [NotNull] public readonly string TopicName;
 
-        [PublicAPI, NotNull]
-        public readonly KafkaConsumerSettings Settings;
+        [NotNull] public readonly KafkaConsumerSettings Settings;
 
         [NotNull] private IReadOnlyDictionary<int, KafkaConsumerTopicPartition> _topicPartitions;
         [NotNull] private readonly ConcurrentDictionary<int, PackageInfo> _packages;
