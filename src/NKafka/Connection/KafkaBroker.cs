@@ -9,16 +9,11 @@ using NKafka.Protocol.API.TopicMetadata;
 namespace NKafka.Connection
 {
     internal sealed class KafkaBroker
-    {
-        [PublicAPI]
+    {        
         public bool IsOpenned => _isOpenned;
 
-        [PublicAPI]
         public bool IsEnabled => _isOpenned && !_isConnectionMaintenance;
-
-        [PublicAPI]
-        public KafkaBrokerStateErrorCode? Error => _sendError ?? _receiveError;
-
+        
         [PublicAPI]
         public string Name { get; }
 
@@ -99,9 +94,10 @@ namespace NKafka.Connection
                     hasAcitveRequests = true;
                 }
             }
-                       
+
             //reconnect if needed
-            var reconnectionPeriod = Error != null
+            var error = _sendError ?? _receiveError;
+            var reconnectionPeriod = error != null
                 ? _settings?.ErrorStateReconnectPeriod
                 : _settings?.RegularReconnectPeriod;            
 
@@ -130,7 +126,8 @@ namespace NKafka.Connection
             }
 
             //hearbeat: send request if needed (and haven't sent already)
-            var heartbeatPeriod = Error != null && _heartbeatRequestId == null
+            error = _sendError ?? _receiveError;
+            var heartbeatPeriod = error != null && _heartbeatRequestId == null
                 ? _settings?.HeartbeatPeriod
                 : null;
 

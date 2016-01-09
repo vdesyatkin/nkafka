@@ -27,7 +27,7 @@ namespace NKafka.Connection
                 _tcpClient = tcpClient;
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //todo (E002) socket errors
                 return false;

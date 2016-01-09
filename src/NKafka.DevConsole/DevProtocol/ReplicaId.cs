@@ -1,5 +1,8 @@
-﻿namespace NKafka.DevConsole.DevProtocol
+﻿using JetBrains.Annotations;
+
+namespace NKafka.DevConsole.DevProtocol
 {
+    [PublicAPI]
     public struct ReplicaId
     {
         public ReplicaIdMode? Mode { get; set; }

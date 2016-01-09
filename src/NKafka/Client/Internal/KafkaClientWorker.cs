@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Client.Internal.Broker;
 using NKafka.Connection;
 using NKafka.Metadata;
 using NKafka.Protocol;

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
+using JetBrains.Annotations;
+// ReSharper disable InconsistentNaming
 
 namespace NKafka.DevConsole.DevProtocol
 {
@@ -13,6 +15,7 @@ namespace NKafka.DevConsole.DevProtocol
     /// interface or remember that the result of one Compute call needs to be ~ (XOR) before
     /// being passed in as the seed for the next Compute call.
     /// </remarks>
+    [PublicAPI]
     public sealed class Crc32 : HashAlgorithm
     {
         public const UInt32 DefaultPolynomial = 0xedb88320u;
@@ -52,7 +55,7 @@ namespace NKafka.DevConsole.DevProtocol
             return hashBuffer;
         }
 
-        public override int HashSize { get { return 32; } }
+        public override int HashSize => 32;
 
         public static UInt32 Compute(byte[] buffer)
         {

@@ -7,19 +7,10 @@ namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopicPartition : IKafkaConsumerMessageQueue
     {
-        [PublicAPI, NotNull]
-        public readonly string TopicName;
-
-        [PublicAPI]
         public readonly int PartitonId;
-
-        [PublicAPI, NotNull]
-        public readonly KafkaConsumerSettings Settings;
-
-        [PublicAPI, NotNull]
-        public readonly KafkaConsumerBrokerPartition BrokerPartition;
-
-        [PublicAPI]
+        
+        [NotNull] public readonly KafkaConsumerBrokerPartition BrokerPartition;
+        
         public int EnqueuedCount => _enqueuedCount;
 
         [NotNull] private readonly ConcurrentQueue<KafkaMessageAndOffset> _messageQueue;
@@ -27,11 +18,9 @@ namespace NKafka.Client.Consumer.Internal
         private long _maxOffset;
 
         public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaConsumerSettings settings)
-        {
-            TopicName = topicName;
-            PartitonId = partitionId;
-            Settings = settings;
-            BrokerPartition = new KafkaConsumerBrokerPartition(TopicName, PartitonId, settings, this);
+        {            
+            PartitonId = partitionId;            
+            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, settings, this);
             _messageQueue = new ConcurrentQueue<KafkaMessageAndOffset>();
             _maxOffset = -1;
         }

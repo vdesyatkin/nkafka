@@ -7,6 +7,13 @@ using System.Text;
 using System.Threading;
 using NKafka.DevConsole.DevProtocol;
 using NKafka.DevConsole.DevProtocol.API;
+// ReSharper disable UnusedMember.Local
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedVariable
+// ReSharper disable UnusedParameter.Local
+// ReSharper disable NotAccessedVariable
+// ReSharper disable UseStringInterpolation
+// ReSharper disable RedundantAssignment
 
 namespace NKafka.DevConsole
 {
@@ -18,7 +25,7 @@ namespace NKafka.DevConsole
         private const byte DefaultMessageAttribute = 0;
         private static readonly byte GZipMessageAttribute = (byte)(0x00 | (ProtocolConstants.AttributeCodeMask & (byte)MessageCodec.CodecGzip));
 
-        private static int _correlationId = 0;
+        private static int _correlationId;
 
         private const ApiVersion DefaultApi = ApiVersion.V0;
         private const string DefaultProtocolType = "consumer";
@@ -706,7 +713,7 @@ namespace NKafka.DevConsole
                 data.AddRange(PackInt64(message.Offset));
                 var messageData = PackMessageWithCrc(message.Message, messageAttribute);
                 data.AddRange(PackByteArray32(messageData));
-            };
+            }
             return data.ToArray();
         }
 
@@ -739,7 +746,7 @@ namespace NKafka.DevConsole
                 {
                     WriteHeader(writer, ApiKeyRequestType.TopicMetadata);
 
-                    writer.Write(PackInt32(topics != null ? topics.Count : 0));
+                    writer.Write(PackInt32(topics?.Count ?? 0));
                     if (topics != null)
                     {
                         foreach (var topic in topics)

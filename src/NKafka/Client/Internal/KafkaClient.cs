@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Internal.Broker;
 
 namespace NKafka.Client.Internal
 {
@@ -33,8 +34,7 @@ namespace NKafka.Client.Internal
 
             _workers = workers;
         }
-
-        [PublicAPI]
+        
         public void Start()
         {
             foreach (var worker in _workers)
@@ -43,7 +43,6 @@ namespace NKafka.Client.Internal
             }
         }
 
-        [PublicAPI]
         public void Stop()
         {
             foreach (var worker in _workers)

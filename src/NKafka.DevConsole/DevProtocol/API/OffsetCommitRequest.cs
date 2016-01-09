@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NKafka.DevConsole.DevProtocol.API
 {
+    [PublicAPI]
     public class OffsetCommitRequest
     {
         public string GroupId { get; set; }

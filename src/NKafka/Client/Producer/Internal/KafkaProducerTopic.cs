@@ -5,11 +5,9 @@ namespace NKafka.Client.Producer.Internal
 {
     internal sealed class KafkaProducerTopic
     {
-        [PublicAPI, NotNull]
-        public readonly string TopicName;
+        [NotNull] public readonly string TopicName;
 
-        [PublicAPI, NotNull]
-        public readonly KafkaProducerSettings Settings;
+        [NotNull] private readonly KafkaProducerSettings _settings;
 
         [NotNull] private readonly IKafkaProducerTopicBuffer _buffer;
         [NotNull] private IReadOnlyList<int> _topicPartitionIds;
@@ -19,7 +17,7 @@ namespace NKafka.Client.Producer.Internal
             [NotNull] IKafkaProducerTopicBuffer buffer)
         {
             TopicName = topicName;
-            Settings = settings;
+            _settings = settings;
             _buffer = buffer;
             _topicPartitions = new Dictionary<int, KafkaProducerTopicPartition>();
             _topicPartitionIds = new int[0];            
@@ -27,7 +25,7 @@ namespace NKafka.Client.Producer.Internal
 
         public KafkaProducerTopicPartition CreatePartition(int partitionId)
         {
-            return new KafkaProducerTopicPartition(TopicName, partitionId, Settings);
+            return new KafkaProducerTopicPartition(partitionId, _settings);
         }
         
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartition> partitions)
