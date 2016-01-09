@@ -12,19 +12,16 @@ namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClientWorker
     {
-        [NotNull]
-        private readonly KafkaProtocol _protocol;
-        [NotNull]
-        private readonly KafkaClientSettings _settings;
+        [NotNull] private readonly KafkaProtocol _protocol;
+        [NotNull] private readonly KafkaClientSettings _settings;
 
-        [NotNull]
-        private readonly ConcurrentDictionary<string, KafkaClientTopic> _topics;
-        [NotNull]
-        private readonly ConcurrentDictionary<string, TopicMetadataRequest> _topicMetadataRequests;
-        [NotNull]
-        private readonly ConcurrentDictionary<int, KafkaClientBroker> _brokers;
-        [NotNull, ItemNotNull]
-        private readonly IReadOnlyCollection<KafkaClientBroker> _metadataBrokers;
+        [NotNull] private readonly ConcurrentDictionary<string, KafkaClientTopic> _topics;
+        [NotNull] private readonly ConcurrentDictionary<string, TopicMetadataRequest> _topicMetadataRequests;
+
+        [NotNull] private readonly ConcurrentDictionary<string, KafkaClientGroup> _groups;
+
+        [NotNull] private readonly ConcurrentDictionary<int, KafkaClientBroker> _brokers;
+        [NotNull, ItemNotNull] private readonly IReadOnlyCollection<KafkaClientBroker> _metadataBrokers;
 
         [NotNull]
         private Timer _workerTimer;
@@ -46,8 +43,12 @@ namespace NKafka.Client.Internal
             }
 
             _brokers = new ConcurrentDictionary<int, KafkaClientBroker>();
+
             _topics = new ConcurrentDictionary<string, KafkaClientTopic>();
             _topicMetadataRequests = new ConcurrentDictionary<string, TopicMetadataRequest>();
+
+            _groups = new ConcurrentDictionary<string, KafkaClientGroup>();
+
 
             var metadataBrokerInfos = _settings.MetadataBrokers ?? new KafkaBrokerInfo[0];
             var metadataBrokers = new List<KafkaClientBroker>(metadataBrokerInfos.Count);
