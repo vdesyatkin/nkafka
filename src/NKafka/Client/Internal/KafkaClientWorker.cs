@@ -343,15 +343,15 @@ namespace NKafka.Client.Internal
             }
 
             if (group.Status == KafkaClientGroupStatus.Ready)
-            {                
+            {
                 if (group.BrokerGroup?.Status == KafkaClientBrokerGroupStatus.RearrangeRequired)
                 {
-                    group.Status = KafkaClientGroupStatus.RearrangeRequired;                        
+                    group.Status = KafkaClientGroupStatus.RearrangeRequired;
                 }
             }
 
             if (group.Status == KafkaClientGroupStatus.RearrangeRequired)
-            {               
+            {
                 if (group.BrokerGroup?.Status == KafkaClientBrokerGroupStatus.Unplugged)
                 {
                     group.Status = KafkaClientGroupStatus.NotInitialized;

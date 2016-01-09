@@ -19,7 +19,7 @@ namespace NKafka.Client.Internal
 
         public void ApplyCoordinator([NotNull] KafkaBrokerMetadata groupCoordinator)
         {
-            BrokerGroup = new KafkaClientBrokerGroup(groupCoordinator);
+            BrokerGroup = new KafkaClientBrokerGroup(GroupName, groupCoordinator);
         }
     }
 }

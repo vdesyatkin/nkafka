@@ -7,6 +7,6 @@ namespace NKafka.Client.Internal.Broker
     {
         Unplugged = 0,
         Plugged = 1,
-        RearrangeRequired = 2,
+        RearrangeRequired = 2
     }
 }

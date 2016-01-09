@@ -48,44 +48,18 @@ namespace NKafka.Client.Internal.Broker
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
-                foreach (var partitionPair in topic.Partitions)
-                {
-                    var partition = partitionPair.Value;
-                    if (partition.IsUnplugRequired)
-                    {
-                        partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
-                        topic.Partitions.TryRemove(partitionPair.Key, out partition);
-                        _producer.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
-                        _consumer.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
-                        continue;
-                    }
+                ProcessTopic(topic);                
+            }
 
-                    if (partition.Status == KafkaClientBrokerPartitionStatus.Unplugged)
-                    {
-                        if (partition.Producer != null)
-                        {
-                            _producer.AddTopicPartition(partition.TopicName, partition.Producer);
-                        }
-
-                        if (partition.Consumer != null)
-                        {
-                            _consumer.AddTopicPartition(partition.TopicName, partition.Consumer);
-                        }
-                        
-                        partition.Status = KafkaClientBrokerPartitionStatus.Plugged;            
-                    }                   
-
-                    if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrageRequired || 
-                        partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrageRequired)
-                    {
-                        partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
-                    }
-                }
+            foreach (var groupPair in _groups)
+            {
+                var group = groupPair.Value;
+                ProcessGroup(group);
             }
             
             _producer.Produce();
             _consumer.Consume();            
-        }
+        }        
 
         public void Open()
         {
@@ -119,6 +93,61 @@ namespace NKafka.Client.Internal.Broker
         public void AddGroupCoordinator([NotNull] string groupName, [NotNull] KafkaClientBrokerGroup group)
         {
             _groups[groupName] = group;
+        }
+
+        private void ProcessTopic([NotNull] KafkaClientBrokerTopic topic)
+        {
+            foreach (var partitionPair in topic.Partitions)
+            {
+                var partition = partitionPair.Value;
+                if (partition.IsUnplugRequired)
+                {
+                    partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
+                    topic.Partitions.TryRemove(partitionPair.Key, out partition);
+                    _producer.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
+                    _consumer.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
+                    continue;
+                }
+
+                if (partition.Status == KafkaClientBrokerPartitionStatus.Unplugged)
+                {
+                    if (partition.Producer != null)
+                    {
+                        _producer.AddTopicPartition(partition.TopicName, partition.Producer);
+                    }
+
+                    if (partition.Consumer != null)
+                    {
+                        _consumer.AddTopicPartition(partition.TopicName, partition.Consumer);
+                    }
+
+                    partition.Status = KafkaClientBrokerPartitionStatus.Plugged;
+                }
+
+                if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrageRequired ||
+                    partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrageRequired)
+                {
+                    partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
+                }
+            }
+        }
+
+        private void ProcessGroup([NotNull] KafkaClientBrokerGroup group)
+        {                       
+            if (group.IsUnplugRequired)
+            {
+                group.Status = KafkaClientBrokerGroupStatus.Unplugged;
+                KafkaClientBrokerGroup removedGroup;
+                _groups.TryRemove(group.GroupName, out removedGroup);
+                return;
+            }
+
+            if (group.Status == KafkaClientBrokerGroupStatus.Unplugged)
+            {                
+                group.Status = KafkaClientBrokerGroupStatus.Plugged;
+            }
+
+            //todo (C004) Coordinator processing
         }
 
         #region Topic metadata
