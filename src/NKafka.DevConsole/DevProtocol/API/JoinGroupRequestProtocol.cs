@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NKafka.DevConsole.DevProtocol.API
 {
+    [PublicAPI]
     public class JoinGroupRequestProtocol
     {
         public string ProtocolName { get; set; }

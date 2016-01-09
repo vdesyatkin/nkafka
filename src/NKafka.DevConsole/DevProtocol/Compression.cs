@@ -1,8 +1,10 @@
 ﻿using System.IO;
 using System.IO.Compression;
+using JetBrains.Annotations;
 
 namespace NKafka.DevConsole.DevProtocol
 {
+    [PublicAPI]
     public static class Compression
     {
         public static byte[] Zip(byte[] bytes)

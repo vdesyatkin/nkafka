@@ -28,9 +28,7 @@ namespace NKafka.Client.Consumer.Internal
 
             var genericMessages = new List<KafkaMessage<TKey, TData>>(messages.Count);
             foreach (var message in messages)
-            {
-                if (message == null) continue;
-
+            {                
                 try
                 {
                     var key = _serializer.DeserializeKey(message.Key);

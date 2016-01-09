@@ -1,5 +1,8 @@
-﻿namespace NKafka.DevConsole.DevProtocol.API
+﻿using JetBrains.Annotations;
+
+namespace NKafka.DevConsole.DevProtocol.API
 {
+    [PublicAPI]
     public class SyncGroupResponse
     {
         public ErrorResponseCode Error { get; set; }

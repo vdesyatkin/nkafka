@@ -1,7 +1,9 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace NKafka.DevConsole.DevProtocol
 {
+    [PublicAPI]
     public struct OffsetTime
     {
         public OffsetMode? Mode { get; private set; }

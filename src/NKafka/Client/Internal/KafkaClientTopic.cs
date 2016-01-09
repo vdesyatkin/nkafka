@@ -8,13 +8,12 @@ namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClientTopic
     {
-        [PublicAPI, NotNull]
+        [NotNull]
         public readonly string TopicName;
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public IReadOnlyList<KafkaClientTopicPartition> Partitions { get; private set; }
-
-        [PublicAPI]
+        
         public KafkaClientTopicStatus Status;
 
         [CanBeNull] private readonly KafkaProducerTopic _producer;

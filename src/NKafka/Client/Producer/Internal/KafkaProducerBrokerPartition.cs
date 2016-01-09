@@ -4,24 +4,18 @@ using JetBrains.Annotations;
 namespace NKafka.Client.Producer.Internal
 {
     internal sealed class KafkaProducerBrokerPartition
-    {
-        [PublicAPI, NotNull]
-        public readonly string TopicName;
-
-        [PublicAPI]
+    {        
         public readonly int PartitionId;
 
-        [PublicAPI, NotNull]
-        public readonly KafkaProducerSettings Settings;
+        [NotNull] public readonly KafkaProducerSettings Settings;
 
         [NotNull] private readonly IKafkaProducerMessageQueue _mainQueue;
         [NotNull] private readonly Queue<KafkaMessage> _retryQueue;
 
         public bool NeedRearrange;
 
-        public KafkaProducerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaProducerSettings settings, [NotNull] IKafkaProducerMessageQueue mainQueue)
-        {
-            TopicName = topicName;
+        public KafkaProducerBrokerPartition(int partitionId, [NotNull] KafkaProducerSettings settings, [NotNull] IKafkaProducerMessageQueue mainQueue)
+        {     
             PartitionId = partitionId;
             Settings = settings;
             _mainQueue = mainQueue;
