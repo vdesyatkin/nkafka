@@ -8,8 +8,7 @@ namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClientTopicPartition
     {                        
-        [NotNull]
-        public readonly KafkaClientBrokerPartition BrokerPartition;        
+        [NotNull] public readonly KafkaClientBrokerPartition BrokerPartition;        
 
         public KafkaClientTopicPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaBrokerMetadata brokerMetadata,
             [CanBeNull] KafkaProducerTopicPartition producerPartition, [CanBeNull] KafkaConsumerTopicPartition consumerPartition)

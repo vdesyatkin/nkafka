@@ -25,6 +25,7 @@ namespace NKafka.Protocol.API.GroupCoordinator
         /// </summary>
         public readonly int Port;
 
+        /// <param name="errorCode">Error code.</param>
         /// <param name="brokerId">Broker Id.</param>
         /// <param name="host">Borker host.</param>
         /// <param name="port">Broker port.</param>

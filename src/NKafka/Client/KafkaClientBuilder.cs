@@ -58,7 +58,7 @@ namespace NKafka.Client
             return topicBuffer;
         }
         
-        public IKafkaConsumerTopic CreateTopicConsumer([NotNull] string topicName, 
+        public IKafkaConsumerTopic CreateTopicConsumer([NotNull] string topicName, [CanBeNull] string groupName,
             [NotNull] KafkaConsumerSettings settings)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -68,12 +68,12 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topic = new KafkaConsumerTopic(topicName, settings);
+            var topic = new KafkaConsumerTopic(topicName, groupName, settings);
             _topicConsumers.Add(topic);
             return topic;
         }
         
-        public IKafkaConsumerTopic<TKey,TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName,
+        public IKafkaConsumerTopic<TKey,TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName, [CanBeNull] string groupName,
            [NotNull] KafkaConsumerSettings settings,
            [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer)
         {
@@ -84,7 +84,7 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topic = new KafkaConsumerTopic(topicName, settings);
+            var topic = new KafkaConsumerTopic(topicName, groupName, settings);
             var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer);
             _topicConsumers.Add(topic);
             return wrapper;
@@ -109,6 +109,7 @@ namespace NKafka.Client
                 consumers[consumer.TopicName] = consumer;
             }
 
+            var groupNames = new HashSet<string>();
             var topics = new List<KafkaClientTopic>(topicNames.Count);
             foreach (var topicName in topicNames)
             {
@@ -118,11 +119,24 @@ namespace NKafka.Client
                 KafkaConsumerTopic consumer;
                 consumers.TryGetValue(topicName, out consumer);
 
+                var groupName = consumer?.GroupName;
+                if (!string.IsNullOrEmpty(groupName))
+                {
+                    groupNames.Add(groupName);
+                }
+
                 var topic = new KafkaClientTopic(topicName, producer, consumer);
                 topics.Add(topic);
             }
 
-            return new KafkaClient(_settings, topics);
-        }        
+            var groups = new List<KafkaClientGroup>(groupNames.Count);
+            foreach (var groupName in groupNames)
+            {                
+                var group = new KafkaClientGroup(groupName);
+                groups.Add(group);
+            }
+
+            return new KafkaClient(_settings, topics, groups);
+        }
     }
 }

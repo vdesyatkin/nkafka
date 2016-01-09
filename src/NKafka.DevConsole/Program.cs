@@ -34,7 +34,7 @@ namespace NKafka.DevConsole
             var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());
             var topicProducer = clientBuilder.CreateTopicProducer(topicName,
                 producerConfigBuilder.Build(), new TestPartitioner(), new TestSerializer());
-            var topicConsumer = clientBuilder.CreateTopicConsumer(topicName,
+            var topicConsumer = clientBuilder.CreateTopicConsumer(topicName, null,
                 consumerConfigBuilder.Build(), new TestSerializer());
             var client = clientBuilder.Build();
 

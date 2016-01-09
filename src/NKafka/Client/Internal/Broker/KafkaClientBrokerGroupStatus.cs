@@ -1,11 +1,11 @@
 ﻿using JetBrains.Annotations;
 
 namespace NKafka.Client.Internal.Broker
-{
+{    
     [PublicAPI]
-    internal enum KafkaClientBrokerPartitionStatus
+    internal enum KafkaClientBrokerGroupStatus
     {
-        Unplugged = 0,        
+        Unplugged = 0,
         Plugged = 1,
         RearrangeRequired = 2,
     }

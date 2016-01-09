@@ -19,18 +19,19 @@ namespace NKafka.Client.Internal.Broker
 
         [NotNull] private readonly KafkaBroker _broker;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;
-        [CanBeNull] private readonly KafkaProducerBroker _producer;
-        [CanBeNull] private readonly KafkaConsumerBroker _consumer;
+        [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerGroup> _groups;
+        [NotNull] private readonly KafkaProducerBroker _producer;
+        [NotNull] private readonly KafkaConsumerBroker _consumer;
 
         private readonly TimeSpan _clientTimeout;
 
-        public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaClientSettings settings, 
-            bool hasProducer, bool hasConsumer)
+        public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaClientSettings settings)
         {
             _broker = broker;
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
-            _producer = hasProducer ? new KafkaProducerBroker(broker, settings.WorkerPeriod) : null;
-            _consumer = hasConsumer ? new KafkaConsumerBroker(broker, settings.WorkerPeriod) : null;
+            _groups = new ConcurrentDictionary<string, KafkaClientBrokerGroup>();
+            _producer = new KafkaProducerBroker(broker, settings.WorkerPeriod);
+            _consumer = new KafkaConsumerBroker(broker, settings.WorkerPeriod);
             
             var workerPeriod = settings.WorkerPeriod;
             if (workerPeriod < TimeSpan.FromMilliseconds(100)) //todo (E006) settings rage validation?
@@ -54,8 +55,8 @@ namespace NKafka.Client.Internal.Broker
                     {
                         partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
                         topic.Partitions.TryRemove(partitionPair.Key, out partition);
-                        _producer?.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
-                        _consumer?.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
+                        _producer.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
+                        _consumer.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
                         continue;
                     }
 
@@ -63,27 +64,27 @@ namespace NKafka.Client.Internal.Broker
                     {
                         if (partition.Producer != null)
                         {
-                            _producer?.AddTopicPartition(partition.TopicName, partition.Producer);
+                            _producer.AddTopicPartition(partition.TopicName, partition.Producer);
                         }
 
                         if (partition.Consumer != null)
                         {
-                            _consumer?.AddTopicPartition(partition.TopicName, partition.Consumer);
+                            _consumer.AddTopicPartition(partition.TopicName, partition.Consumer);
                         }
                         
                         partition.Status = KafkaClientBrokerPartitionStatus.Plugged;            
                     }                   
 
-                    if (partition.Producer?.NeedRearrange == true || 
-                        partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.NeedRearrage)
+                    if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrageRequired || 
+                        partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrageRequired)
                     {
-                        partition.Status = KafkaClientBrokerPartitionStatus.NeedRearrange;
+                        partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
                     }
                 }
             }
             
-            _producer?.Produce();
-            _consumer?.Consume();            
+            _producer.Produce();
+            _consumer.Consume();            
         }
 
         public void Open()
@@ -113,6 +114,11 @@ namespace NKafka.Client.Internal.Broker
             }
 
             topic.Partitions[topicPartition.PartitionId] = topicPartition;            
+        }
+
+        public void AddGroupCoordinator([NotNull] string groupName, [NotNull] KafkaClientBrokerGroup group)
+        {
+            _groups[groupName] = group;
         }
 
         #region Topic metadata
@@ -153,9 +159,8 @@ namespace NKafka.Client.Internal.Broker
             var partitions = new List<KafkaTopicPartitionMetadata>(responsePartitons.Count);
             foreach (var responsePartition in responsePartitons)
             {
-                if (responsePartition == null) continue;
                 //todo (E009) handling standard errors (responsePartition.ErrorCode)
-                if (responsePartition.ErrorCode != KafkaResponseErrorCode.NoError) continue;
+                if (responsePartition?.ErrorCode != KafkaResponseErrorCode.NoError) continue;
                 partitions.Add(new KafkaTopicPartitionMetadata(responsePartition.PartitionId, responsePartition.LeaderId));
             }
 
@@ -166,18 +171,18 @@ namespace NKafka.Client.Internal.Broker
 
         #region Group metadata
 
-        public KafkaBrokerResult<int?> RequestGroupMetadata([NotNull] string groupName)
+        public KafkaBrokerResult<int?> RequestGroupCoordinator([NotNull] string groupName)
         {
             return _broker.Send(new KafkaGroupCoordinatorRequest(groupName), _clientTimeout);
         }
 
-        public KafkaBrokerResult<KafkaBrokerMetadata> GetGroupMetadata(int requestId)
+        public KafkaBrokerResult<KafkaBrokerMetadata> GetGroupCoordinator(int requestId)
         {
             var response = _broker.Receive<KafkaGroupCoordinatorResponse>(requestId);
-            return ConvertMetadata(response);
+            return ConvertGroupCoordinator(response);
         }
 
-        private static KafkaBrokerResult<KafkaBrokerMetadata> ConvertMetadata(KafkaBrokerResult<KafkaGroupCoordinatorResponse> response)
+        private static KafkaBrokerResult<KafkaBrokerMetadata> ConvertGroupCoordinator(KafkaBrokerResult<KafkaGroupCoordinatorResponse> response)
         {
             if (!response.HasData) return response.Error;
 

@@ -48,6 +48,8 @@
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicWrapper.cs" />
     <Compile Include="Client\Consumer\KafkaMessagePackage.cs" />
     <Compile Include="Client\IKafkaClient.cs" />
+    <Compile Include="Client\Internal\Broker\KafkaClientBrokerGroup.cs" />
+    <Compile Include="Client\Internal\Broker\KafkaClientBrokerGroupStatus.cs" />
     <Compile Include="Client\Internal\KafkaClient.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerPartition.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerPartitionStatus.cs" />
@@ -71,6 +73,7 @@
     <Compile Include="Client\Internal\Broker\KafkaClientBroker.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerBroker.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerBrokerPartition.cs" />
+    <Compile Include="Client\Producer\Internal\KafkaProducerBrokerPartitionStatus.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerBrokerTopic.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerTopic.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerTopicBuffer.cs" />
@@ -91,6 +94,7 @@
     <Compile Include="KafkaMessageAndOffset.cs" />
     <Compile Include="KafkaVersion.cs" />
     <Compile Include="Metadata\KafkaBrokerMetadata.cs" />
+    <Compile Include="Metadata\KafkaGroupMetadata.cs" />
     <Compile Include="Metadata\KafkaTopicMetadata.cs" />
     <Compile Include="Metadata\KafkaTopicPartitionMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

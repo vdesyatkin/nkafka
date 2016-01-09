@@ -5,6 +5,6 @@
         NotInitialized = 0,
         OffsetRequested = 1,
         Plugged = 2,
-        NeedRearrage = 3
+        RearrageRequired = 3
     }
 }
