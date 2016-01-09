@@ -352,6 +352,12 @@ namespace NKafka.Client.Internal
 
             if (group.Status == KafkaClientGroupStatus.RearrangeRequired)
             {
+                var brokerGroup = group.BrokerGroup;
+                if (brokerGroup != null)
+                {
+                    brokerGroup.IsUnplugRequired = true;                    
+                }
+
                 if (group.BrokerGroup?.Status == KafkaClientBrokerGroupStatus.Unplugged)
                 {
                     group.Status = KafkaClientGroupStatus.NotInitialized;
