@@ -17,7 +17,7 @@ namespace NKafka.Protocol.API.JoinGroup
     [PublicAPI]
     internal sealed class KafkaJoinGroupRequest : IKafkaRequest
     {
-        public readonly string GroupId;
+        public readonly string GroupName;
 
         public readonly string MemberId;
         
@@ -25,9 +25,9 @@ namespace NKafka.Protocol.API.JoinGroup
 
         public readonly IReadOnlyList<KafkaJoinGroupRequestProtocol> Protocols;
 
-        public KafkaJoinGroupRequest(string groupId, string memberId, TimeSpan sessionTimeout, IReadOnlyList<KafkaJoinGroupRequestProtocol> protocols)
+        public KafkaJoinGroupRequest(string groupName, string memberId, TimeSpan sessionTimeout, IReadOnlyList<KafkaJoinGroupRequestProtocol> protocols)
         {
-            GroupId = groupId;
+            GroupName = groupName;
             MemberId = memberId;
             SessionTimeout = sessionTimeout;
             Protocols = protocols;

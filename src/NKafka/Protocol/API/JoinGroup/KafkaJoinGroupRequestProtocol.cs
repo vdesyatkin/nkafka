@@ -6,9 +6,9 @@ namespace NKafka.Protocol.API.JoinGroup
     [PublicAPI]
     internal sealed class KafkaJoinGroupRequestProtocol
     {
-        public readonly string Name;
+        public readonly string ProtocolName;
 
-        public readonly short Version;
+        public readonly short ProtocolVersion;
 
         public readonly IReadOnlyList<string> TopicNames;
 
@@ -16,10 +16,10 @@ namespace NKafka.Protocol.API.JoinGroup
 
         public readonly byte[] CustomData;
 
-        public KafkaJoinGroupRequestProtocol(string name, short version, IReadOnlyList<string> topicNames, IReadOnlyList<string> assignmentStrategies, byte[] customData)
+        public KafkaJoinGroupRequestProtocol(string protocolName, short protocolVersion, IReadOnlyList<string> topicNames, IReadOnlyList<string> assignmentStrategies, byte[] customData)
         {
-            Name = name;
-            Version = version;
+            ProtocolName = protocolName;
+            ProtocolVersion = protocolVersion;
             TopicNames = topicNames;
             AssignmentStrategies = assignmentStrategies;
             CustomData = customData;

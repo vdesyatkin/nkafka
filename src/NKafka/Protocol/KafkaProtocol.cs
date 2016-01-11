@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.GroupCoordinator;
+using NKafka.Protocol.API.Heartbeat;
 using NKafka.Protocol.API.JoinGroup;
 using NKafka.Protocol.API.Offset;
+using NKafka.Protocol.API.OffsetCommit;
+using NKafka.Protocol.API.OffsetFetch;
 using NKafka.Protocol.API.Produce;
+using NKafka.Protocol.API.SyncGroup;
 using NKafka.Protocol.API.TopicMetadata;
 using NKafka.Protocol.Serialization;
 
@@ -203,9 +207,17 @@ namespace NKafka.Protocol
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaFetchApi());
                 case KafkaRequestType.JoinGroup:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaJoinGroupApi());
+                case KafkaRequestType.SyncGroup:
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaSyncGroupApi());
+                case KafkaRequestType.Heartbeat:
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaHearbeatApi());
+                case KafkaRequestType.OffsetFetch:
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetFetchApi());
+                case KafkaRequestType.OffsetCommit:
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetCommitApi());
             }
             return null;
-        }        
+        }
 
         private sealed class KafkaRequestConfiguration
         {

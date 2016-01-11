@@ -21,8 +21,8 @@ namespace NKafka.Protocol.API.JoinGroup
 
         private static void WriteJoinGroupRequest([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaJoinGroupRequest request)
         {
-            writer.WriteString(request.GroupId);
-            writer.WriteNullableInt32((int)request.SessionTimeout.TotalMilliseconds);
+            writer.WriteString(request.GroupName);
+            writer.WriteInt32((int)request.SessionTimeout.TotalMilliseconds);
             writer.WriteString(request.MemberId ?? UnknownMember);
             writer.WriteString(DefaultProtocolType);
             writer.WriteCollection(request.Protocols, WriteJoinGroupRequestProtocol);
@@ -30,10 +30,10 @@ namespace NKafka.Protocol.API.JoinGroup
 
         private static void WriteJoinGroupRequestProtocol([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaJoinGroupRequestProtocol protocol)
         {
-            writer.WriteString(protocol.Name);
+            writer.WriteString(protocol.ProtocolName);
 
             writer.BeginWriteSize();
-            writer.WriteInt16(protocol.Version);            
+            writer.WriteInt16(protocol.ProtocolVersion);            
             writer.WriteCollection(protocol.TopicNames, writer.WriteString);
             writer.WriteByteArray(protocol.CustomData);
             writer.WriteCollection(protocol.AssignmentStrategies, writer.WriteString);

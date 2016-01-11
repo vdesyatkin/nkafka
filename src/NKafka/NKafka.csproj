@@ -111,12 +111,28 @@
     <Compile Include="Protocol\API\GroupCoordinator\KafkaGroupCoordinatorApi.cs" />
     <Compile Include="Protocol\API\GroupCoordinator\KafkaGroupCoordinatorRequest.cs" />
     <Compile Include="Protocol\API\GroupCoordinator\KafkaGroupCoordinatorResponse.cs" />
+    <Compile Include="Protocol\API\Heartbeat\KafkaHearbeatApi.cs" />
+    <Compile Include="Protocol\API\Heartbeat\KafkaHeartbeatRequest.cs" />
+    <Compile Include="Protocol\API\Heartbeat\KafkaHeartbeatResponse.cs" />
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupApi.cs" />
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupRequest.cs" />
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupRequestProtocol.cs" />
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupResponse.cs" />
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupResponseMember.cs" />
+    <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitApi.cs" />
+    <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitRequestTopic.cs" />
+    <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitRequestTopicPartition.cs" />
+    <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitResponse.cs" />
+    <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitResponseTopic.cs" />
+    <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitResponseTopicPartition.cs" />
+    <Compile Include="Protocol\API\OffsetFetch\KafkaOffsetFetchApi.cs" />
+    <Compile Include="Protocol\API\OffsetFetch\KafkaOffsetFetchRequest.cs" />
+    <Compile Include="Protocol\API\OffsetFetch\KafkaOffsetFetchRequestTopic.cs" />
+    <Compile Include="Protocol\API\OffsetFetch\KafkaOffsetFetchResponse.cs" />
+    <Compile Include="Protocol\API\OffsetFetch\KafkaOffsetFetchResponseTopic.cs" />
+    <Compile Include="Protocol\API\OffsetFetch\KafkaOffsetFetchResponseTopicPartition.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetApi.cs" />
+    <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitRequest.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetRequest.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetRequestTopic.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetRequestTopicPartition.cs" />
@@ -130,6 +146,12 @@
     <Compile Include="Protocol\API\Produce\KafkaProduceResponse.cs" />
     <Compile Include="Protocol\API\Produce\KafkaProduceResponseTopic.cs" />
     <Compile Include="Protocol\API\Produce\KafkaProduceResponseTopicPartition.cs" />
+    <Compile Include="Protocol\API\SyncGroup\KafkaSyncGroupApi.cs" />
+    <Compile Include="Protocol\API\SyncGroup\KafkaSyncGroupRequest.cs" />
+    <Compile Include="Protocol\API\SyncGroup\KafkaSyncGroupRequestMember.cs" />
+    <Compile Include="Protocol\API\SyncGroup\KafkaSyncGroupRequestMemberTopic.cs" />
+    <Compile Include="Protocol\API\SyncGroup\KafkaSyncGroupResponse.cs" />
+    <Compile Include="Protocol\API\SyncGroup\KafkaSyncGroupResponseTopic.cs" />
     <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataApi.cs" />
     <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataRequest.cs" />
     <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataResponse.cs" />
@@ -149,10 +171,7 @@
     <Compile Include="Protocol\Serialization\KafkaCrc32.cs" />
     <Compile Include="ResharperAnnotations.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Protocol\API\Heartbeat\" />
-    <Folder Include="Protocol\API\SyncGroup\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
