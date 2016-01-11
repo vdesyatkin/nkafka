@@ -1,14 +1,17 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.TopicMetadata
 {
     [PublicAPI]
-    internal static class KafkaTopicMetadataApi
+    internal class KafkaTopicMetadataApi : IKafkaRequestApi
     {
+        public Type RequestType => typeof(KafkaTopicMetadataRequest);
+
         #region TopicMetadataRequest
-        
-        public static void WriteRequest([NotNull] KafkaBinaryWriter writer, [NotNull] IKafkaRequest request)
+
+        public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)
         {
             WriteTopicMetadataRequest(writer, (KafkaTopicMetadataRequest)request);
         }
@@ -27,38 +30,8 @@ namespace NKafka.Protocol.API.TopicMetadata
         #endregion TopicMetadataRequest
 
         #region TopicMetadataResponse
-
-        public static void WriteResponse([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaTopicMetadataResponse response)
-        {
-            writer.WriteCollection(response.Brokers, WriteResponseBroker);
-            writer.WriteCollection(response.Topics, WriteResponseTopic);
-        }
-
-        private static void WriteResponseBroker([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaTopicMetadataResponseBroker broker)
-        {
-            writer.WriteInt32(broker.BrokerId);
-            writer.WriteString(broker.Host);
-            writer.WriteInt32(broker.Port);
-        }
-
-        private static void WriteResponseTopic([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaTopicMetadataResponseTopic topic)
-        {
-            writer.WriteInt16((short)topic.ErrorCode);
-            writer.WriteString(topic.TopicName);
-            writer.WriteCollection(topic.Partitions, WriteResponseTopicPartition);
-        }
-
-        private static void WriteResponseTopicPartition([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaTopicMetadataResponseTopicPartition partition)
-        {
-            writer.WriteInt16((short)partition.ErrorCode);
-            writer.WriteInt32(partition.PartitionId);
-            writer.WriteInt32(partition.LeaderId);
-            writer.WriteCollection(partition.ReplicaIds, writer.WriteInt32);
-            writer.WriteCollection(partition.Isr, writer.WriteInt32);
-        }
-        
-        [PublicAPI]
-        public static IKafkaResponse ReadResponse([NotNull] KafkaBinaryReader reader)
+     
+        public IKafkaResponse ReadResponse(KafkaBinaryReader reader)
         {
             return ReadTopicMetadataResponse(reader);
         }

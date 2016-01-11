@@ -36,6 +36,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\Consumer\IKafkaConsumerAssignmentStrategy.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerMessageQueue.cs" />
@@ -46,6 +47,8 @@
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicPartition.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicWrapper.cs" />
+    <Compile Include="Client\Consumer\KafkaConsumerAssignmentStrategyInfo.cs" />
+    <Compile Include="Client\Consumer\KafkaConsumerProtocolInfo.cs" />
     <Compile Include="Client\Consumer\KafkaMessagePackage.cs" />
     <Compile Include="Client\IKafkaClient.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerGroup.cs" />
@@ -108,6 +111,11 @@
     <Compile Include="Protocol\API\GroupCoordinator\KafkaGroupCoordinatorApi.cs" />
     <Compile Include="Protocol\API\GroupCoordinator\KafkaGroupCoordinatorRequest.cs" />
     <Compile Include="Protocol\API\GroupCoordinator\KafkaGroupCoordinatorResponse.cs" />
+    <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupApi.cs" />
+    <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupRequest.cs" />
+    <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupRequestProtocol.cs" />
+    <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupResponse.cs" />
+    <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupResponseMember.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetApi.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetRequest.cs" />
     <Compile Include="Protocol\API\Offset\KafkaOffsetRequestTopic.cs" />
@@ -129,6 +137,7 @@
     <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataResponseTopic.cs" />
     <Compile Include="Protocol\API\TopicMetadata\KafkaTopicMetadataResponseTopicPartition.cs" />
     <Compile Include="Protocol\IKafkaRequest.cs" />
+    <Compile Include="Protocol\IKafkaRequestApi.cs" />
     <Compile Include="Protocol\IKafkaResponse.cs" />
     <Compile Include="Protocol\KafkaProtocol.cs" />
     <Compile Include="Protocol\KafkaRequestType.cs" />
@@ -140,7 +149,10 @@
     <Compile Include="Protocol\Serialization\KafkaCrc32.cs" />
     <Compile Include="ResharperAnnotations.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Protocol\API\Heartbeat\" />
+    <Folder Include="Protocol\API\SyncGroup\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

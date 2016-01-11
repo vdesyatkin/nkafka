@@ -6,8 +6,10 @@ using NKafka.Protocol.Serialization;
 namespace NKafka.Protocol.API.Produce
 {
     [PublicAPI]
-    internal static class KafkaProduceApi
-    {        
+    internal class KafkaProduceApi : IKafkaRequestApi
+    {
+        public Type RequestType => typeof(KafkaProduceRequest);
+
         const byte MessageMagicNumber = 0;
         const byte MessageDefaultAttribute = 0;
         const byte MessageAttributeCodeMask = 3;
@@ -15,7 +17,7 @@ namespace NKafka.Protocol.API.Produce
 
         #region ProduceRequest
         
-        public static void WriteRequest([NotNull] KafkaBinaryWriter writer, [NotNull] IKafkaRequest request)
+        public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)
         {
             WriteProduceRequest(writer, (KafkaProduceRequest)request);
         }
@@ -175,27 +177,9 @@ namespace NKafka.Protocol.API.Produce
         #endregion ProduceRequest
 
         #region ProduceResponse
-
-        public static void WriteProduceResponse([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceResponse response)
-        {
-            writer.WriteCollection(response.Topics, WriteProduceResponseTopic);
-        }
-
-        private static void WriteProduceResponseTopic([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceResponseTopic topic)
-        {
-            writer.WriteString(topic.TopicName);
-            writer.WriteCollection(topic.Partitions, WriteProduceResponseTopicPartition);
-        }
-
-        private static void WriteProduceResponseTopicPartition([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceResponseTopicPartition partition)
-        {
-            writer.WriteInt32(partition.PartitionId);
-            writer.WriteInt16((short)partition.ErrorCode);
-            writer.WriteInt64(partition.Offset);
-        }
-
+        
         [PublicAPI]
-        public static IKafkaResponse ReadResponse([NotNull] KafkaBinaryReader reader)
+        public IKafkaResponse ReadResponse(KafkaBinaryReader reader)
         {
             return ReadProduceResponse(reader);
         }

@@ -1,14 +1,17 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.GroupCoordinator
 {
-    internal static class KafkaGroupCoordinatorApi
+    [PublicAPI]
+    internal class KafkaGroupCoordinatorApi : IKafkaRequestApi
     {
-        #region GroupCoordinatorRequest
+        public Type RequestType => typeof(KafkaGroupCoordinatorRequest);
 
-        [PublicAPI]
-        public static void WriteRequest([NotNull] KafkaBinaryWriter writer, [NotNull] IKafkaRequest request)
+        #region GroupCoordinatorRequest
+        
+        public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)
         {
             WriteGroupCoordinatorRequest(writer, (KafkaGroupCoordinatorRequest)request);
         }
@@ -21,9 +24,8 @@ namespace NKafka.Protocol.API.GroupCoordinator
         #endregion GroupCoordinatorRequest
 
         #region GroupCoordinatorResponse
-
-        [PublicAPI]
-        public static IKafkaResponse ReadResponse([NotNull] KafkaBinaryReader reader)
+        
+        public IKafkaResponse ReadResponse(KafkaBinaryReader reader)
         {
             return ReadGroupCoordinatorResponse(reader);
         }

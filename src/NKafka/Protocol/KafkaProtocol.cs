@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.GroupCoordinator;
+using NKafka.Protocol.API.JoinGroup;
 using NKafka.Protocol.API.Offset;
 using NKafka.Protocol.API.Produce;
 using NKafka.Protocol.API.TopicMetadata;
@@ -49,7 +50,7 @@ namespace NKafka.Protocol
                 writer.WriteInt32(correlationId);
                 writer.WriteString(_clientId);
 
-                requestConfiguration.WriteRequestMethod.Invoke(writer, request);
+                requestConfiguration.RequestApi.WriteRequest(writer, request);
 
                 writer.EndWriteSize();
 
@@ -111,7 +112,7 @@ namespace NKafka.Protocol
 
             using (var reader = new KafkaBinaryReader(data, offset, count))
             {
-                return requestConfiguration.ReadResponseMethod.Invoke(reader);                
+                return requestConfiguration.RequestApi.ReadResponse(reader);
             }
         }
 
@@ -180,7 +181,7 @@ namespace NKafka.Protocol
 
                 var requestConfiguration = CreateRequestConfiguration(requestType, requestVersion);
                 if (requestConfiguration == null) continue;
-                requests[requestConfiguration.RequestClassType] = requestConfiguration;
+                requests[requestConfiguration.RequestApi.RequestType] = requestConfiguration;
             }
 
             return new KafkaProtocolConfiguration(requests);
@@ -191,20 +192,17 @@ namespace NKafka.Protocol
             switch (requestType)
             {
                 case KafkaRequestType.TopicMetadata:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaTopicMetadataRequest),
-                        KafkaTopicMetadataApi.WriteRequest, KafkaTopicMetadataApi.ReadResponse);
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaTopicMetadataApi());
                 case KafkaRequestType.GroupCoordinator:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaGroupCoordinatorRequest),
-                        KafkaGroupCoordinatorApi.WriteRequest, KafkaGroupCoordinatorApi.ReadResponse);
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaGroupCoordinatorApi());                        
                 case KafkaRequestType.Produce:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaProduceRequest),
-                        KafkaProduceApi.WriteRequest, KafkaProduceApi.ReadResponse);
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaProduceApi());                        
                 case KafkaRequestType.Offset:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaOffsetRequest),
-                        KafkaOffsetApi.WriteRequest, KafkaOffsetApi.ReadResponse);
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetApi());                        
                 case KafkaRequestType.Fetch:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, typeof(KafkaFetchRequest),
-                        KafkaFetchApi.WriteRequest, KafkaFetchApi.ReadResponse);
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaFetchApi());
+                case KafkaRequestType.JoinGroup:
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaJoinGroupApi());
             }
             return null;
         }        
@@ -213,20 +211,14 @@ namespace NKafka.Protocol
         {
             public readonly KafkaRequestType RequestType;
             public readonly KafkaRequestVersion RequestVersion;
-            [NotNull] public readonly Type RequestClassType;
-            [NotNull] public readonly Action<KafkaBinaryWriter, IKafkaRequest> WriteRequestMethod;
-            [NotNull] public readonly Func<KafkaBinaryReader, IKafkaResponse> ReadResponseMethod;
+            public readonly IKafkaRequestApi RequestApi;            
 
             public KafkaRequestConfiguration(KafkaRequestType requestType, KafkaRequestVersion requestVersion,
-                [NotNull] Type requestClassType,
-                [NotNull] Action<KafkaBinaryWriter, IKafkaRequest> writeRequestMethod,
-                [NotNull] Func<KafkaBinaryReader, IKafkaResponse> readResponseMethod)
+                [NotNull] IKafkaRequestApi requestApi)
             {
                 RequestType = requestType;
                 RequestVersion = requestVersion;
-                RequestClassType = requestClassType;
-                WriteRequestMethod = writeRequestMethod;
-                ReadResponseMethod = readResponseMethod;
+                RequestApi = requestApi;
             }
         }        
 

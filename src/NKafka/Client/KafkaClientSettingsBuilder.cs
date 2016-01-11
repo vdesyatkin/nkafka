@@ -39,7 +39,7 @@ namespace NKafka.Client
         }
 
         [PublicAPI]
-        public KafkaClientSettingsBuilder AddMetadataBroker([NotNull] KafkaBrokerInfo metadataBroker)
+        public KafkaClientSettingsBuilder AppendMetadataBroker([NotNull] KafkaBrokerInfo metadataBroker)
         {
             _metadataBrokers.Add(metadataBroker);
             return this;

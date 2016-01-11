@@ -1,18 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.Fetch
 {
     [PublicAPI]
-    internal static class KafkaFetchApi
+    internal class KafkaFetchApi : IKafkaRequestApi
     {
+        public Type RequestType => typeof(KafkaFetchRequest);
+
         const byte MessageAttributeCodeMask = 3;
         const byte MessageGZipAttribute = 0x00 | (MessageAttributeCodeMask & (byte)KafkaCodecType.CodecGzip);
 
         #region FetchRequest        
         
-        public static void WriteRequest([NotNull] KafkaBinaryWriter writer, [NotNull] IKafkaRequest request)
+        public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)
         {
             WriteFetchRequest(writer, (KafkaFetchRequest)request);
         }
@@ -42,7 +45,7 @@ namespace NKafka.Protocol.API.Fetch
 
         #region FetchResponse
         
-        public static IKafkaResponse ReadResponse([NotNull] KafkaBinaryReader reader)
+        public IKafkaResponse ReadResponse(KafkaBinaryReader reader)
         {
             return ReadFetchResponse(reader);
         }

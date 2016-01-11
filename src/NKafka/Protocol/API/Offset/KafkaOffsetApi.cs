@@ -1,14 +1,17 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.Offset
 {
-    internal static class KafkaOffsetApi
+    [PublicAPI]
+    internal class KafkaOffsetApi : IKafkaRequestApi
     {
+        public Type RequestType => typeof(KafkaOffsetRequest);
+
         #region OffsetRequest
 
-        [PublicAPI]
-        public static void WriteRequest([NotNull] KafkaBinaryWriter writer, [NotNull] IKafkaRequest request)
+        public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)
         {
             WriteOffsetRequest(writer, (KafkaOffsetRequest)request);
         }
@@ -35,9 +38,8 @@ namespace NKafka.Protocol.API.Offset
         #endregion OffsetRequest
 
         #region OffsetResponse
-
-        [PublicAPI]
-        public static IKafkaResponse ReadResponse([NotNull] KafkaBinaryReader reader)
+        
+        public IKafkaResponse ReadResponse(KafkaBinaryReader reader)
         {
             return ReadOffsetResponse(reader);
         }
