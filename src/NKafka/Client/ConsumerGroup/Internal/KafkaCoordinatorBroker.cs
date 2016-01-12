@@ -77,8 +77,43 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 topicNames.Add(topic.TopicName);
             }
 
-            //todo (C004) session timeout, protocols
-            var request = new KafkaJoinGroupRequest(groupName, group.MemberId, TimeSpan.Zero, null);
+            var settingsProtocols = group.Settings.Protocols;
+            if (settingsProtocols == null || settingsProtocols.Count == 0) return null;
+
+            var protocols = new List<KafkaJoinGroupRequestProtocol>(settingsProtocols.Count);
+            foreach (var settingsProtocol in settingsProtocols)
+            {
+                var protocolName = settingsProtocol?.ProtocolName;
+                if (string.IsNullOrEmpty(protocolName)) continue;                
+
+                var settingsAssignmentStrategies = settingsProtocol.AssignmentStrategies;
+                if (settingsAssignmentStrategies == null || settingsAssignmentStrategies.Count == 0)
+                {
+                    continue;
+                }
+
+                var assignmentStrategies = new List<string>(settingsAssignmentStrategies.Count);
+                foreach (var settingsAssignmentStrategy in settingsAssignmentStrategies)
+                {                    
+                    var strategyName = settingsAssignmentStrategy?.StrategyName;
+                    if (string.IsNullOrEmpty(strategyName)) continue;
+                    assignmentStrategies.Add(settingsAssignmentStrategy.StrategyName);
+                }
+                if (assignmentStrategies.Count == 0)
+                {
+                    continue;
+                }
+
+                var protocolVersion = settingsProtocol.ProtocolVersion;
+                var customData = settingsProtocol.CustomData;
+
+                var protocol = new KafkaJoinGroupRequestProtocol(protocolName, protocolVersion, topicNames, assignmentStrategies, customData);
+                protocols.Add(protocol);
+            }
+
+            if (protocols.Count == 0) return null;
+            
+            var request = new KafkaJoinGroupRequest(groupName, group.MemberId, group.Settings.GroupSessionTimeout, protocols);
             return request;
         }
 
