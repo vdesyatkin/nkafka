@@ -17,8 +17,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public int GroupGenerationId;
         public string GroupProtocolName;
+        public short GroupProtocolVersion;
         public string MemberId;
         public bool IsLeader;
+        [CanBeNull] public IReadOnlyList<KafkaCoordinatorGroupMember> GroupMembers;
         [CanBeNull] public Dictionary<string, List<KafkaCoordinatorGroupMember>> TopicMembers;
 
         [CanBeNull] public List<string> AdditionalTopicNames;

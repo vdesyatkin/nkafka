@@ -8,15 +8,12 @@ namespace NKafka.Client.ConsumerGroup.Assignment
     {
         public readonly string MemberId;
 
-        public readonly IReadOnlyList<int> PartitionIds;
+        public readonly IReadOnlyList<int> PartitionIds;        
 
-        public readonly byte[] CustomData;
-
-        public KafkaConsumerAssignmentMember(string memberId, IReadOnlyList<int> partitionIds, byte[] customData)
+        public KafkaConsumerAssignmentMember(string memberId, IReadOnlyList<int> partitionIds)
         {
             MemberId = memberId;
-            PartitionIds = partitionIds;
-            CustomData = customData;
+            PartitionIds = partitionIds;            
         }
     }
 }
