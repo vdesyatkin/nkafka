@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Client.ConsumerGroups;
 
 namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopic : IKafkaConsumerTopic
     {
         [NotNull] public readonly string TopicName;
-        [CanBeNull] public readonly string GroupName;
+        [CanBeNull] public readonly IKafkaConsumerGroup Group;
 
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
@@ -16,10 +17,10 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentDictionary<int, PackageInfo> _packages;
         private int _currentPackageId;
 
-        public KafkaConsumerTopic([NotNull] string topicName, [CanBeNull] string groupName, [NotNull] KafkaConsumerSettings settings)
+        public KafkaConsumerTopic([NotNull] string topicName, [CanBeNull] IKafkaConsumerGroup group, [NotNull] KafkaConsumerSettings settings)
         { 
             TopicName = topicName;
-            GroupName = groupName;
+            Group = group;
             Settings = settings;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
             _packages = new ConcurrentDictionary<int, PackageInfo>();            

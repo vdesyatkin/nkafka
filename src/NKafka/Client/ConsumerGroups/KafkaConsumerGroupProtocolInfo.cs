@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace NKafka.Client.Consumer
+namespace NKafka.Client.ConsumerGroups
 {
     [PublicAPI]
-    public sealed class KafkaConsumerProtocolInfo
+    public sealed class KafkaConsumerGroupProtocolInfo
     {
         public readonly string ProtocolName;
 
@@ -14,7 +14,7 @@ namespace NKafka.Client.Consumer
 
         public readonly byte[] CustomData;
 
-        public KafkaConsumerProtocolInfo([NotNull] string protocolName, short protocolVersion,
+        public KafkaConsumerGroupProtocolInfo([NotNull] string protocolName, short protocolVersion,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerAssignmentStrategyInfo> assignmentStrategies,
             [CanBeNull] byte[] customData)
         {

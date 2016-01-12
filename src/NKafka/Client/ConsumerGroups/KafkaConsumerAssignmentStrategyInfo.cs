@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace NKafka.Client.Consumer
+namespace NKafka.Client.ConsumerGroups
 {
     [PublicAPI]
     public sealed class KafkaConsumerAssignmentStrategyInfo
