@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using NKafka.Client.ConsumerGroup.Assignment;
 
 namespace NKafka.Client.ConsumerGroup.Internal
 {
@@ -6,9 +7,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
     {
         public readonly string MemberId;
 
-        public readonly bool IsLeader;
-
-        public readonly string ProtocolName;
+        public readonly bool IsLeader;        
 
         public readonly short ProtocolVersion;
 
@@ -16,14 +15,16 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public readonly byte[] CustomData;
 
-        public KafkaCoordinatorGroupMember(string memberId, bool isLeader, string protocolName, short protocolVersion, IReadOnlyList<string> availableAssignmentStrategies, byte[] customData)
+        public readonly Dictionary<string, IReadOnlyList<int>> TopicAssignments;
+
+        public KafkaCoordinatorGroupMember(string memberId, bool isLeader, short protocolVersion, IReadOnlyList<string> availableAssignmentStrategies, byte[] customData)
         {
             MemberId = memberId;
-            IsLeader = isLeader;
-            ProtocolName = protocolName;
+            IsLeader = isLeader;            
             ProtocolVersion = protocolVersion;
             AvailableAssignmentStrategies = availableAssignmentStrategies;
             CustomData = customData;
+            TopicAssignments = new Dictionary<string, IReadOnlyList<int>>();
         }
     }
 }

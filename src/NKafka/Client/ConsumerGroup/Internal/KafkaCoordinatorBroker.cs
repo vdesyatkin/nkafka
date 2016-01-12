@@ -214,9 +214,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                     var isLeader = responseMember.MemberId == response.GroupLeaderId;
                     var member = new KafkaCoordinatorGroupMember(responseMember.MemberId, isLeader,
-                        protocolName, responseMember.ProtocolVersion,
+                        responseMember.ProtocolVersion,
                         responseMember.AssignmentStrategies ?? new string[0], 
-                        responseMember.CustomData);                    
+                        responseMember.CustomData);
 
                     foreach (var topicName in responseMember.TopicNames ?? new string[0])
                     {
@@ -491,8 +491,6 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 {
                     continue;
                 }
-
-                topicAssignments[topicName] = assignment;                
             }
 
             return topicAssignments;
