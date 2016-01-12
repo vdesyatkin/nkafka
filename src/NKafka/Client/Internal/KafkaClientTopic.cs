@@ -10,7 +10,7 @@ namespace NKafka.Client.Internal
     {
         [NotNull] public readonly string TopicName;
 
-        [NotNull] public IReadOnlyList<KafkaClientTopicPartition> Partitions { get; private set; }
+        [NotNull, ItemNotNull] public IReadOnlyList<KafkaClientTopicPartition> Partitions { get; private set; }
         
         public KafkaClientTopicStatus Status;
 

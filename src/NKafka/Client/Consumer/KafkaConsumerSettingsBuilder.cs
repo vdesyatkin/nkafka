@@ -8,7 +8,7 @@ namespace NKafka.Client.Consumer
     {        
         private int? _consumeBatchMinSizeBytes;
         private int? _consumeBatchMaxSizeBytes;
-        private TimeSpan? _consumeServerWaitTime;
+        private TimeSpan? _consumeServerWaitTime;        
 
         public KafkaConsumerSettingsBuilder SetBatchMinSizeBytes(int batchMinSizeBytes)
         {

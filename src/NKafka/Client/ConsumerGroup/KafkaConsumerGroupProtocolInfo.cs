@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.ConsumerGroup.Assignment;
 
 namespace NKafka.Client.ConsumerGroup
 {

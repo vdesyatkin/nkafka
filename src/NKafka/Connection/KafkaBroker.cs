@@ -171,14 +171,27 @@ namespace NKafka.Connection
             }
         }
 
-        public KafkaBrokerResult<int?> Send<TRequest>(TRequest request, TimeSpan? timeout, int? dataCapacity = null) where TRequest : class, IKafkaRequest
+        public KafkaBrokerResult<int?> Send<TRequest>(TRequest request, TimeSpan timeout, int? dataCapacity = null)
+            where TRequest : class, IKafkaRequest
+        {
+            return SendInternal(request, timeout, dataCapacity, true);
+        }
+
+        public KafkaBrokerResult<int?> SendWithoutResponse<TRequest>(TRequest request, int? dataCapacity = null)
+            where TRequest : class, IKafkaRequest
+        {
+            return SendInternal(request, TimeSpan.Zero, dataCapacity, false);
+        }
+
+        private KafkaBrokerResult<int?> SendInternal<TRequest>(TRequest request, TimeSpan timeout, int? dataCapacity, bool processResponse) 
+            where TRequest : class, IKafkaRequest
         {
             if (request == null) return KafkaBrokerErrorCode.BadRequest;
             if (!IsEnabled) return KafkaBrokerErrorCode.InvalidState;
 
-            if (timeout.HasValue && _settings != null && _settings.TransportLatency > TimeSpan.Zero)
+            if (_settings != null && _settings.TransportLatency > TimeSpan.Zero)
             {
-                timeout = timeout.Value +
+                timeout = timeout +
                     _settings.TransportLatency + //request
                     _settings.TransportLatency; //response
             }
@@ -204,12 +217,12 @@ namespace NKafka.Connection
             }            
 
             var requestState = new RequestState(request, DateTime.UtcNow, timeout);
-            if (timeout > TimeSpan.Zero)
+            if (processResponse)
             {
-                _requests[requestId] = requestState; // may be separated method
+                _requests[requestId] = requestState;
+                _lastActivityTimestampUtc = DateTime.UtcNow;
             }
-
-            _lastActivityTimestampUtc = DateTime.UtcNow;
+            
             try
             {
                 stream.Write(data, 0, data.Length);
@@ -223,45 +236,7 @@ namespace NKafka.Connection
                 return KafkaBrokerErrorCode.TransportError;
             }
         }
-
-        public KafkaBrokerResult<int?> SendWithoutResponse<TRequest>(TRequest request, int? dataCapacity = null) where TRequest : class, IKafkaRequest
-        {
-            if (request == null) return KafkaBrokerErrorCode.BadRequest;
-            if (!IsEnabled) return KafkaBrokerErrorCode.InvalidState;            
-
-            var requestId = Interlocked.Increment(ref _currentRequestId);
-
-            byte[] data;
-            try
-            {
-                data = _kafkaProtocol.WriteRequest(request, requestId, dataCapacity);
-                if (data == null) return KafkaBrokerErrorCode.DataError;
-            }
-            catch (Exception)
-            {
-                return KafkaBrokerErrorCode.DataError;
-            }
-
-            var stream = _connection.GetStream();
-            if (stream == null)
-            {
-                _sendError = KafkaBrokerStateErrorCode.ConnectionError;
-                return KafkaBrokerErrorCode.TransportError;
-            }
-                        
-            try
-            {
-                stream.Write(data, 0, data.Length);
-                _sendError = null;
-                return requestId;
-            }
-            catch (Exception)
-            {
-                _sendError = KafkaBrokerStateErrorCode.IOError;
-                return KafkaBrokerErrorCode.TransportError;
-            }
-        }
-
+       
         public KafkaBrokerResult<TResponse> Receive<TResponse>(int requestId) where TResponse : class, IKafkaResponse
         {
             RequestState requestState;

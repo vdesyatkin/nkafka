@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.ConsumerGroup.Assignment;
 
 namespace NKafka.Client.ConsumerGroup
 {    
@@ -12,6 +13,10 @@ namespace NKafka.Client.ConsumerGroup
         /// </summary>
         private TimeSpan? _groupSessionTimeout;
 
+        private TimeSpan? _groupInitiationServerWaitTime;
+
+        private TimeSpan? _heartbeatServerWaitTime;
+
         private List<KafkaConsumerGroupProtocolInfo> _protocols;
 
         public KafkaConsumerGroupSettingsBuilder()
@@ -22,6 +27,18 @@ namespace NKafka.Client.ConsumerGroup
         public KafkaConsumerGroupSettingsBuilder SetGroupSessionTimeout(TimeSpan timeout)
         {
             _groupSessionTimeout = timeout;
+            return this;
+        }
+
+        public KafkaConsumerGroupSettingsBuilder SetGroupInitiationWaitTime(TimeSpan waitTime)
+        {
+            _groupInitiationServerWaitTime = waitTime;
+            return this;
+        }
+
+        public KafkaConsumerGroupSettingsBuilder SetHeartbeatServerWaitTime(TimeSpan waitTime)
+        {
+            _heartbeatServerWaitTime = waitTime;
             return this;
         }
 
@@ -63,10 +80,14 @@ namespace NKafka.Client.ConsumerGroup
         public KafkaConsumerGroupSettings Build()
         {            
             var groupSessionTimeout = _groupSessionTimeout ?? TimeSpan.FromSeconds(30);
+            var groupInitiationWaitTime = _groupInitiationServerWaitTime ?? TimeSpan.FromMinutes(2);
+            var heartbeatServerWaitTime = _heartbeatServerWaitTime ?? TimeSpan.FromSeconds(10);
             var protocols = _protocols.ToArray();
 
             return new KafkaConsumerGroupSettings(
                 groupSessionTimeout,
+                groupInitiationWaitTime,
+                heartbeatServerWaitTime,
                 protocols);
         }
 

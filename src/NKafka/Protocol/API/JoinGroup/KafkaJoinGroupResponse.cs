@@ -15,11 +15,11 @@ namespace NKafka.Protocol.API.JoinGroup
     [PublicAPI]
     internal sealed class KafkaJoinGroupResponse : IKafkaResponse
     {
-        public readonly KafkaResponseErrorCode ErorrCode;
+        public readonly KafkaResponseErrorCode ErrorCode;
 
         public readonly int GroupGenerationId;
 
-        public readonly string GroupProtocol;
+        public readonly string GroupProtocolName;
 
         public readonly string GroupLeaderId;
 
@@ -27,11 +27,11 @@ namespace NKafka.Protocol.API.JoinGroup
 
         public readonly IReadOnlyList<KafkaJoinGroupResponseMember> Members;
 
-        public KafkaJoinGroupResponse(KafkaResponseErrorCode erorrCode, int groupGenerationId, string groupProtocol, string groupLeaderId, string memberId, IReadOnlyList<KafkaJoinGroupResponseMember> members)
+        public KafkaJoinGroupResponse(KafkaResponseErrorCode errorCode, int groupGenerationId, string groupProtocolName, string groupLeaderId, string memberId, IReadOnlyList<KafkaJoinGroupResponseMember> members)
         {
-            ErorrCode = erorrCode;
+            ErrorCode = errorCode;
             GroupGenerationId = groupGenerationId;
-            GroupProtocol = groupProtocol;
+            GroupProtocolName = groupProtocolName;
             GroupLeaderId = groupLeaderId;
             MemberId = memberId;
             Members = members;

@@ -36,10 +36,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignment.cs" />
+    <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentMember.cs" />
+    <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentRequestMember.cs" />
+    <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentRequest.cs" />
     <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroup.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupMember.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroup.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettings.cs" />
-    <Compile Include="Client\ConsumerGroup\IKafkaConsumerAssignmentStrategy.cs" />
+    <Compile Include="Client\ConsumerGroup\Assignment\IKafkaConsumerAssignmentStrategy.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettingsBuilder.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
@@ -51,7 +56,7 @@
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicPartition.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicWrapper.cs" />
-    <Compile Include="Client\ConsumerGroup\KafkaConsumerAssignmentStrategyInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentStrategyInfo.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupProtocolInfo.cs" />
     <Compile Include="Client\Consumer\KafkaMessagePackage.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorBroker.cs" />
