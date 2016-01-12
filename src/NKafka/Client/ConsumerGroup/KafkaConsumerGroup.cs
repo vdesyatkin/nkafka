@@ -1,4 +1,4 @@
-﻿namespace NKafka.Client.ConsumerGroups
+﻿namespace NKafka.Client.ConsumerGroup
 {
     public class KafkaConsumerGroup : IKafkaConsumerGroup
     {

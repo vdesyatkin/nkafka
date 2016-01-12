@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace NKafka.Client.ConsumerGroups
+namespace NKafka.Client.ConsumerGroup
 {    
     [PublicAPI]
     public sealed class KafkaConsumerGroupSettings

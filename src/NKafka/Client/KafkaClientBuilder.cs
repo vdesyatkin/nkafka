@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using NKafka.Client.Consumer;
 using NKafka.Client.Consumer.Internal;
-using NKafka.Client.ConsumerGroups;
+using NKafka.Client.ConsumerGroup;
 using NKafka.Client.Internal;
 using NKafka.Client.Producer;
 using NKafka.Client.Producer.Internal;

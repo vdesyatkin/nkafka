@@ -36,11 +36,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client\ConsumerGroups\IKafkaConsumerGroup.cs" />
-    <Compile Include="Client\ConsumerGroups\KafkaConsumerGroup.cs" />
-    <Compile Include="Client\ConsumerGroups\KafkaConsumerGroupSettings.cs" />
-    <Compile Include="Client\ConsumerGroups\IKafkaConsumerAssignmentStrategy.cs" />
-    <Compile Include="Client\ConsumerGroups\KafkaConsumerGroupSettingsBuilder.cs" />
+    <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroup.cs" />
+    <Compile Include="Client\ConsumerGroup\KafkaConsumerGroup.cs" />
+    <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettings.cs" />
+    <Compile Include="Client\ConsumerGroup\IKafkaConsumerAssignmentStrategy.cs" />
+    <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettingsBuilder.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerMessageQueue.cs" />
@@ -51,12 +51,12 @@
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicPartition.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicWrapper.cs" />
-    <Compile Include="Client\ConsumerGroups\KafkaConsumerAssignmentStrategyInfo.cs" />
-    <Compile Include="Client\ConsumerGroups\KafkaConsumerGroupProtocolInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\KafkaConsumerAssignmentStrategyInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupProtocolInfo.cs" />
     <Compile Include="Client\Consumer\KafkaMessagePackage.cs" />
-    <Compile Include="Client\ConsumerGroups\Internal\KafkaCoordinatorBroker.cs" />
-    <Compile Include="Client\ConsumerGroups\Internal\KafkaCoordinatorGroup.cs" />
-    <Compile Include="Client\ConsumerGroups\Internal\KafkaCoordinatorGroupStatus.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorBroker.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroup.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupStatus.cs" />
     <Compile Include="Client\IKafkaClient.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerGroup.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerGroupStatus.cs" />

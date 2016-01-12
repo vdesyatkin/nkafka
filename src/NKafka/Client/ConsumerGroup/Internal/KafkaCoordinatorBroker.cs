@@ -6,7 +6,7 @@ using NKafka.Client.Internal;
 using NKafka.Connection;
 using NKafka.Protocol.API.JoinGroup;
 
-namespace NKafka.Client.ConsumerGroups.Internal
+namespace NKafka.Client.ConsumerGroup.Internal
 {
     internal sealed class KafkaCoordinatorBroker
     {

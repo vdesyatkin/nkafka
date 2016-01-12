@@ -1,4 +1,4 @@
-﻿namespace NKafka.Client.ConsumerGroups.Internal
+﻿namespace NKafka.Client.ConsumerGroup.Internal
 {       
     public enum KafkaCoordinatorGroupStatus
     {

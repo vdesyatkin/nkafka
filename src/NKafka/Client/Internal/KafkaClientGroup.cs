@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
-using NKafka.Client.ConsumerGroups;
-using NKafka.Client.ConsumerGroups.Internal;
+using NKafka.Client.ConsumerGroup;
+using NKafka.Client.ConsumerGroup.Internal;
 using NKafka.Client.Internal.Broker;
 using NKafka.Metadata;
 

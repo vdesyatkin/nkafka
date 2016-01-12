@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Internal;
-using NKafka.Client.ConsumerGroups.Internal;
+using NKafka.Client.ConsumerGroup.Internal;
 using NKafka.Client.Producer.Internal;
 using NKafka.Connection;
 using NKafka.Metadata;

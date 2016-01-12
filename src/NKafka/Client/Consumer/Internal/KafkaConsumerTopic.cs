@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
-using NKafka.Client.ConsumerGroups;
+using NKafka.Client.ConsumerGroup;
 
 namespace NKafka.Client.Consumer.Internal
 {

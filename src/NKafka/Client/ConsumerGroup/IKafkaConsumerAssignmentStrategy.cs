@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace NKafka.Client.ConsumerGroups
+namespace NKafka.Client.ConsumerGroup
 {
     [PublicAPI]
     public interface IKafkaConsumerAssignmentStrategy

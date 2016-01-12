@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using NKafka.Client.Internal;
 
-namespace NKafka.Client.ConsumerGroups.Internal
+namespace NKafka.Client.ConsumerGroup.Internal
 {
     internal sealed class KafkaCoordinatorGroup
     {
