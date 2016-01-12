@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Internal;
+using NKafka.Client.Coordinator.Internal;
 using NKafka.Client.Producer.Internal;
 using NKafka.Connection;
 using NKafka.Metadata;
@@ -22,6 +23,7 @@ namespace NKafka.Client.Internal.Broker
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerGroup> _groups;
         [NotNull] private readonly KafkaProducerBroker _producer;
         [NotNull] private readonly KafkaConsumerBroker _consumer;
+        [NotNull] private readonly KafkaCoordinatorBroker _coordinator;
 
         private readonly TimeSpan _clientTimeout;
 
@@ -32,6 +34,7 @@ namespace NKafka.Client.Internal.Broker
             _groups = new ConcurrentDictionary<string, KafkaClientBrokerGroup>();
             _producer = new KafkaProducerBroker(broker, settings.WorkerPeriod);
             _consumer = new KafkaConsumerBroker(broker, settings.WorkerPeriod);
+            _coordinator = new KafkaCoordinatorBroker(broker, settings.WorkerPeriod);
             
             var workerPeriod = settings.WorkerPeriod;
             if (workerPeriod < TimeSpan.FromMilliseconds(100)) //todo (E006) settings rage validation?
@@ -56,7 +59,8 @@ namespace NKafka.Client.Internal.Broker
                 var group = groupPair.Value;
                 ProcessGroup(group);
             }
-            
+
+            _coordinator.Process();
             _producer.Produce();
             _consumer.Consume();            
         }        
@@ -124,10 +128,13 @@ namespace NKafka.Client.Internal.Broker
                     partition.Status = KafkaClientBrokerPartitionStatus.Plugged;
                 }
 
-                if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrageRequired ||
-                    partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrageRequired)
+                if (partition.Status == KafkaClientBrokerPartitionStatus.Plugged)
                 {
-                    partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
+                    if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrageRequired ||
+                        partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrageRequired)
+                    {
+                        partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
+                    }
                 }
             }
         }
@@ -139,15 +146,23 @@ namespace NKafka.Client.Internal.Broker
                 group.Status = KafkaClientBrokerGroupStatus.Unplugged;
                 KafkaClientBrokerGroup removedGroup;
                 _groups.TryRemove(group.GroupName, out removedGroup);
+                _coordinator.RemoveGroup(group.GroupName);
                 return;
             }
 
             if (group.Status == KafkaClientBrokerGroupStatus.Unplugged)
-            {                
+            {
+                _coordinator.AddGroup(group.GroupName, group.Coordinator);
                 group.Status = KafkaClientBrokerGroupStatus.Plugged;
             }
 
-            //todo (C004) Coordinator processing
+            if (group.Status == KafkaClientBrokerGroupStatus.Plugged)
+            {
+                if (group.Coordinator.Status == KafkaCoordinatorGroupStatus.RearrageRequired)
+                {
+                    group.Status = KafkaClientBrokerGroupStatus.RearrangeRequired;                    
+                }
+            }
         }
 
         #region Topic metadata

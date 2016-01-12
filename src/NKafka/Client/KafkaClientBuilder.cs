@@ -102,15 +102,17 @@ namespace NKafka.Client
                 producers[producer.TopicName] = producer;
             }
 
-            var consumers = new Dictionary<string, KafkaConsumerTopic>(_topicConsumers.Count);
+            var consumers = new Dictionary<string, KafkaConsumerTopic>(_topicConsumers.Count);            
             foreach (var consumer in _topicConsumers)
             {
-                topicNames.Add(consumer.TopicName);
-                consumers[consumer.TopicName] = consumer;
+                if (!topicNames.Add(consumer.TopicName)) continue;
+
+                consumers[consumer.TopicName] = consumer;                
             }
 
-            var groupNames = new HashSet<string>();
+            
             var topics = new List<KafkaClientTopic>(topicNames.Count);
+            var groupTopicsDictionary = new Dictionary<string, List<KafkaClientTopic>>(_topicConsumers.Count);
             foreach (var topicName in topicNames)
             {
                 KafkaProducerTopic producer;
@@ -119,20 +121,28 @@ namespace NKafka.Client
                 KafkaConsumerTopic consumer;
                 consumers.TryGetValue(topicName, out consumer);
 
-                var groupName = consumer?.GroupName;
-                if (!string.IsNullOrEmpty(groupName))
-                {
-                    groupNames.Add(groupName);
-                }
-
                 var topic = new KafkaClientTopic(topicName, producer, consumer);
                 topics.Add(topic);
+
+                var groupName = consumer?.GroupName;
+                if (!string.IsNullOrEmpty(groupName))
+                {                    
+                    List<KafkaClientTopic> groupTopicList;
+                    if (!groupTopicsDictionary.TryGetValue(groupName, out groupTopicList))
+                    {
+                        groupTopicList = new List<KafkaClientTopic>();
+                        groupTopicsDictionary[groupName] = groupTopicList;
+                    }
+                    groupTopicList.Add(topic);
+                }
             }
 
-            var groups = new List<KafkaClientGroup>(groupNames.Count);
-            foreach (var groupName in groupNames)
-            {                
-                var group = new KafkaClientGroup(groupName);
+            var groups = new List<KafkaClientGroup>(groupTopicsDictionary.Count);
+            foreach (var groupPair in groupTopicsDictionary)
+            {
+                var groupName = groupPair.Key;
+                var groupTopics = groupPair.Value;
+                var group = new KafkaClientGroup(groupName, groupTopics);
                 groups.Add(group);
             }
 

@@ -50,6 +50,9 @@
     <Compile Include="Client\Consumer\KafkaConsumerAssignmentStrategyInfo.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerProtocolInfo.cs" />
     <Compile Include="Client\Consumer\KafkaMessagePackage.cs" />
+    <Compile Include="Client\Coordinator\Internal\KafkaCoordinatorBroker.cs" />
+    <Compile Include="Client\Coordinator\Internal\KafkaCoordinatorGroup.cs" />
+    <Compile Include="Client\Coordinator\Internal\KafkaCoordinatorGroupStatus.cs" />
     <Compile Include="Client\IKafkaClient.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerGroup.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerGroupStatus.cs" />
