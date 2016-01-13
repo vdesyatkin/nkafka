@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup;
 using NKafka.Client.ConsumerGroup.Internal;
 using NKafka.Client.Internal.Broker;
@@ -7,7 +8,7 @@ using NKafka.Metadata;
 
 namespace NKafka.Client.Internal
 {
-    internal sealed class KafkaClientGroup
+    internal sealed class KafkaClientGroup : IKafkaConsumerCoordinator
     {
         [NotNull] public readonly string GroupName;
 
@@ -31,6 +32,11 @@ namespace NKafka.Client.Internal
             var coordinator = new KafkaCoordinatorGroup(GroupName, _topics, _settings);
             var brokerGroup = new KafkaClientBrokerGroup(GroupName, coordinatorBroker, coordinator);            
             BrokerGroup = brokerGroup;
+        }
+
+        public IReadOnlyDictionary<int, long?> GetPartitionOffsets(string topicName)
+        {
+            return BrokerGroup?.Coordinator.GetPartitionOffsets(topicName);
         }
     }
 }

@@ -63,6 +63,11 @@ namespace NKafka.Client.Internal
             _consumer?.ApplyPartitions(consumerPartitions);
         }
 
+        public void ApplyConsumerCoordinator(IKafkaConsumerCoordinator consumerCoordinator)
+        {
+            _consumer?.ApplyCoordinator(consumerCoordinator);
+        }
+
         public void Flush()
         {
             _producer?.Flush();            

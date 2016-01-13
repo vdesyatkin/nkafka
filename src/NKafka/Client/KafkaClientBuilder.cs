@@ -69,9 +69,9 @@ namespace NKafka.Client
             if (string.IsNullOrEmpty(topicName)) return null;            
             settings = settings ?? new KafkaConsumerSettingsBuilder().Build();
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
-            // ReSharper restore ConstantNullCoalescingCondition
+            // ReSharper restore ConstantNullCoalescingCondition            
 
-            var topic = new KafkaConsumerTopic(topicName, group, settings);
+            var topic = new KafkaConsumerTopic(topicName, group?.GroupName, settings);
             _topicConsumers.Add(topic);
             return topic;
         }
@@ -87,7 +87,7 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topic = new KafkaConsumerTopic(topicName, group, settings);
+            var topic = new KafkaConsumerTopic(topicName, group?.GroupName, settings);
             var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer);
             _topicConsumers.Add(topic);
             return wrapper;
@@ -124,8 +124,8 @@ namespace NKafka.Client
             {
                 if (!topicNames.Add(consumer.TopicName)) continue;
 
-                consumers[consumer.TopicName] = consumer;                
-            }            
+                consumers[consumer.TopicName] = consumer;
+            }
 
             var topics = new List<KafkaClientTopic>(topicNames.Count);            
             var groupTopicsDictionary = new Dictionary<string, List<KafkaClientTopic>>(_topicConsumers.Count);
@@ -140,7 +140,7 @@ namespace NKafka.Client
                 var topic = new KafkaClientTopic(topicName, producer, consumer);
                 topics.Add(topic);
 
-                var groupName = consumer?.Group?.GroupName;
+                var groupName = consumer?.GroupName;
                 if (!string.IsNullOrEmpty(groupName))
                 {            
                     if (!_consumerGroups.ContainsKey(groupName)) continue;
@@ -166,8 +166,15 @@ namespace NKafka.Client
                 {
                     continue;
                 }
-                
-                groups.Add(new KafkaClientGroup(groupName, groupTopics, group.Settings));
+
+                var clientGroup = new KafkaClientGroup(groupName, groupTopics, group.Settings);
+
+                foreach (var topic in groupTopics)
+                {
+                    topic.ApplyConsumerCoordinator(clientGroup);
+                }
+
+                groups.Add(clientGroup);
             }
 
             return new KafkaClient(_settings, topics, groups);

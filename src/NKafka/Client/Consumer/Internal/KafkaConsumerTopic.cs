@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
-using NKafka.Client.ConsumerGroup;
 
 namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopic : IKafkaConsumerTopic
     {
         [NotNull] public readonly string TopicName;
-        [CanBeNull] public readonly IKafkaConsumerGroup Group;
+        [CanBeNull] public readonly string GroupName;
+        [CanBeNull] public IKafkaConsumerCoordinator Coordinator { get; private set; }
 
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
@@ -17,10 +17,10 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentDictionary<int, PackageInfo> _packages;
         private int _currentPackageId;
 
-        public KafkaConsumerTopic([NotNull] string topicName, [CanBeNull] IKafkaConsumerGroup group, [NotNull] KafkaConsumerSettings settings)
+        public KafkaConsumerTopic([NotNull] string topicName, [CanBeNull] string groupName, [NotNull] KafkaConsumerSettings settings)
         { 
             TopicName = topicName;
-            Group = group;
+            GroupName = groupName;
             Settings = settings;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
             _packages = new ConcurrentDictionary<int, PackageInfo>();            
@@ -28,7 +28,7 @@ namespace NKafka.Client.Consumer.Internal
 
         public KafkaConsumerTopicPartition CreatePartition(int partitionId)
         {
-            return new KafkaConsumerTopicPartition(TopicName, partitionId, Settings);
+            return new KafkaConsumerTopicPartition(TopicName, partitionId, Settings, Coordinator);
         }
 
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartition> partitions)
@@ -41,6 +41,11 @@ namespace NKafka.Client.Consumer.Internal
             }
            
             _topicPartitions = topicPartitions;
+        }
+
+        public void ApplyCoordinator(IKafkaConsumerCoordinator coordinator)
+        {
+            Coordinator = coordinator;
         }
         
         public KafkaMessagePackage Consume()

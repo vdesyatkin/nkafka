@@ -46,6 +46,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 heartbeatPeriod = TimeSpan.FromMilliseconds(100); //todo (E006)
             }
             HeartbeatPeriod = heartbeatPeriod;
-        }                       
+        }
+
+        [CanBeNull] public IReadOnlyDictionary<int, long?> GetPartitionOffsets([NotNull] string topicName)
+        {
+            if (Status != KafkaCoordinatorGroupStatus.Ready) return null;
+
+            var topicPartitionOffsets = TopicPartitionOffsets;
+            if (topicPartitionOffsets == null) return null;
+
+            IReadOnlyDictionary<int, long?> partitionOffsets;
+            topicPartitionOffsets.TryGetValue(topicName, out partitionOffsets);
+            return partitionOffsets ?? new Dictionary<int, long?>();
+        }
     }
 }

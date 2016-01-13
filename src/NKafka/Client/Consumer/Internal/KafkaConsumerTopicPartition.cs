@@ -17,10 +17,11 @@ namespace NKafka.Client.Consumer.Internal
         private int _enqueuedCount;
         private long _maxOffset;
 
-        public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaConsumerSettings settings)
+        public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId, 
+            [NotNull] KafkaConsumerSettings settings, [CanBeNull] IKafkaConsumerCoordinator coordinator)
         {            
             PartitonId = partitionId;            
-            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, settings, this);
+            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, settings, coordinator, this);
             _messageQueue = new ConcurrentQueue<KafkaMessageAndOffset>();
             _maxOffset = -1;
         }

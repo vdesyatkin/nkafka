@@ -30,9 +30,11 @@ namespace NKafka.Client.Consumer.Internal
             KafkaConsumerBrokerTopic topic;
             if (!_topics.TryGetValue(topicName, out topic))
             {
-                topic = _topics.AddOrUpdate(topicName, new KafkaConsumerBrokerTopic(topicName, topicPartition.Settings), (oldKey, oldValue) => oldValue);
+                topic = _topics.AddOrUpdate(topicName,
+                    new KafkaConsumerBrokerTopic(topicName, topicPartition.Settings, topicPartition.Coordinator),
+                    (oldKey, oldValue) => oldValue);
             }
-            topicPartition.Reset();            
+            topicPartition.Reset();
 
             topic.Partitions[topicPartition.PartitionId] = topicPartition;
         }
@@ -80,16 +82,38 @@ namespace NKafka.Client.Consumer.Internal
                 }
             }
 
+            var coordinator = topic.Coordinator;
+            var coordinatorPartitionOffsets = coordinator?.GetPartitionOffsets(topic.TopicName);
+            if (coordinator != null && coordinatorPartitionOffsets == null)
+            {
+                return; // coordinator is not ready or topic is not allowed for this consumer node
+            }
+
             // prepare new fetch batch
             foreach (var partitionPair in topic.Partitions)
             {
                 var partitionId = partitionPair.Key;
                 var partition = partitionPair.Value;
 
-                if (oldFetchBatch.ContainsKey(partitionId)) continue;                
-                if (!TryPreparePartition(partition)) continue;                
+                long? coordinatorOffset = null;
+                if (coordinatorPartitionOffsets != null)
+                {                    
+                    if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset))
+                    {
+                        continue; // partition is not allowed for this consumer node
+                    }
+                }
 
-                newFetchBatch[partitionId] = partition.CurrentOffset + 1;                
+                if (oldFetchBatch.ContainsKey(partitionId)) continue;
+                if (!TryPreparePartition(partition)) continue;
+
+                var fetchOffset = partition.CurrentOffset;
+                if (coordinatorOffset.HasValue && coordinatorOffset.Value > fetchOffset)
+                {
+                    fetchOffset = coordinatorOffset.Value;
+                }
+
+                newFetchBatch[partitionId] = fetchOffset + 1;
             }
             if (newFetchBatch.Count == 0) return;
 

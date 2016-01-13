@@ -15,7 +15,7 @@ namespace NKafka.Client.Internal.Broker
 
         [CanBeNull] public readonly KafkaProducerBrokerPartition Producer;
 
-        [CanBeNull] public readonly KafkaConsumerBrokerPartition Consumer;
+        [CanBeNull] public readonly KafkaConsumerBrokerPartition Consumer;        
         
         public bool IsUnplugRequired;
 
