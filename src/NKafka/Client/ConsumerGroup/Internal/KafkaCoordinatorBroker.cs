@@ -408,7 +408,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             group.AdditionalTopicNames = additionalTopics;            
 
             return true;
-        }        
+        }
 
         #endregion JoinGroup
 
@@ -758,6 +758,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 return true;
             }
 
+            var topicPartitionOffsets = new Dictionary<string, IReadOnlyDictionary<int, long>>(topics.Count);
             foreach (var topic in topics)
             {
                 if (topic == null) continue;
@@ -765,6 +766,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 var topicPartitions = topic.Partitions;
                 if (string.IsNullOrEmpty(topicName) || topicPartitions == null) continue;
 
+                var partitionOffsets = new Dictionary<int, long>(topicPartitions.Count);
                 foreach (var partition in topicPartitions)
                 {
                     if (partition == null) continue;
@@ -776,13 +778,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     if (partition.ErrorCode != KafkaResponseErrorCode.NoError)
                     {
                         //todo (E009)
-                        group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
-                        return false;
+                        continue;                        
                     }
-                }                
+                    partitionOffsets[partition.PartitionId] = partition.Offset;
+                }
+
+                topicPartitionOffsets[topicName] = partitionOffsets;
             }
 
-            //todo set offsets
+            group.TopicPartitionOffsets = topicPartitionOffsets;            
 
             return true;
         }

@@ -21,12 +21,13 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public string MemberId;
         public bool MemberIsLeader;
         [CanBeNull] public IReadOnlyList<KafkaCoordinatorGroupMember> GroupMembers;
-        [CanBeNull] public Dictionary<string, List<KafkaCoordinatorGroupMember>> TopicMembers;
+        [CanBeNull] public IReadOnlyDictionary<string, List<KafkaCoordinatorGroupMember>> TopicMembers;
 
-        [CanBeNull] public List<string> AdditionalTopicNames;
+        [CanBeNull] public IReadOnlyList<string> AdditionalTopicNames;
         [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> TopicPartitions;
 
-        [CanBeNull] public Dictionary<string, IReadOnlyList<int>> MemberAssignment;
+        [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyList<int>> MemberAssignment;
+        [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyDictionary<int, long>> TopicPartitionOffsets;
 
         public KafkaCoordinatorGroup([NotNull] string groupName, [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
             [NotNull] KafkaConsumerGroupSettings settings)
