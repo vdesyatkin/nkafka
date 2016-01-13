@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.Internal;
 
 namespace NKafka.Client.ConsumerGroup.Internal
@@ -13,6 +14,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         [NotNull]
         public readonly KafkaConsumerGroupSettings Settings;
+
+        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupProtocolInfo> Protocols;
 
         public KafkaCoordinatorGroupStatus Status;
 
@@ -46,6 +49,40 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 heartbeatPeriod = TimeSpan.FromMilliseconds(100); //todo (E006)
             }
             HeartbeatPeriod = heartbeatPeriod;
+
+            var protocols = new List<KafkaConsumerGroupProtocolInfo>();
+            var settingsProtocols = settings.Protocols;
+            if (settingsProtocols != null)
+            {
+                foreach (var settingsProtocol in settingsProtocols)
+                {
+                    if (settingsProtocol?.ProtocolName == null) continue;
+                    var settingsStrategies = settingsProtocol.AssignmentStrategies;
+                    if (settingsStrategies == null || settingsStrategies.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var strategies = new List<KafkaConsumerAssignmentStrategyInfo>(settingsStrategies.Count);
+                    foreach (var settingsStrategy in settingsStrategies)
+                    {
+                        if (settingsStrategy?.StrategyName == null || settingsStrategy.Strategy == null) continue;
+
+                        strategies.Add(settingsStrategy);
+                    }
+                    if (strategies.Count == 0) continue;
+
+                    var protocol = new KafkaConsumerGroupProtocolInfo(settingsProtocol.ProtocolName,
+                        settingsProtocol.ProtocolVersion, strategies, settingsProtocol.CustomData);
+                    protocols.Add(protocol);
+                }
+            }
+
+            if (protocols.Count == 0)
+            {
+                protocols.Add(KafkaConsumerGroupSettingsBuilder.DefaultProtocol);
+            }
+            Protocols = protocols;
         }
 
         [CanBeNull] public IReadOnlyDictionary<int, long?> GetPartitionOffsets([NotNull] string topicName)

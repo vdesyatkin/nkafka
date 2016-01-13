@@ -17,6 +17,11 @@ namespace NKafka.Client
         [NotNull] private readonly Dictionary<string, KafkaConsumerGroup> _consumerGroups;
         [NotNull] private readonly KafkaClientSettings _settings;
 
+        public KafkaClientBuilder([NotNull] KafkaBrokerInfo metadataBroker)
+            : this(new KafkaClientSettingsBuilder(metadataBroker).Build())
+        {            
+        }
+
         public KafkaClientBuilder([NotNull]KafkaClientSettings settings)
         {
             _topicProducers = new List<KafkaProducerTopic>();
@@ -26,14 +31,14 @@ namespace NKafka.Client
             _settings = settings ?? new KafkaClientSettingsBuilder(null).Build();
         }
         
-        public IKafkaProducerTopic CreateTopicProducer([NotNull] string topicName, 
-            [NotNull] KafkaProducerSettings settings,
-            [NotNull] IKafkaProducerPartitioner partitioner)
+        public IKafkaProducerTopic CreateTopicProducer([NotNull] string topicName,             
+            [NotNull] IKafkaProducerPartitioner partitioner,
+            [CanBeNull] KafkaProducerSettings settings = null)
         {            
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             // ReSharper disable ConstantNullCoalescingCondition
             if (string.IsNullOrEmpty(topicName) || (partitioner == null)) return null;
-            settings = settings ?? new KafkaProducerSettingsBuilder().Build();
+            settings = settings ?? KafkaProducerSettingsBuilder.Default;
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
@@ -43,15 +48,15 @@ namespace NKafka.Client
             return topicBuffer;
         }
         
-        public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,
-           [NotNull] KafkaProducerSettings settings,
+        public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,           
            [NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
-           [NotNull] IKafkaProducerSerializer<TKey, TData> serializer)
+           [NotNull] IKafkaProducerSerializer<TKey, TData> serializer,
+           [CanBeNull] KafkaProducerSettings settings = null)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             // ReSharper disable ConstantNullCoalescingCondition
             if (string.IsNullOrEmpty(topicName) || (partitioner == null) || (serializer == null)) return null;            
-            settings = settings ?? new KafkaProducerSettingsBuilder().Build();
+            settings = settings ?? KafkaProducerSettingsBuilder.Default;
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
@@ -61,44 +66,51 @@ namespace NKafka.Client
             return topicBuffer;
         }
         
-        public IKafkaConsumerTopic CreateTopicConsumer([NotNull] string topicName, [CanBeNull] IKafkaConsumerGroup group,
-            [NotNull] KafkaConsumerSettings settings)
+        public IKafkaConsumerTopic CreateTopicConsumer([NotNull] string topicName, [NotNull] IKafkaConsumerGroup group,
+            [CanBeNull] KafkaConsumerSettings settings = null)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
             // ReSharper disable ConstantNullCoalescingCondition
+            // ReSharper disable ConstantConditionalAccessQualifier
             if (string.IsNullOrEmpty(topicName)) return null;            
-            settings = settings ?? new KafkaConsumerSettingsBuilder().Build();
+            if (string.IsNullOrEmpty(group?.GroupName)) return null;
+            settings = settings ?? KafkaConsumerSettingsBuilder.Default;
+            // ReSharper restore ConstantConditionalAccessQualifier
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition            
 
-            var topic = new KafkaConsumerTopic(topicName, group?.GroupName, settings);
+            var topic = new KafkaConsumerTopic(topicName, group.GroupName, settings);
             _topicConsumers.Add(topic);
             return topic;
         }
         
-        public IKafkaConsumerTopic<TKey,TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName, [CanBeNull] IKafkaConsumerGroup group,
-           [NotNull] KafkaConsumerSettings settings,
-           [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer)
+        public IKafkaConsumerTopic<TKey,TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName, [NotNull] IKafkaConsumerGroup group,
+            [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer,
+            [CanBeNull] KafkaConsumerSettings settings = null
+           )
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             // ReSharper disable ConstantNullCoalescingCondition
+            // ReSharper disable ConstantConditionalAccessQualifier
             if (string.IsNullOrEmpty(topicName) || (serializer == null)) return null;
-            settings = settings ?? new KafkaConsumerSettingsBuilder().Build();
+            if (string.IsNullOrEmpty(group?.GroupName)) return null;
+            settings = settings ?? KafkaConsumerSettingsBuilder.Default;
+            // ReSharper restore ConstantConditionalAccessQualifier
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topic = new KafkaConsumerTopic(topicName, group?.GroupName, settings);
+            var topic = new KafkaConsumerTopic(topicName, group.GroupName, settings);
             var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer);
             _topicConsumers.Add(topic);
             return wrapper;
         }
 
-        public IKafkaConsumerGroup CreateConsumerGroup([NotNull] string groupName, [NotNull] KafkaConsumerGroupSettings settings)
+        public IKafkaConsumerGroup CreateConsumerGroup([NotNull] string groupName, [CanBeNull] KafkaConsumerGroupSettings settings = null)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             // ReSharper disable ConstantNullCoalescingCondition
             if (string.IsNullOrEmpty(groupName)) return null;
-            settings = settings ?? new KafkaConsumerGroupSettingsBuilder().Build();
+            settings = settings ?? KafkaConsumerGroupSettingsBuilder.Default;
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 

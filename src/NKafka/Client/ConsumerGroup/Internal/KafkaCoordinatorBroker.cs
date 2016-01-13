@@ -319,31 +319,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 topicNames.Add(topic.TopicName);
             }
 
-            var settingsProtocols = group.Settings.Protocols;
-            if (settingsProtocols == null || settingsProtocols.Count == 0) return null;
+            var settingsProtocols = group.Protocols;            
 
             var protocols = new List<KafkaJoinGroupRequestProtocol>(settingsProtocols.Count);
             foreach (var settingsProtocol in settingsProtocols)
             {
-                var protocolName = settingsProtocol?.ProtocolName;
-                if (string.IsNullOrEmpty(protocolName)) continue;
-
+                var protocolName = settingsProtocol.ProtocolName;                
                 var settingsAssignmentStrategies = settingsProtocol.AssignmentStrategies;
-                if (settingsAssignmentStrategies == null || settingsAssignmentStrategies.Count == 0)
-                {
-                    continue;
-                }
-
+                
                 var assignmentStrategies = new List<string>(settingsAssignmentStrategies.Count);
                 foreach (var settingsAssignmentStrategy in settingsAssignmentStrategies)
-                {
-                    var strategyName = settingsAssignmentStrategy?.StrategyName;
-                    if (string.IsNullOrEmpty(strategyName)) continue;
+                {                                        
                     assignmentStrategies.Add(settingsAssignmentStrategy.StrategyName);
-                }
-                if (assignmentStrategies.Count == 0)
-                {
-                    continue;
                 }
 
                 var protocolVersion = settingsProtocol.ProtocolVersion;
@@ -488,38 +475,16 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 return false;
             }
 
-            var settingsProtocols = group.Settings.Protocols;            
-            if (settingsProtocols == null || settingsProtocols.Count == 0)
-            {
-                group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
-                return false;
-            }
+            var settingsProtocols = group.Protocols;            
             
-            var groupProtocols = new Dictionary<short, List<KafkaConsumerAssignmentStrategyInfo>>(settingsProtocols.Count);
+            var groupProtocols = new Dictionary<short, IReadOnlyList<KafkaConsumerAssignmentStrategyInfo>>(settingsProtocols.Count);
             var groupProtocolVersions = new List<short>(settingsProtocols.Count);
             foreach (var settingsProtocol in settingsProtocols)
-            {
-                if (settingsProtocol == null) continue;                
+            {                             
                 if (settingsProtocol.ProtocolName == group.GroupProtocolName)
-                {
-                    var settingsSrategies = settingsProtocol.AssignmentStrategies;
-                    if (settingsSrategies == null || settingsSrategies.Count == 0)
-                    {
-                        continue;
-                    }
-
-                    var strategies = new List<KafkaConsumerAssignmentStrategyInfo>(settingsSrategies.Count);
-                    foreach (var settingsStrategy in strategies)
-                    {
-                        if (settingsStrategy?.StrategyName == null) continue;
-                        if (settingsStrategy.Strategy == null) continue;
-
-                        strategies.Add(settingsStrategy);
-                    }
-                    if (strategies.Count == 0) continue;
-
+                {                    
                     groupProtocolVersions.Add(settingsProtocol.ProtocolVersion);
-                    groupProtocols[settingsProtocol.ProtocolVersion] = strategies;
+                    groupProtocols[settingsProtocol.ProtocolVersion] = settingsProtocol.AssignmentStrategies;
                 }
             }
             if (groupProtocols.Count == 0)

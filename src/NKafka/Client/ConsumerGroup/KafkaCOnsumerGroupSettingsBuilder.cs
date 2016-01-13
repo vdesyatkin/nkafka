@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.ConsumerGroup.Assignment;
+using NKafka.Client.ConsumerGroup.Assignment.Strategies;
 
 namespace NKafka.Client.ConsumerGroup
 {    
@@ -20,6 +21,14 @@ namespace NKafka.Client.ConsumerGroup
         private TimeSpan? _offsetFetchServerWaitTime;
 
         private List<KafkaConsumerGroupProtocolInfo> _protocols;
+
+        public static KafkaConsumerGroupSettings Default => new KafkaConsumerGroupSettingsBuilder().Build();
+
+        public static readonly KafkaConsumerAssignmentStrategyInfo DefaultStrategy =
+            new KafkaConsumerAssignmentStrategyInfo("round_robin", new KafkaConsumerAssignmentRoundRobinStrategy());
+
+        public static readonly KafkaConsumerGroupProtocolInfo DefaultProtocol =
+                new KafkaConsumerGroupProtocolInfo("nkafka_default", 1, new[] { DefaultStrategy }, null);        
 
         public KafkaConsumerGroupSettingsBuilder()
         {
@@ -92,6 +101,10 @@ namespace NKafka.Client.ConsumerGroup
             var heartbeatServerWaitTime = _heartbeatServerWaitTime ?? TimeSpan.FromSeconds(5);
             var offsetFetchServerWaitTime = _offsetFetchServerWaitTime ?? TimeSpan.FromSeconds(5);
             var protocols = _protocols.ToArray();
+            if (protocols.Length == 0)
+            {
+                protocols = new[] {DefaultProtocol};
+            }            
 
             return new KafkaConsumerGroupSettings(                
                 groupInitiationWaitTime,
@@ -104,19 +117,15 @@ namespace NKafka.Client.ConsumerGroup
         [PublicAPI]
         public sealed class KafkaConsumerSettingsProtocolBuilder
         {
-            [NotNull]
-            private readonly KafkaConsumerGroupSettingsBuilder _baseBuilder;
+            [NotNull] private readonly KafkaConsumerGroupSettingsBuilder _baseBuilder;
 
-            [NotNull]
-            private readonly string _protocolName;
+            [NotNull] private readonly string _protocolName;
 
             private readonly short _protocolVersion;
 
-            [NotNull]
-            private readonly List<KafkaConsumerAssignmentStrategyInfo> _strategies;
+            [NotNull] private readonly List<KafkaConsumerAssignmentStrategyInfo> _strategies;
 
-            [CanBeNull]
-            private byte[] _customData;
+            [CanBeNull] private byte[] _customData;            
 
             internal KafkaConsumerSettingsProtocolBuilder(
                 [NotNull] KafkaConsumerGroupSettingsBuilder baseBuilder,

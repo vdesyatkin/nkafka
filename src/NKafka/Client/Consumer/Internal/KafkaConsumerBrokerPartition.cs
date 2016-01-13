@@ -8,7 +8,7 @@ namespace NKafka.Client.Consumer.Internal
     internal sealed class KafkaConsumerBrokerPartition
     {
         [NotNull] public readonly string TopicName;
-        [CanBeNull] public readonly IKafkaConsumerCoordinator Coordinator;
+        [NotNull] public readonly IKafkaConsumerCoordinator Coordinator;
         
         public readonly int PartitionId;
 
@@ -27,7 +27,7 @@ namespace NKafka.Client.Consumer.Internal
 
         public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, 
             [NotNull] KafkaConsumerSettings settings, 
-            [CanBeNull] IKafkaConsumerCoordinator coordinator, [NotNull] IKafkaConsumerMessageQueue messageQueue)
+            [NotNull] IKafkaConsumerCoordinator coordinator, [NotNull] IKafkaConsumerMessageQueue messageQueue)
         {
             TopicName = topicName;
             PartitionId = partitionId;

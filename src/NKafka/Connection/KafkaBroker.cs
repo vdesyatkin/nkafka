@@ -19,7 +19,7 @@ namespace NKafka.Connection
 
         [NotNull] private readonly KafkaConnection _connection;
         [NotNull] private readonly KafkaProtocol _kafkaProtocol;
-        [CanBeNull] private readonly KafkaConnectionSettings _settings;
+        [NotNull] private readonly KafkaConnectionSettings _settings;
 
         [NotNull] private readonly ConcurrentDictionary<int, RequestState> _requests;
         [NotNull] private readonly ResponseState _responseState;
@@ -98,10 +98,10 @@ namespace NKafka.Connection
             //reconnect if needed
             var error = _sendError ?? _receiveError;
             var reconnectionPeriod = error != null
-                ? _settings?.ErrorStateReconnectPeriod
-                : _settings?.RegularReconnectPeriod;            
+                ? _settings.ErrorStateReconnectPeriod
+                : _settings.RegularReconnectPeriod;            
 
-            if (reconnectionPeriod.HasValue && DateTime.UtcNow - _connectionTimestampUtc >= reconnectionPeriod.Value)
+            if (DateTime.UtcNow - _connectionTimestampUtc >= reconnectionPeriod)
             {
                 if (hasAcitveRequests)
                 {
@@ -128,7 +128,7 @@ namespace NKafka.Connection
             //hearbeat: send request if needed (and haven't sent already)
             error = _sendError ?? _receiveError;
             var heartbeatPeriod = error != null && _heartbeatRequestId == null
-                ? _settings?.HeartbeatPeriod
+                ? (TimeSpan?)_settings.HeartbeatPeriod
                 : null;
 
             if (heartbeatPeriod != null && DateTime.UtcNow - _lastActivityTimestampUtc >= heartbeatPeriod.Value)
@@ -189,7 +189,7 @@ namespace NKafka.Connection
             if (request == null) return KafkaBrokerErrorCode.BadRequest;
             if (!IsEnabled) return KafkaBrokerErrorCode.InvalidState;
 
-            if (_settings != null && _settings.TransportLatency > TimeSpan.Zero)
+            if (_settings.TransportLatency > TimeSpan.Zero)
             {
                 timeout = timeout +
                     _settings.TransportLatency + //request

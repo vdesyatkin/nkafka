@@ -29,13 +29,14 @@ namespace NKafka.DevConsole
             var consumerConfigBuilder = new KafkaConsumerSettingsBuilder()
                 .SetBatchMinSizeBytes(1)
                 .SetBatchMaxSizeBytes(10000)
-                .SetConsumeServerWaitTime(TimeSpan.FromSeconds(5));
+                .SetConsumeServerWaitTime(TimeSpan.FromSeconds(5));            
 
             var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());
+            var group = clientBuilder.CreateConsumerGroup("my_group");
             var topicProducer = clientBuilder.CreateTopicProducer(topicName,
-                producerConfigBuilder.Build(), new TestPartitioner(), new TestSerializer());
-            var topicConsumer = clientBuilder.CreateTopicConsumer(topicName, null,
-                consumerConfigBuilder.Build(), new TestSerializer());
+                new TestPartitioner(), new TestSerializer(), producerConfigBuilder.Build());
+            var topicConsumer = clientBuilder.CreateTopicConsumer(topicName, group,
+                new TestSerializer(), consumerConfigBuilder.Build());
             var client = clientBuilder.Build();
 
             client.Start();

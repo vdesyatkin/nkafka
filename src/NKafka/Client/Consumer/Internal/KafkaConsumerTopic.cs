@@ -8,7 +8,7 @@ namespace NKafka.Client.Consumer.Internal
     internal sealed class KafkaConsumerTopic : IKafkaConsumerTopic
     {
         [NotNull] public readonly string TopicName;
-        [CanBeNull] public readonly string GroupName;
+        [NotNull] public readonly string GroupName;
         [CanBeNull] public IKafkaConsumerCoordinator Coordinator { get; private set; }
 
         [NotNull] public readonly KafkaConsumerSettings Settings;
@@ -17,7 +17,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentDictionary<int, PackageInfo> _packages;
         private int _currentPackageId;
 
-        public KafkaConsumerTopic([NotNull] string topicName, [CanBeNull] string groupName, [NotNull] KafkaConsumerSettings settings)
+        public KafkaConsumerTopic([NotNull] string topicName, [NotNull] string groupName, [NotNull] KafkaConsumerSettings settings)
         { 
             TopicName = topicName;
             GroupName = groupName;
@@ -43,7 +43,7 @@ namespace NKafka.Client.Consumer.Internal
             _topicPartitions = topicPartitions;
         }
 
-        public void ApplyCoordinator(IKafkaConsumerCoordinator coordinator)
+        public void ApplyCoordinator([NotNull] IKafkaConsumerCoordinator coordinator)
         {
             Coordinator = coordinator;
         }

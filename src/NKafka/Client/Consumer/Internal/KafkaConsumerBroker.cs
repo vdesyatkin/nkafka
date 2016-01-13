@@ -83,8 +83,8 @@ namespace NKafka.Client.Consumer.Internal
             }
 
             var coordinator = topic.Coordinator;
-            var coordinatorPartitionOffsets = coordinator?.GetPartitionOffsets(topic.TopicName);
-            if (coordinator != null && coordinatorPartitionOffsets == null)
+            var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);
+            if (coordinatorPartitionOffsets == null)
             {
                 return; // coordinator is not ready or topic is not allowed for this consumer node
             }
@@ -95,13 +95,10 @@ namespace NKafka.Client.Consumer.Internal
                 var partitionId = partitionPair.Key;
                 var partition = partitionPair.Value;
 
-                long? coordinatorOffset = null;
-                if (coordinatorPartitionOffsets != null)
-                {                    
-                    if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset))
-                    {
-                        continue; // partition is not allowed for this consumer node
-                    }
+                long? coordinatorOffset;
+                if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset))
+                {
+                    continue; // partition is not allowed for this consumer node
                 }
 
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;

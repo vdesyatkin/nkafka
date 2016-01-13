@@ -18,7 +18,7 @@ namespace NKafka.Client.Consumer.Internal
         private long _maxOffset;
 
         public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId, 
-            [NotNull] KafkaConsumerSettings settings, [CanBeNull] IKafkaConsumerCoordinator coordinator)
+            [NotNull] KafkaConsumerSettings settings, [NotNull] IKafkaConsumerCoordinator coordinator)
         {            
             PartitonId = partitionId;            
             BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, settings, coordinator, this);

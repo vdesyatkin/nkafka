@@ -10,7 +10,9 @@ namespace NKafka.Client.Producer
         private KafkaCodecType? _codecType;        
         private int? _produceBatchMaxSizeBytes;
         private TimeSpan? _produceTimeout;
-        
+
+        public static KafkaProducerSettings Default => new KafkaProducerSettingsBuilder().Build();
+
         public KafkaProducerSettingsBuilder SetConsistencyLevel(KafkaConsistencyLevel consistencyLevel)
         {
             _consistencyLevel = consistencyLevel;
