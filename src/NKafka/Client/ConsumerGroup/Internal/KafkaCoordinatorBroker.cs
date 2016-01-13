@@ -24,7 +24,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull] private readonly Dictionary<string, int> _heartbeatRequests;
         [NotNull] private readonly Dictionary<string, int> _offsetFetchRequests;
 
-        private readonly TimeSpan _coordinatorClientTimeout;
+        private readonly TimeSpan _coordinatorClientTimeout;                
 
         public KafkaCoordinatorBroker([NotNull] KafkaBroker broker, TimeSpan consumePeriod)
         {
@@ -35,7 +35,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
             _additionalTopicsRequests = new Dictionary<string, int>();
             _heartbeatRequests = new Dictionary<string, int>();
             _offsetFetchRequests = new Dictionary<string, int>();
-            _coordinatorClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;
+
+            _coordinatorClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;            
         }
 
         public void RemoveGroup([NotNull] string groupName)
@@ -202,6 +203,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 var requestId = SendRequest(heartbeatRequest, _coordinatorClientTimeout + group.Settings.HeartbeatServerWaitTime);
                 if (requestId == null) return;
 
+                group.HeartbeatTimestampUtc = DateTime.UtcNow;
                 _heartbeatRequests[group.GroupName] = requestId.Value;
             }
 
@@ -224,6 +226,36 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 }
 
                 group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequired;
+            }
+
+            if (group.Status > KafkaCoordinatorGroupStatus.FirstHeatbeatRequested)
+            {
+                //regular heartbeat
+
+                int heartbeatRequestId;
+                if (_heartbeatRequests.TryGetValue(group.GroupName, out heartbeatRequestId))
+                {
+                    var heartbeatResponse = _broker.Receive<KafkaHeartbeatResponse>(heartbeatRequestId);
+                    if (heartbeatResponse.HasData)
+                    {
+                        _heartbeatRequests.Remove(group.GroupName);
+                        if (!TryProcessHeartbeatResponse(group, heartbeatResponse.Data))
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                if (group.HeartbeatTimestampUtc + group.HeartbeatPeriod >= DateTime.UtcNow &&
+                    !_heartbeatRequests.ContainsKey(group.GroupName))
+                {
+                    var heartbeatRequest = CreateHeartbeatRequest(group);
+                    var requestId = SendRequest(heartbeatRequest, _coordinatorClientTimeout + group.Settings.HeartbeatServerWaitTime);
+                    if (requestId == null) return;
+
+                    group.HeartbeatTimestampUtc = DateTime.UtcNow;
+                    _heartbeatRequests[group.GroupName] = requestId.Value;
+                }
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequired)
@@ -258,10 +290,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.Ready)
             {
-
-            }
-
-            //todo (C004) regular heartbeat
+            }            
         }
 
         private int? SendRequest<TRequest>(TRequest request, TimeSpan timeout)
@@ -752,13 +781,30 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 return false;
             }
 
+            var assignment = group.MemberAssignment;
             var topics = response.Topics;
-            if (topics == null || topics.Count == 0)
+            if (topics == null || topics.Count == 0 || assignment == null)
             {
                 return true;
             }
 
-            var topicPartitionOffsets = new Dictionary<string, IReadOnlyDictionary<int, long>>(topics.Count);
+            // null offset for all assignment topics/partitions
+            var topicPartitionOffsets = new Dictionary<string, IReadOnlyDictionary<int, long?>>(topics.Count);
+            foreach (var topicAssignment in assignment)
+            {
+                var topicName = topicAssignment.Key;
+                var topicAssignmentPartitionIds = topicAssignment.Value;
+                if (topicAssignmentPartitionIds == null) continue;
+
+                var partitionOffsets = new Dictionary<int, long?>(topicAssignmentPartitionIds.Count);
+                foreach (var partitionId in topicAssignmentPartitionIds)
+                {
+                    partitionOffsets[partitionId] = null;
+                }
+                topicPartitionOffsets[topicName] = partitionOffsets;
+            }
+
+            // fill fetched offsets
             foreach (var topic in topics)
             {
                 if (topic == null) continue;
@@ -766,7 +812,17 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 var topicPartitions = topic.Partitions;
                 if (string.IsNullOrEmpty(topicName) || topicPartitions == null) continue;
 
-                var partitionOffsets = new Dictionary<int, long>(topicPartitions.Count);
+                IReadOnlyList<int> topicAssignment;
+                if (!assignment.TryGetValue(topicName, out topicAssignment) || topicAssignment == null) continue;
+
+                // fill null for not-fetched partitions
+                var partitionOffsets = new Dictionary<int, long?>(topicPartitions.Count);
+                foreach (var partitionId in topicAssignment)
+                {
+                    partitionOffsets[partitionId] = null;
+                }
+
+                // fill ofests for fetched partitions
                 foreach (var partition in topicPartitions)
                 {
                     if (partition == null) continue;

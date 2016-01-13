@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Internal;
 
@@ -27,7 +28,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> TopicPartitions;
 
         [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyList<int>> MemberAssignment;
-        [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyDictionary<int, long>> TopicPartitionOffsets;
+        [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyDictionary<int, long?>> TopicPartitionOffsets; //todo C004
+
+        public DateTime HeartbeatTimestampUtc;
+        public readonly TimeSpan HeartbeatPeriod;
 
         public KafkaCoordinatorGroup([NotNull] string groupName, [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
             [NotNull] KafkaConsumerGroupSettings settings)
@@ -36,6 +40,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
             Topics = topics;
             TopicPartitions = new Dictionary<string, IReadOnlyList<int>>();
             Settings = settings;
+            var heartbeatPeriod = TimeSpan.FromSeconds(settings.GroupSessionTimeout.TotalSeconds/2 - 1);
+            if (heartbeatPeriod < TimeSpan.FromMilliseconds(100))
+            {
+                heartbeatPeriod = TimeSpan.FromMilliseconds(100); //todo (E006)
+            }
+            HeartbeatPeriod = heartbeatPeriod;
         }                       
     }
 }
