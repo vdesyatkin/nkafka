@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Client.ConsumerGroup.Internal;
 using NKafka.Metadata;
 
@@ -17,17 +16,12 @@ namespace NKafka.Client.Internal.Broker
 
         [NotNull] public readonly KafkaCoordinatorGroup Coordinator;
 
-        public KafkaClientBrokerGroup([NotNull] string groupName, [NotNull] KafkaBrokerMetadata brokerMetadata,
+        public KafkaClientBrokerGroup([NotNull] string groupName, [NotNull] KafkaBrokerMetadata brokerMetadata,            
             [NotNull] KafkaCoordinatorGroup cooridnator)
         {
             GroupName = groupName;
             BrokerMetadata = brokerMetadata;
             Coordinator = cooridnator;
-        }
-
-        public void SetTopics(IReadOnlyList<KafkaClientTopic> topics)
-        {
-            Coordinator.SetTopics(topics);
-        }
+        }        
     }
 }

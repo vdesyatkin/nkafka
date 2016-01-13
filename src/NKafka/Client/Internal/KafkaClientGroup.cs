@@ -11,8 +11,7 @@ namespace NKafka.Client.Internal
     {
         [NotNull] public readonly string GroupName;
 
-        [NotNull, ItemNotNull]
-        public IReadOnlyList<KafkaClientTopic> Topics { get; private set; }
+        [NotNull, ItemNotNull] private readonly IReadOnlyList<KafkaClientTopic> _topics;
 
         public KafkaClientGroupStatus Status;
 
@@ -23,14 +22,14 @@ namespace NKafka.Client.Internal
         public KafkaClientGroup([NotNull] string groupName, [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, [NotNull] KafkaConsumerGroupSettings settings)
         {
             GroupName = groupName;
-            Topics = new KafkaClientTopic[0];
+            _topics = topics;
             _settings = settings;
         }
 
         public void ApplyCoordinator([NotNull] KafkaBrokerMetadata coordinatorBroker)
         {
-            var brokerGroup = new KafkaClientBrokerGroup(GroupName, coordinatorBroker, new KafkaCoordinatorGroup(_settings));
-            brokerGroup.SetTopics(Topics);
+            var coordinator = new KafkaCoordinatorGroup(GroupName, _topics, _settings);
+            var brokerGroup = new KafkaClientBrokerGroup(GroupName, coordinatorBroker, coordinator);            
             BrokerGroup = brokerGroup;
         }
     }

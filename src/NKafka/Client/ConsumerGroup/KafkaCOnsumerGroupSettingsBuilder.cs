@@ -17,6 +17,8 @@ namespace NKafka.Client.ConsumerGroup
 
         private TimeSpan? _heartbeatServerWaitTime;
 
+        private TimeSpan? _offsetFetchServerWaitTime;
+
         private List<KafkaConsumerGroupProtocolInfo> _protocols;
 
         public KafkaConsumerGroupSettingsBuilder()
@@ -39,6 +41,12 @@ namespace NKafka.Client.ConsumerGroup
         public KafkaConsumerGroupSettingsBuilder SetHeartbeatServerWaitTime(TimeSpan waitTime)
         {
             _heartbeatServerWaitTime = waitTime;
+            return this;
+        }
+
+        public KafkaConsumerGroupSettingsBuilder SetOffsetFetchServerWaitTime(TimeSpan waitTime)
+        {
+            _offsetFetchServerWaitTime = waitTime;
             return this;
         }
 
@@ -81,13 +89,15 @@ namespace NKafka.Client.ConsumerGroup
         {            
             var groupSessionTimeout = _groupSessionTimeout ?? TimeSpan.FromSeconds(30);
             var groupInitiationWaitTime = _groupInitiationServerWaitTime ?? TimeSpan.FromMinutes(2);
-            var heartbeatServerWaitTime = _heartbeatServerWaitTime ?? TimeSpan.FromSeconds(10);
+            var heartbeatServerWaitTime = _heartbeatServerWaitTime ?? TimeSpan.FromSeconds(5);
+            var offsetFetchServerWaitTime = _offsetFetchServerWaitTime ?? TimeSpan.FromSeconds(5);
             var protocols = _protocols.ToArray();
 
-            return new KafkaConsumerGroupSettings(
-                groupSessionTimeout,
+            return new KafkaConsumerGroupSettings(                
                 groupInitiationWaitTime,
                 heartbeatServerWaitTime,
+                offsetFetchServerWaitTime,
+                groupSessionTimeout,
                 protocols);
         }
 

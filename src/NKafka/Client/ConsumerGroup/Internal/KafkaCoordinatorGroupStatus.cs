@@ -9,5 +9,11 @@
         AdditionalTopicsRequired = 4,
         AdditionalTopicsMetadataRequested = 5,
         JoinedAsLeader = 6,
+        SyncGroupRequested = 7,
+        FirstHeatbeatRequired = 8,
+        FirstHeatbeatRequested = 9,
+        OffsetFetchRequired = 10,
+        OffsetFetchRequested = 11,
+        Ready = 12
     }
 }
