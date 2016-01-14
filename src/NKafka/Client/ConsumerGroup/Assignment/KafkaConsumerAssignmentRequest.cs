@@ -6,13 +6,13 @@ namespace NKafka.Client.ConsumerGroup.Assignment
     [PublicAPI]
     public sealed class KafkaConsumerAssignmentRequest
     {
-        public readonly string TopicName;
+        [NotNull] public readonly string TopicName;
 
-        public readonly IReadOnlyList<int> PartitionIds;
+        [NotNull] public readonly IReadOnlyList<int> PartitionIds;
 
-        public readonly IReadOnlyList<KafkaConsumerAssignmentRequestMember> Members;
+        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerAssignmentRequestMember> Members;
 
-        public KafkaConsumerAssignmentRequest(string topicName, IReadOnlyList<int> partitionIds, IReadOnlyList<KafkaConsumerAssignmentRequestMember> members)
+        public KafkaConsumerAssignmentRequest([NotNull] string topicName, [NotNull] IReadOnlyList<int> partitionIds, [NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerAssignmentRequestMember> members)
         {
             TopicName = topicName;
             PartitionIds = partitionIds;
