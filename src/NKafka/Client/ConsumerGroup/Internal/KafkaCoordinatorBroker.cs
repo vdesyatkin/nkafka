@@ -8,6 +8,7 @@ using NKafka.Connection;
 using NKafka.Protocol;
 using NKafka.Protocol.API.Heartbeat;
 using NKafka.Protocol.API.JoinGroup;
+using NKafka.Protocol.API.OffsetCommit;
 using NKafka.Protocol.API.OffsetFetch;
 using NKafka.Protocol.API.SyncGroup;
 using NKafka.Protocol.API.TopicMetadata;
@@ -23,6 +24,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull] private readonly Dictionary<string, int> _syncGroupRequests;
         [NotNull] private readonly Dictionary<string, int> _heartbeatRequests;
         [NotNull] private readonly Dictionary<string, int> _offsetFetchRequests;
+        [NotNull] private readonly Dictionary<string, int> _offsetCommitRequests;
 
         private readonly TimeSpan _coordinatorClientTimeout;                
 
@@ -35,6 +37,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             _additionalTopicsRequests = new Dictionary<string, int>();
             _heartbeatRequests = new Dictionary<string, int>();
             _offsetFetchRequests = new Dictionary<string, int>();
+            _offsetCommitRequests = new Dictionary<string, int>();
 
             _coordinatorClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;            
         }
@@ -72,22 +75,22 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                 foreach (var topic in topics)
                 {
-                    if (topic.Status != KafkaClientTopicStatus.Ready) return;
+                    if (topic.Value.Status != KafkaClientTopicStatus.Ready) return;
                 }
 
                 foreach (var topic in topics)
                 {
-                    var partitions = topic.Partitions;
+                    var partitions = topic.Value.Partitions;
                     var partitionIds = new List<int>(partitions.Count);
                     foreach (var partition in partitions)
                     {
                         partitionIds.Add(partition.PartitionId);
                     }
-                    group.TopicPartitions[topic.TopicName] = partitionIds;
+                    group.AllTopicPartitions[topic.Value.TopicName] = partitionIds;
                 }
 
                 var joinRequest = CreateJoinGroupRequest(group);
-                var requestId = SendRequest(joinRequest, _coordinatorClientTimeout + group.Settings.GroupInitiationServerWaitTime);
+                var requestId = SendRequest(joinRequest, _coordinatorClientTimeout + group.Settings.JoinGroupServerWaitTime);
 
                 if (requestId == null) return;
                 _joinGroupRequests[group.GroupName] = requestId.Value;
@@ -169,7 +172,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 }
 
                 var syncRequest = CreateSyncGroupRequest(group);
-                var requestId = SendRequest(syncRequest, _coordinatorClientTimeout + group.Settings.GroupInitiationServerWaitTime);
+                var requestId = SendRequest(syncRequest, _coordinatorClientTimeout + group.Settings.SyncGroupServerWaitTime);
                 if (requestId == null) return;
 
                 _syncGroupRequests[group.GroupName] = requestId.Value;
@@ -290,6 +293,33 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.Ready)
             {
+                //regular commit
+
+                int commitRequestId;
+                if (_offsetCommitRequests.TryGetValue(group.GroupName, out commitRequestId))
+                {
+                    var commitResponse = _broker.Receive<KafkaOffsetCommitResponse>(commitRequestId);
+                    if (commitResponse.HasData)
+                    {
+                        _offsetCommitRequests.Remove(group.GroupName);
+                        if (!TryProcessOffsetCommitResponse(group, commitResponse.Data))
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                if (group.CommitTimestampUtc + group.CommitPeriod >= DateTime.UtcNow &&
+                    !_offsetCommitRequests.ContainsKey(group.GroupName))
+                {
+                    group.CommitTimestampUtc = DateTime.UtcNow;
+
+                    var commitRequest = CreateOffsetCommitRequest(group);                    
+                    var requestId = SendRequest(commitRequest, _coordinatorClientTimeout + group.Settings.OffsetCommitServerWaitTime);
+                    if (requestId == null) return;
+                    
+                    _offsetCommitRequests[group.GroupName] = requestId.Value;
+                }
             }            
         }
 
@@ -316,7 +346,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             var topicNames = new List<string>(topics.Count);
             foreach (var topic in topics)
             {
-                topicNames.Add(topic.TopicName);
+                topicNames.Add(topic.Value.TopicName);
             }
 
             var settingsProtocols = group.Protocols;            
@@ -384,7 +414,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             var topicMembers = new Dictionary<string, List<KafkaCoordinatorGroupMember>>(group.Topics.Count);
             foreach (var topic in group.Topics)
             {
-                topicMembers[topic.TopicName] = new List<KafkaCoordinatorGroupMember>();
+                topicMembers[topic.Value.TopicName] = new List<KafkaCoordinatorGroupMember>();
             }
             var additionalTopics = new List<string>();
 
@@ -455,7 +485,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     if (responsePartition?.ErrorCode != KafkaResponseErrorCode.NoError) continue;
                     partitions.Add(responsePartition.PartitionId);
                 }
-                group.TopicPartitions[topicName] = partitions;
+                group.AllTopicPartitions[topicName] = partitions;
             }                                   
 
             return true;
@@ -564,7 +594,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (members == null || members.Count == 0) continue;
 
                 IReadOnlyList<int> partitionIds;
-                if (!group.TopicPartitions.TryGetValue(topicName, out partitionIds))
+                if (!group.AllTopicPartitions.TryGetValue(topicName, out partitionIds))
                 {
                     continue;
                 }
@@ -681,7 +711,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 memberAssignment[topicName] = partitionIds;
             }
 
-            group.MemberAssignment = memberAssignment;            
+            group.AssignedTopicPartitions = memberAssignment;            
 
             return true;
         }
@@ -724,7 +754,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         private KafkaOffsetFetchRequest CreateOffsetFetchRequest([NotNull] KafkaCoordinatorGroup group)
         {
-            var memberAssignment = group.MemberAssignment ?? new Dictionary<string, IReadOnlyList<int>>();
+            var memberAssignment = group.AssignedTopicPartitions ?? new Dictionary<string, IReadOnlyList<int>>();
 
             var topics = new List<KafkaOffsetFetchRequestTopic>(memberAssignment.Count);
             foreach (var memberTopicAssignment in memberAssignment)
@@ -746,15 +776,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 return false;
             }
 
-            var assignment = group.MemberAssignment;
-            var topics = response.Topics;
-            if (topics == null || topics.Count == 0 || assignment == null)
+            var assignment = group.AssignedTopicPartitions;
+            var responseTopics = response.Topics;
+            if (responseTopics == null || responseTopics.Count == 0 || assignment == null)
             {
                 return true;
             }
 
             // null offset for all assignment topics/partitions
-            var topicPartitionOffsets = new Dictionary<string, IReadOnlyDictionary<int, long?>>(topics.Count);
+            var topicPartitionOffsets = new Dictionary<string, IReadOnlyDictionary<int, long?>>(responseTopics.Count);
             foreach (var topicAssignment in assignment)
             {
                 var topicName = topicAssignment.Key;
@@ -770,11 +800,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
             }
 
             // fill fetched offsets
-            foreach (var topic in topics)
+            foreach (var responseTopic in responseTopics)
             {
-                if (topic == null) continue;
-                var topicName = topic.TopicName;
-                var topicPartitions = topic.Partitions;
+                if (responseTopic == null) continue;
+                var topicName = responseTopic.TopicName;
+                var topicPartitions = responseTopic.Partitions;
                 if (string.IsNullOrEmpty(topicName) || topicPartitions == null) continue;
 
                 IReadOnlyList<int> topicAssignment;
@@ -807,11 +837,122 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 topicPartitionOffsets[topicName] = partitionOffsets;
             }
 
-            group.TopicPartitionOffsets = topicPartitionOffsets;            
+            group.AssignedTopicPartitionOffsets = topicPartitionOffsets;
+
+            foreach (var topic in topicPartitionOffsets)
+            {
+                var topicInitialCommits = new Dictionary<int, long?>(topic.Value.Count);
+                foreach (var partition in topic.Value)
+                {
+                    topicInitialCommits[partition.Key] = partition.Value;
+                }
+                group.CommitedTopicPartitionOffsets[topic.Key] = topicInitialCommits;
+            }
 
             return true;
         }
 
         #endregion OffsetFetch
+
+        #region OffsetCommit
+
+        private KafkaOffsetCommitRequest CreateOffsetCommitRequest([NotNull] KafkaCoordinatorGroup group)
+        {
+            var commitOffsets = group.CommitedTopicPartitionOffsets;            
+
+            var requestTopics = new List<KafkaOffsetCommitRequestTopic>(commitOffsets.Count);
+
+            foreach (var groupTopic in group.Topics)
+            {
+                var topicName = groupTopic.Value.TopicName;
+
+                Dictionary<int, long?> commitPartitions;
+                if (!commitOffsets.TryGetValue(topicName, out commitPartitions))
+                {
+                    continue;
+                }                
+
+                var requestPartitions = new List<KafkaOffsetCommitRequestTopicPartition>(commitPartitions.Count);
+                foreach (var partitonPair in commitPartitions)
+                {
+                    var partitionId = partitonPair.Key;
+                    var commitOffset = groupTopic.Value.Consumer?.GetCommitOffset(partitionId);
+                    if (commitOffset == null) continue;
+
+                    commitPartitions[partitionId] = commitOffset.Value;
+                    requestPartitions.Add(new KafkaOffsetCommitRequestTopicPartition(partitionId, commitOffset.Value, group.Settings.OffsetCommitCustomData));                    
+                }
+                if (requestPartitions.Count == 0) continue;                
+
+                requestTopics.Add(new KafkaOffsetCommitRequestTopic(topicName, requestPartitions));
+            }
+            if (requestTopics.Count == 0) return null;
+                     
+            return new KafkaOffsetCommitRequest(group.GroupName, group.GroupGenerationId, group.MemberId, group.Settings.OffsetCommitRetentionTime, requestTopics);
+        }
+
+        private bool TryProcessOffsetCommitResponse([NotNull] KafkaCoordinatorGroup group, KafkaOffsetCommitResponse response)
+        {
+            if (response == null)
+            {
+                group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
+                return false;
+            }            
+
+            var commitedOffsets = group.CommitedTopicPartitionOffsets;
+            var topics = response.Topics;
+            if (topics == null || topics.Count == 0)
+            {
+                return true;
+            }           
+
+            // fill fetched offsets
+            foreach (var topic in topics)
+            {
+                if (topic == null) continue;
+                var topicName = topic.TopicName;
+                var topicPartitions = topic.Partitions;
+                if (string.IsNullOrEmpty(topicName) || topicPartitions == null) continue;
+
+                Dictionary<int, long?> commitedPartitions;
+                if (!commitedOffsets.TryGetValue(topicName, out commitedPartitions) || commitedPartitions == null)
+                {
+                    continue;
+                }
+
+                KafkaClientTopic groupTopic;
+                if (!group.Topics.TryGetValue(topicName, out groupTopic))
+                {
+                    continue;
+                }
+                
+                foreach (var partition in topicPartitions)
+                {
+                    if (partition == null) continue;
+                    long? offset;
+                    if (!commitedPartitions.TryGetValue(partition.PartitionId, out offset)) continue;
+
+                    if (partition.ErrorCode == KafkaResponseErrorCode.NotCoordinatorForGroup)
+                    {
+                        group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
+                        return false;
+                    }
+                    if (partition.ErrorCode != KafkaResponseErrorCode.NoError)
+                    {
+                        //todo (E009)
+                        continue;
+                    }
+
+                    if (offset.HasValue)
+                    {
+                        groupTopic.Consumer?.ApproveCommitOffset(partition.PartitionId, offset.Value);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        #endregion OffsetCommit
     }
 }

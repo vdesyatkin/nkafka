@@ -24,6 +24,7 @@ namespace NKafka.Client.Consumer.Internal
 
         private long _lastEnqueuedOffset;
         private long _lastCommittedOffsetRequired;
+        private long _lastCommittedOffsetApproved;
 
         public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, 
             [NotNull] KafkaConsumerSettings settings, 
@@ -59,12 +60,27 @@ namespace NKafka.Client.Consumer.Internal
             }
         }
 
-        public void CommitOffset(long offset)
+        public void RequestCommitOffset(long offset)
         {
             if (offset > _lastCommittedOffsetRequired)
             {
                 Interlocked.CompareExchange(ref _lastCommittedOffsetRequired, offset, _lastCommittedOffsetRequired);
             }
+        }
+
+        public void ApproveCommitOffset(long offset)
+        {
+            if (offset > _lastCommittedOffsetApproved)
+            {
+                Interlocked.CompareExchange(ref _lastCommittedOffsetApproved, offset, _lastCommittedOffsetApproved);
+            }
+        }
+
+        public long? GetCommitOffset()
+        {
+            var required = _lastCommittedOffsetRequired;
+            var approved = _lastCommittedOffsetApproved;
+            return required > approved ? (long?)required : null;
         }
 
         public void InitOffsets(long initialOffset)

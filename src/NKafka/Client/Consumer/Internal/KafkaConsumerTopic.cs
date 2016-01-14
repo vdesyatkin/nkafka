@@ -105,10 +105,29 @@ namespace NKafka.Client.Consumer.Internal
                     continue;
                 }
 
-                partition.CommitOffset(newOffset);                
+                partition.RequestCommitOffset(newOffset);                
             }
 
             _packages.TryRemove(packageNumber, out package);
+        }
+
+        public void ApproveCommitOffset(int partitionId, long offset)
+        {
+            KafkaConsumerTopicPartition partition;
+            if (_topicPartitions.TryGetValue(partitionId, out partition))
+            {
+                partition.ApproveCommitOffset(offset);
+            }
+        }
+
+        public long? GetCommitOffset(int partitionId)
+        {
+            KafkaConsumerTopicPartition partition;
+            if (_topicPartitions.TryGetValue(partitionId, out partition))
+            {
+                return partition.GetCommitOffset();
+            }
+            return null;
         }
 
         private class PackageInfo

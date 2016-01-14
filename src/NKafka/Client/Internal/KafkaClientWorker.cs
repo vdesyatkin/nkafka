@@ -252,7 +252,7 @@ namespace NKafka.Client.Internal
 
             if (topic.Status == KafkaClientTopicStatus.Ready)
             {
-                topic.Flush();
+                topic.Producer?.Flush();
 
                 foreach (var paritition in topic.Partitions)
                 {

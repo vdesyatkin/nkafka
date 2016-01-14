@@ -7,24 +7,37 @@ namespace NKafka.Client.ConsumerGroup
     [PublicAPI]
     public sealed class KafkaConsumerGroupSettings
     {
-        public readonly TimeSpan GroupInitiationServerWaitTime;
+        public readonly TimeSpan JoinGroupServerWaitTime;
+        public readonly TimeSpan SyncGroupServerWaitTime;
         public readonly TimeSpan HeartbeatServerWaitTime;
         public readonly TimeSpan OffsetFetchServerWaitTime;
-        public readonly TimeSpan GroupSessionTimeout;
-        public readonly IReadOnlyList<KafkaConsumerGroupProtocolInfo> Protocols;        
+        public readonly TimeSpan OffsetCommitServerWaitTime;
 
-        public KafkaConsumerGroupSettings(
-            TimeSpan groupInitiationServerWaitTime,
-            TimeSpan heartbeatServerWaitTime,
-            TimeSpan offsetFetchServerWaitTime,
-            TimeSpan groupSessionTimeout,
-            [NotNull] IReadOnlyList<KafkaConsumerGroupProtocolInfo> protocols)
+        public readonly TimeSpan GroupSessionTimeout;
+        public readonly TimeSpan OffsetCommitPeriod;
+        public readonly TimeSpan HeartbeatPeriod;
+        public readonly TimeSpan OffsetCommitRetentionTime;
+
+        public readonly IReadOnlyList<KafkaConsumerGroupProtocolInfo> Protocols;
+        public readonly string OffsetCommitCustomData;
+
+        public KafkaConsumerGroupSettings(TimeSpan joinGroupServerWaitTime, TimeSpan syncGroupServerWaitTime,
+            TimeSpan heartbeatServerWaitTime, TimeSpan offsetFetchServerWaitTime, TimeSpan offsetCommitServerWaitTime,
+            TimeSpan groupSessionTimeout, TimeSpan heartbeatPeriod, TimeSpan offsetCommitPeriod,
+            TimeSpan offsetCommitRetentionTime, IReadOnlyList<KafkaConsumerGroupProtocolInfo> protocols,
+            string offsetCommitCustomData)
         {
-            GroupInitiationServerWaitTime = groupInitiationServerWaitTime;            
+            JoinGroupServerWaitTime = joinGroupServerWaitTime;
+            SyncGroupServerWaitTime = syncGroupServerWaitTime;
             HeartbeatServerWaitTime = heartbeatServerWaitTime;
             OffsetFetchServerWaitTime = offsetFetchServerWaitTime;
-            GroupSessionTimeout = groupSessionTimeout;
+            OffsetCommitServerWaitTime = offsetCommitServerWaitTime;
+            GroupSessionTimeout = groupSessionTimeout;            
+            HeartbeatPeriod = heartbeatPeriod;
+            OffsetCommitPeriod = offsetCommitPeriod;
+            OffsetCommitRetentionTime = offsetCommitRetentionTime;
             Protocols = protocols;
+            OffsetCommitCustomData = offsetCommitCustomData;
         }
     }
 }

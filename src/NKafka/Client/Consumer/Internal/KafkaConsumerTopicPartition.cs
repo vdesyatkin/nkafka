@@ -50,9 +50,19 @@ namespace NKafka.Client.Consumer.Internal
             return true;
         }
 
-        public void CommitOffset(long offset)
+        public void RequestCommitOffset(long offset)
         {
-            BrokerPartition.CommitOffset(offset);
+            BrokerPartition.RequestCommitOffset(offset);
+        }
+
+        public void ApproveCommitOffset(long offset)
+        {        
+            BrokerPartition.ApproveCommitOffset(offset);    
+        }
+
+        public long? GetCommitOffset()
+        {
+            return BrokerPartition.GetCommitOffset();
         }
     }
 }

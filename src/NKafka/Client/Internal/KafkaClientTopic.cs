@@ -14,14 +14,14 @@ namespace NKafka.Client.Internal
         
         public KafkaClientTopicStatus Status;
 
-        [CanBeNull] private readonly KafkaProducerTopic _producer;
-        [CanBeNull] private readonly KafkaConsumerTopic _consumer;
+        [CanBeNull] public readonly KafkaProducerTopic Producer;
+        [CanBeNull] public readonly KafkaConsumerTopic Consumer;
 
         public KafkaClientTopic([NotNull] string topicName, [CanBeNull] KafkaProducerTopic producer, [CanBeNull] KafkaConsumerTopic consumer)
         {
             TopicName = topicName;
-            _producer = producer;
-            _consumer = consumer;            
+            Producer = producer;
+            Consumer = consumer;
             Partitions = new KafkaClientTopicPartition[0];
         }
         
@@ -48,10 +48,10 @@ namespace NKafka.Client.Internal
                     continue;
                 }
 
-                var producerPartiton = _producer?.CreatePartition(partitionId);
+                var producerPartiton = Producer?.CreatePartition(partitionId);
                 producerPartitions.Add(producerPartiton);
 
-                var consumerPartition = _consumer?.CreatePartition(partitionId);
+                var consumerPartition = Consumer?.CreatePartition(partitionId);
                 consumerPartitions.Add(consumerPartition);
 
                 var partition = new KafkaClientTopicPartition(topicName, partitionId, brokerMetadata, producerPartiton, consumerPartition);
@@ -59,18 +59,8 @@ namespace NKafka.Client.Internal
             }
 
             Partitions = topicPartitions;
-            _producer?.ApplyPartitions(producerPartitions);
-            _consumer?.ApplyPartitions(consumerPartitions);
-        }
-
-        public void ApplyConsumerCoordinator(IKafkaConsumerCoordinator consumerCoordinator)
-        {
-            _consumer?.ApplyCoordinator(consumerCoordinator);
-        }
-
-        public void Flush()
-        {
-            _producer?.Flush();            
-        }
+            Producer?.ApplyPartitions(producerPartitions);
+            Consumer?.ApplyPartitions(consumerPartitions);
+        }       
     }
 }

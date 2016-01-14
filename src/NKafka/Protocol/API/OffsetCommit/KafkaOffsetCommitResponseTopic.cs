@@ -8,12 +8,12 @@ namespace NKafka.Protocol.API.OffsetCommit
     {
         public readonly string TopicName;
 
-        public readonly IReadOnlyList<KafkaOffsetCommitResponseTopicPartition> TopicPartitions;
+        public readonly IReadOnlyList<KafkaOffsetCommitResponseTopicPartition> Partitions;
 
-        public KafkaOffsetCommitResponseTopic(string topicName, IReadOnlyList<KafkaOffsetCommitResponseTopicPartition> topicPartitions)
+        public KafkaOffsetCommitResponseTopic(string topicName, IReadOnlyList<KafkaOffsetCommitResponseTopicPartition> partitions)
         {
             TopicName = topicName;
-            TopicPartitions = topicPartitions;
+            Partitions = partitions;
         }
     }
 }
