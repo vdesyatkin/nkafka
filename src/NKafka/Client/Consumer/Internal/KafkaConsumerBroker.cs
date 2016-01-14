@@ -173,8 +173,8 @@ namespace NKafka.Client.Consumer.Internal
             }
 
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.Plugged)
-            {                
-                return true;
+            {
+                return partition.CanEnqueue();
             }
 
             return false;

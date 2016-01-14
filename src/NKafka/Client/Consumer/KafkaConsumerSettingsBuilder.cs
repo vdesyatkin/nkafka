@@ -9,18 +9,20 @@ namespace NKafka.Client.Consumer
         private int? _consumeBatchMinSizeBytes;
         private int? _consumeBatchMaxSizeBytes;
         private TimeSpan? _consumeServerWaitTime;
+        private int? _bufferMaxMessageCount;
+        private int? _bufferMaxSizeBytes;
 
         public static readonly KafkaConsumerSettings Default = new KafkaConsumerSettingsBuilder().Build();
 
-        public KafkaConsumerSettingsBuilder SetBatchMinSizeBytes(int batchMinSizeBytes)
+        public KafkaConsumerSettingsBuilder SetBatchMinSizeBytes(int sizeBytes)
         {
-            _consumeBatchMinSizeBytes = batchMinSizeBytes;
+            _consumeBatchMinSizeBytes = sizeBytes;
             return this;
         }
 
-        public KafkaConsumerSettingsBuilder SetBatchMaxSizeBytes(int batchMaxSizeBytes)
+        public KafkaConsumerSettingsBuilder SetBatchMaxSizeBytes(int sizeBytes)
         {
-            _consumeBatchMaxSizeBytes = batchMaxSizeBytes;
+            _consumeBatchMaxSizeBytes = sizeBytes;
             return this;
         }
         
@@ -29,17 +31,33 @@ namespace NKafka.Client.Consumer
             _consumeServerWaitTime = waitTime;
             return this;
         }
-       
+
+        public KafkaConsumerSettingsBuilder SetBufferMaxMessageCount(int messageCount)
+        {
+            _bufferMaxMessageCount = messageCount;
+            return this;
+        }
+
+        public KafkaConsumerSettingsBuilder SetBufferMaxSizeBytes(int sizeBytes)
+        {
+            _bufferMaxSizeBytes = sizeBytes;
+            return this;
+        }
+
         public KafkaConsumerSettings Build()
         {            
             var batchMinSizeBytes = _consumeBatchMinSizeBytes ?? 0;
             var batchMaxSizeBytes = _consumeBatchMaxSizeBytes ?? 200 * 200;
-            var consumerServerWaitTime = _consumeServerWaitTime ?? TimeSpan.Zero;            
+            var consumerServerWaitTime = _consumeServerWaitTime ?? TimeSpan.Zero;
+            var bufferMaxMessageCount = _bufferMaxMessageCount;
+            var bufferMaxSizeBytes = _bufferMaxSizeBytes ?? 10*1000*1000;
 
             return new KafkaConsumerSettings(                
                 batchMinSizeBytes,
                 batchMaxSizeBytes,
-                consumerServerWaitTime);
+                consumerServerWaitTime,
+                bufferMaxMessageCount,
+                bufferMaxSizeBytes);
         }        
     }
 }

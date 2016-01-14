@@ -32,7 +32,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyList<int>> AssignedTopicPartitions;
         [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyDictionary<int, long?>> AssignedTopicPartitionOffsets;
-        [NotNull] public Dictionary<string, Dictionary<int, long?>> CommitedTopicPartitionOffsets;
+        [NotNull] public readonly Dictionary<string, Dictionary<int, long?>> CommitedTopicPartitionOffsets;
 
         public DateTime HeartbeatTimestampUtc;
         public readonly TimeSpan HeartbeatPeriod;

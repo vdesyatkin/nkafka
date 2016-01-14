@@ -23,6 +23,7 @@ namespace NKafka.Client.Producer.Internal
             _topicPartitionIds = new int[0];            
         }
 
+        [NotNull]
         public KafkaProducerTopicPartition CreatePartition(int partitionId)
         {
             return new KafkaProducerTopicPartition(partitionId, _settings);

@@ -8,17 +8,23 @@ namespace NKafka.Client.Consumer
     {        
         public readonly int ConsumeBatchMinSizeBytes;
         public readonly int ConsumeBatchMaxSizeBytes;
-        public readonly TimeSpan ConsumeServerWaitTime;        
+        public readonly TimeSpan ConsumeServerWaitTime;
+        public readonly int? BufferMaxMessageCount;
+        public readonly int? BufferedMaxSizeBytes;
 
         public KafkaConsumerSettings(          
           int consumeBatchMinSizeBytes,
           int consumeBatchMaxSizeBytes,
-          TimeSpan consumeServerWaitTime
+          TimeSpan consumeServerWaitTime,
+          int? bufferMaxMesageCount,
+          int? bufferedMaxSizeBytes
           )
         {            
             ConsumeBatchMinSizeBytes = consumeBatchMinSizeBytes;
             ConsumeBatchMaxSizeBytes = consumeBatchMaxSizeBytes;
-            ConsumeServerWaitTime = consumeServerWaitTime;            
+            ConsumeServerWaitTime = consumeServerWaitTime;
+            BufferMaxMessageCount = bufferMaxMesageCount;
+            BufferedMaxSizeBytes = bufferedMaxSizeBytes;
         }
     }
 }

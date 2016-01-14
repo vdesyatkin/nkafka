@@ -9,7 +9,8 @@ namespace NKafka.Client.Consumer.Internal
     {
         [NotNull] public readonly string TopicName;
         [NotNull] public readonly string GroupName;
-        [CanBeNull] public IKafkaConsumerCoordinator Coordinator { get; private set; }
+
+        [NotNull] private IKafkaConsumerCoordinator _coordinator;
 
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
@@ -23,12 +24,14 @@ namespace NKafka.Client.Consumer.Internal
             GroupName = groupName;
             Settings = settings;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
-            _packages = new ConcurrentDictionary<int, PackageInfo>();            
+            _packages = new ConcurrentDictionary<int, PackageInfo>();
+            _coordinator = new NullCoordinator();
         }
 
+        [NotNull]
         public KafkaConsumerTopicPartition CreatePartition(int partitionId)
         {
-            return new KafkaConsumerTopicPartition(TopicName, partitionId, Settings, Coordinator);
+            return new KafkaConsumerTopicPartition(TopicName, partitionId, Settings, _coordinator);
         }
 
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartition> partitions)
@@ -45,7 +48,7 @@ namespace NKafka.Client.Consumer.Internal
 
         public void ApplyCoordinator([NotNull] IKafkaConsumerCoordinator coordinator)
         {
-            Coordinator = coordinator;
+            _coordinator = coordinator;
         }
         
         public KafkaMessagePackage Consume()
@@ -138,6 +141,14 @@ namespace NKafka.Client.Consumer.Internal
             public PackageInfo([NotNull] Dictionary<int, long> partitionOffsets)
             {
                 PartitionOffsets = partitionOffsets;
+            }
+        }
+
+        private class NullCoordinator : IKafkaConsumerCoordinator
+        {
+            public IReadOnlyDictionary<int, long?> GetPartitionOffsets(string topicName)
+            {
+                return new Dictionary<int, long?>();
             }
         }
     }

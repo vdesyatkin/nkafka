@@ -38,6 +38,11 @@ namespace NKafka.Client.Consumer.Internal
             Reset();
         }
 
+        public bool CanEnqueue()
+        {
+            return _messageQueue.CanEnqueue();
+        }
+
         public void EnqueueMessages(IReadOnlyList<KafkaMessageAndOffset> messages)
         {
             if (messages == null) return;

@@ -145,13 +145,13 @@ namespace NKafka.Client.ConsumerGroup
             var groupSessionTimeout = _groupSessionTimeout ?? TimeSpan.FromMinutes(2);
             var heartbeatPeriod = _heartbeatPeriod ?? TimeSpan.FromMinutes(1);
             var offsetCommitPeriod = _offsetCommitPeriod ?? TimeSpan.FromMinutes(1);
-            var offsetCommitRetentionTime = _offsetCommitRetentionTime ?? TimeSpan.FromDays(7); //todo (C005)
+            var offsetCommitRetentionTime = _offsetCommitRetentionTime ?? TimeSpan.FromDays(7);
 
             var protocols = _protocols.ToArray();
             if (protocols.Length == 0)
             {
                 protocols = new[] {DefaultProtocol};
-            }            
+            }
 
             return new KafkaConsumerGroupSettings(                
                 joinGroupServerWaitTime,
