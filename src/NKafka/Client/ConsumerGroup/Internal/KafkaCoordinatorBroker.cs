@@ -291,6 +291,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     return;
                 }
 
+                group.CommitTimestampUtc = DateTime.UtcNow;
                 group.Status = KafkaCoordinatorGroupStatus.Ready;
             }
 
@@ -867,7 +868,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             foreach (var groupTopic in group.Topics)
             {
-                var topicName = groupTopic.Value.TopicName;
+                var topicName = groupTopic.Value.TopicName;                
 
                 Dictionary<int, long?> commitPartitions;
                 if (!commitOffsets.TryGetValue(topicName, out commitPartitions))
@@ -881,11 +882,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     var partitionId = partitonPair.Key;
                     var commitOffset = groupTopic.Value.Consumer?.GetCommitOffset(partitionId);
                     if (commitOffset == null) continue;
-
-                    commitPartitions[partitionId] = commitOffset.Value;
+                    
                     requestPartitions.Add(new KafkaOffsetCommitRequestTopicPartition(partitionId, commitOffset.Value, group.Settings.OffsetCommitCustomData));                    
                 }
-                if (requestPartitions.Count == 0) continue;                
+                if (requestPartitions.Count == 0) continue;
+
+                foreach (var requestPartition in requestPartitions)
+                {
+                    commitPartitions[requestPartition.PartitionId] = requestPartition.Offset;
+                }
 
                 requestTopics.Add(new KafkaOffsetCommitRequestTopic(topicName, requestPartitions));
             }

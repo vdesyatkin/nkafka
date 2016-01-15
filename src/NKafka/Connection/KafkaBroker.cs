@@ -188,7 +188,10 @@ namespace NKafka.Connection
             where TRequest : class, IKafkaRequest
         {
             if (request == null) return KafkaBrokerErrorCode.BadRequest;
-            if (!IsEnabled) return KafkaBrokerErrorCode.InvalidState;
+            if (!IsEnabled)
+            {
+                return KafkaBrokerErrorCode.InvalidState;
+            }
 
             if (_settings.TransportLatency > TimeSpan.Zero)
             {

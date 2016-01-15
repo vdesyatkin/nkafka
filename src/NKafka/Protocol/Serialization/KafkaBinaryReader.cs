@@ -73,12 +73,18 @@ namespace NKafka.Protocol.Serialization
         {
             if (_sizeValues.Count == 0) return true;
 
-            var size = _sizeValues.Pop();
-            var beginPosition = _beginPositions.Pop();
+            var requiredSize = _sizeValues.Peek();
+            var beginPosition = _beginPositions.Peek();
             var endPosition = _stream.Position;
             var actualSize = endPosition - beginPosition;
 
-            return size == actualSize;
+            if (actualSize >= requiredSize)
+            {
+                _sizeValues.Pop();
+                _beginPositions.Pop();
+                return true;
+            }
+            return false;
         }
 
         public uint BeginReadCrc32()

@@ -52,7 +52,7 @@ namespace NKafka.Client.Consumer.Internal
 
             if (newOffset > _lastEnqueuedOffset)
             {
-                _lastCommittedOffsetRequired = newOffset;
+                _lastEnqueuedOffset = newOffset;
             }
 
             try
@@ -91,6 +91,7 @@ namespace NKafka.Client.Consumer.Internal
         public void InitOffsets(long initialOffset)
         {
             _lastEnqueuedOffset = initialOffset;
+            _lastCommittedOffsetApproved = initialOffset;
             _lastCommittedOffsetRequired = initialOffset;            
         }
 

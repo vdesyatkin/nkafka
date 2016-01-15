@@ -39,7 +39,7 @@ namespace NKafka.Connection
 
         public KafkaConnectionSettings Build()
         {
-            var regularReconnectPeriod = _regularReconnectPeriod ?? TimeSpan.FromSeconds(3); //TimeSpan.FromMinutes(30);
+            var regularReconnectPeriod = _regularReconnectPeriod ?? TimeSpan.FromMinutes(30);
             var errorStateReconnectPeriod = _errorStateReconnectPeriod ?? TimeSpan.FromSeconds(30);
             var heartbeatPeriod = _heartbeatPeriod ?? TimeSpan.FromSeconds(30);
             var transportLatency = _transportLatency ?? TimeSpan.Zero;
