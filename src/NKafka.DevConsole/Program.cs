@@ -16,6 +16,7 @@ namespace NKafka.DevConsole
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);
             var topicName = "test2";
+            var groupName = "group53";
 
             var clientConfigBuilder = new KafkaClientSettingsBuilder(metadataBroker)
                 .SetClientId("nkafka")
@@ -32,7 +33,7 @@ namespace NKafka.DevConsole
                 .SetConsumeServerWaitTime(TimeSpan.FromSeconds(5));            
 
             var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());
-            var group = clientBuilder.CreateConsumerGroup("my_group");
+            var group = clientBuilder.CreateConsumerGroup(groupName);
             var topicProducer = clientBuilder.CreateTopicProducer(topicName,
                 new TestPartitioner(), new TestSerializer(), producerConfigBuilder.Build());
             var topicConsumer = clientBuilder.CreateTopicConsumer(topicName, group,
@@ -77,6 +78,7 @@ namespace NKafka.DevConsole
                         {
                             Console.WriteLine("empty package");
                         }
+                        topicConsumer.Commit(package.PackageNumber);
                     }
                     else
                     {

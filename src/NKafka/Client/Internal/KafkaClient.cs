@@ -25,9 +25,10 @@ namespace NKafka.Client.Internal
                 var worker = new KafkaClientWorker(settings);
                 worker.ArrangeTopic += OnArrangeTopic;
                 worker.ArrangeGroup += OnArrangeGroupCoordinator;
-                workers.Add(worker);                
-            }            
-            
+                workers.Add(worker);
+            }
+            _workers = workers;
+
             foreach (var topic in topics)
             {
                 var worker = GetWorker(topic.TopicName.GetHashCode());                
@@ -38,9 +39,7 @@ namespace NKafka.Client.Internal
             {
                 var worker = GetWorker(group.GroupName.GetHashCode());
                 worker.AssignGroup(group);
-            }
-
-            _workers = workers;
+            }            
         }        
 
         public void Start()

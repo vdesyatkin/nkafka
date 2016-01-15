@@ -111,6 +111,7 @@ namespace NKafka.Connection
                 
                 CloseConnection();
                 TryOpenConnection();
+                _isConnectionMaintenance = false;
                 return;
             }
 

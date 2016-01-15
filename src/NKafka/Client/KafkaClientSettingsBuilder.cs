@@ -16,12 +16,11 @@ namespace NKafka.Client
 
         [NotNull] private readonly List<KafkaBrokerInfo> _metadataBrokers;
         
-        [NotNull] public readonly KafkaConnectionSettingsBuilder Connection;        
+        [CanBeNull] private readonly KafkaConnectionSettings _connection;        
 
         public KafkaClientSettingsBuilder([NotNull] KafkaBrokerInfo metadataBroker)
         {
-            _metadataBrokers = new List<KafkaBrokerInfo> { metadataBroker };
-            Connection = new KafkaConnectionSettingsBuilder();
+            _metadataBrokers = new List<KafkaBrokerInfo> { metadataBroker };            
         }
 
         [PublicAPI]
@@ -69,7 +68,7 @@ namespace NKafka.Client
             var workerThreadCount = _workerThreadCount ?? 0;
             var workerPeriod = _workerPeriod ?? TimeSpan.FromSeconds(1);
 
-            var connectionSettings = Connection.Build();            
+            var connectionSettings = _connection ?? KafkaConnectionSettingsBuilder.Default;
 
             return new KafkaClientSettings(kafkaVersion, clientId, metadataBrokers, 
                 workerThreadCount, workerPeriod,

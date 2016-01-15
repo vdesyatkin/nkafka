@@ -142,7 +142,7 @@ namespace NKafka.Client.ConsumerGroup
             var offsetFetchServerWaitTime = _offsetFetchServerWaitTime ?? TimeSpan.FromSeconds(5);
             var offsetCommitServerWaitTime = _offsetCommitServerWaitTime ?? TimeSpan.FromSeconds(10);
 
-            var groupSessionTimeout = _groupSessionTimeout ?? TimeSpan.FromMinutes(2);
+            var groupSessionTimeout = _groupSessionTimeout ?? TimeSpan.FromSeconds(30);
             var heartbeatPeriod = _heartbeatPeriod ?? TimeSpan.FromMinutes(1);
             var offsetCommitPeriod = _offsetCommitPeriod ?? TimeSpan.FromMinutes(1);
             var offsetCommitRetentionTime = _offsetCommitRetentionTime ?? TimeSpan.FromDays(7);

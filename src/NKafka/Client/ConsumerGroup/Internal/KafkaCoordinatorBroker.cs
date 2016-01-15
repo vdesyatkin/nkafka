@@ -208,6 +208,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                 group.HeartbeatTimestampUtc = DateTime.UtcNow;
                 _heartbeatRequests[group.GroupName] = requestId.Value;
+
+                group.Status = KafkaCoordinatorGroupStatus.FirstHeatbeatRequested;
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.FirstHeatbeatRequested)
@@ -268,6 +270,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (requestId == null) return;
 
                 _offsetFetchRequests[group.GroupName] = requestId.Value;
+                group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequested;
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequested)

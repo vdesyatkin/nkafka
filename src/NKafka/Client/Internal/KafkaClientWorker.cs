@@ -392,7 +392,8 @@ namespace NKafka.Client.Internal
                 {
                     metadataBroker.Close();
                 }
-            }
+                return;
+            }            
 
             if (!metadataBroker.IsOpenned)
             {

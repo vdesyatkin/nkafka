@@ -52,7 +52,7 @@ namespace NKafka.Protocol.API.JoinGroup
         private static KafkaJoinGroupResponse ReadJoinGroupResponse([NotNull] KafkaBinaryReader reader)
         {
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();
-            var groupGenerationId = reader.ReadInt16();
+            var groupGenerationId = reader.ReadInt32();
             var groupProtocol = reader.ReadString();
             var groupLeaderId = reader.ReadString();
             var memberId = reader.ReadString();

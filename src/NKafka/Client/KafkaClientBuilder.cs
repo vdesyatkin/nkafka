@@ -134,8 +134,7 @@ namespace NKafka.Client
             var consumers = new Dictionary<string, KafkaConsumerTopic>(_topicConsumers.Count);            
             foreach (var consumer in _topicConsumers)
             {
-                if (!topicNames.Add(consumer.TopicName)) continue;
-
+                topicNames.Add(consumer.TopicName);
                 consumers[consumer.TopicName] = consumer;
             }
 
