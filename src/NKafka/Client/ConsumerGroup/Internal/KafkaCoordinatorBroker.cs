@@ -85,7 +85,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     }
                 }
 
-                group.Status = KafkaCoordinatorGroupStatus.RearrageRequired;
+                group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
             }
 
             _joinGroupRequests.Clear();
@@ -98,7 +98,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         private void ProcessGroup([NotNull] KafkaCoordinatorGroup group)
         {
-            if (group.Status == KafkaCoordinatorGroupStatus.RearrageRequired)
+            if (group.Status == KafkaCoordinatorGroupStatus.RearrangeRequired)
             {
                 return;
             }
@@ -425,7 +425,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (response.ErrorCode == KafkaResponseErrorCode.NotCoordinatorForGroup)
             {
-                group.Status = KafkaCoordinatorGroupStatus.RearrageRequired;
+                group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
                 return false;
             }
 
@@ -725,7 +725,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (response.ErrorCode == KafkaResponseErrorCode.NotCoordinatorForGroup)
             {
-                group.Status = KafkaCoordinatorGroupStatus.RearrageRequired;
+                group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
                 return false;
             }
 
@@ -774,7 +774,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (response.ErrorCode == KafkaResponseErrorCode.NotCoordinatorForGroup)
             {
-                group.Status = KafkaCoordinatorGroupStatus.RearrageRequired;
+                group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
                 return false;
             }
 

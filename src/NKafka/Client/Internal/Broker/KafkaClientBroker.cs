@@ -141,8 +141,8 @@ namespace NKafka.Client.Internal.Broker
 
                 if (partition.Status == KafkaClientBrokerPartitionStatus.Plugged)
                 {
-                    if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrageRequired ||
-                        partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrageRequired)
+                    if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrangeRequired ||
+                        partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired)
                     {
                         partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
                     }
@@ -169,7 +169,7 @@ namespace NKafka.Client.Internal.Broker
 
             if (group.Status == KafkaClientBrokerGroupStatus.Plugged)
             {
-                if (group.Coordinator.Status == KafkaCoordinatorGroupStatus.RearrageRequired)
+                if (group.Coordinator.Status == KafkaCoordinatorGroupStatus.RearrangeRequired)
                 {
                     group.Status = KafkaClientBrokerGroupStatus.RearrangeRequired;                    
                 }

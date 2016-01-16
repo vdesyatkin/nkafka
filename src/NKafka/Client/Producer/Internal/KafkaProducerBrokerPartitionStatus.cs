@@ -7,6 +7,6 @@ namespace NKafka.Client.Producer.Internal
     {
         NotInitialized = 0,        
         Plugged = 1,
-        RearrageRequired = 2
+        RearrangeRequired = 2
     }
 }

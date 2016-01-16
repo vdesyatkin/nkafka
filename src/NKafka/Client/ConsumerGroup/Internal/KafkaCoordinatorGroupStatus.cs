@@ -3,7 +3,7 @@
     public enum KafkaCoordinatorGroupStatus
     {
         NotInitialized = 0,        
-        RearrageRequired = 1,
+        RearrangeRequired = 1,
         JoinGroupRequested = 2,
         JoinedAsMember = 3,
         AdditionalTopicsRequired = 4,

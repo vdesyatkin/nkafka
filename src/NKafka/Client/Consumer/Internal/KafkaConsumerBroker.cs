@@ -61,9 +61,8 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     var partition = partitionPair.Value;
 
-                    partition.Status = KafkaConsumerBrokerPartitionStatus.RearrageRequired;
-                }
-                //todo (C009)
+                    partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
+                }                
             }
 
             _fetchRequests.Clear();
@@ -147,7 +146,7 @@ namespace NKafka.Client.Consumer.Internal
 
         private bool TryPreparePartition([NotNull] KafkaConsumerBrokerPartition partition)
         {
-            if (partition.Status == KafkaConsumerBrokerPartitionStatus.RearrageRequired) return false;
+            if (partition.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired) return false;
 
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.NotInitialized)
             {
@@ -176,7 +175,7 @@ namespace NKafka.Client.Consumer.Internal
                     var minPartitionOffset = ExtractMinOffset(offsetResponse.Data, out needRearrange);
                     if (needRearrange)
                     {
-                        partition.Status = KafkaConsumerBrokerPartitionStatus.RearrageRequired;
+                        partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
                         return false;
                     }
                     if (minPartitionOffset == null)
@@ -236,7 +235,7 @@ namespace NKafka.Client.Consumer.Internal
                     //todo (E009)
                     if (errorCode == KafkaResponseErrorCode.NotLeaderForPartition)
                     {
-                        partition.Status = KafkaConsumerBrokerPartitionStatus.RearrageRequired;                        
+                        partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;                        
                         continue;
                     }
 

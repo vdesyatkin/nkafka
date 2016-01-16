@@ -65,7 +65,7 @@ namespace NKafka.Client.Producer.Internal
                 {
                     var partition = partitionPair.Value;
 
-                    partition.Status = KafkaProducerBrokerPartitionStatus.RearrageRequired;
+                    partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
                 }
             }
 
@@ -140,7 +140,7 @@ namespace NKafka.Client.Producer.Internal
             foreach (var partitionPair in topic.Partitions)
             {
                 var partition = partitionPair.Value;
-                if (partition.Status == KafkaProducerBrokerPartitionStatus.RearrageRequired)
+                if (partition.Status == KafkaProducerBrokerPartitionStatus.RearrangeRequired)
                 {
                     continue;
                 }
@@ -263,7 +263,7 @@ namespace NKafka.Client.Producer.Internal
 
                         if (error == KafkaResponseErrorCode.NotLeaderForPartition)
                         {
-                            partition.Status = KafkaProducerBrokerPartitionStatus.RearrageRequired;
+                            partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
                         }
 
                         //todo (E009) handling standard errors
