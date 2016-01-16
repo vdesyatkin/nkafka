@@ -85,11 +85,15 @@ namespace NKafka.DevConsole
                         Console.WriteLine("no packages");
                     }
                 }
-            } while (userText != "exit");
+            } while (userText != "exit" && userText != "q" && userText != "quit");            
 
-            Console.ReadLine();
+            Console.WriteLine("stopping...");
 
             client.Stop();
+
+            Console.WriteLine("stopped");
+
+            Console.ReadLine();
 
             //var tester = new KafkaTester();
             //tester.Test(host, port, topicName);

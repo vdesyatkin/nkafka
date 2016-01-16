@@ -71,14 +71,25 @@ namespace NKafka.Client.Internal.Broker
         }
 
         public void Close()
-        {
-            foreach (var topic in _topics)
+        {            
+            _consumer.Close();
+            _producer.Close();
+            _coordinator.Close();
+
+            foreach (var groupPair in _groups)
             {
-                foreach (var partition in topic.Value.Partitions)
+                var group = groupPair.Value;
+                group.Status = KafkaClientBrokerGroupStatus.RearrangeRequired;
+            }
+
+            foreach (var topicPair in _topics)
+            {
+                var topic = topicPair.Value;
+
+                foreach (var partition in topic.Partitions)
                 {
-                    partition.Value.Status = KafkaClientBrokerPartitionStatus.Unplugged;
-                }
-                topic.Value.Partitions.Clear();
+                    partition.Value.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
+                }                
             }
             _broker.Close();
         }

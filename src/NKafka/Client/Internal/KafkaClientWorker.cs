@@ -122,68 +122,88 @@ namespace NKafka.Client.Internal
 
             try
             {
-                var produceTimer = _workerTimer;
-                lock (produceTimer)
+                var workerTimer = _workerTimer;
+                lock (workerTimer)
                 {
-                    produceTimer.Dispose();
+                    workerTimer.Dispose();
                 }
             }
             catch (Exception)
             {
                 //ignored
-            }
+            }            
+
             foreach (var broker in _brokers)
             {
-                broker.Value.Close();
+                broker.Value.Close();                
             }
+            foreach (var broker in _metadataBrokers)
+            {
+                broker.Close();                
+            }
+
+            foreach (var topicPair in _topics)
+            {
+                var topic = topicPair.Value;                
+                topic.Status = KafkaClientTopicStatus.RearrangeRequired;
+            }
+
+            foreach (var groupPair in _groups)
+            {
+                var group = groupPair.Value;
+                group.Status = KafkaClientGroupStatus.RearrangeRequired;
+            }
+
+            _topicMetadataRequests.Clear();
+            _groupMetadataRequests.Clear();
         }
 
         private void Work(object state)
         {
-            var hasGroups = false;
-            foreach (var group in _groups)
-            {
-                if (_workerCancellation.IsCancellationRequested) return;
-                ProcessGroup(group.Value);
-                hasGroups = true;
-            }
-
-            var hasTopics = false;
-            foreach (var topic in _topics)
-            {
-                if (_workerCancellation.IsCancellationRequested) return;
-                ProcessTopic(topic.Value);
-                hasTopics = true;
-            }
-
-            var isBrokersRequired = hasTopics;
-            bool isRegularBrokerAvailable = false;
-            foreach (var brokerPair in _brokers)
-            {
-                if (_workerCancellation.IsCancellationRequested) return;
-                ProcessBroker(brokerPair.Value, isBrokersRequired);
-                if (brokerPair.Value.IsEnabled)
-                {
-                    isRegularBrokerAvailable = true;
-                }
-            }
-
-            var isMetadataBrokerRequired = (hasTopics || hasGroups) && !isRegularBrokerAvailable;
-            foreach (var metadataBroker in _metadataBrokers)
-            {
-                if (_workerCancellation.IsCancellationRequested) return;
-                ProcessMetadataBroker(metadataBroker, isMetadataBrokerRequired);
-            }
-
             if (_workerCancellation.IsCancellationRequested) return;
-            var produceTimer = _workerTimer;
-            lock (produceTimer)
+            var workerTimer = _workerTimer;
+            lock (workerTimer)
             {
+                var hasGroups = false;
+                foreach (var group in _groups)
+                {
+                    if (_workerCancellation.IsCancellationRequested) return;
+                    ProcessGroup(group.Value);
+                    hasGroups = true;
+                }
+
+                var hasTopics = false;
+                foreach (var topic in _topics)
+                {
+                    if (_workerCancellation.IsCancellationRequested) return;
+                    ProcessTopic(topic.Value);
+                    hasTopics = true;
+                }
+
+                var isBrokersRequired = hasTopics;
+                bool isRegularBrokerAvailable = false;
+                foreach (var brokerPair in _brokers)
+                {
+                    if (_workerCancellation.IsCancellationRequested) return;
+                    ProcessBroker(brokerPair.Value, isBrokersRequired);
+                    if (brokerPair.Value.IsEnabled)
+                    {
+                        isRegularBrokerAvailable = true;
+                    }
+                }
+
+                var isMetadataBrokerRequired = (hasTopics || hasGroups) && !isRegularBrokerAvailable;
+                foreach (var metadataBroker in _metadataBrokers)
+                {
+                    if (_workerCancellation.IsCancellationRequested) return;
+                    ProcessMetadataBroker(metadataBroker, isMetadataBrokerRequired);
+                }                       
+            
                 if (_workerCancellation.IsCancellationRequested) return;
 
                 try
                 {
-                    produceTimer.Change(_workerPeriod, Timeout.InfiniteTimeSpan);
+                    workerTimer.Change(_workerPeriod, Timeout.InfiniteTimeSpan);
                 }
                 catch (Exception)
                 {

@@ -8,6 +8,7 @@ using NKafka.Connection;
 using NKafka.Protocol;
 using NKafka.Protocol.API.Heartbeat;
 using NKafka.Protocol.API.JoinGroup;
+using NKafka.Protocol.API.LeaveGroup;
 using NKafka.Protocol.API.OffsetCommit;
 using NKafka.Protocol.API.OffsetFetch;
 using NKafka.Protocol.API.SyncGroup;
@@ -59,6 +60,40 @@ namespace NKafka.Client.ConsumerGroup.Internal
             {                
                 ProcessGroup(groupPair.Value);
             }
+        }
+
+        public void Close()
+        {
+            foreach (var groupPair in _groups)
+            {
+                var group = groupPair.Value;
+                if (group.Status == KafkaCoordinatorGroupStatus.Ready)
+                {
+                    var commitRequest = CreateOffsetCommitRequest(group);
+                    if (commitRequest != null)
+                    {
+                        _broker.SendWithoutResponse(commitRequest);
+                    }
+                }
+
+                if (group.Status >= KafkaCoordinatorGroupStatus.JoinGroupRequested)
+                {
+                    var leaveGroupRequest = CreateLeaveGroupRequest(group);
+                    if (leaveGroupRequest != null)
+                    {
+                        _broker.SendWithoutResponse(leaveGroupRequest);
+                    }
+                }
+
+                group.Status = KafkaCoordinatorGroupStatus.RearrageRequired;
+            }
+
+            _joinGroupRequests.Clear();
+            _additionalTopicsRequests.Clear();
+            _syncGroupRequests.Clear();
+            _heartbeatRequests.Clear();
+            _offsetFetchRequests.Clear();
+            _offsetCommitRequests.Clear();
         }
 
         private void ProcessGroup([NotNull] KafkaCoordinatorGroup group)
@@ -962,5 +997,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         #endregion OffsetCommit
+
+        #region LeaveGroup
+
+        private KafkaLeaveGroupRequest CreateLeaveGroupRequest([NotNull] KafkaCoordinatorGroup group)
+        {
+            if (string.IsNullOrEmpty(group.MemberId)) return null;
+            return new KafkaLeaveGroupRequest(group.GroupName, group.MemberId);
+        }
+      
+        #endregion LeaveGroup
     }
 }

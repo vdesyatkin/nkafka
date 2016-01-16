@@ -51,6 +51,24 @@ namespace NKafka.Client.Consumer.Internal
             topic.Partitions.TryRemove(partitionId, out partition);
         }
 
+        public void Close()
+        {
+            foreach (var topicPair in _topics)
+            {
+                var topic = topicPair.Value;
+
+                foreach (var partitionPair in topic.Partitions)
+                {
+                    var partition = partitionPair.Value;
+
+                    partition.Status = KafkaConsumerBrokerPartitionStatus.RearrageRequired;
+                }
+                //todo (C009)
+            }
+
+            _fetchRequests.Clear();
+        }
+
         public void Consume()
         {            
             foreach (var topicPair in _topics)
@@ -320,6 +338,6 @@ namespace NKafka.Client.Consumer.Internal
             }
         }
 
-        #endregion Fetch        
+        #endregion Fetch                
     }
 }

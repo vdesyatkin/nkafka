@@ -48,6 +48,30 @@ namespace NKafka.Client.Producer.Internal
             topic.Partitions.TryRemove(partitionId, out partition);
         }
 
+        public void Close()
+        {
+            foreach (var topicPair in _topics)
+            {
+                var topic = topicPair.Value;
+                
+                var batches = CreateTopicRequests(topic, new HashSet<int>());
+                foreach (var batch in batches)
+                {
+                    var batchRequest = CreateBatchRequest(topic, batch);
+                    _broker.SendWithoutResponse(batchRequest, batch.DataSize*2);
+                }
+
+                foreach (var partitionPair in topic.Partitions)
+                {
+                    var partition = partitionPair.Value;
+
+                    partition.Status = KafkaProducerBrokerPartitionStatus.RearrageRequired;
+                }
+            }
+
+            _produceRequests.Clear();
+        }
+
         public void Produce()
         {
             foreach (var topicPair in _topics)
@@ -339,6 +363,6 @@ namespace NKafka.Client.Producer.Internal
                 }
                 return result;
             }
-        }
+        }        
     }
 }
