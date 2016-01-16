@@ -133,6 +133,9 @@
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupRequestProtocol.cs" />
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupResponse.cs" />
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupResponseMember.cs" />
+    <Compile Include="Protocol\API\LeaveGroup\KafkaLeaveGroupApi.cs" />
+    <Compile Include="Protocol\API\LeaveGroup\KafkaLeaveGroupRequest.cs" />
+    <Compile Include="Protocol\API\LeaveGroup\KafkaLeaveGroupResponse.cs" />
     <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitApi.cs" />
     <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitRequestTopic.cs" />
     <Compile Include="Protocol\API\OffsetCommit\KafkaOffsetCommitRequestTopicPartition.cs" />

@@ -10,10 +10,7 @@ namespace NKafka.Protocol.API.Heartbeat
         public Type RequestType => typeof(KafkaHeartbeatRequest);
 
         #region HeartbeatRequest
-
-        private const string DefaultProtocolType = "consumer";
-        private const string UnknownMember = "";
-
+        
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)
         {
             WriteHeartbeatRequest(writer, (KafkaHeartbeatRequest)request);

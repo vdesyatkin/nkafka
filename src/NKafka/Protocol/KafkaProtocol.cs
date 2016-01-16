@@ -5,6 +5,7 @@ using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.GroupCoordinator;
 using NKafka.Protocol.API.Heartbeat;
 using NKafka.Protocol.API.JoinGroup;
+using NKafka.Protocol.API.LeaveGroup;
 using NKafka.Protocol.API.Offset;
 using NKafka.Protocol.API.OffsetCommit;
 using NKafka.Protocol.API.OffsetFetch;
@@ -134,6 +135,7 @@ namespace NKafka.Protocol
                 [KafkaRequestType.JoinGroup] = KafkaRequestVersion.V0,
                 [KafkaRequestType.SyncGroup] = KafkaRequestVersion.V0,
                 [KafkaRequestType.Heartbeat] = KafkaRequestVersion.V0,
+                [KafkaRequestType.LeaveGroup] = KafkaRequestVersion.V0,
 
                 [KafkaRequestType.Offset] = KafkaRequestVersion.V0,
                 [KafkaRequestType.OffsetFetch] = KafkaRequestVersion.V1,
@@ -209,6 +211,8 @@ namespace NKafka.Protocol
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaJoinGroupApi());
                 case KafkaRequestType.SyncGroup:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaSyncGroupApi());
+                case KafkaRequestType.LeaveGroup:
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaLeaveGroupApi());
                 case KafkaRequestType.Heartbeat:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaHearbeatApi());
                 case KafkaRequestType.OffsetFetch:
