@@ -116,8 +116,7 @@ namespace NKafka.Client.ConsumerGroup
             if (string.IsNullOrEmpty(protocolName)) return this;
             if (assignmentStrategies == null) return this;
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
-            // ReSharper restore HeuristicUnreachableCode
-            if (string.IsNullOrEmpty(protocolName)) return this;
+            // ReSharper restore HeuristicUnreachableCode            
             var protocol = new KafkaConsumerGroupProtocolInfo(protocolName, protocolVersion, assignmentStrategies, customData);
             return AppendProtocol(protocol);
         }

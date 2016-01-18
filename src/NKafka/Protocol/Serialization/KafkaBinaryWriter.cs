@@ -97,7 +97,7 @@ namespace NKafka.Protocol.Serialization
 
         public void BeginWriteCrc2()
         {
-            WriteUInt32(0); // crc32s
+            WriteUInt32(32); // crc32s
             _beginPositions.Push(_stream.Position);
         }
 
