@@ -62,7 +62,16 @@ namespace NKafka.Client.Consumer.Internal
                 if (message.Offset <= _maxOffset) continue;
                 _maxOffset = message.Offset;
                 Interlocked.Increment(ref _enqueuedCount);
-                Interlocked.Add(ref _enqueuedSize, message.Key.Length + message.Data.Length);
+                var messageSize = 0;
+                if (message.Key != null)
+                {
+                    messageSize += message.Key.Length;
+                }
+                if (message.Data != null)
+                {
+                    messageSize += message.Data.Length;
+                }
+                Interlocked.Add(ref _enqueuedSize, messageSize);
                 _messageQueue.Enqueue(message);
             }
         }
@@ -75,7 +84,18 @@ namespace NKafka.Client.Consumer.Internal
             }
 
             Interlocked.Decrement(ref _enqueuedCount);
-            Interlocked.Add(ref _enqueuedSize, -(message.Key.Length + message.Data.Length));
+            if (message == null) return true;
+
+            var messageSize = 0;
+            if (message.Key != null)
+            {
+                messageSize += message.Key.Length;
+            }
+            if (message.Data != null)
+            {
+                messageSize += message.Data.Length;
+            }
+            Interlocked.Add(ref _enqueuedSize, -messageSize);
             return true;
         }
 

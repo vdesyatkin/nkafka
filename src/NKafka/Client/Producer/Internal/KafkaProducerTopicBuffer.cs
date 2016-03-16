@@ -45,6 +45,12 @@ namespace NKafka.Client.Producer.Internal
             KafkaMessage message;
             while (processedCount < enqueuedCount && _messageQueue.TryDequeue(out message))
             {
+                processedCount++;
+                if (message == null)
+                {                    
+                    continue;
+                }
+
                 int partitionId;
                 try
                 {
@@ -66,8 +72,7 @@ namespace NKafka.Client.Producer.Internal
                     continue;
                 }
 
-                partition.EnqueueMessage(message);
-                processedCount++;
+                partition.EnqueueMessage(message);                
             }
 
             Interlocked.Add(ref _enqueuedCount, -processedCount);
@@ -117,6 +122,9 @@ namespace NKafka.Client.Producer.Internal
             KafkaMessage<TKey, TData> message;
             while (processedCount < enqueuedCount && _messageQueue.TryDequeue(out message))
             {
+                processedCount++;
+                if (message == null) continue;
+
                 byte[] key;
                 byte[] data;
                 try
@@ -150,8 +158,7 @@ namespace NKafka.Client.Producer.Internal
                     continue;
                 }
 
-                partition.EnqueueMessage(new KafkaMessage(key, data));
-                processedCount++;
+                partition.EnqueueMessage(new KafkaMessage(key, data));                
             }
 
             Interlocked.Add(ref _enqueuedCount, -processedCount);

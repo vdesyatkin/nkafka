@@ -1,4 +1,6 @@
-﻿namespace NKafka.Protocol.Serialization
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Protocol.Serialization
 {
     /// <summary>
     /// Implements a 32-bit CRC hash algorithm compatible with Zip etc.
@@ -15,7 +17,7 @@
         private const uint DefaultPolynomial = 0xedb88320u;
         private const uint DefaultSeed = 0xffffffffu;
 
-        static readonly uint[] DefaultTable;
+        [NotNull] static readonly uint[] DefaultTable;
 
         static KafkaCrc32()
         {
@@ -25,7 +27,8 @@
         public static uint Compute(byte[] buffer, long offset, long count)
         {
             var crc = DefaultSeed;
-            for (var i = offset; i < offset + count; i++)
+            buffer = buffer ?? new byte[0];
+            for (var i = offset; (i < offset + count) && (i < buffer.Length); i++)
             {
                 unchecked
                 {
@@ -35,6 +38,7 @@
             return ~crc;
         }
 
+        [NotNull]
         static uint[] InitializeTable(uint polynomial)
         {            
             var createTable = new uint[256];

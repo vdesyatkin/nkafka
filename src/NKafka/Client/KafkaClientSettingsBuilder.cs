@@ -20,52 +20,52 @@ namespace NKafka.Client
 
         public KafkaClientSettingsBuilder([NotNull] KafkaBrokerInfo metadataBroker)
         {
-            _metadataBrokers = new List<KafkaBrokerInfo> { metadataBroker };            
+            _metadataBrokers = new List<KafkaBrokerInfo> { metadataBroker };
         }
 
-        [PublicAPI]
+        [PublicAPI, NotNull]
         public KafkaClientSettingsBuilder SetKafkaVersion(KafkaVersion version)
         {
             _kafkaVersion = version;
             return this;
         }
 
-        [PublicAPI]
+        [PublicAPI, NotNull]
         public KafkaClientSettingsBuilder SetClientId([CanBeNull]string clientId)
         {
             _clientId = clientId;
             return this;
         }
 
-        [PublicAPI]
+        [PublicAPI, NotNull]
         public KafkaClientSettingsBuilder AppendMetadataBroker([NotNull] KafkaBrokerInfo metadataBroker)
         {
             _metadataBrokers.Add(metadataBroker);
             return this;
         }
 
-        [PublicAPI]
+        [PublicAPI, NotNull]
         public KafkaClientSettingsBuilder SetWorkerThreadCount(int threadCount)
         {
             _workerThreadCount = threadCount;
             return this;
         }
 
-        [PublicAPI]
+        [PublicAPI, NotNull]
         public KafkaClientSettingsBuilder SetWorkerPeriod(TimeSpan workerPeriod)
         {
             _workerPeriod = workerPeriod;
             return this;
         }
 
-        [PublicAPI]
+        [PublicAPI, NotNull]
         public KafkaClientSettingsBuilder SetConnectionSettings([NotNull]KafkaConnectionSettings connectionSettings)
         {
             _connectionSettings = connectionSettings;
             return this;
         }
 
-        [NotNull]
+        [PublicAPI, NotNull]
         public KafkaClientSettings Build()
         {
             var kafkaVersion = _kafkaVersion ?? KafkaVersion.V0_9;

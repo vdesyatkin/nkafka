@@ -37,13 +37,12 @@ namespace NKafka.Client
         {            
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             // ReSharper disable ConstantNullCoalescingCondition
-            if (string.IsNullOrEmpty(topicName) || (partitioner == null)) return null;
-            settings = settings ?? KafkaProducerSettingsBuilder.Default;
+            if (string.IsNullOrEmpty(topicName) || (partitioner == null)) return null;            
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
             var topicBuffer = new KafkaProducerTopicBuffer(partitioner);
-            var topic = new KafkaProducerTopic(topicName, settings, topicBuffer);
+            var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer);
             _topicProducers.Add(topic);            
             return topicBuffer;
         }
@@ -56,12 +55,11 @@ namespace NKafka.Client
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             // ReSharper disable ConstantNullCoalescingCondition
             if (string.IsNullOrEmpty(topicName) || (partitioner == null) || (serializer == null)) return null;            
-            settings = settings ?? KafkaProducerSettingsBuilder.Default;
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
             var topicBuffer = new KafkaProducerTopicBuffer<TKey, TData>(partitioner, serializer);
-            var topic = new KafkaProducerTopic(topicName, settings, topicBuffer);
+            var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer);
             _topicProducers.Add(topic);
             return topicBuffer;
         }
@@ -73,13 +71,12 @@ namespace NKafka.Client
             // ReSharper disable ConstantNullCoalescingCondition
             // ReSharper disable ConstantConditionalAccessQualifier
             if (string.IsNullOrEmpty(topicName)) return null;            
-            if (string.IsNullOrEmpty(group?.GroupName)) return null;
-            settings = settings ?? KafkaConsumerSettingsBuilder.Default;
+            if (string.IsNullOrEmpty(group?.GroupName)) return null;            
             // ReSharper restore ConstantConditionalAccessQualifier
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition            
 
-            var topic = new KafkaConsumerTopic(topicName, group.GroupName, settings);
+            var topic = new KafkaConsumerTopic(topicName, group.GroupName, settings ?? KafkaConsumerSettingsBuilder.Default);
             _topicConsumers.Add(topic);
             return topic;
         }
@@ -93,13 +90,12 @@ namespace NKafka.Client
             // ReSharper disable ConstantNullCoalescingCondition
             // ReSharper disable ConstantConditionalAccessQualifier
             if (string.IsNullOrEmpty(topicName) || (serializer == null)) return null;
-            if (string.IsNullOrEmpty(group?.GroupName)) return null;
-            settings = settings ?? KafkaConsumerSettingsBuilder.Default;
+            if (string.IsNullOrEmpty(group?.GroupName)) return null;            
             // ReSharper restore ConstantConditionalAccessQualifier
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topic = new KafkaConsumerTopic(topicName, group.GroupName, settings);
+            var topic = new KafkaConsumerTopic(topicName, group.GroupName, settings ?? KafkaConsumerSettingsBuilder.Default);
             var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer);
             _topicConsumers.Add(topic);
             return wrapper;
@@ -142,6 +138,8 @@ namespace NKafka.Client
             var groupTopicsDictionary = new Dictionary<string, List<KafkaClientTopic>>(_topicConsumers.Count);
             foreach (var topicName in topicNames)
             {
+                if (topicName == null) continue;
+
                 KafkaProducerTopic producer;
                 producers.TryGetValue(topicName, out producer);
 
@@ -157,7 +155,7 @@ namespace NKafka.Client
                     if (!_consumerGroups.ContainsKey(groupName)) continue;
 
                     List<KafkaClientTopic> groupTopicList;
-                    if (!groupTopicsDictionary.TryGetValue(groupName, out groupTopicList))
+                    if (!groupTopicsDictionary.TryGetValue(groupName, out groupTopicList) || groupTopicList == null)
                     {
                         groupTopicList = new List<KafkaClientTopic>();
                         groupTopicsDictionary[groupName] = groupTopicList;
@@ -172,17 +170,20 @@ namespace NKafka.Client
                 var groupName = groupPair.Key;
                 var groupTopics = groupPair.Value;
 
+                if (groupName == null || groupTopics == null) continue;
+
                 KafkaConsumerGroup group;
-                if (!_consumerGroups.TryGetValue(groupName, out group))
+                if (!_consumerGroups.TryGetValue(groupName, out group) || group == null)
                 {
                     continue;
                 }
+                if (group.Settings == null) continue;
 
                 var clientGroup = new KafkaClientGroup(groupName, groupTopics, group.Settings);
 
                 foreach (var topic in groupTopics)
                 {
-                    topic.Consumer?.ApplyCoordinator(clientGroup);
+                    topic?.Consumer?.ApplyCoordinator(clientGroup);
                 }
 
                 groups.Add(clientGroup);

@@ -28,7 +28,7 @@ namespace NKafka.Client.Consumer.Internal
         public void AddTopicPartition([NotNull] string topicName, [NotNull] KafkaConsumerBrokerPartition topicPartition)
         {
             KafkaConsumerBrokerTopic topic;
-            if (!_topics.TryGetValue(topicName, out topic))
+            if (!_topics.TryGetValue(topicName, out topic) || topic == null)
             {
                 topic = _topics.AddOrUpdate(topicName,
                     new KafkaConsumerBrokerTopic(topicName, topicPartition.Settings, topicPartition.Coordinator),
@@ -36,7 +36,10 @@ namespace NKafka.Client.Consumer.Internal
             }
             topicPartition.Reset();
 
-            topic.Partitions[topicPartition.PartitionId] = topicPartition;
+            if (topic != null)
+            {
+                topic.Partitions[topicPartition.PartitionId] = topicPartition;
+            }
         }
 
         public void RemoveTopicPartition([NotNull] string topicName, int partitionId)
@@ -47,8 +50,11 @@ namespace NKafka.Client.Consumer.Internal
                 return;
             }
 
-            KafkaConsumerBrokerPartition partition;
-            topic.Partitions.TryRemove(partitionId, out partition);
+            if (topic != null)
+            {
+                KafkaConsumerBrokerPartition partition;
+                topic.Partitions.TryRemove(partitionId, out partition);
+            }
         }
 
         public void Close()
@@ -56,10 +62,12 @@ namespace NKafka.Client.Consumer.Internal
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
+                if (topic == null) continue;
 
                 foreach (var partitionPair in topic.Partitions)
                 {
                     var partition = partitionPair.Value;
+                    if (partition == null) continue;
 
                     partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
                 }                
@@ -73,6 +81,7 @@ namespace NKafka.Client.Consumer.Internal
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
+                if (topic == null) continue;
 
                 ConsumeTopic(topic);
             }
@@ -85,7 +94,7 @@ namespace NKafka.Client.Consumer.Internal
 
             // process requests that have already sent
             FetchRequestInfo currentRequest;
-            if (_fetchRequests.TryGetValue(topic.TopicName, out currentRequest))
+            if (_fetchRequests.TryGetValue(topic.TopicName, out currentRequest) && currentRequest != null)
             {
                 var response = _broker.Receive<KafkaFetchResponse>(currentRequest.RequestId);
                 if (!response.HasData && !response.HasError) // has not received
@@ -111,6 +120,7 @@ namespace NKafka.Client.Consumer.Internal
             {
                 var partitionId = partitionPair.Key;
                 var partition = partitionPair.Value;
+                if (partition == null) continue;
 
                 long? coordinatorOffset;
                 if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset))
@@ -225,7 +235,7 @@ namespace NKafka.Client.Consumer.Internal
                     var partitionId = partitionResponse.PartitionId;                    
 
                     KafkaConsumerBrokerPartition partition;
-                    if (!topic.Partitions.TryGetValue(partitionId, out partition))
+                    if (!topic.Partitions.TryGetValue(partitionId, out partition) || partition == null)
                     {
                         continue;
                     }
@@ -241,7 +251,7 @@ namespace NKafka.Client.Consumer.Internal
 
                     if (errorCode == KafkaResponseErrorCode.NoError)
                     {
-                        partition.EnqueueMessages(partitionResponse.Messages);
+                        partition.EnqueueMessages(partitionResponse.Messages ?? new KafkaMessageAndOffset[0]);
                     }
                 }
             }
@@ -280,12 +290,8 @@ namespace NKafka.Client.Consumer.Internal
             }
 
             var offsetResponsePartition = offsetResponsePartitions[0];
-            if (offsetResponsePartition == null)
-            {
-                return null;
-            }
 
-            var offsets = offsetResponsePartitions[0].Offsets;
+            var offsets = offsetResponsePartition?.Offsets;
             if (offsets == null || offsets.Count == 0)
             {
                 return null;
@@ -330,7 +336,7 @@ namespace NKafka.Client.Consumer.Internal
             [NotNull]
             public readonly Dictionary<int, long> PartitionOffsets;
 
-            public FetchRequestInfo(int requsetId, Dictionary<int, long> partitionOffsets)
+            public FetchRequestInfo(int requsetId, [NotNull] Dictionary<int, long> partitionOffsets)
             {
                 RequestId = requsetId;
                 PartitionOffsets = partitionOffsets;

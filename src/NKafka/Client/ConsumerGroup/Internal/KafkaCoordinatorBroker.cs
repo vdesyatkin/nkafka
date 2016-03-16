@@ -57,8 +57,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public void Process()
         {
             foreach (var groupPair in _groups)
-            {                
-                ProcessGroup(groupPair.Value);
+            {
+                var group = groupPair.Value;
+                if (group == null) continue;
+
+                ProcessGroup(group);
             }
         }
 
@@ -67,6 +70,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
             foreach (var groupPair in _groups)
             {
                 var group = groupPair.Value;
+                if (group == null) continue;
+
                 if (group.Status == KafkaCoordinatorGroupStatus.Ready)
                 {
                     var commitRequest = CreateOffsetCommitRequest(group);
@@ -108,9 +113,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 var topics = group.Topics;
                 if (topics.Count == 0) return;
 
-                foreach (var topic in topics)
+                foreach (var topicPair in topics)
                 {
-                    if (topic.Value.Status != KafkaClientTopicStatus.Ready) return;
+                    var topic = topicPair.Value;
+                    if (topic == null) continue;
+
+                    if (topic.Status != KafkaClientTopicStatus.Ready) return;
                 }
 
                 foreach (var topic in topics)
@@ -383,9 +391,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
             if (topics.Count == 0) return null;
 
             var topicNames = new List<string>(topics.Count);
-            foreach (var topic in topics)
+            foreach (var topicPair in topics)
             {
-                topicNames.Add(topic.Value.TopicName);
+                var topic = topicPair.Value;
+                if (topic == null) continue;
+                topicNames.Add(topic.TopicName);
             }
 
             var settingsProtocols = group.Protocols;            
@@ -395,10 +405,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
             {
                 var protocolName = settingsProtocol.ProtocolName;                
                 var settingsAssignmentStrategies = settingsProtocol.AssignmentStrategies;
+                if (settingsAssignmentStrategies == null) continue;
                 
                 var assignmentStrategies = new List<string>(settingsAssignmentStrategies.Count);
                 foreach (var settingsAssignmentStrategy in settingsAssignmentStrategies)
                 {                                        
+                    if (settingsAssignmentStrategy?.StrategyName == null) continue;
                     assignmentStrategies.Add(settingsAssignmentStrategy.StrategyName);
                 }
 
@@ -451,18 +463,21 @@ namespace NKafka.Client.ConsumerGroup.Internal
             var responseMembers = response.Members;                
 
             var topicMembers = new Dictionary<string, List<KafkaCoordinatorGroupMember>>(group.Topics.Count);
-            foreach (var topic in group.Topics)
+            foreach (var topicPair in group.Topics)
             {
-                topicMembers[topic.Value.TopicName] = new List<KafkaCoordinatorGroupMember>();
+                var topic = topicPair.Value;
+                if (topic == null) continue;
+
+                topicMembers[topic.TopicName] = new List<KafkaCoordinatorGroupMember>();
             }
             var additionalTopics = new List<string>();
 
             var groupMembers = new List<KafkaCoordinatorGroupMember>();
             if (responseMembers != null)
             {
-                foreach (var responseMember in response.Members)
+                foreach (var responseMember in responseMembers)
                 {
-                    if (responseMember == null) continue;
+                    if (responseMember?.MemberId == null) continue;
 
                     var isLeader = responseMember.MemberId == response.GroupLeaderId;
                     var member = new KafkaCoordinatorGroupMember(responseMember.MemberId, isLeader,
@@ -475,7 +490,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         if (string.IsNullOrEmpty(topicName)) continue;
 
                         List<KafkaCoordinatorGroupMember> memberList;
-                        if (!topicMembers.TryGetValue(topicName, out memberList))
+                        if (!topicMembers.TryGetValue(topicName, out memberList) || memberList == null)
                         {
                             memberList = new List<KafkaCoordinatorGroupMember>();
                             topicMembers[topicName] = memberList;
@@ -570,6 +585,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
             var groupMembersDictionary = new Dictionary<string, KafkaCoordinatorGroupMember>(groupMembers.Count);
             foreach (var groupMember in groupMembers)
             {
+                if (groupMember == null) continue;
+
                 groupMembersDictionary[groupMember.MemberId] = groupMember;
 
                 if (minSupportedProtocolVersion == null || minSupportedProtocolVersion.Value > groupMember.ProtocolVersion)
@@ -612,28 +629,33 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             // в найденном протоколе подбираем наиболее релевантную стратегию
             KafkaConsumerAssignmentStrategyInfo topicStrategy = null;
-            foreach (var strategy in protocolStrategies)
+            if (protocolStrategies != null)
             {
-                if (supportedStrategies.Contains(strategy.StrategyName))
+                foreach (var strategy in protocolStrategies)
                 {
-                    topicStrategy = strategy;
-                    break;
+                    if (strategy?.StrategyName == null) continue;
+
+                    if (supportedStrategies.Contains(strategy.StrategyName))
+                    {
+                        topicStrategy = strategy;
+                        break;
+                    }
                 }
-            }
-            if (topicStrategy == null)
-            {
-                topicStrategy = protocolStrategies[0];
-            }
+                if (topicStrategy == null)
+                {
+                    topicStrategy = protocolStrategies[0];
+                }
+            }            
 
             // Поочерёдное назначение партиций на каждый топик            
             foreach (var topicMember in topicMembers)
             {
                 var topicName = topicMember.Key;
                 var members = topicMember.Value;
-                if (members == null || members.Count == 0) continue;
+                if (members == null || members.Count == 0 || topicName == null) continue;
 
                 IReadOnlyList<int> partitionIds;
-                if (!group.AllTopicPartitions.TryGetValue(topicName, out partitionIds))
+                if (!group.AllTopicPartitions.TryGetValue(topicName, out partitionIds) || partitionIds == null)
                 {
                     continue;
                 }
@@ -642,6 +664,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                 foreach (var member in members)
                 {
+                    if (member == null) continue;
                     assignmentRequestMembers.Add(new KafkaConsumerAssignmentRequestMember(member.MemberId, member.IsLeader,
                         member.CustomData));
                 }
@@ -651,7 +674,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 KafkaConsumerAssignment assignment;
                 try
                 {
-                    assignment = topicStrategy.Strategy.Assign(assignmentRequest);
+                    assignment = topicStrategy?.Strategy?.Assign(assignmentRequest);
                 }
                 catch (Exception)
                 {
@@ -672,7 +695,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     if (assignmentMemberId == null || assignmentPartitionIds == null || assignmentPartitionIds.Count == 0) continue;
 
                     KafkaCoordinatorGroupMember groupMember;
-                    if (!groupMembersDictionary.TryGetValue(assignmentMemberId, out groupMember)) continue;
+                    if (!groupMembersDictionary.TryGetValue(assignmentMemberId, out groupMember) || groupMember == null) continue;
 
                     groupMember.TopicAssignments[topicName] = assignmentPartitionIds;
                 }
@@ -698,6 +721,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
             
             foreach (var groupMember in groupMembers)
             {
+                if (groupMember == null) continue;
+
                 var groupMemberTopics = new List<KafkaSyncGroupRequestMemberTopic>(groupMember.TopicAssignments.Count);
                 foreach (var topicAssignment in groupMember.TopicAssignments)
                 {
@@ -827,6 +852,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             foreach (var topicAssignment in assignment)
             {
                 var topicName = topicAssignment.Key;
+                if (topicName == null) continue;
                 var topicAssignmentPartitionIds = topicAssignment.Value;
                 if (topicAssignmentPartitionIds == null) continue;
 
@@ -878,14 +904,17 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             group.AssignedTopicPartitionOffsets = topicPartitionOffsets;
 
-            foreach (var topic in topicPartitionOffsets)
+            foreach (var topicPair in topicPartitionOffsets)
             {
-                var topicInitialCommits = new Dictionary<int, long?>(topic.Value.Count);
-                foreach (var partition in topic.Value)
+                var topicPartitions = topicPair.Value;
+                if (topicPair.Key == null || topicPartitions == null) continue;
+
+                var topicInitialCommits = new Dictionary<int, long?>(topicPartitions.Count);
+                foreach (var partition in topicPartitions)
                 {
                     topicInitialCommits[partition.Key] = partition.Value;
                 }
-                group.CommitedTopicPartitionOffsets[topic.Key] = topicInitialCommits;
+                group.CommitedTopicPartitionOffsets[topicPair.Key] = topicInitialCommits;
             }
 
             return true;
@@ -903,10 +932,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             foreach (var groupTopic in group.Topics)
             {
+                if (groupTopic.Value == null) continue;
                 var topicName = groupTopic.Value.TopicName;                
 
                 Dictionary<int, long?> commitPartitions;
-                if (!commitOffsets.TryGetValue(topicName, out commitPartitions))
+                if (!commitOffsets.TryGetValue(topicName, out commitPartitions) || commitPartitions == null)
                 {
                     continue;
                 }                
@@ -924,6 +954,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                 foreach (var requestPartition in requestPartitions)
                 {
+                    if (requestPartition == null) continue;
                     commitPartitions[requestPartition.PartitionId] = requestPartition.Offset;
                 }
 
@@ -988,7 +1019,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                     if (offset.HasValue)
                     {
-                        groupTopic.Consumer?.ApproveCommitOffset(partition.PartitionId, offset.Value);
+                        groupTopic?.Consumer?.ApproveCommitOffset(partition.PartitionId, offset.Value);
                     }
                 }
             }

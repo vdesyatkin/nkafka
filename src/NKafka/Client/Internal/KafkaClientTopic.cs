@@ -43,7 +43,7 @@ namespace NKafka.Client.Internal
                 var partitionId = partitionMetadata.PartitionId;
                 var brokerId = partitionMetadata.LeaderBrokerId;
                 KafkaBrokerMetadata brokerMetadata;
-                if (!partitionBrokers.TryGetValue(brokerId, out brokerMetadata))
+                if (!partitionBrokers.TryGetValue(brokerId, out brokerMetadata) || brokerMetadata == null)
                 {
                     continue;
                 }

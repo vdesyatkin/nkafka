@@ -14,7 +14,7 @@ namespace NKafka.Client.Consumer.Internal
 
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
-        [NotNull] private IReadOnlyDictionary<int, KafkaConsumerTopicPartition> _topicPartitions;
+        [NotNull, ItemNotNull] private IReadOnlyDictionary<int, KafkaConsumerTopicPartition> _topicPartitions;
         [NotNull] private readonly ConcurrentDictionary<int, PackageInfo> _packages;
         private int _currentPackageId;
 
@@ -54,9 +54,11 @@ namespace NKafka.Client.Consumer.Internal
         public KafkaMessagePackage Consume()
         {
             var count = 0;
-            foreach (var partition in _topicPartitions)
+            foreach (var partitionPair in _topicPartitions)
             {
-                count += partition.Value.EnqueuedCount;
+                var partition = partitionPair.Value;
+                if (partition == null) continue;
+                count += partition.EnqueuedCount;
             }
 
             if (count == 0) return null;
@@ -64,19 +66,25 @@ namespace NKafka.Client.Consumer.Internal
             var partitionOffsets = new Dictionary<int, long>();
 
             var messages = new List<KafkaMessage>(count);
-            foreach (var partition in _topicPartitions)
+            foreach (var partitionPair in _topicPartitions)
             {
-                var partitionCount = partition.Value.EnqueuedCount;
+                var partition = partitionPair.Value;
+                if (partition == null) continue;
+
+                var partitionCount = partition.EnqueuedCount;
                 KafkaMessageAndOffset messageAndOffset = null;
-                while (partitionCount > 0 && partition.Value.TryDequeue(out messageAndOffset))
+                while (partitionCount > 0 && partition.TryDequeue(out messageAndOffset))
                 {
-                    var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data);
-                    messages.Add(message);
+                    if (messageAndOffset != null)
+                    {
+                        var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data);
+                        messages.Add(message);
+                    }                    
                     partitionCount--;
                 }
                 if (messageAndOffset != null)
                 {
-                    partitionOffsets[partition.Key] = messageAndOffset.Offset;
+                    partitionOffsets[partitionPair.Key] = messageAndOffset.Offset;
                 }
             }
 
@@ -92,7 +100,7 @@ namespace NKafka.Client.Consumer.Internal
         public void Commit(int packageNumber)
         {
             PackageInfo package;
-            if (!_packages.TryGetValue(packageNumber, out package))
+            if (!_packages.TryGetValue(packageNumber, out package) || package == null)
             {
                 return;
             }
@@ -103,7 +111,7 @@ namespace NKafka.Client.Consumer.Internal
                 var newOffset = partitionOffset.Value;
 
                 KafkaConsumerTopicPartition partition;
-                if (!_topicPartitions.TryGetValue(partitionId, out partition))
+                if (!_topicPartitions.TryGetValue(partitionId, out partition) || partition == null)
                 {
                     continue;
                 }
@@ -117,20 +125,16 @@ namespace NKafka.Client.Consumer.Internal
         public void ApproveCommitOffset(int partitionId, long offset)
         {
             KafkaConsumerTopicPartition partition;
-            if (_topicPartitions.TryGetValue(partitionId, out partition))
-            {
-                partition.ApproveCommitOffset(offset);
-            }
+            if (!_topicPartitions.TryGetValue(partitionId, out partition) || partition == null) return;
+
+            partition.ApproveCommitOffset(offset);
         }
 
         public long? GetCommitOffset(int partitionId)
         {
             KafkaConsumerTopicPartition partition;
-            if (_topicPartitions.TryGetValue(partitionId, out partition))
-            {
-                return partition.GetCommitOffset();
-            }
-            return null;
+            if (!_topicPartitions.TryGetValue(partitionId, out partition) || partition == null) return null;
+            return partition.GetCommitOffset();
         }
 
         private class PackageInfo

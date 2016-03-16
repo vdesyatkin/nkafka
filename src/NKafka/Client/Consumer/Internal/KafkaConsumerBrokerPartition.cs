@@ -43,12 +43,14 @@ namespace NKafka.Client.Consumer.Internal
             return _messageQueue.CanEnqueue();
         }
 
-        public void EnqueueMessages(IReadOnlyList<KafkaMessageAndOffset> messages)
-        {
-            if (messages == null) return;
+        public void EnqueueMessages([NotNull, ItemNotNull] IReadOnlyList<KafkaMessageAndOffset> messages)
+        {            
             if (messages.Count == 0) return;
 
-            var newOffset = messages[messages.Count - 1].Offset;
+            var lastMessage = messages[messages.Count - 1];
+            if (lastMessage == null) return;
+
+            var newOffset = lastMessage.Offset;
 
             if (newOffset > _lastEnqueuedOffset)
             {

@@ -51,12 +51,16 @@ namespace NKafka.Client.Internal.Broker
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
+                if (topic == null) continue;
+
                 ProcessTopic(topic);                
             }
 
             foreach (var groupPair in _groups)
             {
                 var group = groupPair.Value;
+                if (group == null) continue;
+
                 ProcessGroup(group);
             }
 
@@ -79,16 +83,22 @@ namespace NKafka.Client.Internal.Broker
             foreach (var groupPair in _groups)
             {
                 var group = groupPair.Value;
+                if (group == null) continue;
+
                 group.Status = KafkaClientBrokerGroupStatus.RearrangeRequired;
             }
 
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
+                if (topic == null) continue;
 
-                foreach (var partition in topic.Partitions)
+                foreach (var partitionPair in topic.Partitions)
                 {
-                    partition.Value.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
+                    var partition = partitionPair.Value;
+                    if (partition == null) continue;
+
+                    partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
                 }                
             }
             _broker.Close();
@@ -97,12 +107,15 @@ namespace NKafka.Client.Internal.Broker
         public void AddTopicPartition([NotNull] string topicName, [NotNull] KafkaClientBrokerPartition topicPartition)
         {
             KafkaClientBrokerTopic topic;
-            if (!_topics.TryGetValue(topicName, out topic))
+            if (!_topics.TryGetValue(topicName, out topic) || topic == null)
             {
                 topic = _topics.AddOrUpdate(topicName, new KafkaClientBrokerTopic(topicName), (oldKey, oldValue) => oldValue);
             }
 
-            topic.Partitions[topicPartition.PartitionId] = topicPartition;            
+            if (topic != null)
+            {
+                topic.Partitions[topicPartition.PartitionId] = topicPartition;
+            }
         }
 
         public void AddGroupCoordinator([NotNull] string groupName, [NotNull] KafkaClientBrokerGroup group)
@@ -115,12 +128,15 @@ namespace NKafka.Client.Internal.Broker
             foreach (var partitionPair in topic.Partitions)
             {
                 var partition = partitionPair.Value;
+                if (partition == null) continue;
+
                 if (partition.IsUnplugRequired)
                 {
                     partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
+                    var partitionId = partition.PartitionId;
                     topic.Partitions.TryRemove(partitionPair.Key, out partition);
-                    _producer.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
-                    _consumer.RemoveTopicPartition(topic.TopicName, partition.PartitionId);
+                    _producer.RemoveTopicPartition(topic.TopicName, partitionId);
+                    _consumer.RemoveTopicPartition(topic.TopicName, partitionId);
                     continue;
                 }
 
@@ -194,8 +210,8 @@ namespace NKafka.Client.Internal.Broker
             if (!response.HasData) return response.Error;
 
             var responseData = response.Data;
-            var responseBrokers = responseData.Brokers ?? new KafkaTopicMetadataResponseBroker[0];
-            var responseTopics = responseData.Topics ?? new KafkaTopicMetadataResponseTopic[0];
+            var responseBrokers = responseData?.Brokers ?? new KafkaTopicMetadataResponseBroker[0];
+            var responseTopics = responseData?.Topics ?? new KafkaTopicMetadataResponseTopic[0];
 
             if (responseTopics.Count < 1) return KafkaBrokerErrorCode.DataError;
             var responseTopic = responseTopics[0];
@@ -243,7 +259,7 @@ namespace NKafka.Client.Internal.Broker
 
             var responseData = response.Data;            
                        
-            if (responseData.ErrorCode != KafkaResponseErrorCode.NoError)
+            if (responseData == null || responseData.ErrorCode != KafkaResponseErrorCode.NoError)
             {
                 //todo (E009) handling standard errors
                 return KafkaBrokerErrorCode.DataError;

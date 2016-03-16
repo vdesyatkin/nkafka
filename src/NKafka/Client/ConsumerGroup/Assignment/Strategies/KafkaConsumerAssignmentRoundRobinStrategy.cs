@@ -5,7 +5,12 @@ namespace NKafka.Client.ConsumerGroup.Assignment.Strategies
     public sealed class KafkaConsumerAssignmentRoundRobinStrategy : IKafkaConsumerAssignmentStrategy
     {
         public KafkaConsumerAssignment Assign(KafkaConsumerAssignmentRequest request)
-        {                                              
+        {
+            if (request == null)
+            {
+                return new KafkaConsumerAssignment(new KafkaConsumerAssignmentMember[0]);
+            }
+
             var assignmentMembers = new List<KafkaConsumerAssignmentMember>(request.Members.Count);
 
             var memberIndex = 0;

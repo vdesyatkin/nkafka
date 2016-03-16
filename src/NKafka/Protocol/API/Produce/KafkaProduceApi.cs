@@ -29,7 +29,7 @@ namespace NKafka.Protocol.API.Produce
             writer.WriteCollection(request.Topics, WriteProduceRequestTopic);
         }
 
-        private static void WriteProduceRequestTopic(KafkaBinaryWriter writer, [NotNull] KafkaProduceRequestTopic topic)
+        private static void WriteProduceRequestTopic([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceRequestTopic topic)
         {            
             writer.WriteString(topic.TopicName);
             writer.WriteCollection(topic.Partitions, WriteProduceRequestTopicPartition);            
@@ -52,20 +52,24 @@ namespace NKafka.Protocol.API.Produce
                 writer.WriteByteArray(null); // key
 
                 writer.BeginWriteGZipData(); //value
-                foreach (var message in partition.Messages)
+                if (partition.Messages != null)
                 {
-                    writer.WriteInt64(0); //offset
+                    foreach (var message in partition.Messages)
+                    {
+                        if (message == null) continue;
+                        writer.WriteInt64(0); //offset
 
-                    writer.BeginWriteSize();
-                    writer.BeginWriteCrc2();
+                        writer.BeginWriteSize();
+                        writer.BeginWriteCrc2();
 
-                    writer.WriteInt8(MessageMagicNumber);
-                    writer.WriteInt8(MessageDefaultAttribute);
-                    writer.WriteByteArray(message.Key);
-                    writer.WriteByteArray(message.Data);
+                        writer.WriteInt8(MessageMagicNumber);
+                        writer.WriteInt8(MessageDefaultAttribute);
+                        writer.WriteByteArray(message.Key);
+                        writer.WriteByteArray(message.Data);
 
-                    writer.EndWriteCrc2();
-                    writer.EndWriteSize();
+                        writer.EndWriteCrc2();
+                        writer.EndWriteSize();
+                    }
                 }
                 writer.EndWriteGZipData();
 
@@ -76,20 +80,24 @@ namespace NKafka.Protocol.API.Produce
             else
             {                
                 // ordinary message set
-                foreach (var message in partition.Messages)
+                if (partition.Messages != null)
                 {
-                    writer.WriteInt64(0); //offset
+                    foreach (var message in partition.Messages)
+                    {
+                        if (message == null) continue;
+                        writer.WriteInt64(0); //offset
 
-                    writer.BeginWriteSize();
-                    writer.BeginWriteCrc2();
+                        writer.BeginWriteSize();
+                        writer.BeginWriteCrc2();
 
-                    writer.WriteInt8(MessageMagicNumber);
-                    writer.WriteInt8(MessageDefaultAttribute);
-                    writer.WriteByteArray(message.Key);
-                    writer.WriteByteArray(message.Data);
+                        writer.WriteInt8(MessageMagicNumber);
+                        writer.WriteInt8(MessageDefaultAttribute);
+                        writer.WriteByteArray(message.Key);
+                        writer.WriteByteArray(message.Data);
 
-                    writer.EndWriteCrc2();
-                    writer.EndWriteSize();
+                        writer.EndWriteCrc2();
+                        writer.EndWriteSize();
+                    }
                 }
             }           
 

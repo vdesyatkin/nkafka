@@ -23,7 +23,7 @@ namespace NKafka.Client.ConsumerGroup
         private TimeSpan? _offsetCommitPeriod;
         private TimeSpan? _offsetCommitRetentionTime;
 
-        private List<KafkaConsumerGroupProtocolInfo> _protocols;
+        [NotNull] private List<KafkaConsumerGroupProtocolInfo> _protocols;
         private string _offsetCommitCustomData;
 
         public static KafkaConsumerGroupSettings Default => new KafkaConsumerGroupSettingsBuilder().Build();

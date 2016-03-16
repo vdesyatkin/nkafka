@@ -37,11 +37,11 @@ namespace NKafka.Connection
         private int _currentRequestId;      
 
         public KafkaBroker([NotNull] KafkaConnection connection, [NotNull] KafkaProtocol kafkaProtocol,
-            [CanBeNull] string name, [NotNull] KafkaConnectionSettings settings)
+            [CanBeNull] string name, [CanBeNull] KafkaConnectionSettings settings)
         {
             _connection = connection;
             _kafkaProtocol = kafkaProtocol;
-            _settings = settings;
+            _settings = settings ?? KafkaConnectionSettingsBuilder.Default;
             Name = name;
             
             _requests = new ConcurrentDictionary<int, RequestState>();
@@ -79,6 +79,8 @@ namespace NKafka.Connection
             foreach (var requestPair in _requests)
             {
                 var request = requestPair.Value;
+                if (request == null) continue;
+
                 if (request.Timeout.HasValue && request.Response == null && request.Error == null)
                 {
                     var requestTimestampUtc = request.SentTimestampUtc ?? request.CreateTimestampUtc;
@@ -244,7 +246,7 @@ namespace NKafka.Connection
         public KafkaBrokerResult<TResponse> Receive<TResponse>(int requestId) where TResponse : class, IKafkaResponse
         {
             RequestState requestState;
-            if (!_requests.TryGetValue(requestId, out requestState))
+            if (!_requests.TryGetValue(requestId, out requestState) || requestState == null)
             {
                 return KafkaBrokerErrorCode.BadRequest;
             }
@@ -291,7 +293,7 @@ namespace NKafka.Connection
 
         private void OnReceived(IAsyncResult result)
         {
-            if (!_isOpenned) return;
+            if (!_isOpenned) return;            
             
             try
             {                
@@ -308,7 +310,7 @@ namespace NKafka.Connection
 
                 var requestId = responseHeader.CorrelationId;
                 RequestState requestState;
-                if (!_requests.TryGetValue(requestId, out requestState))
+                if (!_requests.TryGetValue(requestId, out requestState) || requestState == null)
                 {
                     if (responseHeader.DataSize > 0)
                     {
@@ -344,6 +346,12 @@ namespace NKafka.Connection
         [CanBeNull]
         private KafkaResponseHeader ReadResponseHeader([NotNull] Stream stream, IAsyncResult result)
         {
+            if (result == null)
+            {
+                _receiveError = KafkaBrokerStateErrorCode.IOError;
+                return null;
+            }
+
             int responseHeaderSize;
             try
             {

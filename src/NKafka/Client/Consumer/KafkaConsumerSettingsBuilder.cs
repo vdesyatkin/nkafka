@@ -12,38 +12,44 @@ namespace NKafka.Client.Consumer
         private int? _bufferMaxMessageCount;
         private int? _bufferMaxSizeBytes;
 
-        public static readonly KafkaConsumerSettings Default = new KafkaConsumerSettingsBuilder().Build();
+        [NotNull] public static readonly KafkaConsumerSettings Default = new KafkaConsumerSettingsBuilder().Build();
 
+        [PublicAPI, NotNull]
         public KafkaConsumerSettingsBuilder SetBatchMinSizeBytes(int sizeBytes)
         {
             _consumeBatchMinSizeBytes = sizeBytes;
             return this;
         }
 
+        [PublicAPI, NotNull]
         public KafkaConsumerSettingsBuilder SetBatchMaxSizeBytes(int sizeBytes)
         {
             _consumeBatchMaxSizeBytes = sizeBytes;
             return this;
         }
-        
+
+        [PublicAPI, NotNull]
         public KafkaConsumerSettingsBuilder SetConsumeServerWaitTime(TimeSpan waitTime)
         {
             _consumeServerWaitTime = waitTime;
             return this;
         }
 
+        [PublicAPI, NotNull]
         public KafkaConsumerSettingsBuilder SetBufferMaxMessageCount(int messageCount)
         {
             _bufferMaxMessageCount = messageCount;
             return this;
         }
 
+        [PublicAPI, NotNull]
         public KafkaConsumerSettingsBuilder SetBufferMaxSizeBytes(int sizeBytes)
         {
             _bufferMaxSizeBytes = sizeBytes;
             return this;
         }
 
+        [PublicAPI, NotNull]
         public KafkaConsumerSettings Build()
         {            
             var batchMinSizeBytes = _consumeBatchMinSizeBytes ?? 0;

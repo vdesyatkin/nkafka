@@ -6,7 +6,7 @@ namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClient : IKafkaClient
     {
-        [NotNull]
+        [NotNull, ItemNotNull]
         private readonly IReadOnlyList<KafkaClientWorker> _workers;
 
         public KafkaClient([NotNull]KafkaClientSettings settings, 
@@ -31,13 +31,17 @@ namespace NKafka.Client.Internal
 
             foreach (var topic in topics)
             {
-                var worker = GetWorker(topic.TopicName.GetHashCode());                
+                var worker = GetWorker(topic.TopicName.GetHashCode());
+                if (worker == null) continue;
+
                 worker.AssignTopic(topic);
             }
 
             foreach (var group in groups)
             {
                 var worker = GetWorker(group.GroupName.GetHashCode());
+                if (worker == null) continue;
+
                 worker.AssignGroup(group);
             }            
         }        
@@ -46,6 +50,7 @@ namespace NKafka.Client.Internal
         {
             foreach (var worker in _workers)
             {
+
                 worker.Start();
             }
         }
@@ -64,6 +69,8 @@ namespace NKafka.Client.Internal
             {
                 var brokerId = partition.BrokerMetadata.BrokerId;
                 var worker = GetWorker(brokerId);
+                if (worker == null) continue;
+
                 worker.AssignTopicPartition(topicName, partition);
             }
         }
@@ -72,6 +79,8 @@ namespace NKafka.Client.Internal
         {
             var brokerId = groupCoordinator.BrokerMetadata.BrokerId;
             var worker = GetWorker(brokerId);
+            if (worker == null) return;
+
             worker.AssignGroupCoordinator(groupName, groupCoordinator);
         }
 

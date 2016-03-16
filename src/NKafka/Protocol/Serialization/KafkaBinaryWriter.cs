@@ -10,9 +10,8 @@ namespace NKafka.Protocol.Serialization
     [PublicAPI]
     internal class KafkaBinaryWriter : IDisposable
     {        
-        private readonly MemoryStream _stream;
-
-        private readonly Stack<long> _beginPositions = new Stack<long>();
+        [NotNull] private readonly MemoryStream _stream;
+        [NotNull] private readonly Stack<long> _beginPositions = new Stack<long>();
 
         private const int NullValue = -1;   
           
@@ -24,7 +23,7 @@ namespace NKafka.Protocol.Serialization
         public byte[] ToByteArray()
         {            
             return _stream.ToArray();
-        }        
+        }
 
         public void WriteCollection<T>(IReadOnlyList<T> collection, Action<KafkaBinaryWriter, T> itemWriteMethod)
         {
@@ -130,9 +129,10 @@ namespace NKafka.Protocol.Serialization
             {
                 using (var gzip = new GZipStream(destination, CompressionLevel.Fastest, false))
                 {
+                    // ReSharper disable once AssignNullToNotNullAttribute
                     gzip.Write(_stream.GetBuffer(), (int)beginPosition, size);
                     gzip.Flush();
-                    gzip.Close();                                      
+                    gzip.Close();
                 }
                 gzipData = destination.ToArray();
             }

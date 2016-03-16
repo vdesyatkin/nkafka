@@ -41,7 +41,7 @@ namespace NKafka.Protocol
             // ReSharper enable HeuristicUnreachableCode
 
             KafkaRequestConfiguration requestConfiguration;
-            if (!_configuration.Requests.TryGetValue(request.GetType(), out requestConfiguration))
+            if (!_configuration.Requests.TryGetValue(request.GetType(), out requestConfiguration) || requestConfiguration == null)
             {
                 return null;
             }
@@ -110,7 +110,7 @@ namespace NKafka.Protocol
             }            
 
             KafkaRequestConfiguration requestConfiguration;
-            if (!_configuration.Requests.TryGetValue(request.GetType(), out requestConfiguration))
+            if (!_configuration.Requests.TryGetValue(request.GetType(), out requestConfiguration) || requestConfiguration == null)
             {
                 return null;
             }
@@ -163,6 +163,7 @@ namespace NKafka.Protocol
             return new Dictionary<KafkaRequestType, KafkaRequestVersion>();            
         }
 
+        [NotNull]
         private static KafkaProtocolConfiguration CreateConfiguration(KafkaVersion kafkaVersion)
         {
             IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> supportedRequests;
@@ -227,7 +228,7 @@ namespace NKafka.Protocol
         {
             public readonly KafkaRequestType RequestType;
             public readonly KafkaRequestVersion RequestVersion;
-            public readonly IKafkaRequestApi RequestApi;            
+            [NotNull] public readonly IKafkaRequestApi RequestApi;            
 
             public KafkaRequestConfiguration(KafkaRequestType requestType, KafkaRequestVersion requestVersion,
                 [NotNull] IKafkaRequestApi requestApi)

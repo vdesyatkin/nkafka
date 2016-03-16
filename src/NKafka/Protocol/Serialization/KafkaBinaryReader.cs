@@ -12,15 +12,15 @@ namespace NKafka.Protocol.Serialization
     {
         private const int NullValue = -1;
 
-        private MemoryStream _stream;
-        private readonly Stack<long> _beginPositions = new Stack<long>();
-        private readonly Stack<int> _sizeValues = new Stack<int>();
-        private readonly Stack<uint> _crc32Values = new Stack<uint>();
-        private readonly Stack<MemoryStream> _gzipStoredStreams = new Stack<MemoryStream>();
+        [NotNull] private MemoryStream _stream;
+        [NotNull] private readonly Stack<long> _beginPositions = new Stack<long>();
+        [NotNull] private readonly Stack<int> _sizeValues = new Stack<int>();
+        [NotNull] private readonly Stack<uint> _crc32Values = new Stack<uint>();
+        [NotNull] private readonly Stack<MemoryStream> _gzipStoredStreams = new Stack<MemoryStream>();
 
         public KafkaBinaryReader(byte[] data, int offset, int count)
         {
-            _stream = new MemoryStream(data, offset, count, false, true);
+            _stream = new MemoryStream(data ?? new byte[0], offset, count, false, true);
         }      
 
         public IReadOnlyList<T> ReadCollection<T>(Func<KafkaBinaryReader, T> itemReadMethod)
@@ -121,6 +121,7 @@ namespace NKafka.Protocol.Serialization
 
             var gzipStream = new MemoryStream(size * 2);
 
+            // ReSharper disable once AssignNullToNotNullAttribute
             using (var source = new MemoryStream(_stream.GetBuffer(), (int)_stream.Position, size))
             {                
                 using (var gzip = new GZipStream(source, CompressionMode.Decompress, false))
@@ -149,7 +150,9 @@ namespace NKafka.Protocol.Serialization
             }
 
             _stream.Dispose();
+            // ReSharper disable once AssignNullToNotNullAttribute
             _stream = _gzipStoredStreams.Pop();
+            // ReSharper disable once PossibleNullReferenceException
             _stream.Position = _beginPositions.Pop();
 
             return true;
@@ -241,7 +244,7 @@ namespace NKafka.Protocol.Serialization
             while (_gzipStoredStreams.Count > 0)
             {
                 var storedStream = _gzipStoredStreams.Pop();
-                storedStream.Dispose();
+                storedStream?.Dispose();
             }            
         }
     }
