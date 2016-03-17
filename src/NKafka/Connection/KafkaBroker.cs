@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Net.Sockets;
 using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Protocol;
@@ -297,7 +298,7 @@ namespace NKafka.Connection
             
             try
             {                
-                var stream = result?.AsyncState as Stream;
+                var stream = result?.AsyncState as NetworkStream;
                 if (stream == null) return;
 
                 var responseHeader = ReadResponseHeader(stream, result);
@@ -392,13 +393,16 @@ namespace NKafka.Connection
         }
 
         [CanBeNull]
-        private IKafkaResponse ReadResponse([NotNull] Stream stream, [NotNull] RequestState state, [NotNull]KafkaResponseHeader responseHeader)
+        private IKafkaResponse ReadResponse([NotNull] NetworkStream stream, [NotNull] RequestState state, [NotNull]KafkaResponseHeader responseHeader)
         {
             var responseBuffer = new byte[responseHeader.DataSize];
-            int responseSize;
+            int responseSize = 0;
             try
             {
-                responseSize = stream.Read(responseBuffer, 0, responseBuffer.Length);
+                do
+                {
+                    responseSize += stream.Read(responseBuffer, responseSize, responseBuffer.Length);
+                } while (stream.DataAvailable && responseSize < responseBuffer.Length);
             }
             catch (Exception)
             {

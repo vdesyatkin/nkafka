@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Net.Sockets;
 using JetBrains.Annotations;
 
@@ -48,7 +47,7 @@ namespace NKafka.Connection
         }
 
         [CanBeNull]
-        public Stream GetStream()
+        public NetworkStream GetStream()
         {
             try
             {

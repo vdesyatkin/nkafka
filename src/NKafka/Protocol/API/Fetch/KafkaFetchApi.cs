@@ -75,11 +75,11 @@ namespace NKafka.Protocol.API.Fetch
             var messages = new List<KafkaMessageAndOffset>();
             reader.BeginReadSize();
             
-            while (!reader.EndReadSize())
+            while (reader.CanRead() && !reader.EndReadSize())
             {
                 var offset = reader.ReadInt64();
 
-                reader.BeginReadSize();
+                if (reader.BeginReadSize() == 0) break;
                 reader.BeginReadCrc32();
                 
                 var magicNumber = reader.ReadInt8();
@@ -114,10 +114,11 @@ namespace NKafka.Protocol.API.Fetch
                     //ordinary message
                     var value = reader.ReadByteArray();
 
-                    var isCrcValid = reader.EndReadCrc32(); //todo (E005) invalid CRC
+                    var isCrcValid = reader.EndReadCrc32();
                     var isSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
 
-                    if (!isCrcValid || !isSizeValid) continue;
+                    if (!isCrcValid) continue; //todo (E005) invalid CRC
+                    if (!isSizeValid) break; //todo (E005) invalid Size                    
                     var message = new KafkaMessageAndOffset(offset, key, value);
                     messages.Add(message);
                 }

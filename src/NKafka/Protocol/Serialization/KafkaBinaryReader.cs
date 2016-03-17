@@ -21,7 +21,12 @@ namespace NKafka.Protocol.Serialization
         public KafkaBinaryReader(byte[] data, int offset, int count)
         {
             _stream = new MemoryStream(data ?? new byte[0], offset, count, false, true);
-        }      
+        }
+
+        public bool CanRead()
+        {
+            return _stream.Position < _stream.Length;
+        }
 
         public IReadOnlyList<T> ReadCollection<T>(Func<KafkaBinaryReader, T> itemReadMethod)
         {
