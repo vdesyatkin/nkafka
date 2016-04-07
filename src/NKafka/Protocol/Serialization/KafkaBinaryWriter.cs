@@ -13,6 +13,8 @@ namespace NKafka.Protocol.Serialization
         [NotNull] private readonly MemoryStream _stream;
         [NotNull] private readonly Stack<long> _beginPositions = new Stack<long>();
 
+        private readonly DateTime _unixTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         private const int NullValue = -1;   
           
         public KafkaBinaryWriter(int? capacity = null)
@@ -210,6 +212,11 @@ namespace NKafka.Protocol.Serialization
             }
 
             _stream.Write(bytes, 0, bytes.Length);
+        }
+
+        public void WriteTimestampUtc(DateTime timestampUtc)
+        {
+            WriteInt64((long)Math.Round((timestampUtc - _unixTimeUtc).TotalMilliseconds));
         }
 
         public void WriteString(string data)

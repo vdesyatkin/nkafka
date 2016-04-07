@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
@@ -10,10 +9,24 @@ namespace NKafka.Protocol.API.Produce
     {
         public Type RequestType => typeof(KafkaProduceRequest);
 
-        const byte MessageMagicNumber = 0;
-        const byte MessageDefaultAttribute = 0;
-        const byte MessageAttributeCodeMask = 3;
-        const byte MessageGZipAttribute = 0x00 | (MessageAttributeCodeMask & (byte)KafkaCodecType.CodecGzip);
+        const byte MessageMagicByteV09 = 0;
+        const byte MessageMagicByteV010 = 1;
+
+        const byte MessageEmptyAttribute = 0;
+        const byte MessageAttributeCodecMask = 0x7;
+        const byte MessageGZipAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecGzip;
+        const byte MessageAttributeTimestampMask = 0x8;
+        const byte MessageTimestampLogAppendAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.LogAppendTime;
+
+
+        private readonly KafkaVersion _kafkaVersion;
+        private readonly KafkaRequestVersion _requestVersion;
+
+        public KafkaProduceApi(KafkaVersion kafkaVersion, KafkaRequestVersion requestVersion)
+        {
+            _kafkaVersion = kafkaVersion;
+            _requestVersion = requestVersion;
+        }
 
         #region ProduceRequest
         
@@ -22,21 +35,24 @@ namespace NKafka.Protocol.API.Produce
             WriteProduceRequest(writer, (KafkaProduceRequest)request);
         }
 
-        private static void WriteProduceRequest([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceRequest request)
+        private void WriteProduceRequest([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceRequest request)
         {
             writer.WriteInt16((short)request.RequiredAcks);
             writer.WriteInt32((int)request.Timeout.TotalMilliseconds);
             writer.WriteCollection(request.Topics, WriteProduceRequestTopic);
         }
 
-        private static void WriteProduceRequestTopic([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceRequestTopic topic)
+        private void WriteProduceRequestTopic([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceRequestTopic topic)
         {            
             writer.WriteString(topic.TopicName);
             writer.WriteCollection(topic.Partitions, WriteProduceRequestTopicPartition);            
         }
 
-        private static void WriteProduceRequestTopicPartition([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceRequestTopicPartition partition)
+        private void WriteProduceRequestTopicPartition([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceRequestTopicPartition partition)
         {
+            var magicByte = _kafkaVersion >= KafkaVersion.V0_10 ? MessageMagicByteV010 : MessageMagicByteV09;
+            var useTimestamp = _requestVersion >= KafkaRequestVersion.V2;
+
             writer.WriteInt32(partition.PartitionId);
 
             writer.BeginWriteSize();
@@ -47,7 +63,7 @@ namespace NKafka.Protocol.API.Produce
                 writer.WriteInt64(0); //offset
                 writer.BeginWriteSize();
                 writer.BeginWriteCrc2();
-                writer.WriteInt8(MessageMagicNumber);
+                writer.WriteInt8(magicByte);
                 writer.WriteInt8(MessageGZipAttribute);
                 writer.WriteByteArray(null); // key
 
@@ -62,8 +78,12 @@ namespace NKafka.Protocol.API.Produce
                         writer.BeginWriteSize();
                         writer.BeginWriteCrc2();
 
-                        writer.WriteInt8(MessageMagicNumber);
-                        writer.WriteInt8(MessageDefaultAttribute);
+                        writer.WriteInt8(magicByte);
+                        writer.WriteInt8(MessageEmptyAttribute);
+                        if (useTimestamp)
+                        {
+                            writer.WriteTimestampUtc(message.TimestampUtc);
+                        }
                         writer.WriteByteArray(message.Key);
                         writer.WriteByteArray(message.Data);
 
@@ -90,8 +110,12 @@ namespace NKafka.Protocol.API.Produce
                         writer.BeginWriteSize();
                         writer.BeginWriteCrc2();
 
-                        writer.WriteInt8(MessageMagicNumber);
-                        writer.WriteInt8(MessageDefaultAttribute);
+                        writer.WriteInt8(magicByte);
+                        writer.WriteInt8(MessageEmptyAttribute);
+                        if (useTimestamp)
+                        {
+                            writer.WriteTimestampUtc(message.TimestampUtc);
+                        }
                         writer.WriteByteArray(message.Key);
                         writer.WriteByteArray(message.Data);
 
@@ -103,85 +127,7 @@ namespace NKafka.Protocol.API.Produce
 
             writer.EndWriteSize();
         }
-
-        private static KafkaProduceRequest ReadProduceRequest([NotNull] KafkaBinaryReader reader)
-        {
-            var ackMode = (KafkaConsistencyLevel)reader.ReadInt16();
-            var timeout = TimeSpan.FromMilliseconds(reader.ReadInt32());
-            var topics = reader.ReadCollection(ReadProduceRequestTopic);
-                        
-            return new KafkaProduceRequest(ackMode, timeout, topics);
-        }
-
-        private static KafkaProduceRequestTopic ReadProduceRequestTopic([NotNull] KafkaBinaryReader reader)
-        {
-            var topicName = reader.ReadString();
-            var partitions = reader.ReadCollection(ReadProduceRequestTopicPartition);
-
-            return new KafkaProduceRequestTopic(topicName, partitions);            
-        }
-
-        private static KafkaProduceRequestTopicPartition ReadProduceRequestTopicPartition([NotNull] KafkaBinaryReader reader)
-        {
-            // ReSharper disable UnusedVariable
-
-            var partitionId = reader.ReadInt32();
-
-            var messages = new List<KafkaMessage>();
-            reader.BeginReadSize();
-
-            var codec = KafkaCodecType.CodecNone;
-
-            while (!reader.EndReadSize())
-            {
-                var offset = reader.ReadInt64();
-
-                reader.BeginReadSize();
-                reader.BeginReadCrc32();
-
-                var magicNumber = reader.ReadInt8();
-                var attribute = reader.ReadInt8();
-                var key = reader.ReadByteArray();                
-
-                if (attribute == MessageGZipAttribute)
-                {
-                    // gzip message
-                    reader.BeginReadGZipData();
-                    while (!reader.EndReadGZipData())
-                    {
-                        // nested message set
-                        var nestedOffset = reader.ReadInt64();
-
-                        reader.BeginReadSize();
-                        reader.BeginReadCrc32();
-
-                        var nestedKey = reader.ReadByteArray();
-                        var nestedValue = reader.ReadByteArray();
-
-                        var nestedIsCrcValid = reader.EndReadCrc32(); //todo (E005) invalid CRC
-                        var nestedIsSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
-
-                        var nestedMessage = new KafkaMessage(nestedKey, nestedValue);
-                        messages.Add(nestedMessage);
-                    }
-                }
-                else
-                {
-                    //ordinary message
-                    var value = reader.ReadByteArray();
-
-                    var isCrcValid = reader.EndReadCrc32(); //todo (E005) invalid CRC
-                    var isSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
-
-                    var message = new KafkaMessage(key, value);
-                    messages.Add(message);
-                }                
-            }
-
-            return new KafkaProduceRequestTopicPartition(partitionId, codec, messages);
-            // ReSharper enable UnusedVariable
-        }
-
+        
         #endregion ProduceRequest
 
         #region ProduceResponse
@@ -192,13 +138,14 @@ namespace NKafka.Protocol.API.Produce
             return ReadProduceResponse(reader);
         }
 
-        private static KafkaProduceResponse ReadProduceResponse([NotNull] KafkaBinaryReader reader)
+        private KafkaProduceResponse ReadProduceResponse([NotNull] KafkaBinaryReader reader)
         {
             var topics = reader.ReadCollection(ReadProduceResponseTopic);
-            return new KafkaProduceResponse(topics);
+            var throttleTime = _requestVersion >= KafkaRequestVersion.V1 ? TimeSpan.FromMilliseconds(reader.ReadInt32()) : TimeSpan.Zero;
+            return new KafkaProduceResponse(topics, throttleTime);
         }
 
-        private static KafkaProduceResponseTopic ReadProduceResponseTopic([NotNull] KafkaBinaryReader reader)
+        private KafkaProduceResponseTopic ReadProduceResponseTopic([NotNull] KafkaBinaryReader reader)
         {
             var topicName = reader.ReadString();
             var partitions = reader.ReadCollection(ReadProduceResponseTopicPartition);
@@ -206,12 +153,13 @@ namespace NKafka.Protocol.API.Produce
             return new KafkaProduceResponseTopic(topicName, partitions);
         }
 
-        private static KafkaProduceResponseTopicPartition ReadProduceResponseTopicPartition([NotNull] KafkaBinaryReader reader)
+        private KafkaProduceResponseTopicPartition ReadProduceResponseTopicPartition([NotNull] KafkaBinaryReader reader)
         {
             var partitionId = reader.ReadInt32();
             var errorCode = (KafkaResponseErrorCode) reader.ReadInt16();
             var offset = reader.ReadInt64();
-            return new KafkaProduceResponseTopicPartition(partitionId, errorCode, offset);
+            var timestampUtc = _requestVersion >= KafkaRequestVersion.V2 ? reader.ReadNulalbleTimestampUtc() : null;
+            return new KafkaProduceResponseTopicPartition(partitionId, errorCode, offset, timestampUtc);
         }
 
         #endregion ProduceResponse        

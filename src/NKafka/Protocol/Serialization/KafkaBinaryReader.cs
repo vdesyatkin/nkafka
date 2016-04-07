@@ -18,6 +18,8 @@ namespace NKafka.Protocol.Serialization
         [NotNull] private readonly Stack<uint> _crc32Values = new Stack<uint>();
         [NotNull] private readonly Stack<MemoryStream> _gzipStoredStreams = new Stack<MemoryStream>();
 
+        private readonly DateTime _unixTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         public KafkaBinaryReader(byte[] data, int offset, int count)
         {
             _stream = new MemoryStream(data ?? new byte[0], offset, count, false, true);
@@ -218,6 +220,18 @@ namespace NKafka.Protocol.Serialization
             }
 
             return BitConverter.ToInt64(bytes, 0);
+        }
+
+        public DateTime ReadTimestampUtc()
+        {
+            var milliseconds = ReadInt64();
+            return _unixTimeUtc.AddMilliseconds(milliseconds);
+        }
+
+        public DateTime? ReadNulalbleTimestampUtc()
+        {
+            var milliseconds = ReadInt64();
+            return milliseconds == NullValue ? (DateTime?)null :_unixTimeUtc.AddMilliseconds(milliseconds);
         }
 
         public string ReadString()

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace NKafka.Protocol.API.Produce
@@ -11,9 +12,15 @@ namespace NKafka.Protocol.API.Produce
         /// </summary>
         public readonly IReadOnlyList<KafkaProduceResponseTopic> Topics;
 
-        public KafkaProduceResponse(IReadOnlyList<KafkaProduceResponseTopic> topics)
+        /// <summary>
+        /// Duration in milliseconds for which the request was throttled due to quota violation. (Zero if the request did not violate any quota).
+        /// </summary>
+        public readonly TimeSpan ThrottleTime;
+
+        public KafkaProduceResponse(IReadOnlyList<KafkaProduceResponseTopic> topics, TimeSpan throttleTime)
         {
             Topics = topics;
+            ThrottleTime = throttleTime;
         }
     }
 }

@@ -109,6 +109,7 @@
     <Compile Include="KafkaConsistencyLevel.cs" />
     <Compile Include="KafkaMessage.cs" />
     <Compile Include="KafkaMessageAndOffset.cs" />
+    <Compile Include="KafkaTimestampType.cs" />
     <Compile Include="KafkaVersion.cs" />
     <Compile Include="Metadata\KafkaBrokerMetadata.cs" />
     <Compile Include="Metadata\KafkaGroupMetadata.cs" />

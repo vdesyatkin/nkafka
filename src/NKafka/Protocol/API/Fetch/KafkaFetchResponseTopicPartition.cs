@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using System;
 
 namespace NKafka.Protocol.API.Fetch
 {
@@ -26,12 +27,18 @@ namespace NKafka.Protocol.API.Fetch
         /// </summary>
         public readonly IReadOnlyList<KafkaMessageAndOffset> Messages;
 
-        public KafkaFetchResponseTopicPartition(int partitionId, KafkaResponseErrorCode errorCode, long highwaterMarkOffset, IReadOnlyList<KafkaMessageAndOffset> messages)
+        /// <summary>
+        /// Duration in milliseconds for which the request was throttled due to quota violation. (Zero if the request did not violate any quota).
+        /// </summary>
+        public readonly TimeSpan ThrottleTime;
+
+        public KafkaFetchResponseTopicPartition(int partitionId, KafkaResponseErrorCode errorCode, long highwaterMarkOffset, IReadOnlyList<KafkaMessageAndOffset> messages, TimeSpan throttleTime)
         {
             PartitionId = partitionId;
             ErrorCode = errorCode;
             HighwaterMarkOffset = highwaterMarkOffset;
             Messages = messages;
+            ThrottleTime = throttleTime;
         }
     }
 }

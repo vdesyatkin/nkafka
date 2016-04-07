@@ -124,12 +124,12 @@ namespace NKafka.Protocol
         #region Configuration
 
         [NotNull]
-        private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateV09ApiSupports()
+        private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateV010ApiSupports()
         {
             var requests = new Dictionary<KafkaRequestType, KafkaRequestVersion>
             {
                 [KafkaRequestType.TopicMetadata] = KafkaRequestVersion.V0,
-                [KafkaRequestType.Produce] = KafkaRequestVersion.V0,
+                [KafkaRequestType.Produce] = KafkaRequestVersion.V2,
 
                 [KafkaRequestType.GroupCoordinator] = KafkaRequestVersion.V0,
                 [KafkaRequestType.JoinGroup] = KafkaRequestVersion.V0,
@@ -140,7 +140,30 @@ namespace NKafka.Protocol
                 [KafkaRequestType.Offset] = KafkaRequestVersion.V0,
                 [KafkaRequestType.OffsetFetch] = KafkaRequestVersion.V1,
 
-                [KafkaRequestType.Fetch] = KafkaRequestVersion.V0,
+                [KafkaRequestType.Fetch] = KafkaRequestVersion.V2,
+                [KafkaRequestType.OffsetCommit] = KafkaRequestVersion.V2
+            };
+            return requests;
+        }
+
+        [NotNull]
+        private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateV09ApiSupports()
+        {
+            var requests = new Dictionary<KafkaRequestType, KafkaRequestVersion>
+            {
+                [KafkaRequestType.TopicMetadata] = KafkaRequestVersion.V0,
+                [KafkaRequestType.Produce] = KafkaRequestVersion.V1,
+
+                [KafkaRequestType.GroupCoordinator] = KafkaRequestVersion.V0,
+                [KafkaRequestType.JoinGroup] = KafkaRequestVersion.V0,
+                [KafkaRequestType.SyncGroup] = KafkaRequestVersion.V0,
+                [KafkaRequestType.Heartbeat] = KafkaRequestVersion.V0,
+                [KafkaRequestType.LeaveGroup] = KafkaRequestVersion.V0,
+
+                [KafkaRequestType.Offset] = KafkaRequestVersion.V0,
+                [KafkaRequestType.OffsetFetch] = KafkaRequestVersion.V1,
+
+                [KafkaRequestType.Fetch] = KafkaRequestVersion.V1,
                 [KafkaRequestType.OffsetCommit] = KafkaRequestVersion.V2
             };
             return requests;
@@ -158,7 +181,7 @@ namespace NKafka.Protocol
         }
 
         [NotNull]
-        private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateDefaultApiSupports()
+        private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateEmptyApiSupports()
         {
             return new Dictionary<KafkaRequestType, KafkaRequestVersion>();            
         }
@@ -169,6 +192,9 @@ namespace NKafka.Protocol
             IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> supportedRequests;
             switch (kafkaVersion)
             {
+                case KafkaVersion.V0_10:
+                    supportedRequests = CreateV010ApiSupports();
+                    break;
                 case KafkaVersion.V0_9:
                     supportedRequests = CreateV09ApiSupports();
                     break;
@@ -176,7 +202,7 @@ namespace NKafka.Protocol
                     supportedRequests = CreateV08ApiSupports();
                     break;
                 default:
-                    supportedRequests = CreateDefaultApiSupports();
+                    supportedRequests = CreateEmptyApiSupports();
                     break;
             }
 
@@ -186,7 +212,7 @@ namespace NKafka.Protocol
                 var requestType = supportRequest.Key;
                 var requestVersion = supportRequest.Value;
 
-                var requestConfiguration = CreateRequestConfiguration(requestType, requestVersion);
+                var requestConfiguration = CreateRequestConfiguration(kafkaVersion, requestType, requestVersion);
                 if (requestConfiguration == null) continue;
                 requests[requestConfiguration.RequestApi.RequestType] = requestConfiguration;
             }
@@ -194,7 +220,7 @@ namespace NKafka.Protocol
             return new KafkaProtocolConfiguration(requests);
         }
 
-        private static KafkaRequestConfiguration CreateRequestConfiguration(KafkaRequestType requestType, KafkaRequestVersion requestVersion)
+        private static KafkaRequestConfiguration CreateRequestConfiguration(KafkaVersion kafkaVersion, KafkaRequestType requestType, KafkaRequestVersion requestVersion)
         {
             switch (requestType)
             {
@@ -203,11 +229,11 @@ namespace NKafka.Protocol
                 case KafkaRequestType.GroupCoordinator:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaGroupCoordinatorApi());                        
                 case KafkaRequestType.Produce:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaProduceApi());                        
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaProduceApi(kafkaVersion, requestVersion));                        
                 case KafkaRequestType.Offset:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetApi());                        
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetApi());
                 case KafkaRequestType.Fetch:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaFetchApi());
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaFetchApi(requestVersion));
                 case KafkaRequestType.JoinGroup:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaJoinGroupApi());
                 case KafkaRequestType.SyncGroup:
