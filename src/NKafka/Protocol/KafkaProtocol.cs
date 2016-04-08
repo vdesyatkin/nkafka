@@ -128,7 +128,7 @@ namespace NKafka.Protocol
         {
             var requests = new Dictionary<KafkaRequestType, KafkaRequestVersion>
             {
-                [KafkaRequestType.TopicMetadata] = KafkaRequestVersion.V0,
+                [KafkaRequestType.TopicMetadata] = KafkaRequestVersion.V1,
                 [KafkaRequestType.Produce] = KafkaRequestVersion.V2,
 
                 [KafkaRequestType.GroupCoordinator] = KafkaRequestVersion.V0,
@@ -225,7 +225,7 @@ namespace NKafka.Protocol
             switch (requestType)
             {
                 case KafkaRequestType.TopicMetadata:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaTopicMetadataApi());
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaTopicMetadataApi(requestVersion));
                 case KafkaRequestType.GroupCoordinator:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaGroupCoordinatorApi());                        
                 case KafkaRequestType.Produce:

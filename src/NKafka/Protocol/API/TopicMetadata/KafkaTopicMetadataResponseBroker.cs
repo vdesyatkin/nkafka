@@ -22,11 +22,17 @@ namespace NKafka.Protocol.API.TopicMetadata
         /// Broker port.
         /// </summary>
         public readonly int Port;
-        
+
+        /// <summary>
+        /// Rack in data-center.
+        /// </summary>
+        public readonly string Rack;
+
         /// <param name="brokerId">Broker Id.</param>
         /// <param name="host">Borker host.</param>
         /// <param name="port">Broker port.</param>
-        public KafkaTopicMetadataResponseBroker(int brokerId, string host, int port)
+        /// <param name="rack">Rack in data-center.</param>        
+        public KafkaTopicMetadataResponseBroker(int brokerId, string host, int port, string rack)
         {
             BrokerId = brokerId;
             Host = host;

@@ -9,6 +9,13 @@ namespace NKafka.Protocol.API.TopicMetadata
     {
         public Type RequestType => typeof(KafkaTopicMetadataRequest);
 
+        private readonly KafkaRequestVersion _requestVersion;
+
+        public KafkaTopicMetadataApi(KafkaRequestVersion requestVersion)
+        {
+            _requestVersion = requestVersion;
+        }
+
         #region TopicMetadataRequest
 
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)
@@ -36,20 +43,21 @@ namespace NKafka.Protocol.API.TopicMetadata
             return ReadTopicMetadataResponse(reader);
         }
 
-        private static KafkaTopicMetadataResponse ReadTopicMetadataResponse([NotNull] KafkaBinaryReader reader)
+        private KafkaTopicMetadataResponse ReadTopicMetadataResponse([NotNull] KafkaBinaryReader reader)
         {
             var brokers = reader.ReadCollection(ReadResponseBroker);
             var topics = reader.ReadCollection(ReadResponseTopic);
             return new KafkaTopicMetadataResponse(brokers, topics);
         }
 
-        private static KafkaTopicMetadataResponseBroker ReadResponseBroker([NotNull] KafkaBinaryReader reader)
+        private KafkaTopicMetadataResponseBroker ReadResponseBroker([NotNull] KafkaBinaryReader reader)
         {
             var brokerId = reader.ReadInt32();
             var host = reader.ReadString();
             var port = reader.ReadInt32();
+            var rack = _requestVersion >= KafkaRequestVersion.V1 ? reader.ReadString() : null;
 
-            return new KafkaTopicMetadataResponseBroker(brokerId, host, port);
+            return new KafkaTopicMetadataResponseBroker(brokerId, host, port, rack);
         }
 
         private static KafkaTopicMetadataResponseTopic ReadResponseTopic([NotNull] KafkaBinaryReader reader)

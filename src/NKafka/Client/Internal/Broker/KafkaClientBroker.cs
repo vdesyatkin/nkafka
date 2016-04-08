@@ -224,7 +224,7 @@ namespace NKafka.Client.Internal.Broker
             foreach (var responseBroker in responseBrokers)
             {
                 if (responseBroker == null) continue;
-                brokers.Add(new KafkaBrokerMetadata(responseBroker.BrokerId, responseBroker.Host, responseBroker.Port));
+                brokers.Add(new KafkaBrokerMetadata(responseBroker.BrokerId, responseBroker.Host, responseBroker.Port, responseBroker.Rack));
             }
 
             var partitions = new List<KafkaTopicPartitionMetadata>(responsePartitons.Count);
@@ -265,7 +265,7 @@ namespace NKafka.Client.Internal.Broker
                 return KafkaBrokerErrorCode.DataError;
             }
 
-            return new KafkaBrokerMetadata(responseData.BrokerId, responseData.Host, responseData.Port);                
+            return new KafkaBrokerMetadata(responseData.BrokerId, responseData.Host, responseData.Port, null);
         }
 
         #endregion Group metadata
