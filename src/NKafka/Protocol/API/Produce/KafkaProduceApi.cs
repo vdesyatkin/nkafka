@@ -67,10 +67,12 @@ namespace NKafka.Protocol.API.Produce
                 writer.BeginWriteGZipData(); //value
                 if (partition.Messages != null)
                 {
+                    var innerOffset = 0;
                     foreach (var message in partition.Messages)
                     {
                         if (message == null) continue;
-                        writer.WriteInt64(0); //offset
+                        writer.WriteInt64(innerOffset); //offset
+                        innerOffset++;
 
                         writer.BeginWriteSize();
                         writer.BeginWriteCrc2();
