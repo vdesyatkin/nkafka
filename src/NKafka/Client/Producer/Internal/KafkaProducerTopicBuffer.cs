@@ -25,14 +25,14 @@ namespace NKafka.Client.Producer.Internal
             Interlocked.Increment(ref _enqueuedCount);
         }
 
-        public void EnqueueMessage([CanBeNull] byte[] key, [CanBeNull]  byte[] data, DateTime timestampUtc)
+        public void EnqueueMessage([CanBeNull] byte[] key, [CanBeNull]  byte[] data)
         {
-            EnqueueMessage(new KafkaMessage(key, data, timestampUtc));
+            EnqueueMessage(new KafkaMessage(key, data));
         }
 
-        public void EnqueueMessage([CanBeNull]  byte[] data, DateTime timestampUtc)
+        public void EnqueueMessage([CanBeNull]  byte[] data)
         {
-            EnqueueMessage(new KafkaMessage(null, data, timestampUtc));
+            EnqueueMessage(new KafkaMessage(null, data));
         }
         
         public void Flush(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions)
@@ -101,14 +101,14 @@ namespace NKafka.Client.Producer.Internal
             Interlocked.Increment(ref _enqueuedCount);
         }
 
-        public void Produce([CanBeNull] TKey key, [CanBeNull] TData data, DateTime timestampUtc)
+        public void Produce([CanBeNull] TKey key, [CanBeNull] TData data)
         {
-            Produce(new KafkaMessage<TKey, TData>(key, data, timestampUtc));
+            Produce(new KafkaMessage<TKey, TData>(key, data));
         }
 
-        public void Produce([CanBeNull] TData data, DateTime timestampUtc)
+        public void Produce([CanBeNull] TData data)
         {
-            Produce(new KafkaMessage<TKey, TData>(default(TKey), data, timestampUtc));
+            Produce(new KafkaMessage<TKey, TData>(default(TKey), data));
         }
         
         public void Flush(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions)
@@ -158,7 +158,7 @@ namespace NKafka.Client.Producer.Internal
                     continue;
                 }
 
-                partition.EnqueueMessage(new KafkaMessage(key, data, message.TimestampUtc));                
+                partition.EnqueueMessage(new KafkaMessage(key, data));
             }
 
             Interlocked.Add(ref _enqueuedCount, -processedCount);

@@ -1,5 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace NKafka
 {
@@ -8,10 +7,9 @@ namespace NKafka
     {
         public readonly long Offset;
         public readonly byte[] Key;
-        public readonly byte[] Data;
-        public readonly DateTime TimestampUtc;
+        public readonly byte[] Data;        
 
-        public KafkaMessageAndOffset(long offset, byte[] key, byte[] data, DateTime timestampUtc)
+        public KafkaMessageAndOffset(long offset, byte[] key, byte[] data)
         {
             Offset = offset;
             Key = key;

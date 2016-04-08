@@ -77,7 +77,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     if (messageAndOffset != null)
                     {
-                        var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data, messageAndOffset.TimestampUtc);
+                        var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data);
                         messages.Add(message);
                     }                    
                     partitionCount--;

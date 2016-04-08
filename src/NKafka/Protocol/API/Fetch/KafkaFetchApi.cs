@@ -97,7 +97,7 @@ namespace NKafka.Protocol.API.Fetch
                 
                 var magicByte = reader.ReadInt8();
                 var attribute = reader.ReadInt8();
-                var timestampUtc = magicByte == MessageMagicByteV010 ? reader.ReadTimestampUtc() : DateTime.UtcNow;
+                var timestampUtc = magicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
                 var key = reader.ReadByteArray();
 
                 if (attribute == MessageGZipAttribute)
@@ -114,7 +114,7 @@ namespace NKafka.Protocol.API.Fetch
 
                         var nestedMagicByte = reader.ReadInt8();
                         var nestedAttribute = reader.ReadInt8();
-                        var nestedTimestampUtc = magicByte == MessageMagicByteV010 ? reader.ReadTimestampUtc() : DateTime.UtcNow;
+                        var nestedTimestampUtc = magicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
                         var nestedKey = reader.ReadByteArray();
                         var nestedValue = reader.ReadByteArray();
 
@@ -122,7 +122,7 @@ namespace NKafka.Protocol.API.Fetch
                         var nestedIsSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
 
                         if (!nestedIsCrcValid || !nestedIsSizeValid) continue;
-                        var nestedMessage = new KafkaMessageAndOffset(nestedOffset, nestedKey, nestedValue, nestedTimestampUtc);
+                        var nestedMessage = new KafkaMessageAndOffset(nestedOffset, nestedKey, nestedValue);
                         messages.Add(nestedMessage);
                     }
                 }
@@ -136,7 +136,7 @@ namespace NKafka.Protocol.API.Fetch
 
                     if (!isCrcValid) continue; //todo (E005) invalid CRC
                     if (!isSizeValid) break; //todo (E005) invalid Size                    
-                    var message = new KafkaMessageAndOffset(offset, key, value, timestampUtc);
+                    var message = new KafkaMessageAndOffset(offset, key, value);
                     messages.Add(message);
                 }
             }

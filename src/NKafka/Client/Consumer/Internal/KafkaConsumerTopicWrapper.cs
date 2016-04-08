@@ -33,7 +33,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     var key = _serializer.DeserializeKey(message.Key);
                     var data = _serializer.DeserializeData(message.Data);
-                    var genericMessage = new KafkaMessage<TKey, TData>(key, data, message.TimestampUtc);
+                    var genericMessage = new KafkaMessage<TKey, TData>(key, data);
                     genericMessages.Add(genericMessage);
                 }
                 catch (Exception)

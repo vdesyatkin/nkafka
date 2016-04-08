@@ -1,5 +1,4 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace NKafka
 {
@@ -14,14 +13,9 @@ namespace NKafka
         /// <summary>
         /// The data is the actual message contents as an opaque byte array.
         /// </summary>
-        public readonly byte[] Data;
+        public readonly byte[] Data;        
 
-        /// <summary>
-        /// The timestamp of the message.
-        /// </summary>
-        public readonly DateTime TimestampUtc;
-
-        public KafkaMessage(byte[] key, byte[] data, DateTime timestampUtc)
+        public KafkaMessage(byte[] key, byte[] data)
         {
             Key = key;
             Data = data;
@@ -39,14 +33,9 @@ namespace NKafka
         /// <summary>
         /// The data is the actual message contents as an opaque byte array.
         /// </summary>
-        public readonly TData Data;
+        public readonly TData Data;        
 
-        /// <summary>
-        /// The timestamp of the message.
-        /// </summary>
-        public readonly DateTime TimestampUtc;
-
-        public KafkaMessage(TKey key, TData data, DateTime timestampUtc)
+        public KafkaMessage(TKey key, TData data)
         {
             Key = key;
             Data = data;

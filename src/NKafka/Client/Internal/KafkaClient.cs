@@ -32,17 +32,15 @@ namespace NKafka.Client.Internal
             foreach (var topic in topics)
             {
                 var worker = GetWorker(topic.TopicName.GetHashCode());
-                if (worker == null) continue;
 
-                worker.AssignTopic(topic);
+                worker?.AssignTopic(topic);
             }
 
             foreach (var group in groups)
             {
-                var worker = GetWorker(group.GroupName.GetHashCode());
-                if (worker == null) continue;
+                var worker = GetWorker(group.GroupName.GetHashCode());                
 
-                worker.AssignGroup(group);
+                worker?.AssignGroup(group);
             }            
         }        
 
@@ -68,20 +66,18 @@ namespace NKafka.Client.Internal
             foreach (var partition in partitions)
             {
                 var brokerId = partition.BrokerMetadata.BrokerId;
-                var worker = GetWorker(brokerId);
-                if (worker == null) continue;
+                var worker = GetWorker(brokerId);                
 
-                worker.AssignTopicPartition(topicName, partition);
+                worker?.AssignTopicPartition(topicName, partition);
             }
         }
 
         private void OnArrangeGroupCoordinator([NotNull] string groupName, [NotNull] KafkaClientBrokerGroup groupCoordinator)
         {
             var brokerId = groupCoordinator.BrokerMetadata.BrokerId;
-            var worker = GetWorker(brokerId);
-            if (worker == null) return;
+            var worker = GetWorker(brokerId);            
 
-            worker.AssignGroupCoordinator(groupName, groupCoordinator);
+            worker?.AssignGroupCoordinator(groupName, groupCoordinator);
         }
 
         private KafkaClientWorker GetWorker(int key)
