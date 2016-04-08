@@ -16,6 +16,9 @@ namespace NKafka
         /// </summary>
         public readonly byte[] Data;
 
+        /// <summary>
+        /// The timestamp of the message.
+        /// </summary>
         public readonly DateTime TimestampUtc;
 
         public KafkaMessage(byte[] key, byte[] data, DateTime timestampUtc)
@@ -38,6 +41,9 @@ namespace NKafka
         /// </summary>
         public readonly TData Data;
 
+        /// <summary>
+        /// The timestamp of the message.
+        /// </summary>
         public readonly DateTime TimestampUtc;
 
         public KafkaMessage(TKey key, TData data, DateTime timestampUtc)

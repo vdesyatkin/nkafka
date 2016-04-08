@@ -17,14 +17,11 @@ namespace NKafka.Protocol.API.Produce
         const byte MessageGZipAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecGzip;
         const byte MessageAttributeTimestampMask = 0x8;
         const byte MessageTimestampLogAppendAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.LogAppendTime;
-
-
-        private readonly KafkaVersion _kafkaVersion;
+        
         private readonly KafkaRequestVersion _requestVersion;
 
-        public KafkaProduceApi(KafkaVersion kafkaVersion, KafkaRequestVersion requestVersion)
-        {
-            _kafkaVersion = kafkaVersion;
+        public KafkaProduceApi(KafkaRequestVersion requestVersion)
+        {            
             _requestVersion = requestVersion;
         }
 
@@ -49,8 +46,8 @@ namespace NKafka.Protocol.API.Produce
         }
 
         private void WriteProduceRequestTopicPartition([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaProduceRequestTopicPartition partition)
-        {
-            var magicByte = _kafkaVersion >= KafkaVersion.V0_10 ? MessageMagicByteV010 : MessageMagicByteV09;
+        {            
+            var magicByte = _requestVersion >= KafkaRequestVersion.V2 ? MessageMagicByteV010 : MessageMagicByteV09;
             var useTimestamp = _requestVersion >= KafkaRequestVersion.V2;
 
             writer.WriteInt32(partition.PartitionId);

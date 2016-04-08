@@ -212,7 +212,7 @@ namespace NKafka.Protocol
                 var requestType = supportRequest.Key;
                 var requestVersion = supportRequest.Value;
 
-                var requestConfiguration = CreateRequestConfiguration(kafkaVersion, requestType, requestVersion);
+                var requestConfiguration = CreateRequestConfiguration(requestType, requestVersion);
                 if (requestConfiguration == null) continue;
                 requests[requestConfiguration.RequestApi.RequestType] = requestConfiguration;
             }
@@ -220,7 +220,7 @@ namespace NKafka.Protocol
             return new KafkaProtocolConfiguration(requests);
         }
 
-        private static KafkaRequestConfiguration CreateRequestConfiguration(KafkaVersion kafkaVersion, KafkaRequestType requestType, KafkaRequestVersion requestVersion)
+        private static KafkaRequestConfiguration CreateRequestConfiguration(KafkaRequestType requestType, KafkaRequestVersion requestVersion)
         {
             switch (requestType)
             {
@@ -229,7 +229,7 @@ namespace NKafka.Protocol
                 case KafkaRequestType.GroupCoordinator:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaGroupCoordinatorApi());                        
                 case KafkaRequestType.Produce:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaProduceApi(kafkaVersion, requestVersion));                        
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaProduceApi(requestVersion));                        
                 case KafkaRequestType.Offset:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetApi());
                 case KafkaRequestType.Fetch:
