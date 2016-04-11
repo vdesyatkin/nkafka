@@ -14,10 +14,13 @@ namespace NKafka.Protocol.API.Fetch
         const byte MessageMagicByteV010 = 1;
 
         const byte MessageEmptyAttribute = 0;
+
         const byte MessageAttributeCodecMask = 0x7;
         const byte MessageGZipAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecGzip;
+
         const byte MessageAttributeTimestampMask = 0x8;
-        const byte MessageTimestampLogAppendAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.LogAppendTime;
+        const byte MessageTimestampLogAppendTimeAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.LogAppendTime;
+        const byte MessageTimestampCreateTimeAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.CreateTime;
 
         private readonly KafkaRequestVersion _requestVersion;
 
@@ -100,7 +103,10 @@ namespace NKafka.Protocol.API.Fetch
                 var timestampUtc = magicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
                 var key = reader.ReadByteArray();
 
-                if (attribute == MessageGZipAttribute)
+                var codecAttribute = attribute & MessageAttributeCodecMask;
+                var timestampAttribute = attribute & MessageAttributeTimestampMask; //todo (v10) use timestamp?
+
+                if (codecAttribute == MessageGZipAttribute)
                 {
                     // gzip message
                     reader.BeginReadGZipData();
