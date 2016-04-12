@@ -3,7 +3,7 @@
 namespace NKafka.Metadata
 {
     [PublicAPI]
-    public enum KafkaTopicMetadataError : byte
+    public enum KafkaTopicMetadataErrorCode : byte
     {
         UnknownError = 0,
 
@@ -21,6 +21,6 @@ namespace NKafka.Metadata
         /// <summary>
         /// Returned by the broker when the client is not authorized to access the requested topic.
         /// </summary>
-        TopicAuthorizationFailed = 29
+        AuthorizationFailed = 29
     }
 }

@@ -7,12 +7,15 @@ namespace NKafka.Metadata
     {
         [NotNull] public readonly string GroupName;
 
-        [NotNull] public readonly KafkaBrokerMetadata Coordinator;
+        public KafkaGroupMetadataErrorCode? Error;
 
-        public KafkaGroupMetadata([NotNull] string groupName, [NotNull] KafkaBrokerMetadata coordinator)
+        [CanBeNull] public readonly KafkaBrokerMetadata Coordinator;
+
+        public KafkaGroupMetadata([NotNull] string groupName, KafkaGroupMetadataErrorCode? error, [CanBeNull] KafkaBrokerMetadata coordinator)
         {
             GroupName = groupName;
-            Coordinator = coordinator;
+            Error = error;
+            Coordinator = coordinator; 
         }
     }
 }

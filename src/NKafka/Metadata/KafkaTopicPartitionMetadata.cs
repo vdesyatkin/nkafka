@@ -7,12 +7,12 @@ namespace NKafka.Metadata
     {
         public readonly int PartitionId;
 
-        public readonly KafkaTopicPartitionMetadataError? Error;
+        public readonly KafkaTopicPartitionMetadataErrorCode? Error;
 
         public readonly int LeaderBrokerId;
 
         public KafkaTopicPartitionMetadata(int partitionId, 
-            KafkaTopicPartitionMetadataError? error, 
+            KafkaTopicPartitionMetadataErrorCode? error, 
             int leaderBrokerId)
         {
             PartitionId = partitionId;

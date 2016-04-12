@@ -9,7 +9,7 @@ namespace NKafka.Metadata
         [NotNull]
         public readonly string TopicName;
 
-        public readonly KafkaTopicMetadataError? Error;
+        public readonly KafkaTopicMetadataErrorCode? Error;
 
         [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaBrokerMetadata> Brokers;
@@ -18,7 +18,7 @@ namespace NKafka.Metadata
         public readonly IReadOnlyList<KafkaTopicPartitionMetadata> Partitions;
 
         public KafkaTopicMetadata([NotNull] string topicName, 
-            KafkaTopicMetadataError? error,
+            KafkaTopicMetadataErrorCode? error,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaBrokerMetadata> brokers,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaTopicPartitionMetadata> partitions)
         {            

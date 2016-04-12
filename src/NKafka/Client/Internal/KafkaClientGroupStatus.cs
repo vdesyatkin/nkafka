@@ -7,7 +7,8 @@ namespace NKafka.Client.Internal
     {
         NotInitialized = 0,
         MetadataRequested = 1,
-        Ready = 2,
-        RearrangeRequired = 3
+        MetadataError = 2,
+        Ready = 3,
+        RearrangeRequired = 4
     }
 }

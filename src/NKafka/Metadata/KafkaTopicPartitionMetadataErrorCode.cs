@@ -3,7 +3,7 @@
 namespace NKafka.Metadata
 {
     [PublicAPI]
-    public enum KafkaTopicPartitionMetadataError : byte
+    public enum KafkaTopicPartitionMetadataErrorCode : byte
     {
         UnknownError = 0,
 

@@ -64,6 +64,8 @@
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorBroker.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupStatus.cs" />
+    <Compile Include="Client\Diagnostics\KafkaClientGroupErrorCode.cs" />
+    <Compile Include="Client\Diagnostics\KafkaClientGroupInfo.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientTopicErrorCode.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientTopicInfo.cs" />
     <Compile Include="Client\IKafkaClient.cs" />
@@ -115,10 +117,11 @@
     <Compile Include="KafkaVersion.cs" />
     <Compile Include="Metadata\KafkaBrokerMetadata.cs" />
     <Compile Include="Metadata\KafkaGroupMetadata.cs" />
+    <Compile Include="Metadata\KafkaGroupMetadataErrorCode.cs" />
     <Compile Include="Metadata\KafkaTopicMetadata.cs" />
-    <Compile Include="Metadata\KafkaTopicMetadataError.cs" />
+    <Compile Include="Metadata\KafkaTopicMetadataErrorCode.cs" />
     <Compile Include="Metadata\KafkaTopicPartitionMetadata.cs" />
-    <Compile Include="Metadata\KafkaTopicPartitionMetadataError.cs" />
+    <Compile Include="Metadata\KafkaTopicPartitionMetadataErrorCode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol\API\Fetch\KafkaFetchApi.cs" />
     <Compile Include="Protocol\API\Fetch\KafkaFetchRequest.cs" />

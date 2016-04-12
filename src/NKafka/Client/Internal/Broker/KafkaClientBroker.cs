@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup.Internal;
 using NKafka.Client.Producer.Internal;
 using NKafka.Connection;
-using NKafka.Metadata;
 using NKafka.Protocol;
-using NKafka.Protocol.API.GroupCoordinator;
-using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Client.Internal.Broker
 {
@@ -66,8 +62,8 @@ namespace NKafka.Client.Internal.Broker
 
             _coordinator.Process();
             _producer.Produce();
-            _consumer.Consume();            
-        }        
+            _consumer.Consume();
+        }
 
         public void Open()
         {
@@ -201,36 +197,5 @@ namespace NKafka.Client.Internal.Broker
         {
             return _broker.Receive<TResponse>(requestId);            
         }
-
-        #region Group metadata
-
-        public KafkaBrokerResult<int?> RequestGroupCoordinator([NotNull] string groupName)
-        {
-            return _broker.Send(new KafkaGroupCoordinatorRequest(groupName), _clientTimeout);
-        }
-
-        public KafkaBrokerResult<KafkaBrokerMetadata> GetGroupCoordinator(int requestId)
-        {
-            var response = _broker.Receive<KafkaGroupCoordinatorResponse>(requestId);
-            return ConvertGroupCoordinator(response);
-        }
-
-        private static KafkaBrokerResult<KafkaBrokerMetadata> ConvertGroupCoordinator(KafkaBrokerResult<KafkaGroupCoordinatorResponse> response)
-        {
-            if (!response.HasData) return response.Error;
-
-            var responseData = response.Data;            
-                       
-            if (responseData == null || responseData.ErrorCode != KafkaResponseErrorCode.NoError)
-            {
-                //todo (E009) handling standard errors
-                return KafkaBrokerErrorCode.DataError;
-            }
-
-            return new KafkaBrokerMetadata(responseData.BrokerId, responseData.Host, responseData.Port, null);
-        }
-
-        #endregion Group metadata
-
     }
 }
