@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Internal;
+using NKafka.Client.Diagnostics;
 using NKafka.Client.Producer.Internal;
 using NKafka.Metadata;
 
@@ -17,15 +19,29 @@ namespace NKafka.Client.Internal
         [CanBeNull] public readonly KafkaProducerTopic Producer;
         [CanBeNull] public readonly KafkaConsumerTopic Consumer;
 
+        [NotNull]
+        public KafkaClientTopicInfo DiagnosticsInfo => _diagnosticsInfo;
+        [NotNull] private KafkaClientTopicInfo _diagnosticsInfo;
+
         public KafkaClientTopic([NotNull] string topicName, [CanBeNull] KafkaProducerTopic producer, [CanBeNull] KafkaConsumerTopic consumer)
         {
             TopicName = topicName;
             Producer = producer;
             Consumer = consumer;
             Partitions = new KafkaClientTopicPartition[0];
+            _diagnosticsInfo = new KafkaClientTopicInfo(topicName, DateTime.UtcNow, false, null, null);
+        }
+
+        public void ChangeMetadataState(bool isReady, KafkaClientTopicErrorCode? errorCode, [CanBeNull] KafkaTopicMetadata metadata)
+        {
+            _diagnosticsInfo = new KafkaClientTopicInfo(TopicName, DateTime.UtcNow, isReady, errorCode, metadata);
+            if (isReady && metadata != null)
+            {
+                ApplyMetadata(metadata);
+            }
         }
         
-        public void ApplyMetadata([NotNull] KafkaTopicMetadata topicMetadata)
+        private void ApplyMetadata([NotNull] KafkaTopicMetadata topicMetadata)
         {
             var partitionBrokers = new Dictionary<int, KafkaBrokerMetadata>(topicMetadata.Brokers.Count);
             foreach (var brokerMetadata in topicMetadata.Brokers)

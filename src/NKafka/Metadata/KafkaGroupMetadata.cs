@@ -3,7 +3,7 @@
 namespace NKafka.Metadata
 {
     [PublicAPI]
-    internal sealed class KafkaGroupMetadata
+    public sealed class KafkaGroupMetadata
     {
         [NotNull] public readonly string GroupName;
 

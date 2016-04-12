@@ -3,10 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Client.Diagnostics;
 using NKafka.Client.Internal.Broker;
 using NKafka.Connection;
 using NKafka.Metadata;
 using NKafka.Protocol;
+using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Client.Internal
 {
@@ -33,6 +35,8 @@ namespace NKafka.Client.Internal
 
         public delegate void ArrangeGroupDelegate([NotNull] string groupName, [NotNull] KafkaClientBrokerGroup groupCoordinator);
         public event ArrangeGroupDelegate ArrangeGroup;
+
+        private readonly TimeSpan _retryMetadataRequestPeriod = TimeSpan.FromMinutes(1);
         
         public KafkaClientWorker([NotNull] KafkaClientSettings settings)
         {
@@ -227,20 +231,33 @@ namespace NKafka.Client.Internal
 
         private void ProcessTopic([NotNull] KafkaClientTopic topic)
         {
-            if (topic.Status == KafkaClientTopicStatus.NotInitialized)
+            if (topic.Status == KafkaClientTopicStatus.MetadataError)
+            {
+                if (topic.DiagnosticsInfo.TimestampUtc - DateTime.UtcNow < _retryMetadataRequestPeriod) return;                
+            }
+
+            if (topic.Status == KafkaClientTopicStatus.NotInitialized || topic.Status == KafkaClientTopicStatus.MetadataError)
             {
                 var metadataBroker = GetMetadataBroker();
                 if (metadataBroker != null)
                 {
-                    var metadataResponse = metadataBroker.RequestTopicMetadata(topic.TopicName);
-                    var metadataRequestId = metadataResponse.HasData ? metadataResponse.Data : null;
+                    var metadataRequest = CreateTopicMetadataRequest(topic.TopicName);
+                    var metadataRequestResult =  metadataBroker.SendRequest(metadataRequest);
+                    if (metadataRequestResult.HasError)
+                    {
+                        topic.Status = KafkaClientTopicStatus.MetadataError;
+                        topic.ChangeMetadataState(false, ConvertMetadataRequestError(metadataRequestResult.Error), null);                        
+                        return;
+                    }
+                    
+                    var metadataRequestId = metadataRequestResult.HasData ? metadataRequestResult.Data : null;
                     if (metadataRequestId.HasValue)
                     {
+
                         _topicMetadataRequests[topic.TopicName] = new MetadataRequestInfo(metadataRequestId.Value, metadataBroker);
                         topic.Status = KafkaClientTopicStatus.MetadataRequested;
                     }
                 }
-
             }
 
             if (topic.Status == KafkaClientTopicStatus.MetadataRequested)
@@ -248,38 +265,53 @@ namespace NKafka.Client.Internal
                 MetadataRequestInfo metadataRequest;
                 if (!_topicMetadataRequests.TryGetValue(topic.TopicName, out metadataRequest) || metadataRequest == null)
                 {
-                    topic.Status = KafkaClientTopicStatus.NotInitialized;
+                    topic.Status = KafkaClientTopicStatus.MetadataError;
                     return;
                 }
 
-                var topicMetadata = metadataRequest.Broker.GetTopicMetadata(metadataRequest.RequestId);
-                if (topicMetadata.HasData && topicMetadata.Data != null)
+                var topicMetadataResponse = metadataRequest.Broker.GetResponse<KafkaTopicMetadataResponse>(metadataRequest.RequestId);
+                if (topicMetadataResponse.HasError)
                 {
-                    topic.ApplyMetadata(topicMetadata.Data);
-                    var brokerPartitions = new List<KafkaClientBrokerPartition>(topic.Partitions.Count);
-                    foreach (var topicPartition in topic.Partitions)
-                    {
-                        brokerPartitions.Add(topicPartition.BrokerPartition);
-                    }
-
-                    try
-                    {
-                        ArrangeTopic?.Invoke(topic.TopicName, brokerPartitions);
-                        topic.Status = KafkaClientTopicStatus.Ready;
-                    }
-                    catch (Exception)
-                    {
-                        topic.Status = KafkaClientTopicStatus.NotInitialized;
-                        return;
-                    }
+                    topic.Status = KafkaClientTopicStatus.MetadataError;
+                    topic.ChangeMetadataState(false, ConvertMetadataRequestError(topicMetadataResponse.Error), null);
+                    return;
                 }
-                else
+
+                if (!topicMetadataResponse.HasData || topicMetadataResponse.Data == null)
                 {
-                    if (topicMetadata.HasError)
-                    {
-                        topic.Status = KafkaClientTopicStatus.NotInitialized;
-                        return;
-                    }
+                    topic.Status = KafkaClientTopicStatus.MetadataError;
+                    topic.ChangeMetadataState(false, KafkaClientTopicErrorCode.ProtocolError, null);
+                    return;
+                }
+
+                bool hasMetadataError;
+                var metadata = ConvertMetadata(topic.TopicName, topicMetadataResponse.Data, out hasMetadataError);                               
+
+                if (hasMetadataError)
+                {                 
+                    topic.Status = KafkaClientTopicStatus.MetadataError;
+                    topic.ChangeMetadataState(false, KafkaClientTopicErrorCode.MetadataError, metadata);
+                    return;
+                }
+
+                topic.ChangeMetadataState(true, null, metadata);
+
+                var brokerPartitions = new List<KafkaClientBrokerPartition>(topic.Partitions.Count);
+                foreach (var topicPartition in topic.Partitions)
+                {
+                    brokerPartitions.Add(topicPartition.BrokerPartition);
+                }
+
+                try
+                {
+                    ArrangeTopic?.Invoke(topic.TopicName, brokerPartitions);
+                    topic.Status = KafkaClientTopicStatus.Ready;
+                }
+                catch (Exception)
+                {
+                    topic.Status = KafkaClientTopicStatus.MetadataError;
+                    topic.ChangeMetadataState(false, KafkaClientTopicErrorCode.InternalError, null);
+                    return;
                 }
             }
 
@@ -484,6 +516,116 @@ namespace NKafka.Client.Internal
             return new KafkaClientBroker(broker, _settings);
         }
 
+        #region Topic metadata
+
+        [NotNull]
+        private static KafkaTopicMetadataRequest CreateTopicMetadataRequest([NotNull] string topicName)
+        {
+            return new KafkaTopicMetadataRequest(new[] { topicName });
+        }
+
+        private static KafkaClientTopicErrorCode? ConvertMetadataRequestError(KafkaBrokerErrorCode? errorCode)
+        {           
+            KafkaClientTopicErrorCode? topicErrorCode = null;
+            if (errorCode.HasValue)
+            {
+                switch (errorCode.Value)
+                {
+                    case KafkaBrokerErrorCode.BadRequest:
+                        topicErrorCode = KafkaClientTopicErrorCode.ProtocolError;
+                        break;
+                    case KafkaBrokerErrorCode.InvalidState:
+                        topicErrorCode = KafkaClientTopicErrorCode.InvalidState;
+                        break;
+                    case KafkaBrokerErrorCode.DataError:
+                        topicErrorCode = KafkaClientTopicErrorCode.ProtocolError;
+                        break;
+                    case KafkaBrokerErrorCode.TransportError:
+                        topicErrorCode = KafkaClientTopicErrorCode.TransportError;
+                        break;                                        
+                    case KafkaBrokerErrorCode.Timeout:
+                        topicErrorCode = KafkaClientTopicErrorCode.TransportError;
+                        break;
+                    default:
+                        topicErrorCode = KafkaClientTopicErrorCode.UnknownError;
+                        break;
+                }
+            }
+
+            return topicErrorCode;            
+        }
+
+        [NotNull]
+        private static KafkaTopicMetadata ConvertMetadata([NotNull] string topicName, KafkaTopicMetadataResponse responseData, out bool hasError)
+        {
+            hasError = false;     
+            var responseBrokers = responseData?.Brokers ?? new KafkaTopicMetadataResponseBroker[0];
+            var responseTopics = responseData?.Topics ?? new KafkaTopicMetadataResponseTopic[0];
+            
+            var responseTopic = responseTopics.Count >= 1 ? responseTopics[0] : null;
+            if (string.IsNullOrEmpty(responseTopic?.TopicName))
+            {
+                hasError = true;
+                return new KafkaTopicMetadata(topicName, KafkaTopicMetadataError.InvalidTopic, new KafkaBrokerMetadata[0], new KafkaTopicPartitionMetadata[0]);
+            }
+
+            KafkaTopicMetadataError? topicError = null;
+            if (responseTopic.ErrorCode != KafkaResponseErrorCode.NoError)
+            {
+                hasError = true;
+                switch (responseTopic.ErrorCode)
+                {
+                    case KafkaResponseErrorCode.UnknownTopicOrPartition:
+                        topicError = KafkaTopicMetadataError.UnknownTopic;
+                        break;
+                    case KafkaResponseErrorCode.InvalidTopic:
+                        topicError = KafkaTopicMetadataError.InvalidTopic;
+                        break;
+                    case KafkaResponseErrorCode.TopicAuthorizationFailed:
+                        topicError = KafkaTopicMetadataError.TopicAuthorizationFailed;
+                        break;
+                    default:
+                        topicError = KafkaTopicMetadataError.UnknownError;
+                        break;
+                }
+            }
+            
+            var responsePartitons = responseTopic.Partitions ?? new KafkaTopicMetadataResponseTopicPartition[0];
+
+            var brokers = new List<KafkaBrokerMetadata>(responseBrokers.Count);
+            foreach (var responseBroker in responseBrokers)
+            {
+                if (responseBroker == null) continue;                
+                brokers.Add(new KafkaBrokerMetadata(responseBroker.BrokerId, responseBroker.Host, responseBroker.Port, responseBroker.Rack));
+            }
+
+            var partitions = new List<KafkaTopicPartitionMetadata>(responsePartitons.Count);
+            foreach (var responsePartition in responsePartitons)
+            {                
+                if (responsePartition == null) continue;
+                KafkaTopicPartitionMetadataError? partitionError = null;
+                if (responsePartition.ErrorCode != KafkaResponseErrorCode.NoError)
+                {
+                    hasError = true;
+                    switch (responsePartition.ErrorCode)
+                    {
+                        case KafkaResponseErrorCode.UnknownTopicOrPartition:
+                            partitionError = KafkaTopicPartitionMetadataError.UnknownPartition;
+                            break;
+                        case KafkaResponseErrorCode.LeaderNotAvailable:
+                            partitionError = KafkaTopicPartitionMetadataError.LeaderNotAvailable;
+                            break;                        
+                        default:
+                            partitionError = KafkaTopicPartitionMetadataError.UnknownError;
+                            break;
+                    }
+                }                
+                partitions.Add(new KafkaTopicPartitionMetadata(responsePartition.PartitionId, partitionError, responsePartition.LeaderId));
+            }
+
+            return new KafkaTopicMetadata(responseTopic.TopicName, topicError, brokers, partitions);
+        }
+
         private sealed class MetadataRequestInfo
         {
             public readonly int RequestId;
@@ -495,6 +637,8 @@ namespace NKafka.Client.Internal
                 RequestId = requestId;
                 Broker = broker;
             }
-        }       
+        }
+
+        #endregion Topic metadata
     }
 }

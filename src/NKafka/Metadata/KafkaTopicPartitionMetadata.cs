@@ -3,15 +3,20 @@
 namespace NKafka.Metadata
 {
     [PublicAPI]
-    internal sealed class KafkaTopicPartitionMetadata
+    public sealed class KafkaTopicPartitionMetadata
     {
         public readonly int PartitionId;
 
+        public readonly KafkaTopicPartitionMetadataError? Error;
+
         public readonly int LeaderBrokerId;
 
-        public KafkaTopicPartitionMetadata(int partitionId, int leaderBrokerId)
+        public KafkaTopicPartitionMetadata(int partitionId, 
+            KafkaTopicPartitionMetadataError? error, 
+            int leaderBrokerId)
         {
             PartitionId = partitionId;
+            Error = error;
             LeaderBrokerId = leaderBrokerId;
         }
     }

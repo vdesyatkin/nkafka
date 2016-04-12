@@ -192,53 +192,15 @@ namespace NKafka.Client.Internal.Broker
             }
         }
 
-        #region Topic metadata
-
-        public KafkaBrokerResult<int?> RequestTopicMetadata([NotNull] string topicName)
-        {           
-            return _broker.Send(new KafkaTopicMetadataRequest(new[] { topicName }), _clientTimeout);
-        }
-
-        public KafkaBrokerResult<KafkaTopicMetadata> GetTopicMetadata(int requestId)
+        public KafkaBrokerResult<int?> SendRequest<TRequest>([NotNull] TRequest request) where TRequest: class, IKafkaRequest
         {
-            var response = _broker.Receive<KafkaTopicMetadataResponse>(requestId);
-            return ConvertMetadata(response);
+            return _broker.Send(request, _clientTimeout);                
         }
 
-        private static KafkaBrokerResult<KafkaTopicMetadata> ConvertMetadata(KafkaBrokerResult<KafkaTopicMetadataResponse> response)
+        public KafkaBrokerResult<TResponse> GetResponse<TResponse>(int requestId) where TResponse: class, IKafkaResponse
         {
-            if (!response.HasData) return response.Error;
-
-            var responseData = response.Data;
-            var responseBrokers = responseData?.Brokers ?? new KafkaTopicMetadataResponseBroker[0];
-            var responseTopics = responseData?.Topics ?? new KafkaTopicMetadataResponseTopic[0];
-
-            if (responseTopics.Count < 1) return KafkaBrokerErrorCode.DataError;
-            var responseTopic = responseTopics[0];
-            if (string.IsNullOrEmpty(responseTopic?.TopicName)) return KafkaBrokerErrorCode.DataError;
-
-            //todo (E009) handling standard errors (responseTopic.ErrorCode)
-            var responsePartitons = responseTopic.Partitions ?? new KafkaTopicMetadataResponseTopicPartition[0];
-
-            var brokers = new List<KafkaBrokerMetadata>(responseBrokers.Count);
-            foreach (var responseBroker in responseBrokers)
-            {
-                if (responseBroker == null) continue;
-                brokers.Add(new KafkaBrokerMetadata(responseBroker.BrokerId, responseBroker.Host, responseBroker.Port, responseBroker.Rack));
-            }
-
-            var partitions = new List<KafkaTopicPartitionMetadata>(responsePartitons.Count);
-            foreach (var responsePartition in responsePartitons)
-            {
-                //todo (E009) handling standard errors (responsePartition.ErrorCode)
-                if (responsePartition?.ErrorCode != KafkaResponseErrorCode.NoError) continue;
-                partitions.Add(new KafkaTopicPartitionMetadata(responsePartition.PartitionId, responsePartition.LeaderId));
-            }
-
-            return new KafkaTopicMetadata(responseTopic.TopicName, brokers, partitions);
+            return _broker.Receive<TResponse>(requestId);            
         }
-
-        #endregion Topic metadata
 
         #region Group metadata
 
