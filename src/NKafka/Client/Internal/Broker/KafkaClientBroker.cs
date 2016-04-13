@@ -3,8 +3,10 @@ using System.Collections.Concurrent;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup.Internal;
+using NKafka.Client.Diagnostics;
 using NKafka.Client.Producer.Internal;
 using NKafka.Connection;
+using NKafka.Metadata;
 using NKafka.Protocol;
 
 namespace NKafka.Client.Internal.Broker
@@ -15,6 +17,7 @@ namespace NKafka.Client.Internal.Broker
         public bool IsOpenned => _broker.IsOpenned;
 
         [NotNull] private readonly KafkaBroker _broker;
+        [NotNull] private readonly KafkaBrokerMetadata _metadata;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerGroup> _groups;
         [NotNull] private readonly KafkaProducerBroker _producer;
@@ -23,9 +26,38 @@ namespace NKafka.Client.Internal.Broker
 
         private readonly TimeSpan _clientTimeout;
 
-        public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaClientSettings settings)
+        public KafkaClientBrokerInfo GetDiagnosticsInfo()
+        {
+            KafkaClientBrokerErrorCode? errorCode = null;
+            var brokerErrorCode = _broker.Error;
+            if (brokerErrorCode.HasValue)
+            {
+                switch (brokerErrorCode.Value)
+                {
+                    case KafkaBrokerStateErrorCode.ConnectionError:
+                        errorCode = KafkaClientBrokerErrorCode.ConnectionError;
+                        break;
+                    case KafkaBrokerStateErrorCode.TransportError:
+                        errorCode = KafkaClientBrokerErrorCode.TransportError;
+                        break;
+                    case KafkaBrokerStateErrorCode.ProtocolError:
+                        errorCode = KafkaClientBrokerErrorCode.ProtocolError;
+                        break;
+                    case KafkaBrokerStateErrorCode.Timeout:
+                        errorCode = KafkaClientBrokerErrorCode.Timeout;
+                        break;
+                    default:
+                        errorCode = KafkaClientBrokerErrorCode.UnknownError;
+                        break;
+                }
+            }
+            return new KafkaClientBrokerInfo(_broker.Name, _metadata, _broker.IsOpenned, errorCode, _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc);            
+        }
+
+        public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaBrokerMetadata metadata, [NotNull] KafkaClientSettings settings)
         {
             _broker = broker;
+            _metadata = metadata;
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
             _groups = new ConcurrentDictionary<string, KafkaClientBrokerGroup>();
             _producer = new KafkaProducerBroker(broker, settings.WorkerPeriod);

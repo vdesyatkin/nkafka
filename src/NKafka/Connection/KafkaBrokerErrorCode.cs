@@ -7,9 +7,9 @@ namespace NKafka.Connection
     {
         UnknownError = 0,   
         BadRequest = 1,
-        InvalidState = 2,
-        DataError = 3,
-        TransportError = 4,
+        InvalidState = 2,        
+        TransportError = 3,
+        ProtocolError = 4,
         Timeout = 5
     }
 }

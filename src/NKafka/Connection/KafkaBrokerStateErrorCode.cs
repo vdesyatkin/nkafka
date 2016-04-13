@@ -5,11 +5,10 @@ namespace NKafka.Connection
     [PublicAPI]
     internal enum KafkaBrokerStateErrorCode : short
     {
-        Unknown = 0,
-        ConnectionError = 1,
-        // ReSharper disable once InconsistentNaming
-        IOError = 2,
-        DataError = 3,
+        UnknownError = 0,
+        ConnectionError = 1,        
+        TransportError = 2,
+        ProtocolError = 3,
         Timeout = 4    
     }
 }

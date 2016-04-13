@@ -15,6 +15,7 @@ namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClientWorker
     {
+        private readonly int _workerId;
         [NotNull] private readonly KafkaProtocol _protocol;
         [NotNull] private readonly KafkaClientSettings _settings;
 
@@ -39,8 +40,9 @@ namespace NKafka.Client.Internal
 
         private readonly TimeSpan _retryMetadataRequestPeriod = TimeSpan.FromMinutes(1);
         
-        public KafkaClientWorker([NotNull] KafkaClientSettings settings)
+        public KafkaClientWorker(int workerId, [NotNull] KafkaClientSettings settings)
         {
+            _workerId = workerId;
             _settings = settings;
             _protocol = new KafkaProtocol(_settings.KafkaVersion, _settings.ClientId);
             _workerPeriod = settings.WorkerPeriod;
@@ -68,7 +70,50 @@ namespace NKafka.Client.Internal
             _metadataBrokers = metadataBrokers;
             _workerCancellation = new CancellationTokenSource();
             _workerTimer = new Timer(Work);
-        }        
+        }
+
+        [NotNull]
+        public KafkaClientWorkerInfo GetDiagnosticsInfo()
+        {
+            var topicInfos = new List<KafkaClientTopicInfo>();
+            foreach (var topicPair in _topics)
+            {
+                var topic = topicPair.Value;                
+                if (topic == null) continue;
+
+                var topicInfo = topic.DiagnosticsInfo;
+                topicInfos.Add(topicInfo);
+            }
+
+            var groupInfos = new List<KafkaClientGroupInfo>();
+            foreach (var groupPair in _groups)
+            {
+                var group = groupPair.Value;
+                if (group == null) continue;
+
+                var groupInfo = group.DiagnosticsInfo;
+                groupInfos.Add(groupInfo);
+            }
+
+            var brokerInfos = new List<KafkaClientBrokerInfo>();
+            foreach (var brokerPair in _brokers)
+            {
+                var broker = brokerPair.Value;
+                if (broker == null) continue;
+
+                var brokerInfo = broker.GetDiagnosticsInfo();
+                brokerInfos.Add(brokerInfo);
+            }
+
+            var metadataBrokerInfos = new List<KafkaClientBrokerInfo>();
+            foreach (var metadataBroker in _metadataBrokers)
+            {                                
+                var metadataBrokerInfo = metadataBroker.GetDiagnosticsInfo();
+                metadataBrokerInfos.Add(metadataBrokerInfo);
+            }
+
+            return new KafkaClientWorkerInfo(_workerId, topicInfos, groupInfos, brokerInfos, metadataBrokerInfos);
+        }
 
         public void AssignTopic([NotNull] KafkaClientTopic topic)
         {
@@ -533,7 +578,7 @@ namespace NKafka.Client.Internal
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{brokerId} ({host}:{port})";
             var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker, _settings);
+            return new KafkaClientBroker(broker,  brokerMetadata, _settings);
         }
 
         [NotNull]
@@ -544,7 +589,7 @@ namespace NKafka.Client.Internal
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{host}:{port})";
             var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker, _settings);
+            return new KafkaClientBroker(broker, new KafkaBrokerMetadata(0, host, port, null), _settings);
         }
 
         #region Topic metadata
@@ -568,7 +613,7 @@ namespace NKafka.Client.Internal
                     case KafkaBrokerErrorCode.InvalidState:
                         topicErrorCode = KafkaClientTopicErrorCode.InvalidState;
                         break;
-                    case KafkaBrokerErrorCode.DataError:
+                    case KafkaBrokerErrorCode.ProtocolError:
                         topicErrorCode = KafkaClientTopicErrorCode.ProtocolError;
                         break;
                     case KafkaBrokerErrorCode.TransportError:
@@ -680,7 +725,7 @@ namespace NKafka.Client.Internal
                     case KafkaBrokerErrorCode.InvalidState:
                         groupErrorCode = KafkaClientGroupErrorCode.InvalidState;
                         break;
-                    case KafkaBrokerErrorCode.DataError:
+                    case KafkaBrokerErrorCode.ProtocolError:
                         groupErrorCode = KafkaClientGroupErrorCode.ProtocolError;
                         break;
                     case KafkaBrokerErrorCode.TransportError:

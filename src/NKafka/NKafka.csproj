@@ -64,10 +64,14 @@
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorBroker.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupStatus.cs" />
+    <Compile Include="Client\Diagnostics\KafkaClientBrokerErrorCode.cs" />
+    <Compile Include="Client\Diagnostics\KafkaClientBrokerInfo.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientGroupErrorCode.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientGroupInfo.cs" />
+    <Compile Include="Client\Diagnostics\KafkaClientInfo.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientTopicErrorCode.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientTopicInfo.cs" />
+    <Compile Include="Client\Diagnostics\KafkaClientWorkerInfo.cs" />
     <Compile Include="Client\IKafkaClient.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerGroup.cs" />
     <Compile Include="Client\Internal\Broker\KafkaClientBrokerGroupStatus.cs" />

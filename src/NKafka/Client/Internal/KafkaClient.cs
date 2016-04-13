@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Diagnostics;
 using NKafka.Client.Internal.Broker;
 
 namespace NKafka.Client.Internal
@@ -8,6 +9,18 @@ namespace NKafka.Client.Internal
     {
         [NotNull, ItemNotNull]
         private readonly IReadOnlyList<KafkaClientWorker> _workers;
+
+        public KafkaClientInfo GetDiagnosticsInfo()
+        {
+            var workerInfos = new List<KafkaClientWorkerInfo>(_workers.Count);
+            foreach (var worker in _workers)
+            {
+                var workerInfo = worker.GetDiagnosticsInfo();
+                workerInfos.Add(workerInfo);
+            }
+
+            return new KafkaClientInfo(workerInfos);
+        }
 
         public KafkaClient([NotNull]KafkaClientSettings settings, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics,
@@ -22,7 +35,7 @@ namespace NKafka.Client.Internal
             var workers = new List<KafkaClientWorker>(workerCount);
             for (var i = 0; i < workerCount; i++)
             {
-                var worker = new KafkaClientWorker(settings);
+                var worker = new KafkaClientWorker(i + 1, settings);
                 worker.ArrangeTopic += OnArrangeTopic;
                 worker.ArrangeGroup += OnArrangeGroupCoordinator;
                 workers.Add(worker);
