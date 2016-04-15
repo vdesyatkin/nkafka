@@ -62,7 +62,7 @@ namespace NKafka.DevConsole
                         Console.WriteLine("Key and data required");
                         continue;
                     }
-                    topicProducer.Produce(data[1].Trim(), data[2].Trim());
+                    topicProducer.EnqueueMessage(data[1].Trim(), data[2].Trim());
                 }
 
                 if (command == "consume" || command == "c")

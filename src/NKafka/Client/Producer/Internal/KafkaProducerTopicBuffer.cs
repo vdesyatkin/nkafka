@@ -6,11 +6,16 @@ using JetBrains.Annotations;
 
 namespace NKafka.Client.Producer.Internal
 {
-    internal sealed class KafkaProducerTopicBuffer : IKafkaProducerTopic, IKafkaProducerTopicBuffer
+    internal sealed class KafkaProducerTopicBuffer : IKafkaProducerTopicBuffer
     {
+        public long EnqueuedCount => _enqueuedCount;
+        public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
+
         [NotNull] private readonly IKafkaProducerPartitioner _partitioner;
         [NotNull] private readonly ConcurrentQueue<KafkaMessage> _messageQueue;
+
         private int _enqueuedCount;
+        private DateTime? _enqueueTimestampUtc;
 
         public KafkaProducerTopicBuffer([NotNull] IKafkaProducerPartitioner partitioner)
         {
@@ -22,18 +27,10 @@ namespace NKafka.Client.Producer.Internal
         {
             if (message == null) return;
             _messageQueue.Enqueue(message);
+
             Interlocked.Increment(ref _enqueuedCount);
-        }
-
-        public void EnqueueMessage([CanBeNull] byte[] key, [CanBeNull]  byte[] data)
-        {
-            EnqueueMessage(new KafkaMessage(key, data));
-        }
-
-        public void EnqueueMessage([CanBeNull]  byte[] data)
-        {
-            EnqueueMessage(new KafkaMessage(null, data));
-        }
+            _enqueueTimestampUtc = DateTime.UtcNow;
+        }       
         
         public void Flush(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions)
         {
@@ -75,16 +72,21 @@ namespace NKafka.Client.Producer.Internal
                 partition.EnqueueMessage(message);                
             }
 
-            Interlocked.Add(ref _enqueuedCount, -processedCount);
+            Interlocked.Add(ref _enqueuedCount, -processedCount);            
         }
     }
 
-    internal sealed class KafkaProducerTopicBuffer<TKey, TData> : IKafkaProducerTopic<TKey, TData>, IKafkaProducerTopicBuffer
+    internal sealed class KafkaProducerTopicBuffer<TKey, TData> : IKafkaProducerTopicBuffer
     {
+        public long EnqueuedCount => _enqueuedCount;
+        public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
+
         [NotNull] private readonly IKafkaProducerPartitioner<TKey, TData> _partitioner;
         [NotNull] private readonly IKafkaProducerSerializer<TKey, TData> _serializer;
         [NotNull] private readonly ConcurrentQueue<KafkaMessage<TKey, TData>> _messageQueue;
+
         private int _enqueuedCount;
+        private DateTime? _enqueueTimestampUtc;
 
         public KafkaProducerTopicBuffer([NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
             [NotNull] IKafkaProducerSerializer<TKey, TData> serializer)
@@ -94,21 +96,12 @@ namespace NKafka.Client.Producer.Internal
             _messageQueue = new ConcurrentQueue<KafkaMessage<TKey, TData>>();
         }
 
-        public void Produce([CanBeNull] KafkaMessage<TKey, TData> message)
+        public void EnqueueMessage([CanBeNull] KafkaMessage<TKey, TData> message)
         {
             if (message == null) return;
             _messageQueue.Enqueue(message);
             Interlocked.Increment(ref _enqueuedCount);
-        }
-
-        public void Produce([CanBeNull] TKey key, [CanBeNull] TData data)
-        {
-            Produce(new KafkaMessage<TKey, TData>(key, data));
-        }
-
-        public void Produce([CanBeNull] TData data)
-        {
-            Produce(new KafkaMessage<TKey, TData>(default(TKey), data));
+            _enqueueTimestampUtc = DateTime.UtcNow;
         }
         
         public void Flush(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions)

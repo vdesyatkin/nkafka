@@ -284,7 +284,10 @@ namespace NKafka.Client.Producer.Internal
                         }
 
                         //todo (E009) handling standard errors
+                        continue;
                     }
+
+                    partition.ConfirmMessags(batchMessages);
                 }
             }
         }

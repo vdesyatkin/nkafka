@@ -34,10 +34,16 @@ namespace NKafka.Client.Internal
 
         public void ChangeMetadataState(bool isReady, KafkaClientTopicErrorCode? errorCode, [CanBeNull] KafkaTopicMetadata metadata)
         {
-            _diagnosticsInfo = new KafkaClientTopicInfo(TopicName, DateTime.UtcNow, isReady, errorCode, metadata);
+            _diagnosticsInfo = new KafkaClientTopicInfo(TopicName, DateTime.UtcNow, isReady, errorCode, metadata);            
             if (isReady && metadata != null)
             {
                 ApplyMetadata(metadata);
+            }
+
+            var producer = Producer;
+            if (producer != null)
+            {
+                producer.TopicDiagnosticsInfo = _diagnosticsInfo;
             }
         }
         

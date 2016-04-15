@@ -1,9 +1,9 @@
 ﻿using JetBrains.Annotations;
 
 namespace NKafka.Client.Producer.Diagnostics
-{
+{    
     [PublicAPI]
-    public enum KafkaProducerTopicErrorCode : byte
+    public enum KafkaProducerTopicPartitionErrorCode : byte
     {
         UnknownError = 0
     }

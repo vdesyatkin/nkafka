@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Diagnostics;
 
@@ -10,41 +11,34 @@ namespace NKafka.Client.Producer.Diagnostics
         [NotNull]
         public readonly string TopicName;
 
+        [NotNull]
+        public readonly KafkaClientTopicInfo TopicInfo;
+
         public readonly DateTime TimestampUtc;
 
-        public readonly bool IsProducing;
-
-        public readonly KafkaProducerTopicErrorCode? Error;
-
-        public readonly KafkaProducerTopicMessageCountInfo EnqueuedMessageCount;                
-
-        public readonly KafkaProducerTopicMessageCountInfo TotalSentMessageCount;        
+        public readonly bool IsReady;        
 
         [NotNull]
-        public readonly KafkaClientTopicInfo TopicInfo;        
+        public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;
 
-        [NotNull]
+        [NotNull, ItemNotNull]
+        public readonly IReadOnlyList<KafkaProducerTopicPartitionInfo> Partitions;
+            
+        [NotNull]            
         public readonly KafkaProducerTopicLimitInfo TopicBatchLimitInfo;
 
-        [CanBeNull]
-        public readonly KafkaProdcuerTopicOffsetInfo TopicOffsetInfo;
-
-        public KafkaProducerTopicInfo([NotNull] string topicName, DateTime timestampUtc, 
-            bool isProducing, KafkaProducerTopicErrorCode? error, 
-            KafkaProducerTopicMessageCountInfo enqueuedMessageCount, 
-            KafkaProducerTopicMessageCountInfo totalSentMessageCount, 
-            [NotNull] KafkaClientTopicInfo topicInfo,
-            [NotNull] KafkaProducerTopicLimitInfo topicBatchLimitInfo,
-            [CanBeNull] KafkaProdcuerTopicOffsetInfo topicOffsetInfo)
+        public KafkaProducerTopicInfo([NotNull] string topicName, [NotNull] KafkaClientTopicInfo topicInfo, DateTime timestampUtc, 
+            bool isReady,
+            [NotNull]KafkaProducerTopicMessageCountInfo messagesInfo, 
+            [NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartitionInfo> partitions, 
+            [NotNull] KafkaProducerTopicLimitInfo topicBatchLimitInfo)
         {
             TopicName = topicName;
-            TimestampUtc = timestampUtc;
-            IsProducing = isProducing;
-            Error = error;
-            EnqueuedMessageCount = enqueuedMessageCount;
-            TotalSentMessageCount = totalSentMessageCount;
             TopicInfo = topicInfo;
-            TopicOffsetInfo = topicOffsetInfo;
+            TimestampUtc = timestampUtc;
+            IsReady = isReady;            
+            MessagesInfo = messagesInfo;
+            Partitions = partitions;
             TopicBatchLimitInfo = topicBatchLimitInfo;
         }
     }

@@ -44,7 +44,7 @@ namespace NKafka.Client
             var topicBuffer = new KafkaProducerTopicBuffer(partitioner);
             var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer);
             _topicProducers.Add(topic);            
-            return topicBuffer;
+            return new KafkaProducerTopicFacade(topicName, topicBuffer, topic);
         }
         
         public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,           
@@ -61,7 +61,7 @@ namespace NKafka.Client
             var topicBuffer = new KafkaProducerTopicBuffer<TKey, TData>(partitioner, serializer);
             var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer);
             _topicProducers.Add(topic);
-            return topicBuffer;
+            return new KafkaProducerTopicFacade<TKey, TData>(topicName, topicBuffer, topic);
         }
         
         public IKafkaConsumerTopic CreateTopicConsumer([NotNull] string topicName, [NotNull] IKafkaConsumerGroup group,

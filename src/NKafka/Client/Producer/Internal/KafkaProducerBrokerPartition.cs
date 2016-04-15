@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace NKafka.Client.Producer.Internal
@@ -7,12 +8,16 @@ namespace NKafka.Client.Producer.Internal
     {        
         public readonly int PartitionId;
 
+        public KafkaProducerBrokerPartitionStatus Status;
+
         [NotNull] public readonly KafkaProducerSettings Settings;
 
-        [NotNull] private readonly IKafkaProducerMessageQueue _mainQueue;
-        [NotNull] private readonly Queue<KafkaMessage> _retryQueue;
+        public long RetryEnqueuedMessageCount { get; private set; }
+        public long SentMessageCount { get; private set; }
+        public DateTime? SendMessageTimestampUtc { get; private set; }
 
-        public KafkaProducerBrokerPartitionStatus Status;        
+        [NotNull] private readonly IKafkaProducerMessageQueue _mainQueue;
+        [NotNull] private readonly Queue<KafkaMessage> _retryQueue;        
 
         public KafkaProducerBrokerPartition(int partitionId, [NotNull] KafkaProducerSettings settings, [NotNull] IKafkaProducerMessageQueue mainQueue)
         {     
@@ -30,6 +35,7 @@ namespace NKafka.Client.Producer.Internal
             }
 
             message = _retryQueue.Dequeue();
+            RetryEnqueuedMessageCount = _retryQueue.Count;
             return message != null;
         }
 
@@ -50,6 +56,16 @@ namespace NKafka.Client.Producer.Internal
                 if (message == null) continue;
                 _retryQueue.Enqueue(message);
             }
+
+            RetryEnqueuedMessageCount = _retryQueue.Count;            
+        }
+
+        public void ConfirmMessags(IReadOnlyList<KafkaMessage> messages)
+        {
+            if (messages == null) return;
+
+            SentMessageCount += messages.Count;
+            SendMessageTimestampUtc = DateTime.UtcNow;
         }
     }
 }

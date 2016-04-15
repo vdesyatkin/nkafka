@@ -4,16 +4,22 @@ using JetBrains.Annotations;
 namespace NKafka.Client.Producer.Diagnostics
 {
     [PublicAPI]
-    public struct KafkaProducerTopicMessageCountInfo
+    public sealed class KafkaProducerTopicMessageCountInfo
     {
-        public readonly long MessageCount;
+        public readonly long EnqueuedMessageCount;
 
-        public readonly DateTime TimestampUtc;
+        public readonly DateTime? EnqueueTimestampUtc;
 
-        public KafkaProducerTopicMessageCountInfo(long messageCount, DateTime timestampUtc)
+        public readonly long SentMessageCount;
+
+        public readonly DateTime? SendTimestampUtc;
+
+        public KafkaProducerTopicMessageCountInfo(long enqueuedMessageCount, DateTime? enqueueTimestampUtc, long sentMessageCount, DateTime? sendTimestampUtc)
         {
-            MessageCount = messageCount;
-            TimestampUtc = timestampUtc;
+            EnqueuedMessageCount = enqueuedMessageCount;
+            EnqueueTimestampUtc = enqueueTimestampUtc;
+            SentMessageCount = sentMessageCount;
+            SendTimestampUtc = sendTimestampUtc;
         }
     }
 }
