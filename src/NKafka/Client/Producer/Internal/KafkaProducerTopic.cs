@@ -21,7 +21,7 @@ namespace NKafka.Client.Producer.Internal
             _buffer = buffer;
             _topicPartitions = new Dictionary<int, KafkaProducerTopicPartition>();
             _topicPartitionIds = new int[0];            
-        }
+        }        
 
         [NotNull]
         public KafkaProducerTopicPartition CreatePartition(int partitionId)

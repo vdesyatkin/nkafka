@@ -7,7 +7,10 @@ namespace NKafka.Client.Diagnostics
     [PublicAPI]
     public sealed class KafkaClientBrokerInfo
     {
+        [NotNull]
         public readonly string BrokerName;
+
+        public readonly DateTime TimestampUtc;
 
         public readonly KafkaBrokerMetadata Metadata;
 
@@ -19,7 +22,8 @@ namespace NKafka.Client.Diagnostics
 
         public readonly DateTime? LastActivityTimestampUtc;        
 
-        public KafkaClientBrokerInfo(string brokerName, KafkaBrokerMetadata metadata, bool isOpenned, KafkaClientBrokerErrorCode? error, 
+        public KafkaClientBrokerInfo([NotNull] string brokerName, DateTime TimestampUtc,
+            KafkaBrokerMetadata metadata, bool isOpenned, KafkaClientBrokerErrorCode? error, 
             DateTime? connectionTimestampUtc, DateTime? lastActivityTimestampUtc)
         {
             BrokerName = brokerName;

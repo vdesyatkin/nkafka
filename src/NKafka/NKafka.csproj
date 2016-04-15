@@ -90,6 +90,11 @@
     <Compile Include="Client\KafkaClientSettingsBuilder.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettings.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettingsBuilder.cs" />
+    <Compile Include="Client\Producer\Diagnostics\KafkaProdcuerTopicOffsetInfo.cs" />
+    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicErrorCode.cs" />
+    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicInfo.cs" />
+    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicLimitInfo.cs" />
+    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicMessageCountInfo.cs" />
     <Compile Include="Client\Producer\IKafkaProducerPartitioner.cs" />
     <Compile Include="Client\Producer\IKafkaProducerSerializer.cs" />
     <Compile Include="Client\Producer\IKafkaProducerTopic.cs" />
@@ -202,7 +207,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Client\Consumer\Diagnostics\" />
-    <Folder Include="Client\Producer\Diagnostics\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

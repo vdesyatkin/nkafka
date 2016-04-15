@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Diagnostics;
 using NKafka.Client.Internal.Broker;
@@ -19,7 +20,7 @@ namespace NKafka.Client.Internal
                 workerInfos.Add(workerInfo);
             }
 
-            return new KafkaClientInfo(workerInfos);
+            return new KafkaClientInfo(DateTime.UtcNow, workerInfos);
         }
 
         public KafkaClient([NotNull]KafkaClientSettings settings, 

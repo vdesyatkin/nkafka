@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Dynamic;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
@@ -18,6 +17,7 @@ namespace NKafka.Connection
 
         public KafkaBrokerStateErrorCode? Error => _sendError ?? _receiveError;
         
+        [NotNull]
         public string Name { get; }
 
         public DateTime? ConnectionTimestampUtc
@@ -59,7 +59,7 @@ namespace NKafka.Connection
         private int _currentRequestId;        
 
         public KafkaBroker([NotNull] KafkaConnection connection, [NotNull] KafkaProtocol kafkaProtocol,
-            [CanBeNull] string name, [CanBeNull] KafkaConnectionSettings settings)
+            [NotNull] string name, [CanBeNull] KafkaConnectionSettings settings)
         {
             _connection = connection;
             _kafkaProtocol = kafkaProtocol;
