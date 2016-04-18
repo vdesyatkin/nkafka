@@ -13,11 +13,9 @@ namespace NKafka.Protocol.API.Produce
         /// <summary>
         /// <para>
         /// This field indicates how many acknowledgements the servers should receive before responding to the request.<br/>
-        /// If it is 0 the server will not send any response (this is the only case where the server will not reply to a request). <br/>
-        /// If it is 1, the server will wait the data is written to the local log before sending a response. <br/>
-        /// If it is -1 the server will block until the message is committed by all in sync replicas before sending a response.<br/>
-        /// For any number > 1 the server will block waiting for this number of acknowledgements to occur <br/>
-        /// (but the server will never wait for more acknowledgements than there are in-sync replicas).
+        /// If it is 0 the server will not send any response(this is the only case where the server will not reply to a request). <br/>
+        /// If it is 1, the server will wait the data is written to the local log before sending a response.<br/>
+        /// If it is -1 the server will block until the message is committed by all in sync replicas before sending a response.
         /// </para>
         /// </summary>
         public readonly KafkaConsistencyLevel RequiredAcks;

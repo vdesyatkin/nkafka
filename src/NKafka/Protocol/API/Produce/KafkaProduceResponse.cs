@@ -13,7 +13,8 @@ namespace NKafka.Protocol.API.Produce
         public readonly IReadOnlyList<KafkaProduceResponseTopic> Topics;
 
         /// <summary>
-        /// Duration in milliseconds for which the request was throttled due to quota violation. (Zero if the request did not violate any quota).
+        /// Duration in milliseconds for which the request was throttled due to quota violation. <br/>
+        /// (Zero if the request did not violate any quota).
         /// </summary>
         public readonly TimeSpan ThrottleTime;
 
