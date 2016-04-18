@@ -85,10 +85,9 @@ namespace NKafka.Client.Producer.Internal
                     partitionSendMessageTimestampUtc);
 
                 var partitionInfo = new KafkaProducerTopicPartitionInfo(partition.PartitonId,
-                    false, //todo isProducing,
-                    null, //todo errorCode
-                    partitionMessagesInfo,
-                    null); //todo offsetInfo
+                    partitionBroker.Status == KafkaProducerBrokerPartitionStatus.Ready,
+                    partitionBroker.Error,
+                    partitionMessagesInfo); 
                 partitionInfos.Add(partitionInfo);
             }
 
@@ -103,8 +102,7 @@ namespace NKafka.Client.Producer.Internal
                 DateTime.UtcNow,
                 topicInfo.IsReady,
                 topicMessagesInfo,
-                partitionInfos,
-                new KafkaProducerTopicLimitInfo(DateTime.UtcNow, 0, 0) //todo
+                partitionInfos                
                 );
         }
     }

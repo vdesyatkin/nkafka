@@ -91,9 +91,8 @@
     <Compile Include="Client\Consumer\KafkaConsumerSettings.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettingsBuilder.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicPartitionErrorCode.cs" />
-    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicPartitionOffsetInfo.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicInfo.cs" />
-    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicLimitInfo.cs" />
+    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicPartitionLimitInfo.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicMessageCountInfo.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicPartitionInfo.cs" />
     <Compile Include="Client\Producer\IKafkaProducerPartitioner.cs" />

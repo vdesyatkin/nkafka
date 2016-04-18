@@ -7,25 +7,20 @@ namespace NKafka.Client.Producer.Diagnostics
     {
         public readonly int PartitionId;
 
-        public readonly bool IsProducing;
+        public readonly bool IsReady;
 
         public readonly KafkaProducerTopicPartitionErrorCode? Error;
 
         [NotNull]
-        public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;
+        public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;        
 
-        [CanBeNull]
-        public readonly KafkaProducerTopicPartitionOffsetInfo OffsetInfo;
-
-        public KafkaProducerTopicPartitionInfo(int partitionId, bool isProducing, KafkaProducerTopicPartitionErrorCode? error, 
-            [NotNull] KafkaProducerTopicMessageCountInfo messagesInfo,
-            [CanBeNull] KafkaProducerTopicPartitionOffsetInfo offsetInfo)
+        public KafkaProducerTopicPartitionInfo(int partitionId, bool isReady, KafkaProducerTopicPartitionErrorCode? error, 
+            [NotNull] KafkaProducerTopicMessageCountInfo messagesInfo)
         {
             PartitionId = partitionId;
-            IsProducing = isProducing;
+            IsReady = isReady;
             Error = error;
-            MessagesInfo = messagesInfo;
-            OffsetInfo = offsetInfo;
+            MessagesInfo = messagesInfo;            
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Producer.Diagnostics;
 
 namespace NKafka.Client.Producer.Internal
 {
@@ -9,12 +10,13 @@ namespace NKafka.Client.Producer.Internal
         public readonly int PartitionId;
 
         public KafkaProducerBrokerPartitionStatus Status;
+        public KafkaProducerTopicPartitionErrorCode? Error;               
 
         [NotNull] public readonly KafkaProducerSettings Settings;
 
-        public long RetryEnqueuedMessageCount { get; private set; }
-        public long SentMessageCount { get; private set; }
-        public DateTime? SendMessageTimestampUtc { get; private set; }
+        public long RetryEnqueuedMessageCount;
+        public long SentMessageCount;
+        public DateTime? SendMessageTimestampUtc;
 
         [NotNull] private readonly IKafkaProducerMessageQueue _mainQueue;
         [NotNull] private readonly Queue<KafkaMessage> _retryQueue;        
@@ -24,7 +26,7 @@ namespace NKafka.Client.Producer.Internal
             PartitionId = partitionId;
             Settings = settings;
             _mainQueue = mainQueue;
-            _retryQueue = new Queue<KafkaMessage>();
+            _retryQueue = new Queue<KafkaMessage>();            
         }
 
         public bool TryDequeueMessage(out KafkaMessage message)
@@ -40,7 +42,7 @@ namespace NKafka.Client.Producer.Internal
         }
 
         public void RollbackMessags(IReadOnlyList<KafkaMessage> messages)
-        {
+        {            
             if (messages == null) return;
 
             var oldQueue = _retryQueue.ToArray();
@@ -65,7 +67,7 @@ namespace NKafka.Client.Producer.Internal
             if (messages == null) return;
 
             SentMessageCount += messages.Count;
-            SendMessageTimestampUtc = DateTime.UtcNow;
+            SendMessageTimestampUtc = DateTime.UtcNow;            
         }
     }
 }

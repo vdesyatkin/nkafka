@@ -22,24 +22,19 @@ namespace NKafka.Client.Producer.Diagnostics
         public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;
 
         [NotNull, ItemNotNull]
-        public readonly IReadOnlyList<KafkaProducerTopicPartitionInfo> Partitions;
-            
-        [NotNull]            
-        public readonly KafkaProducerTopicLimitInfo TopicBatchLimitInfo;
+        public readonly IReadOnlyList<KafkaProducerTopicPartitionInfo> Partitions;                   
 
         public KafkaProducerTopicInfo([NotNull] string topicName, [NotNull] KafkaClientTopicInfo topicInfo, DateTime timestampUtc, 
             bool isReady,
             [NotNull]KafkaProducerTopicMessageCountInfo messagesInfo, 
-            [NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartitionInfo> partitions, 
-            [NotNull] KafkaProducerTopicLimitInfo topicBatchLimitInfo)
+            [NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartitionInfo> partitions)
         {
             TopicName = topicName;
             TopicInfo = topicInfo;
             TimestampUtc = timestampUtc;
             IsReady = isReady;            
             MessagesInfo = messagesInfo;
-            Partitions = partitions;
-            TopicBatchLimitInfo = topicBatchLimitInfo;
+            Partitions = partitions;            
         }
     }
 }
