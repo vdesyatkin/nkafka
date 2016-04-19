@@ -3,7 +3,7 @@
 namespace NKafka.Connection
 {
     [PublicAPI]
-    internal enum KafkaBrokerStateErrorCode : short
+    internal enum KafkaBrokerStateErrorCode
     {
         UnknownError = 0,
         ConnectionError = 1,        

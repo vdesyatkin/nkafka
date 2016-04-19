@@ -212,9 +212,13 @@ namespace NKafka.Connection
             where TRequest : class, IKafkaRequest
         {
             if (request == null) return KafkaBrokerErrorCode.BadRequest;
-            if (!IsEnabled)
+            if (!_isOpenned)
             {
-                return KafkaBrokerErrorCode.InvalidState;
+                return KafkaBrokerErrorCode.Closed;
+            }
+            if (_isConnectionMaintenance)
+            {
+                return KafkaBrokerErrorCode.Maintenance;
             }
 
             if (_settings.TransportLatency > TimeSpan.Zero)

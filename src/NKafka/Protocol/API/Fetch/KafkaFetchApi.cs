@@ -70,8 +70,9 @@ namespace NKafka.Protocol.API.Fetch
 
         private KafkaFetchResponse ReadFetchResponse([NotNull] KafkaBinaryReader reader)
         {
+            var throttleTime = _requestVersion >= KafkaRequestVersion.V1 ? TimeSpan.FromMilliseconds(reader.ReadInt32()) : TimeSpan.Zero;
             var topics = reader.ReadCollection(ReadFetchResponseTopic);
-            return new KafkaFetchResponse(topics);
+            return new KafkaFetchResponse(topics, throttleTime);
         }
 
         private KafkaFetchResponseTopic ReadFetchResponseTopic([NotNull] KafkaBinaryReader reader)

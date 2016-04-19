@@ -297,11 +297,58 @@ namespace NKafka.Client.Producer.Internal
             var isRearrangeRequired = false;
             switch (responsError)
             {
-                case KafkaResponseErrorCode.NotLeaderForPartition:
-                    error = KafkaProducerTopicPartitionErrorCode.UnknownError;
+                case KafkaResponseErrorCode.InvalidMessage:
+                    error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaResponseErrorCode.UnknownTopicOrPartition:
+                    error = KafkaProducerTopicPartitionErrorCode.UnknownTopicOrPartition;
                     isRearrangeRequired = true;
                     break;
-                //todo (E009) handling standard errors
+                case KafkaResponseErrorCode.InvalidMessageSize:
+                    error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaResponseErrorCode.LeaderNotAvailable:
+                    error = KafkaProducerTopicPartitionErrorCode.ServerMaintenance;                    
+                    break;
+                case KafkaResponseErrorCode.NotLeaderForPartition:
+                    error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                    isRearrangeRequired = true;
+                    break;
+                case KafkaResponseErrorCode.RequestTimedOut:
+                    error = KafkaProducerTopicPartitionErrorCode.ServerTimetout;
+                    break;
+                case KafkaResponseErrorCode.BrokerNotAvailable:
+                    error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                    isRearrangeRequired = true;
+                    break;
+                case KafkaResponseErrorCode.ReplicaNotAvailable:
+                    error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                    isRearrangeRequired = true;
+                    break;
+                case KafkaResponseErrorCode.MessageSizeTooLarge:
+                    error = KafkaProducerTopicPartitionErrorCode.UnknownError; //todo change limit, return message to user
+                    break;
+                case KafkaResponseErrorCode.InvalidTopic:
+                    error = KafkaProducerTopicPartitionErrorCode.InvalidTopic;
+                    isRearrangeRequired = true;
+                    break;
+                case KafkaResponseErrorCode.RecordListTooLarge:
+                    error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance; //todo change limit
+                    break;
+                case KafkaResponseErrorCode.NotEnoughReplicas:
+                    error = KafkaProducerTopicPartitionErrorCode.NotEnoughReplicas;
+                    break;
+                case KafkaResponseErrorCode.NotEnoughReplicasAfterAppend:
+                    error = KafkaProducerTopicPartitionErrorCode.NotEnoughReplicasAfterAppend;
+                    break;
+                case KafkaResponseErrorCode.InvalidRequiredAcks:
+                    error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                    isRearrangeRequired = true;
+                    break;
+                case KafkaResponseErrorCode.TopicAuthorizationFailed:
+                    error = KafkaProducerTopicPartitionErrorCode.TopicAuthorizationFailed;
+                    isRearrangeRequired = true;
+                    break;
             }
 
             partition.Error = error;
@@ -315,12 +362,28 @@ namespace NKafka.Client.Producer.Internal
         {
             if (brokerError == null) return null;
 
-            KafkaProducerTopicPartitionErrorCode error = KafkaProducerTopicPartitionErrorCode.UnknownError;
+            var error = KafkaProducerTopicPartitionErrorCode.UnknownError;
             switch (brokerError.Value)
-            {
-                case KafkaBrokerErrorCode.BadRequest:
+            {                
+                case KafkaBrokerErrorCode.Closed:
+                    error = KafkaProducerTopicPartitionErrorCode.ConnectionClosed;
                     break;
-                    //todo (E009) handling standard errors
+                case KafkaBrokerErrorCode.Maintenance:
+                    error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                    break;
+                case KafkaBrokerErrorCode.BadRequest:
+                    error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.ProtocolError:
+                    error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.TransportError:
+                    error = KafkaProducerTopicPartitionErrorCode.TransportError;
+                    break;
+                case KafkaBrokerErrorCode.Timeout:
+                    error = KafkaProducerTopicPartitionErrorCode.ClientTimeout;
+                    break;
+
             }
 
             return error;

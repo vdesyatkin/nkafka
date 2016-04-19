@@ -3,7 +3,7 @@
 namespace NKafka
 {
     [PublicAPI]
-    public enum KafkaCodecType : byte
+    public enum KafkaCodecType : short
     {
         CodecNone = 0,
         CodecGzip = 1   

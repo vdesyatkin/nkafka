@@ -3,7 +3,7 @@
 namespace NKafka.Metadata
 {
     [PublicAPI]
-    public enum KafkaTopicMetadataErrorCode : byte
+    public enum KafkaTopicMetadataErrorCode
     {
         UnknownError = 0,
 

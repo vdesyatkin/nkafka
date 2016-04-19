@@ -3,7 +3,7 @@
 namespace NKafka
 {
     [PublicAPI]
-    public enum KafkaTimestampType : byte
+    public enum KafkaTimestampType : short
     {
         CreateTime = 0,
         LogAppendTime = 1

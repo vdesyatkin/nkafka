@@ -3,13 +3,15 @@
 namespace NKafka.Client.Diagnostics
 {
     [PublicAPI]
-    public enum KafkaClientTopicErrorCode : byte
+    public enum KafkaClientTopicErrorCode
     {
         UnknownError = 0,
-        InvalidState = 1,
-        TransportError = 2,
-        ProtocolError = 3,
-        MetadataError = 4,
-        InternalError = 5,
+        ConnectionClosed = 1,
+        Maintenance = 2,
+        TransportError = 3,
+        ProtocolError = 4,
+        Timeout = 5,
+        InternalError = 6,
+        MetadataError = 7,        
     }
 }

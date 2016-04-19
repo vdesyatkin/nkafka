@@ -607,12 +607,15 @@ namespace NKafka.Client.Internal
             {
                 switch (errorCode.Value)
                 {
+                    case KafkaBrokerErrorCode.Closed:
+                        topicErrorCode = KafkaClientTopicErrorCode.ConnectionClosed;
+                        break;
+                    case KafkaBrokerErrorCode.Maintenance:
+                        topicErrorCode = KafkaClientTopicErrorCode.Maintenance;
+                        break;
                     case KafkaBrokerErrorCode.BadRequest:
                         topicErrorCode = KafkaClientTopicErrorCode.ProtocolError;
-                        break;
-                    case KafkaBrokerErrorCode.InvalidState:
-                        topicErrorCode = KafkaClientTopicErrorCode.InvalidState;
-                        break;
+                        break;                    
                     case KafkaBrokerErrorCode.ProtocolError:
                         topicErrorCode = KafkaClientTopicErrorCode.ProtocolError;
                         break;
@@ -620,7 +623,7 @@ namespace NKafka.Client.Internal
                         topicErrorCode = KafkaClientTopicErrorCode.TransportError;
                         break;                                        
                     case KafkaBrokerErrorCode.Timeout:
-                        topicErrorCode = KafkaClientTopicErrorCode.TransportError;
+                        topicErrorCode = KafkaClientTopicErrorCode.Timeout;
                         break;
                     default:
                         topicErrorCode = KafkaClientTopicErrorCode.UnknownError;
@@ -659,7 +662,7 @@ namespace NKafka.Client.Internal
                         break;
                     case KafkaResponseErrorCode.TopicAuthorizationFailed:
                         topicError = KafkaTopicMetadataErrorCode.AuthorizationFailed;
-                        break;
+                        break;                    
                     default:
                         topicError = KafkaTopicMetadataErrorCode.UnknownError;
                         break;
@@ -722,7 +725,7 @@ namespace NKafka.Client.Internal
                     case KafkaBrokerErrorCode.BadRequest:
                         groupErrorCode = KafkaClientGroupErrorCode.ProtocolError;
                         break;
-                    case KafkaBrokerErrorCode.InvalidState:
+                    case KafkaBrokerErrorCode.Closed:
                         groupErrorCode = KafkaClientGroupErrorCode.InvalidState;
                         break;
                     case KafkaBrokerErrorCode.ProtocolError:

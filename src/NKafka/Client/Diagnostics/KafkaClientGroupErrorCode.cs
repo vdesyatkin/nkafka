@@ -3,7 +3,7 @@
 namespace NKafka.Client.Diagnostics
 {    
     [PublicAPI]
-    public enum KafkaClientGroupErrorCode : byte
+    public enum KafkaClientGroupErrorCode 
     {
         UnknownError = 0,
         InvalidState = 1,

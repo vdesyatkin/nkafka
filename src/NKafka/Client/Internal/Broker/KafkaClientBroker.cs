@@ -53,7 +53,7 @@ namespace NKafka.Client.Internal.Broker
             }
             return new KafkaClientBrokerInfo(_broker.Name, DateTime.UtcNow, 
                 _metadata, _broker.IsOpenned, errorCode,
-                _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc);            
+                _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc);
         }
 
         public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaBrokerMetadata metadata, [NotNull] KafkaClientSettings settings)

@@ -3,7 +3,7 @@
 namespace NKafka.Client.Internal
 {   
     [PublicAPI]
-    internal enum KafkaClientGroupStatus : byte
+    internal enum KafkaClientGroupStatus
     {
         NotInitialized = 0,
         MetadataRequested = 1,

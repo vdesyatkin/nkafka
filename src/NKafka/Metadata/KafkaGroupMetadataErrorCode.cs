@@ -3,7 +3,7 @@
 namespace NKafka.Metadata
 {
     [PublicAPI]
-    public enum KafkaGroupMetadataErrorCode : byte
+    public enum KafkaGroupMetadataErrorCode 
     {
         UnknownError = 0,
         CoordinatorNotAvailable = 15,

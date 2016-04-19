@@ -24,7 +24,7 @@ namespace NKafka.Protocol
         OffsetOutOfRange = 1,
 
         /// <summary>
-        /// This indicates that a message contents does not match its CR.
+        /// This indicates that a message contents does not match its CRC.
         /// </summary>
         InvalidMessage = 2,
 

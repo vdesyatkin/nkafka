@@ -3,13 +3,14 @@
 namespace NKafka.Connection
 {
     [PublicAPI]
-    internal enum KafkaBrokerErrorCode : short
+    internal enum KafkaBrokerErrorCode
     {
-        UnknownError = 0,   
-        BadRequest = 1,
-        InvalidState = 2,        
-        TransportError = 3,
-        ProtocolError = 4,
-        Timeout = 5
+        UnknownError = 0,
+        Closed = 1,
+        Maintenance = 2,
+        BadRequest = 3,                
+        TransportError = 4,
+        ProtocolError = 5,
+        Timeout = 6
     }
 }
