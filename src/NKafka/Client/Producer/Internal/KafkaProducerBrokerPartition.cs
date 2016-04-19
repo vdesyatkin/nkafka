@@ -8,12 +8,12 @@ namespace NKafka.Client.Producer.Internal
     internal sealed class KafkaProducerBrokerPartition
     {        
         public readonly int PartitionId;
-
-        public KafkaProducerBrokerPartitionStatus Status;
-        public KafkaProducerTopicPartitionErrorCode? Error;               
-
         [NotNull] public readonly KafkaProducerSettings Settings;
 
+        public KafkaProducerBrokerPartitionStatus Status;
+        public KafkaProducerTopicPartitionErrorCode? Error;
+        [NotNull] public KafkaProducerTopicPartitionLimitInfo LimitInfo;
+        
         public long RetryEnqueuedMessageCount;
         public long SentMessageCount;
         public DateTime? SendMessageTimestampUtc;
@@ -26,7 +26,19 @@ namespace NKafka.Client.Producer.Internal
             PartitionId = partitionId;
             Settings = settings;
             _mainQueue = mainQueue;
-            _retryQueue = new Queue<KafkaMessage>();            
+            _retryQueue = new Queue<KafkaMessage>();
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow, null, null);
+        }
+
+        public bool TryPeekMessage(out KafkaMessage message)
+        {
+            if (_retryQueue.Count == 0)
+            {
+                return _mainQueue.TryPeekMessage(out message);
+            }
+
+            message = _retryQueue.Peek();
+            return message != null;
         }
 
         public bool TryDequeueMessage(out KafkaMessage message)

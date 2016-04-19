@@ -12,15 +12,18 @@ namespace NKafka.Client.Producer.Diagnostics
         public readonly KafkaProducerTopicPartitionErrorCode? Error;
 
         [NotNull]
-        public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;        
+        public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;
+
+        [NotNull] public readonly KafkaProducerTopicPartitionLimitInfo LimitInfo;
 
         public KafkaProducerTopicPartitionInfo(int partitionId, bool isReady, KafkaProducerTopicPartitionErrorCode? error, 
-            [NotNull] KafkaProducerTopicMessageCountInfo messagesInfo)
+            [NotNull] KafkaProducerTopicMessageCountInfo messagesInfo, [NotNull] KafkaProducerTopicPartitionLimitInfo limitInfo)
         {
             PartitionId = partitionId;
             IsReady = isReady;
             Error = error;
-            MessagesInfo = messagesInfo;            
+            MessagesInfo = messagesInfo;
+            LimitInfo = limitInfo;
         }
     }
 }

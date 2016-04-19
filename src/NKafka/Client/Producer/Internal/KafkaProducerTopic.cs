@@ -60,7 +60,8 @@ namespace NKafka.Client.Producer.Internal
         {
             var partitionInfos = new List<KafkaProducerTopicPartitionInfo>(_topicPartitions.Count);
 
-            long sentMessageCount = 0;
+            long enqueuedMessageCount = 0;
+            long sentMessageCount = 0;            
             var sendMessageTimestampUtc = (DateTime?) null;
 
             foreach (var partitionPair in _topicPartitions)
@@ -70,31 +71,37 @@ namespace NKafka.Client.Producer.Internal
 
                 var partitionBroker = partition.BrokerPartition;
 
+
+                var partitionEnqueuedCount = partition.EnqueuedCount + partitionBroker.RetryEnqueuedMessageCount;
+                var partitionEnqueueTimestampUtc = partition.EnqueueTimestampUtc;
                 var partitionSentMessageCount = partitionBroker.SentMessageCount;
                 var partitionSendMessageTimestampUtc = partitionBroker.SendMessageTimestampUtc;
-                sentMessageCount += partitionSentMessageCount;
+
+                enqueuedMessageCount += partitionEnqueuedCount;
+                sentMessageCount += partitionSentMessageCount;                
                 if (sendMessageTimestampUtc == null || sendMessageTimestampUtc < partitionSendMessageTimestampUtc)
                 {
                     sendMessageTimestampUtc = partitionSendMessageTimestampUtc;
                 }
 
                 var partitionMessagesInfo = new KafkaProducerTopicMessageCountInfo(
-                    partition.EnqueuedCount + partitionBroker.RetryEnqueuedMessageCount, 
-                    partition.EnqueueTimestampUtc,
+                    partitionEnqueuedCount,
+                    partitionEnqueueTimestampUtc,
                     partitionSentMessageCount, 
                     partitionSendMessageTimestampUtc);
 
                 var partitionInfo = new KafkaProducerTopicPartitionInfo(partition.PartitonId,
                     partitionBroker.Status == KafkaProducerBrokerPartitionStatus.Ready,
                     partitionBroker.Error,
-                    partitionMessagesInfo); 
+                    partitionMessagesInfo,
+                    partitionBroker.LimitInfo); 
                 partitionInfos.Add(partitionInfo);
             }
 
             var topicInfo = TopicDiagnosticsInfo;
 
             var topicMessagesInfo = new KafkaProducerTopicMessageCountInfo(
-                _buffer.EnqueuedCount, _buffer.EnqueueTimestampUtc,
+                _buffer.EnqueuedCount + enqueuedMessageCount, _buffer.EnqueueTimestampUtc,
                 sentMessageCount, sendMessageTimestampUtc);
 
             return new KafkaProducerTopicInfo(TopicName, 

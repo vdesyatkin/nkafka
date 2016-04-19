@@ -43,5 +43,15 @@ namespace NKafka.Client.Producer.Internal
             Interlocked.Decrement(ref _enqueuedCount);
             return true;
         }
+
+        public bool TryPeekMessage(out KafkaMessage message)
+        {
+            if (!_messageQueue.TryPeek(out message))
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }
