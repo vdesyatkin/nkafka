@@ -7,7 +7,7 @@ namespace NKafka.DevConsole.DevProtocol
     [PublicAPI]
     public static class Compression
     {
-        public static byte[] Zip(byte[] bytes)
+        public static byte[] Zip([NotNull]byte[] bytes)
         {
             using (var destination = new MemoryStream())
             using (var gzip = new GZipStream(destination, CompressionLevel.Fastest, false))
@@ -19,7 +19,7 @@ namespace NKafka.DevConsole.DevProtocol
             }
         }
 
-        public static byte[] Unzip(byte[] bytes)
+        public static byte[] Unzip([NotNull]byte[] bytes)
         {
             using (var source = new MemoryStream(bytes))
             using (var destination = new MemoryStream())

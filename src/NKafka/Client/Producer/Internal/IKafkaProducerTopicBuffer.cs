@@ -7,6 +7,8 @@ namespace NKafka.Client.Producer.Internal
     {
         long EnqueuedCount { get; }
         DateTime? EnqueueTimestampUtc { get; }
+        IKafkaProducerFallbackHandler FallbackHandler { get; }
+
         void Flush(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions);
     }
 }

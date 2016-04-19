@@ -22,11 +22,12 @@ namespace NKafka.Client.Diagnostics
 
         public readonly DateTime? LastActivityTimestampUtc;        
 
-        public KafkaClientBrokerInfo([NotNull] string brokerName, DateTime TimestampUtc,
+        public KafkaClientBrokerInfo([NotNull] string brokerName, DateTime timestampUtc,
             KafkaBrokerMetadata metadata, bool isOpenned, KafkaClientBrokerErrorCode? error, 
             DateTime? connectionTimestampUtc, DateTime? lastActivityTimestampUtc)
         {
             BrokerName = brokerName;
+            TimestampUtc = timestampUtc;
             Metadata = metadata;
             IsOpenned = isOpenned;
             Error = error;

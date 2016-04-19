@@ -109,6 +109,9 @@
     <Compile Include="Client\Producer\Internal\KafkaProducerTopicBuffer.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerTopicFacade.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerTopicPartition.cs" />
+    <Compile Include="Client\Producer\KafkaProdcuerFallbackReason.cs" />
+    <Compile Include="Client\Producer\IKafkaProducerFallbackHandler.cs" />
+    <Compile Include="Client\Producer\KafkaProducerFallbackInfo.cs" />
     <Compile Include="Client\Producer\KafkaProducerSettings.cs" />
     <Compile Include="Client\Producer\KafkaProducerSettingsBuilder.cs" />
     <Compile Include="Connection\KafkaBroker.cs" />

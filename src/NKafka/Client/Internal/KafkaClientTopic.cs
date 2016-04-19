@@ -83,6 +83,6 @@ namespace NKafka.Client.Internal
             Partitions = topicPartitions;
             Producer?.ApplyPartitions(producerPartitions);
             Consumer?.ApplyPartitions(consumerPartitions);
-        }       
+        }
     }
 }

@@ -5,7 +5,7 @@ namespace NKafka.Client.Producer.Internal
 {
     internal sealed class KafkaProducerTopicFacade : IKafkaProducerTopic
     {        
-        public string TopicName { get; }
+        public string TopicName { get; }        
 
         [NotNull] private readonly KafkaProducerTopicBuffer _buffer;
         [NotNull] private readonly KafkaProducerTopic _topic;
@@ -41,7 +41,7 @@ namespace NKafka.Client.Producer.Internal
 
     internal sealed class KafkaProducerTopicFacade<TKey, TData> : IKafkaProducerTopic<TKey, TData>
     {        
-        public string TopicName { get; }
+        public string TopicName { get; }        
 
         [NotNull] private readonly KafkaProducerTopicBuffer<TKey, TData> _buffer;
         [NotNull] private readonly KafkaProducerTopic _topic;

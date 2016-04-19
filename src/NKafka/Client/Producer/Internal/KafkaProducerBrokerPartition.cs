@@ -81,5 +81,17 @@ namespace NKafka.Client.Producer.Internal
             SentMessageCount += messages.Count;
             SendMessageTimestampUtc = DateTime.UtcNow;            
         }
+
+        public void FallbackMessage([NotNull] KafkaMessage message, DateTime timestampUtc, KafkaProdcuerFallbackReason reason)
+        {
+            try
+            {
+                _mainQueue.FallbackMessage(message, timestampUtc, reason);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
     }
 }

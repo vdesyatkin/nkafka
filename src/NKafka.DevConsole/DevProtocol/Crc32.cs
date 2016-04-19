@@ -24,7 +24,7 @@ namespace NKafka.DevConsole.DevProtocol
         static UInt32[] defaultTable;
 
         readonly UInt32 seed;
-        readonly UInt32[] table;
+        [NotNull] readonly UInt32[] table;
         UInt32 hash;
 
         public Crc32()
@@ -57,21 +57,22 @@ namespace NKafka.DevConsole.DevProtocol
 
         public override int HashSize => 32;
 
-        public static UInt32 Compute(byte[] buffer)
+        public static UInt32 Compute([NotNull]byte[] buffer)
         {
             return Compute(DefaultSeed, buffer);
         }       
 
-        public static UInt32 Compute(UInt32 seed, byte[] buffer)
+        public static UInt32 Compute(UInt32 seed, [NotNull]byte[] buffer)
         {
             return Compute(DefaultPolynomial, seed, buffer);
         }
 
-        public static UInt32 Compute(UInt32 polynomial, UInt32 seed, byte[] buffer)
+        public static UInt32 Compute(UInt32 polynomial, UInt32 seed, [NotNull]byte[] buffer)
         {
             return ~CalculateHash(InitializeTable(polynomial), seed, buffer, 0, buffer.Length);
         }
 
+        [NotNull]
         static UInt32[] InitializeTable(UInt32 polynomial)
         {
             if (polynomial == DefaultPolynomial && defaultTable != null)
@@ -95,7 +96,7 @@ namespace NKafka.DevConsole.DevProtocol
             return createTable;
         }
 
-        static UInt32 CalculateHash(UInt32[] table, UInt32 seed, byte[] buffer, int start, int size)
+        static UInt32 CalculateHash([NotNull]UInt32[] table, UInt32 seed, [NotNull]byte[] buffer, int start, int size)
         {
             var crc = seed;
             for (var i = start; i < start + size; i++)

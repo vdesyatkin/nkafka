@@ -203,8 +203,9 @@ namespace NKafka.Client.Producer.Internal
                     var messageSize = (message.Key?.Length ?? 0) + (message.Data?.Length ?? 0);
                     if (messageSize > batchMaxByteCount || messageSize > partition.LimitInfo.MaxMessageSize)
                     {
-                        partition.TryDequeueMessage(out message);
-                        //todo raise event
+                        KafkaMessage skippedMessage;
+                        partition.TryDequeueMessage(out skippedMessage);
+                        partition.FallbackMessage(message, DateTime.UtcNow, KafkaProdcuerFallbackReason.TooLargeSize);                        
                         
                         continue;
                     }

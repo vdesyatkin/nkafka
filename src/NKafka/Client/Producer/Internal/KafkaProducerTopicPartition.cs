@@ -14,15 +14,20 @@ namespace NKafka.Client.Producer.Internal
 
         [NotNull] public readonly KafkaProducerBrokerPartition BrokerPartition;
 
+        [NotNull] private readonly string _topicName;
         [NotNull] private readonly ConcurrentQueue<KafkaMessage> _messageQueue;
+        [CanBeNull] private readonly IKafkaProducerFallbackHandler _fallbackHandler;
 
         private long _enqueuedCount;
-        private DateTime? _enqueueTimestampUtc;
+        private DateTime? _enqueueTimestampUtc;        
 
-        public KafkaProducerTopicPartition(int partitionId, [NotNull] KafkaProducerSettings settings)
-        {            
-            PartitonId = partitionId;            
+        public KafkaProducerTopicPartition([NotNull] string topicName, int partitionId, 
+            [NotNull] KafkaProducerSettings settings, [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler)
+        {
+            _topicName = topicName;
+            PartitonId = partitionId;
             _messageQueue = new ConcurrentQueue<KafkaMessage>();
+            _fallbackHandler = fallbackHandler;
             BrokerPartition = new KafkaProducerBrokerPartition(partitionId, settings, this);
         }
 
@@ -42,7 +47,7 @@ namespace NKafka.Client.Producer.Internal
 
             Interlocked.Decrement(ref _enqueuedCount);
             return true;
-        }
+        }        
 
         public bool TryPeekMessage(out KafkaMessage message)
         {
@@ -52,6 +57,19 @@ namespace NKafka.Client.Producer.Internal
             }
 
             return true;
+        }
+
+        public void FallbackMessage(KafkaMessage message, DateTime timestampUtc, KafkaProdcuerFallbackReason reason)
+        {
+            try
+            {
+                var fallbackInfo = new KafkaProducerFallbackInfo(_topicName, PartitonId, timestampUtc, message, reason);
+                _fallbackHandler?.HandleMessageFallback(fallbackInfo);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ namespace NKafka.Client.Producer
         void EnqueueMessage([NotNull] KafkaMessage message);
         void EnqueueMessage([NotNull] byte[] key, [NotNull] byte[] data);
         void EnqueueMessage([NotNull] byte[] data);
-        KafkaProducerTopicInfo GetDiagnosticsInfo();
+        KafkaProducerTopicInfo GetDiagnosticsInfo();        
     }
 
     [PublicAPI]

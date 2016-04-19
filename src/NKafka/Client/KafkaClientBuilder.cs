@@ -33,6 +33,7 @@ namespace NKafka.Client
         
         public IKafkaProducerTopic CreateTopicProducer([NotNull] string topicName,             
             [NotNull] IKafkaProducerPartitioner partitioner,
+            [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler = null,
             [CanBeNull] KafkaProducerSettings settings = null)
         {            
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
@@ -41,15 +42,16 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topicBuffer = new KafkaProducerTopicBuffer(partitioner);
+            var topicBuffer = new KafkaProducerTopicBuffer(partitioner, fallbackHandler);
             var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer);
-            _topicProducers.Add(topic);            
+            _topicProducers.Add(topic);
             return new KafkaProducerTopicFacade(topicName, topicBuffer, topic);
         }
         
         public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,           
            [NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
            [NotNull] IKafkaProducerSerializer<TKey, TData> serializer,
+           [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler = null,
            [CanBeNull] KafkaProducerSettings settings = null)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
@@ -58,7 +60,7 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topicBuffer = new KafkaProducerTopicBuffer<TKey, TData>(partitioner, serializer);
+            var topicBuffer = new KafkaProducerTopicBuffer<TKey, TData>(partitioner, serializer, fallbackHandler);
             var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer);
             _topicProducers.Add(topic);
             return new KafkaProducerTopicFacade<TKey, TData>(topicName, topicBuffer, topic);

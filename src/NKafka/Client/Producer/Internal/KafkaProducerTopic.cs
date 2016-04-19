@@ -32,7 +32,7 @@ namespace NKafka.Client.Producer.Internal
         [NotNull]
         public KafkaProducerTopicPartition CreatePartition(int partitionId)
         {
-            return new KafkaProducerTopicPartition(partitionId, _settings);
+            return new KafkaProducerTopicPartition(TopicName, partitionId, _settings, _buffer.FallbackHandler);
         }
         
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartition> partitions)
