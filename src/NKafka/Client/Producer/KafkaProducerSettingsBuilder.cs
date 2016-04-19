@@ -8,9 +8,10 @@ namespace NKafka.Client.Producer
     {
         private KafkaConsistencyLevel? _consistencyLevel;
         private KafkaCodecType? _codecType;        
-        private int? _produceBatchMaxByteCount;
-        private int? _produceBatchMaxMessageCount;
-        private TimeSpan? _produceTimeout;
+        private int? _batchSizeByteCount;
+        private int? _batchMaxMessageCount;
+        private int? _maxMessageSizeByteCount;
+        private TimeSpan? _batchServerTimeout;
 
         [NotNull] public static KafkaProducerSettings Default => new KafkaProducerSettingsBuilder().Build();
 
@@ -29,23 +30,30 @@ namespace NKafka.Client.Producer
         }
 
         [PublicAPI, NotNull]
-        public KafkaProducerSettingsBuilder SetBatchMaxSizeBytes(int batchMaxSizeBytes)
+        public KafkaProducerSettingsBuilder SetBatchSizeByteCount(int batchSizeByteCount)
         {
-            _produceBatchMaxByteCount = batchMaxSizeBytes;
+            _batchSizeByteCount = batchSizeByteCount;
             return this;
         }
 
         [PublicAPI, NotNull]
         public KafkaProducerSettingsBuilder SetBatchMaxMessageCount(int batchMaxMessageCount)
         {
-            _produceBatchMaxMessageCount = batchMaxMessageCount;
+            _batchMaxMessageCount = batchMaxMessageCount;
             return this;
         }
 
         [PublicAPI, NotNull]
-        public KafkaProducerSettingsBuilder SetProduceServerTimeout(TimeSpan timeout)
+        public KafkaProducerSettingsBuilder SetMessageSizeByteCount(int maxMessageSizeByteCount)
         {
-            _produceTimeout = timeout;
+            _maxMessageSizeByteCount = maxMessageSizeByteCount;
+            return this;
+        }
+
+        [PublicAPI, NotNull]
+        public KafkaProducerSettingsBuilder SetBatchServerTimeout(TimeSpan timeout)
+        {
+            _batchServerTimeout = timeout;
             return this;
         }
 
@@ -54,15 +62,17 @@ namespace NKafka.Client.Producer
         {
             var consistencyLevel = _consistencyLevel ?? KafkaConsistencyLevel.OneReplica;
             var codecType = _codecType ?? KafkaCodecType.CodecNone;            
-            var batchMaxByteCount = _produceBatchMaxByteCount ?? 200 * 200;
-            var batchMaxMessageCount = _produceBatchMaxMessageCount;
-            var produceTimeout = _produceTimeout ?? TimeSpan.FromSeconds(1);
+            var batchSizeByteCount = _batchSizeByteCount ?? 200 * 200;
+            var batchMaxMessageCount = _batchMaxMessageCount;
+            var maxMessageSizeByteCount = _maxMessageSizeByteCount;
+            var produceTimeout = _batchServerTimeout ?? TimeSpan.FromSeconds(1);
 
             return new KafkaProducerSettings(
                 consistencyLevel,
                 codecType,
-                batchMaxByteCount,
+                batchSizeByteCount,
                 batchMaxMessageCount,
+                maxMessageSizeByteCount,
                 produceTimeout);
         }
     }

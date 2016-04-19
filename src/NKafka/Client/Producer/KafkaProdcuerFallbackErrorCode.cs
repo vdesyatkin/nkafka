@@ -3,9 +3,9 @@
 namespace NKafka.Client.Producer
 {
     [PublicAPI]
-    public enum KafkaProdcuerFallbackReason
+    public enum KafkaProdcuerFallbackErrorCode
     {
-        Unknown = 0,
+        UnknownError = 0,
         TooLargeSize = 1
     }
 }

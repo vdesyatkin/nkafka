@@ -12,11 +12,11 @@ namespace NKafka.Client.Producer.Internal
 
         public KafkaProducerBrokerPartitionStatus Status;
         public KafkaProducerTopicPartitionErrorCode? Error;
-        [NotNull] public KafkaProducerTopicPartitionLimitInfo LimitInfo;
-        
-        public long RetryEnqueuedMessageCount;
-        public long SentMessageCount;
-        public DateTime? SendMessageTimestampUtc;
+        [NotNull] public KafkaProducerTopicPartitionLimitInfo LimitInfo { get; private set; }
+
+        public long RetryEnqueuedMessageCount { get; private set; }
+        public long SentMessageCount { get; private set; }
+        public DateTime? SendMessageTimestampUtc { get; private set; }
 
         [NotNull] private readonly IKafkaProducerMessageQueue _mainQueue;
         [NotNull] private readonly Queue<KafkaMessage> _retryQueue;        
@@ -27,19 +27,8 @@ namespace NKafka.Client.Producer.Internal
             Settings = settings;
             _mainQueue = mainQueue;
             _retryQueue = new Queue<KafkaMessage>();
-            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow, null, null);
-        }
-
-        public bool TryPeekMessage(out KafkaMessage message)
-        {
-            if (_retryQueue.Count == 0)
-            {
-                return _mainQueue.TryPeekMessage(out message);
-            }
-
-            message = _retryQueue.Peek();
-            return message != null;
-        }
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow, settings.MaxMessageSizeByteCount, settings.BatchMaxMessageCount);
+        }        
 
         public bool TryDequeueMessage(out KafkaMessage message)
         {
@@ -82,7 +71,7 @@ namespace NKafka.Client.Producer.Internal
             SendMessageTimestampUtc = DateTime.UtcNow;            
         }
 
-        public void FallbackMessage([NotNull] KafkaMessage message, DateTime timestampUtc, KafkaProdcuerFallbackReason reason)
+        public void FallbackMessage([NotNull] KafkaMessage message, DateTime timestampUtc, KafkaProdcuerFallbackErrorCode reason)
         {
             try
             {
@@ -92,6 +81,21 @@ namespace NKafka.Client.Producer.Internal
             {
                 //ignored
             }
+        }
+
+        public void ResetLimits()
+        {
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow, Settings.MaxMessageSizeByteCount, Settings.BatchMaxMessageCount);
+        }
+
+        public void SetMaxMessageSizeByteCount(int maxMessageSizeByteCount)
+        {
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow, maxMessageSizeByteCount, LimitInfo.MaxMessageCount);
+        }
+
+        public void SetMaxMessageCount(int maxMessageCount)
+        {
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow, LimitInfo.MaxMessageSizeByteCount, maxMessageCount);
         }
     }
 }

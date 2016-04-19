@@ -54,17 +54,7 @@ namespace NKafka.Client.Producer.Internal
             return true;
         }        
 
-        public bool TryPeekMessage(out KafkaMessage message)
-        {
-            if (!_messageQueue.TryPeek(out message))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public void FallbackMessage(KafkaMessage message, DateTime timestampUtc, KafkaProdcuerFallbackReason reason)
+        public void FallbackMessage(KafkaMessage message, DateTime timestampUtc, KafkaProdcuerFallbackErrorCode reason)
         {
             Interlocked.Increment(ref _fallbackCount);
             _fallbackTimestampUtc = timestampUtc;

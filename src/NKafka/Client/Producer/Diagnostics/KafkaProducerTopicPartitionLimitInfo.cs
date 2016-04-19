@@ -8,14 +8,14 @@ namespace NKafka.Client.Producer.Diagnostics
     {       
         public DateTime TimestampUtc;
 
-        public readonly int? MaxMessageSize;
+        public readonly int? MaxMessageSizeByteCount;
 
         public readonly int? MaxMessageCount;        
 
-        public KafkaProducerTopicPartitionLimitInfo(DateTime timestampUtc, int? maxMessageSize, int? maxMessageCount)
+        public KafkaProducerTopicPartitionLimitInfo(DateTime timestampUtc, int? maxMessageSizeByteCount, int? maxMessageCount)
         {            
             TimestampUtc = timestampUtc;
-            MaxMessageSize = maxMessageSize;
+            MaxMessageSizeByteCount = maxMessageSizeByteCount;
             MaxMessageCount = maxMessageCount;            
         }
     }

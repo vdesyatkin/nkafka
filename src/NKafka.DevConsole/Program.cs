@@ -25,8 +25,8 @@ namespace NKafka.DevConsole
                 .SetWorkerPeriod(TimeSpan.FromMilliseconds(500));
             var producerConfigBuilder = new KafkaProducerSettingsBuilder()
                 .SetConsistencyLevel(KafkaConsistencyLevel.OneReplica)
-                .SetProduceServerTimeout(TimeSpan.FromSeconds(5))
-                .SetBatchMaxSizeBytes(10000);
+                .SetBatchServerTimeout(TimeSpan.FromSeconds(5))
+                .SetBatchSizeByteCount(10000);
             var consumerConfigBuilder = new KafkaConsumerSettingsBuilder()
                 .SetBatchMinSizeBytes(1)
                 .SetBatchMaxSizeBytes(10000)

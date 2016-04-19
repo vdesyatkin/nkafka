@@ -14,10 +14,10 @@ namespace NKafka.Client.Producer
 
         [NotNull] public readonly KafkaMessage Message;
 
-        public readonly KafkaProdcuerFallbackReason Reason;
+        public readonly KafkaProdcuerFallbackErrorCode Reason;
 
         public KafkaProducerFallbackInfo([NotNull] string topicName, int partitionId, DateTime timestampUtc, 
-            [NotNull] KafkaMessage message, KafkaProdcuerFallbackReason reason)
+            [NotNull] KafkaMessage message, KafkaProdcuerFallbackErrorCode reason)
         {
             TopicName = topicName;
             PartitionId = partitionId;
@@ -40,10 +40,10 @@ namespace NKafka.Client.Producer
         [NotNull]
         public readonly KafkaMessage<TKey, TData> Message;
 
-        public readonly KafkaProdcuerFallbackReason Reason;
+        public readonly KafkaProdcuerFallbackErrorCode Reason;
 
         public KafkaProducerFallbackInfo([NotNull] string topicName, int partitionId, DateTime timestampUtc,
-            [NotNull] KafkaMessage<TKey, TData> message, KafkaProdcuerFallbackReason reason)
+            [NotNull] KafkaMessage<TKey, TData> message, KafkaProdcuerFallbackErrorCode reason)
         {
             TopicName = topicName;
             PartitionId = partitionId;

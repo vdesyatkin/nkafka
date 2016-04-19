@@ -124,7 +124,7 @@ namespace NKafka.Client.Producer.Internal
 
                 var batchRequestResult = topic.Settings.ConsistencyLevel == KafkaConsistencyLevel.None
                     ? _broker.SendWithoutResponse(batchRequest, batch.ByteCount * 2)
-                    : _broker.Send(batchRequest, _produceClientTimeout + topic.Settings.ProduceServerTimeout, batch.ByteCount * 2);
+                    : _broker.Send(batchRequest, _produceClientTimeout + topic.Settings.BatchServerTimeout, batch.ByteCount * 2);
                 
                 var batchRequestId = batchRequestResult.Data;
                 if (batchRequestId == null)
@@ -152,6 +152,7 @@ namespace NKafka.Client.Producer.Internal
                 }
                 if (partition.Status == KafkaProducerBrokerPartitionStatus.NotInitialized)
                 {
+                    partition.ResetLimits();
                     partition.Status = KafkaProducerBrokerPartitionStatus.Ready;
                 }
                 partitionList.Add(partition);
@@ -168,8 +169,8 @@ namespace NKafka.Client.Producer.Internal
             var batchMessageCount = 0;
             var isBatchFilled = false;
 
-            var batchMaxByteCount = topic.Settings.ProduceBatchMaxByteCount;
-            var batchMaxMessageCount = topic.Settings.ProduceBatchMaxMessageCount;
+            var batchMaxByteCount = topic.Settings.BatchSizeByteCount;
+            var batchMaxMessageCount = topic.Settings.BatchMaxMessageCount;
 
             for (var i = 0; i < partitionList.Count; i++)
             {
@@ -193,7 +194,7 @@ namespace NKafka.Client.Producer.Internal
                 }
 
                 KafkaMessage message;
-                while (partition.TryPeekMessage(out message))
+                while (partition.TryDequeueMessage(out message))
                 {
                     if (message == null)
                     {
@@ -201,25 +202,12 @@ namespace NKafka.Client.Producer.Internal
                     }
 
                     var messageSize = (message.Key?.Length ?? 0) + (message.Data?.Length ?? 0);
-                    if (messageSize > batchMaxByteCount || messageSize > partition.LimitInfo.MaxMessageSize)
-                    {
-                        KafkaMessage skippedMessage;
-                        partition.TryDequeueMessage(out skippedMessage);
-                        partition.FallbackMessage(message, DateTime.UtcNow, KafkaProdcuerFallbackReason.TooLargeSize);                        
+                    if (messageSize > partition.LimitInfo.MaxMessageSizeByteCount)
+                    {                        
+                        partition.FallbackMessage(message, DateTime.UtcNow, KafkaProdcuerFallbackErrorCode.TooLargeSize);                        
                         
                         continue;
-                    }
-
-                    if (batchByteCount + messageSize > batchMaxByteCount)
-                    {
-                        isBatchFilled = true;
-                        break;
-                    }
-
-                    if (!partition.TryDequeueMessage(out message) || message == null)
-                    {
-                        break;
-                    }
+                    }                                       
 
                     if (message.Key != null)
                     {
@@ -360,8 +348,7 @@ namespace NKafka.Client.Producer.Internal
                                 maxMessageSize = messageSize;
                             }
                         }
-                        partition.LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow,
-                            maxMessageSize - 1, partition.LimitInfo.MaxMessageCount);                            
+                        partition.SetMaxMessageSizeByteCount(maxMessageSize - 1);
                         break;
                     case KafkaResponseErrorCode.InvalidTopic:
                         error = KafkaProducerTopicPartitionErrorCode.InvalidTopic;
@@ -370,8 +357,7 @@ namespace NKafka.Client.Producer.Internal
                     case KafkaResponseErrorCode.RecordListTooLarge:
                         error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
                         var newMessageCountLimit = Math.Max(1, (int)Math.Round(batchMessages.Count * 0.66));
-                        partition.LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow, 
-                            partition.LimitInfo.MaxMessageSize, newMessageCountLimit);
+                        partition.SetMaxMessageCount(newMessageCountLimit);
                         break;
                     case KafkaResponseErrorCode.NotEnoughReplicas:
                         error = KafkaProducerTopicPartitionErrorCode.NotEnoughReplicas;
@@ -516,7 +502,7 @@ namespace NKafka.Client.Producer.Internal
             }
             var requestTopic = new KafkaProduceRequestTopic(topic.TopicName, requestPartitions);
             
-            var batchRequest = new KafkaProduceRequest(topic.Settings.ConsistencyLevel, topic.Settings.ProduceServerTimeout, new [] { requestTopic});
+            var batchRequest = new KafkaProduceRequest(topic.Settings.ConsistencyLevel, topic.Settings.BatchServerTimeout, new [] { requestTopic});
             return batchRequest;
         }
 
