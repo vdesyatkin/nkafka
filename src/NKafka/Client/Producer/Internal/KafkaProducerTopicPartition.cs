@@ -12,6 +12,9 @@ namespace NKafka.Client.Producer.Internal
         public long EnqueuedCount => _enqueuedCount;
         public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
 
+        public long FallbackCount => _fallbackCount;
+        public DateTime? FallabackTimestampUtc => _fallbackTimestampUtc;
+
         [NotNull] public readonly KafkaProducerBrokerPartition BrokerPartition;
 
         [NotNull] private readonly string _topicName;
@@ -19,7 +22,9 @@ namespace NKafka.Client.Producer.Internal
         [CanBeNull] private readonly IKafkaProducerFallbackHandler _fallbackHandler;
 
         private long _enqueuedCount;
-        private DateTime? _enqueueTimestampUtc;        
+        private DateTime? _enqueueTimestampUtc;
+        private long _fallbackCount;
+        private DateTime? _fallbackTimestampUtc;
 
         public KafkaProducerTopicPartition([NotNull] string topicName, int partitionId, 
             [NotNull] KafkaProducerSettings settings, [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler)
@@ -61,6 +66,9 @@ namespace NKafka.Client.Producer.Internal
 
         public void FallbackMessage(KafkaMessage message, DateTime timestampUtc, KafkaProdcuerFallbackReason reason)
         {
+            Interlocked.Increment(ref _fallbackCount);
+            _fallbackTimestampUtc = timestampUtc;
+
             try
             {
                 var fallbackInfo = new KafkaProducerFallbackInfo(_topicName, PartitonId, timestampUtc, message, reason);

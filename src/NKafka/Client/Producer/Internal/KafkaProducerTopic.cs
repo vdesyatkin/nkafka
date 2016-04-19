@@ -61,8 +61,10 @@ namespace NKafka.Client.Producer.Internal
             var partitionInfos = new List<KafkaProducerTopicPartitionInfo>(_topicPartitions.Count);
 
             long enqueuedMessageCount = 0;
+            long fallbackMessageCount = 0;
             long sentMessageCount = 0;            
             var sendMessageTimestampUtc = (DateTime?) null;
+            var fallbackMessageTimestampUtc = (DateTime?)null;
 
             foreach (var partitionPair in _topicPartitions)
             {
@@ -71,13 +73,21 @@ namespace NKafka.Client.Producer.Internal
 
                 var partitionBroker = partition.BrokerPartition;
 
-
                 var partitionEnqueuedCount = partition.EnqueuedCount + partitionBroker.RetryEnqueuedMessageCount;
                 var partitionEnqueueTimestampUtc = partition.EnqueueTimestampUtc;
+                var partitionFallbackMessageCount = partition.FallbackCount;
+                var partitionFallbackMessageTimestampUtc = partition.FallabackTimestampUtc;
                 var partitionSentMessageCount = partitionBroker.SentMessageCount;
                 var partitionSendMessageTimestampUtc = partitionBroker.SendMessageTimestampUtc;
 
                 enqueuedMessageCount += partitionEnqueuedCount;
+
+                fallbackMessageCount += partitionFallbackMessageCount;
+                if (fallbackMessageTimestampUtc == null || fallbackMessageTimestampUtc < partitionFallbackMessageTimestampUtc)
+                {
+                    fallbackMessageTimestampUtc = partitionFallbackMessageTimestampUtc;
+                }
+
                 sentMessageCount += partitionSentMessageCount;                
                 if (sendMessageTimestampUtc == null || sendMessageTimestampUtc < partitionSendMessageTimestampUtc)
                 {
@@ -87,6 +97,8 @@ namespace NKafka.Client.Producer.Internal
                 var partitionMessagesInfo = new KafkaProducerTopicMessageCountInfo(
                     partitionEnqueuedCount,
                     partitionEnqueueTimestampUtc,
+                    partitionFallbackMessageCount,
+                    partitionFallbackMessageTimestampUtc,
                     partitionSentMessageCount, 
                     partitionSendMessageTimestampUtc);
 
@@ -102,15 +114,16 @@ namespace NKafka.Client.Producer.Internal
 
             var topicMessagesInfo = new KafkaProducerTopicMessageCountInfo(
                 _buffer.EnqueuedCount + enqueuedMessageCount, _buffer.EnqueueTimestampUtc,
+                fallbackMessageCount, fallbackMessageTimestampUtc,
                 sentMessageCount, sendMessageTimestampUtc);
 
-            return new KafkaProducerTopicInfo(TopicName, 
+            return new KafkaProducerTopicInfo(
+                TopicName,
                 topicInfo,
                 DateTime.UtcNow,
                 topicInfo.IsReady,
                 topicMessagesInfo,
-                partitionInfos                
-                );
+                partitionInfos);
         }
     }
 }
