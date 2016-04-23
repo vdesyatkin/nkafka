@@ -279,7 +279,7 @@ namespace NKafka.Client.Internal
         {
             if (topic.Status == KafkaClientTopicStatus.MetadataError)
             {
-                if (topic.DiagnosticsInfo.TimestampUtc - DateTime.UtcNow < _retryMetadataRequestPeriod) return;                
+                if (DateTime.UtcNow - topic.DiagnosticsInfo.TimestampUtc < _retryMetadataRequestPeriod) return;                
             }
 
             if (topic.Status == KafkaClientTopicStatus.NotInitialized || topic.Status == KafkaClientTopicStatus.MetadataError)
@@ -405,7 +405,7 @@ namespace NKafka.Client.Internal
         {
             if (group.Status == KafkaClientGroupStatus.MetadataError)
             {
-                if (group.DiagnosticsInfo.TimestampUtc - DateTime.UtcNow < _retryMetadataRequestPeriod) return;
+                if (DateTime.UtcNow - group.DiagnosticsInfo.TimestampUtc < _retryMetadataRequestPeriod) return;
             }
 
             if (group.Status == KafkaClientGroupStatus.NotInitialized || group.Status == KafkaClientGroupStatus.MetadataError)
