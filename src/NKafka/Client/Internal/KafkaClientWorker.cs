@@ -316,6 +316,13 @@ namespace NKafka.Client.Internal
                 }
 
                 var topicMetadataResponse = metadataRequest.Broker.GetResponse<KafkaTopicMetadataResponse>(metadataRequest.RequestId);
+
+                if (!topicMetadataResponse.HasData && !topicMetadataResponse.HasError)
+                {
+                    // has not received
+                    return;
+                }
+
                 if (topicMetadataResponse.HasError)
                 {
                     topic.Status = KafkaClientTopicStatus.MetadataError;
@@ -324,7 +331,7 @@ namespace NKafka.Client.Internal
                 }
 
                 if (!topicMetadataResponse.HasData || topicMetadataResponse.Data == null)
-                {
+                {                    
                     topic.Status = KafkaClientTopicStatus.MetadataError;
                     topic.ChangeMetadataState(false, KafkaClientTopicErrorCode.ProtocolError, null);
                     return;

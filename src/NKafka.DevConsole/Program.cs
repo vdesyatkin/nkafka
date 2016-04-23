@@ -20,7 +20,7 @@ namespace NKafka.DevConsole
 
             var clientConfigBuilder = new KafkaClientSettingsBuilder(metadataBroker)
                 .SetClientId("nkafka")
-                .SetKafkaVersion(KafkaVersion.V0_9)
+                .SetKafkaVersion(KafkaVersion.V0_10)
                 .SetWorkerThreadCount(1)
                 .SetWorkerPeriod(TimeSpan.FromMilliseconds(500));
             var producerConfigBuilder = new KafkaProducerSettingsBuilder()
