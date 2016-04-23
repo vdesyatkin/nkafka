@@ -25,20 +25,14 @@ namespace NKafka.Protocol.API.Fetch
         /// <summary>
         /// The message data fetched from this partition.
         /// </summary>
-        public readonly IReadOnlyList<KafkaMessageAndOffset> Messages;
+        public readonly IReadOnlyList<KafkaMessageAndOffset> Messages;        
 
-        /// <summary>
-        /// Duration in milliseconds for which the request was throttled due to quota violation. (Zero if the request did not violate any quota).
-        /// </summary>
-        public readonly TimeSpan ThrottleTime;
-
-        public KafkaFetchResponseTopicPartition(int partitionId, KafkaResponseErrorCode errorCode, long highwaterMarkOffset, IReadOnlyList<KafkaMessageAndOffset> messages, TimeSpan throttleTime)
+        public KafkaFetchResponseTopicPartition(int partitionId, KafkaResponseErrorCode errorCode, long highwaterMarkOffset, IReadOnlyList<KafkaMessageAndOffset> messages)
         {
             PartitionId = partitionId;
             ErrorCode = errorCode;
             HighwaterMarkOffset = highwaterMarkOffset;
-            Messages = messages;
-            ThrottleTime = throttleTime;
+            Messages = messages;            
         }
     }
 }

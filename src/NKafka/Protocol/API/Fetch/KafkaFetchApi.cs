@@ -149,10 +149,8 @@ namespace NKafka.Protocol.API.Fetch
                     messages.Add(message);
                 }
             }
-
-            var throttleTime = _requestVersion >= KafkaRequestVersion.V1 ? TimeSpan.FromMilliseconds(reader.ReadInt32()) : TimeSpan.Zero;
-
-            return new KafkaFetchResponseTopicPartition(partitionId, errorCode, highwaterMarkOffset, messages, throttleTime);
+            
+            return new KafkaFetchResponseTopicPartition(partitionId, errorCode, highwaterMarkOffset, messages);
             // ReSharper enable UnusedVariable
         }
 

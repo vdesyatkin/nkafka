@@ -443,6 +443,13 @@ namespace NKafka.Client.Internal
                 }
 
                 var groupMetadataResponse = metadataRequest.Broker.GetResponse<KafkaGroupCoordinatorResponse>(metadataRequest.RequestId);
+
+                if (!groupMetadataResponse.HasData && !groupMetadataResponse.HasError)
+                {
+                    // has not received
+                    return;
+                }
+
                 if (groupMetadataResponse.HasError)
                 {
                     group.Status = KafkaClientGroupStatus.MetadataError;
@@ -451,7 +458,7 @@ namespace NKafka.Client.Internal
                 }
 
                 if (!groupMetadataResponse.HasData || groupMetadataResponse.Data == null)
-                {
+                {                    
                     group.Status = KafkaClientGroupStatus.MetadataError;
                     group.ChangeMetadataState(false, KafkaClientGroupErrorCode.ProtocolError, null);
                     return;
