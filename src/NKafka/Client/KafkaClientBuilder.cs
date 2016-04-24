@@ -182,6 +182,7 @@ namespace NKafka.Client
                 if (group.Settings == null) continue;
 
                 var clientGroup = new KafkaClientGroup(groupName, groupTopics, group.Settings);
+                group.ClientGroup = clientGroup;
 
                 foreach (var topic in groupTopics)
                 {

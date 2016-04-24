@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Diagnostics;
+using NKafka.Metadata;
 
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
@@ -18,7 +19,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly KafkaConsumerGroupErrorCode? Error;
 
-        public readonly KafkaClientBrokerInfo CoordinatorBrokerInfo;
+        public readonly KafkaBrokerMetadata CoordinatorBrokerMetadata;
 
         public readonly KafkaConsumerGroupProtocolInfo ProtocolInfo;
 
@@ -27,7 +28,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
         public readonly IReadOnlyList<KafkaConsumerGroupTopicInfo> Topics;
 
         public KafkaConsumerGroupInfo(string groupName, DateTime timestampUtc, bool isReady, KafkaConsumerGroupStatus status, KafkaConsumerGroupErrorCode? error,
-            KafkaClientBrokerInfo coordinatorBrokerInfo,
+            KafkaBrokerMetadata coordinatorBrokerMetadata,
             KafkaConsumerGroupProtocolInfo protocolInfo, KafkaConsumerGroupMemberInfo memberInfo, 
             IReadOnlyList<KafkaConsumerGroupTopicInfo> topics)
         {
@@ -36,7 +37,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
             IsReady = isReady;
             Status = status;
             Error = error;
-            CoordinatorBrokerInfo = coordinatorBrokerInfo;
+            CoordinatorBrokerMetadata = coordinatorBrokerMetadata;
             ProtocolInfo = protocolInfo;
             MemberInfo = memberInfo;
             Topics = topics;
