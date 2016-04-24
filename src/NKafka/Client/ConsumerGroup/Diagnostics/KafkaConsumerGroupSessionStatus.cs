@@ -3,7 +3,7 @@
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
     [PublicAPI]
-    public enum KafkaConsumerGroupStatus
+    public enum KafkaConsumerGroupSessionStatus
     {
         //todo
         ToDo,

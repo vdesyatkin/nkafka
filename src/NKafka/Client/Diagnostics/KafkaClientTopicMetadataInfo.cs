@@ -5,7 +5,7 @@ using NKafka.Metadata;
 namespace NKafka.Client.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaClientTopicInfo
+    public sealed class KafkaClientTopicMetadataInfo
     {
         [NotNull]
         public readonly string TopicName;
@@ -14,12 +14,12 @@ namespace NKafka.Client.Diagnostics
 
         public readonly bool IsReady;
 
-        public readonly KafkaClientTopicErrorCode? Error;
+        public readonly KafkaClientTopicMetadataErrorCode? Error;
 
         [CanBeNull]
         public readonly KafkaTopicMetadata TopicMetadata;
 
-        public KafkaClientTopicInfo([NotNull] string topicName, DateTime timestampUtc, bool isReady, KafkaClientTopicErrorCode? error, [CanBeNull] KafkaTopicMetadata topicMetadata)
+        public KafkaClientTopicMetadataInfo([NotNull] string topicName, DateTime timestampUtc, bool isReady, KafkaClientTopicMetadataErrorCode? error, [CanBeNull] KafkaTopicMetadata topicMetadata)
         {
             TopicName = topicName;
             TimestampUtc = timestampUtc;

@@ -3,7 +3,7 @@
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
     [PublicAPI]
-    public enum KafkaConsumerGroupErrorCode
+    public enum KafkaConsumerGroupSessionErrorCode
     {
         UnknownError = 0
     }

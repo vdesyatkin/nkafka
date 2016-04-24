@@ -3,7 +3,7 @@
 namespace NKafka.Client.Diagnostics
 {    
     [PublicAPI]
-    public enum KafkaClientGroupErrorCode 
+    public enum KafkaClientGroupMetadataErrorCode 
     {
         UnknownError = 0,
         InvalidState = 1,

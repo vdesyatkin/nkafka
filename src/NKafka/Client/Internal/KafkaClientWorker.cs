@@ -75,23 +75,23 @@ namespace NKafka.Client.Internal
         [NotNull]
         public KafkaClientWorkerInfo GetDiagnosticsInfo()
         {
-            var topicInfos = new List<KafkaClientTopicInfo>();
+            var topicInfos = new List<KafkaClientTopicMetadataInfo>();
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;                
                 if (topic == null) continue;
 
-                var topicInfo = topic.DiagnosticsInfo;
+                var topicInfo = topic.MetadataInfo;
                 topicInfos.Add(topicInfo);
             }
 
-            var groupInfos = new List<KafkaClientGroupInfo>();
+            var groupInfos = new List<KafkaClientGroupMetadataInfo>();
             foreach (var groupPair in _groups)
             {
                 var group = groupPair.Value;
                 if (group == null) continue;
 
-                var groupInfo = group.DiagnosticsInfo;
+                var groupInfo = group.MetadataInfo;
                 groupInfos.Add(groupInfo);
             }
 
@@ -279,7 +279,7 @@ namespace NKafka.Client.Internal
         {
             if (topic.Status == KafkaClientTopicStatus.MetadataError)
             {
-                if (DateTime.UtcNow - topic.DiagnosticsInfo.TimestampUtc < _retryMetadataRequestPeriod) return;                
+                if (DateTime.UtcNow - topic.MetadataInfo.TimestampUtc < _retryMetadataRequestPeriod) return;                
             }
 
             if (topic.Status == KafkaClientTopicStatus.NotInitialized || topic.Status == KafkaClientTopicStatus.MetadataError)
@@ -333,7 +333,7 @@ namespace NKafka.Client.Internal
                 if (!topicMetadataResponse.HasData || topicMetadataResponse.Data == null)
                 {                    
                     topic.Status = KafkaClientTopicStatus.MetadataError;
-                    topic.ChangeMetadataState(false, KafkaClientTopicErrorCode.ProtocolError, null);
+                    topic.ChangeMetadataState(false, KafkaClientTopicMetadataErrorCode.ProtocolError, null);
                     return;
                 }
 
@@ -343,7 +343,7 @@ namespace NKafka.Client.Internal
                 if (hasMetadataError)
                 {                 
                     topic.Status = KafkaClientTopicStatus.MetadataError;
-                    topic.ChangeMetadataState(false, KafkaClientTopicErrorCode.MetadataError, metadata);
+                    topic.ChangeMetadataState(false, KafkaClientTopicMetadataErrorCode.MetadataError, metadata);
                     return;
                 }
 
@@ -363,7 +363,7 @@ namespace NKafka.Client.Internal
                 catch (Exception)
                 {
                     topic.Status = KafkaClientTopicStatus.MetadataError;
-                    topic.ChangeMetadataState(false, KafkaClientTopicErrorCode.InternalError, null);
+                    topic.ChangeMetadataState(false, KafkaClientTopicMetadataErrorCode.InternalError, null);
                     return;
                 }
             }
@@ -405,7 +405,7 @@ namespace NKafka.Client.Internal
         {
             if (group.Status == KafkaClientGroupStatus.MetadataError)
             {
-                if (DateTime.UtcNow - group.DiagnosticsInfo.TimestampUtc < _retryMetadataRequestPeriod) return;
+                if (DateTime.UtcNow - group.MetadataInfo.TimestampUtc < _retryMetadataRequestPeriod) return;
             }
 
             if (group.Status == KafkaClientGroupStatus.NotInitialized || group.Status == KafkaClientGroupStatus.MetadataError)
@@ -460,7 +460,7 @@ namespace NKafka.Client.Internal
                 if (!groupMetadataResponse.HasData || groupMetadataResponse.Data == null)
                 {                    
                     group.Status = KafkaClientGroupStatus.MetadataError;
-                    group.ChangeMetadataState(false, KafkaClientGroupErrorCode.ProtocolError, null);
+                    group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.ProtocolError, null);
                     return;
                 }
 
@@ -470,7 +470,7 @@ namespace NKafka.Client.Internal
                 if (hasMetadataError)
                 {
                     group.Status = KafkaClientGroupStatus.MetadataError;
-                    group.ChangeMetadataState(false, KafkaClientGroupErrorCode.MetadataError, metadata);
+                    group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.MetadataError, metadata);
                     return;
                 }
 
@@ -480,7 +480,7 @@ namespace NKafka.Client.Internal
                 if (groupCoordinator == null)
                 {
                     group.Status = KafkaClientGroupStatus.MetadataError;
-                    group.ChangeMetadataState(false, KafkaClientGroupErrorCode.MetadataError, null);
+                    group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.MetadataError, null);
                     return;
                 }
                
@@ -492,7 +492,7 @@ namespace NKafka.Client.Internal
                 catch (Exception)
                 {
                     group.Status = KafkaClientGroupStatus.MetadataError;
-                    group.ChangeMetadataState(false, KafkaClientGroupErrorCode.InternalError, null);
+                    group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.InternalError, null);
                     return;
                 }                
             }
@@ -614,33 +614,33 @@ namespace NKafka.Client.Internal
             return new KafkaTopicMetadataRequest(new[] { topicName });
         }
 
-        private static KafkaClientTopicErrorCode? ConvertTopicMetadataRequestError(KafkaBrokerErrorCode? errorCode)
+        private static KafkaClientTopicMetadataErrorCode? ConvertTopicMetadataRequestError(KafkaBrokerErrorCode? errorCode)
         {           
-            KafkaClientTopicErrorCode? topicErrorCode = null;
+            KafkaClientTopicMetadataErrorCode? topicErrorCode = null;
             if (errorCode.HasValue)
             {
                 switch (errorCode.Value)
                 {
                     case KafkaBrokerErrorCode.Closed:
-                        topicErrorCode = KafkaClientTopicErrorCode.ConnectionClosed;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ConnectionClosed;
                         break;
                     case KafkaBrokerErrorCode.Maintenance:
-                        topicErrorCode = KafkaClientTopicErrorCode.Maintenance;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.Maintenance;
                         break;
                     case KafkaBrokerErrorCode.BadRequest:
-                        topicErrorCode = KafkaClientTopicErrorCode.ProtocolError;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ProtocolError;
                         break;                    
                     case KafkaBrokerErrorCode.ProtocolError:
-                        topicErrorCode = KafkaClientTopicErrorCode.ProtocolError;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ProtocolError;
                         break;
                     case KafkaBrokerErrorCode.TransportError:
-                        topicErrorCode = KafkaClientTopicErrorCode.TransportError;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.TransportError;
                         break;                                        
                     case KafkaBrokerErrorCode.Timeout:
-                        topicErrorCode = KafkaClientTopicErrorCode.Timeout;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.Timeout;
                         break;
                     default:
-                        topicErrorCode = KafkaClientTopicErrorCode.UnknownError;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.UnknownError;
                         break;
                 }
             }
@@ -729,30 +729,30 @@ namespace NKafka.Client.Internal
             return new KafkaGroupCoordinatorRequest(groupName);
         }
 
-        private static KafkaClientGroupErrorCode? ConvertGroupMetadataRequestError(KafkaBrokerErrorCode? errorCode)
+        private static KafkaClientGroupMetadataErrorCode? ConvertGroupMetadataRequestError(KafkaBrokerErrorCode? errorCode)
         {
-            KafkaClientGroupErrorCode? groupErrorCode = null;
+            KafkaClientGroupMetadataErrorCode? groupErrorCode = null;
             if (errorCode.HasValue)
             {
                 switch (errorCode.Value)
                 {
                     case KafkaBrokerErrorCode.BadRequest:
-                        groupErrorCode = KafkaClientGroupErrorCode.ProtocolError;
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ProtocolError;
                         break;
                     case KafkaBrokerErrorCode.Closed:
-                        groupErrorCode = KafkaClientGroupErrorCode.InvalidState;
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.InvalidState;
                         break;
                     case KafkaBrokerErrorCode.ProtocolError:
-                        groupErrorCode = KafkaClientGroupErrorCode.ProtocolError;
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ProtocolError;
                         break;
                     case KafkaBrokerErrorCode.TransportError:
-                        groupErrorCode = KafkaClientGroupErrorCode.TransportError;
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.TransportError;
                         break;
                     case KafkaBrokerErrorCode.Timeout:
-                        groupErrorCode = KafkaClientGroupErrorCode.TransportError;
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.TransportError;
                         break;
                     default:
-                        groupErrorCode = KafkaClientGroupErrorCode.UnknownError;
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.UnknownError;
                         break;
                 }
             }

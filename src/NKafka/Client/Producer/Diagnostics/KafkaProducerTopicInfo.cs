@@ -12,7 +12,7 @@ namespace NKafka.Client.Producer.Diagnostics
         public readonly string TopicName;
 
         [NotNull]
-        public readonly KafkaClientTopicInfo TopicInfo;
+        public readonly KafkaClientTopicMetadataInfo MetadataInfo;
 
         public readonly DateTime TimestampUtc;
 
@@ -24,13 +24,13 @@ namespace NKafka.Client.Producer.Diagnostics
         [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaProducerTopicPartitionInfo> Partitions;                   
 
-        public KafkaProducerTopicInfo([NotNull] string topicName, [NotNull] KafkaClientTopicInfo topicInfo, DateTime timestampUtc, 
+        public KafkaProducerTopicInfo([NotNull] string topicName, [NotNull] KafkaClientTopicMetadataInfo metadataInfo, DateTime timestampUtc, 
             bool isReady,
             [NotNull]KafkaProducerTopicMessageCountInfo messagesInfo, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartitionInfo> partitions)
         {
             TopicName = topicName;
-            TopicInfo = topicInfo;
+            MetadataInfo = metadataInfo;
             TimestampUtc = timestampUtc;
             IsReady = isReady;            
             MessagesInfo = messagesInfo;

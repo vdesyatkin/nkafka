@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Diagnostics;
-using NKafka.Metadata;
 
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
@@ -15,32 +13,20 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly bool IsReady;
 
-        public readonly KafkaConsumerGroupStatus Status;
+        [NotNull]
+        public readonly KafkaClientGroupMetadataInfo MetadataInfo;
 
-        public readonly KafkaConsumerGroupErrorCode? Error;
+        [NotNull]
+        public readonly KafkaConsumerGroupSessionInfo SessionInfo;
 
-        public readonly KafkaBrokerMetadata CoordinatorBrokerMetadata;
-
-        public readonly KafkaConsumerGroupProtocolInfo ProtocolInfo;
-
-        public readonly KafkaConsumerGroupMemberInfo MemberInfo;
-
-        public readonly IReadOnlyList<KafkaConsumerGroupTopicInfo> Topics;
-
-        public KafkaConsumerGroupInfo(string groupName, DateTime timestampUtc, bool isReady, KafkaConsumerGroupStatus status, KafkaConsumerGroupErrorCode? error,
-            KafkaBrokerMetadata coordinatorBrokerMetadata,
-            KafkaConsumerGroupProtocolInfo protocolInfo, KafkaConsumerGroupMemberInfo memberInfo, 
-            IReadOnlyList<KafkaConsumerGroupTopicInfo> topics)
+        public KafkaConsumerGroupInfo(string groupName, DateTime timestampUtc, bool isReady,
+            [NotNull] KafkaClientGroupMetadataInfo metadataInfo,
+            [NotNull] KafkaConsumerGroupSessionInfo sessionInfo)
         {
             GroupName = groupName;
             TimestampUtc = timestampUtc;
-            IsReady = isReady;
-            Status = status;
-            Error = error;
-            CoordinatorBrokerMetadata = coordinatorBrokerMetadata;
-            ProtocolInfo = protocolInfo;
-            MemberInfo = memberInfo;
-            Topics = topics;
+            IsReady = isReady;            
+            MetadataInfo = metadataInfo;            
         }
     }
 }

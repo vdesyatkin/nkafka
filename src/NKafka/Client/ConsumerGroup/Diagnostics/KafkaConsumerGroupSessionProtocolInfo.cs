@@ -3,7 +3,7 @@
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaConsumerGroupProtocolInfo
+    public sealed class KafkaConsumerGroupSessionProtocolInfo
     {
         public readonly string ProtocolName;
 
@@ -13,7 +13,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly byte[] CustomData;
 
-        public KafkaConsumerGroupProtocolInfo(string protocolName, short protocolVersion, string assignmentStrategyName, byte[] customData)
+        public KafkaConsumerGroupSessionProtocolInfo(string protocolName, short protocolVersion, string assignmentStrategyName, byte[] customData)
         {
             ProtocolName = protocolName;
             ProtocolVersion = protocolVersion;

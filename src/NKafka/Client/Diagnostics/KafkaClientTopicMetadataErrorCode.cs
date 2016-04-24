@@ -3,7 +3,7 @@
 namespace NKafka.Client.Diagnostics
 {
     [PublicAPI]
-    public enum KafkaClientTopicErrorCode
+    public enum KafkaClientTopicMetadataErrorCode
     {
         UnknownError = 0,
         ConnectionClosed = 1,

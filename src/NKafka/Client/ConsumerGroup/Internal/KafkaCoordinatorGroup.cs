@@ -117,5 +117,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
             topicPartitionOffsets.TryGetValue(topicName, out partitionOffsets);
             return partitionOffsets ?? new Dictionary<int, long?>();
         }
+
+        [NotNull]
+        public KafkaConsumerGroupSessionInfo GetSessionInfo()
+        {
+            return new KafkaConsumerGroupSessionInfo(GroupName, GroupTimestampUtc,
+                false, //todo 
+                KafkaConsumerGroupSessionStatus.ToDo, //todo 
+                KafkaConsumerGroupSessionErrorCode.UnknownError, //todo                
+                new KafkaConsumerGroupSessionTopicInfo[0], //todo
+                new KafkaConsumerGroupSessionProtocolInfo(GroupProtocolName, GroupProtocolVersion, GroupAssignmentStrategyName, null), //todo
+                new KafkaConsumerGroupSessionMemberInfo(GroupGenerationId, MemberId, MemberIsLeader)              
+                );
+        }
     }
 }

@@ -3,7 +3,7 @@
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaConsumerGroupMemberInfo
+    public sealed class KafkaConsumerGroupSessionMemberInfo
     {
         public readonly int? GenerationId;
 
@@ -11,7 +11,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly bool IsLeader;
 
-        public KafkaConsumerGroupMemberInfo(int? generationId, string memberId, bool isLeader)
+        public KafkaConsumerGroupSessionMemberInfo(int? generationId, string memberId, bool isLeader)
         {
             GenerationId = generationId;
             MemberId = memberId;

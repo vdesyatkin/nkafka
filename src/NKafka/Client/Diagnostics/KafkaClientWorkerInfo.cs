@@ -12,10 +12,10 @@ namespace NKafka.Client.Diagnostics
         public readonly DateTime TimestampUtc;
 
         [NotNull, ItemNotNull]
-        public readonly IReadOnlyList<KafkaClientTopicInfo> Topics;
+        public readonly IReadOnlyList<KafkaClientTopicMetadataInfo> Topics;
 
         [NotNull, ItemNotNull]
-        public readonly IReadOnlyList<KafkaClientGroupInfo> Groups;
+        public readonly IReadOnlyList<KafkaClientGroupMetadataInfo> Groups;
 
         [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaClientBrokerInfo> Brokers;
@@ -24,8 +24,8 @@ namespace NKafka.Client.Diagnostics
         public readonly IReadOnlyList<KafkaClientBrokerInfo> MetadataBrokers;
 
         public KafkaClientWorkerInfo(int workerId, DateTime timestampUtc,
-            [NotNull, ItemNotNull]IReadOnlyList<KafkaClientTopicInfo> topics, 
-            [NotNull, ItemNotNull]IReadOnlyList<KafkaClientGroupInfo> groups,
+            [NotNull, ItemNotNull]IReadOnlyList<KafkaClientTopicMetadataInfo> topics, 
+            [NotNull, ItemNotNull]IReadOnlyList<KafkaClientGroupMetadataInfo> groups,
             [NotNull, ItemNotNull]IReadOnlyList<KafkaClientBrokerInfo> brokers,
             [NotNull, ItemNotNull]IReadOnlyList<KafkaClientBrokerInfo> metadataBrokers)
         {

@@ -23,32 +23,14 @@ namespace NKafka.Client.ConsumerGroup
 
         public KafkaConsumerGroupInfo GetDiagnosticsInfo()
         {
-            var coordinator = ClientGroup?.Coordinator;
-            var brokerMetadata = ClientGroup?.BrokerGroup?.BrokerMetadata;            
+            var sessionInfo = ClientGroup?.Coordinator.GetSessionInfo();
+            var metadataInfo = ClientGroup?.MetadataInfo;
 
-            if (coordinator == null)
-            {
-                return new KafkaConsumerGroupInfo(GroupName, 
-                    DateTime.UtcNow, //todo first timstamp
-                    false, 
-                    KafkaConsumerGroupStatus.ToDo, //todo
-                    KafkaConsumerGroupErrorCode.UnknownError, //todo
-                    brokerMetadata, //todo brokerInfo
-                    null, 
-                    null,                    
-                    null //todo emptyTopics
-                    );
-            }
-
-            return new KafkaConsumerGroupInfo(GroupName, coordinator.GroupTimestampUtc,
+            return new KafkaConsumerGroupInfo(GroupName, DateTime.UtcNow,
                 false, //todo 
-                KafkaConsumerGroupStatus.ToDo, //todo 
-                KafkaConsumerGroupErrorCode.UnknownError, //todo
-                brokerMetadata, //todo brokerInfo
-                new KafkaConsumerGroupProtocolInfo(coordinator.GroupProtocolName, coordinator.GroupProtocolVersion, coordinator.GroupAssignmentStrategyName, null), //todo
-                new KafkaConsumerGroupMemberInfo(coordinator.GroupGenerationId, coordinator.MemberId, coordinator.MemberIsLeader),
-                new KafkaConsumerGroupTopicInfo[0] //todo
-                );            
+                metadataInfo, //todo empty value
+                sessionInfo //todo empty value
+                );   
         }
     }
 }

@@ -24,10 +24,8 @@ namespace NKafka.Client.Internal
 
         [NotNull] private readonly KafkaConsumerGroupSettings _settings;
 
-        [NotNull]
-        public KafkaClientGroupInfo DiagnosticsInfo => _diagnosticsInfo;
-        [NotNull]
-        private KafkaClientGroupInfo _diagnosticsInfo;
+        [NotNull] public KafkaClientGroupMetadataInfo MetadataInfo => _metadataInfo;
+        [NotNull] private KafkaClientGroupMetadataInfo _metadataInfo;
 
         public KafkaClientGroup([NotNull] string groupName, [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, [NotNull] KafkaConsumerGroupSettings settings)
         {
@@ -35,12 +33,12 @@ namespace NKafka.Client.Internal
             _topics = topics;
             _settings = settings;
             Coordinator = new KafkaCoordinatorGroup(GroupName, _topics, _settings);
-            _diagnosticsInfo = new KafkaClientGroupInfo(groupName, DateTime.UtcNow, false, null, null);
+            _metadataInfo = new KafkaClientGroupMetadataInfo(groupName, DateTime.UtcNow, false, null, null);
         }
 
-        public void ChangeMetadataState(bool isReady, KafkaClientGroupErrorCode? errorCode, [CanBeNull] KafkaGroupMetadata metadata)
+        public void ChangeMetadataState(bool isReady, KafkaClientGroupMetadataErrorCode? errorCode, [CanBeNull] KafkaGroupMetadata metadata)
         {
-            _diagnosticsInfo = new KafkaClientGroupInfo(GroupName, DateTime.UtcNow, isReady, errorCode, metadata);
+            _metadataInfo = new KafkaClientGroupMetadataInfo(GroupName, DateTime.UtcNow, isReady, errorCode, metadata);
             if (isReady && metadata?.Coordinator != null)
             {
                 ApplyMetadata(metadata.Coordinator);

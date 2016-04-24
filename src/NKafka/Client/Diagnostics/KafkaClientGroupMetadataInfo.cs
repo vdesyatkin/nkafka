@@ -5,7 +5,7 @@ using NKafka.Metadata;
 namespace NKafka.Client.Diagnostics
 {   
     [PublicAPI]
-    public sealed class KafkaClientGroupInfo
+    public sealed class KafkaClientGroupMetadataInfo
     {
         [NotNull]
         public readonly string GroupName;
@@ -14,12 +14,12 @@ namespace NKafka.Client.Diagnostics
 
         public readonly bool IsReady;
 
-        public readonly KafkaClientGroupErrorCode? Error;
+        public readonly KafkaClientGroupMetadataErrorCode? Error;
 
         [CanBeNull]
         public readonly KafkaGroupMetadata GroupMetadata;
 
-        public KafkaClientGroupInfo([NotNull] string groupName, DateTime timestampUtc, bool isReady, KafkaClientGroupErrorCode? error, [CanBeNull] KafkaGroupMetadata groupMetadata)
+        public KafkaClientGroupMetadataInfo([NotNull] string groupName, DateTime timestampUtc, bool isReady, KafkaClientGroupMetadataErrorCode? error, [CanBeNull] KafkaGroupMetadata groupMetadata)
         {
             GroupName = groupName;
             TimestampUtc = timestampUtc;

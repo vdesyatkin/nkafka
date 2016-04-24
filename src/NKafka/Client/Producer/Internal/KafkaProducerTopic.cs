@@ -9,7 +9,7 @@ namespace NKafka.Client.Producer.Internal
     internal sealed class KafkaProducerTopic
     {
         [NotNull] public readonly string TopicName;
-        [NotNull] public KafkaClientTopicInfo TopicDiagnosticsInfo;
+        [NotNull] public KafkaClientTopicMetadataInfo TopicDiagnosticsInfo;
 
         [NotNull] private readonly KafkaProducerSettings _settings;
 
@@ -26,7 +26,7 @@ namespace NKafka.Client.Producer.Internal
             _buffer = buffer;
             _topicPartitions = new Dictionary<int, KafkaProducerTopicPartition>();
             _topicPartitionIds = new int[0];
-            TopicDiagnosticsInfo = new KafkaClientTopicInfo(topicName, DateTime.UtcNow, false, null, null);
+            TopicDiagnosticsInfo = new KafkaClientTopicMetadataInfo(topicName, DateTime.UtcNow, false, null, null);
         }
 
         [NotNull]

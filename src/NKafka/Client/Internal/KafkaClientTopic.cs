@@ -19,9 +19,8 @@ namespace NKafka.Client.Internal
         [CanBeNull] public readonly KafkaProducerTopic Producer;
         [CanBeNull] public readonly KafkaConsumerTopic Consumer;
 
-        [NotNull]
-        public KafkaClientTopicInfo DiagnosticsInfo => _diagnosticsInfo;
-        [NotNull] private KafkaClientTopicInfo _diagnosticsInfo;
+        [NotNull] public KafkaClientTopicMetadataInfo MetadataInfo => _metadataInfo;
+        [NotNull] private KafkaClientTopicMetadataInfo _metadataInfo;
 
         public KafkaClientTopic([NotNull] string topicName, [CanBeNull] KafkaProducerTopic producer, [CanBeNull] KafkaConsumerTopic consumer)
         {
@@ -29,12 +28,12 @@ namespace NKafka.Client.Internal
             Producer = producer;
             Consumer = consumer;
             Partitions = new KafkaClientTopicPartition[0];
-            _diagnosticsInfo = new KafkaClientTopicInfo(topicName, DateTime.UtcNow, false, null, null);
+            _metadataInfo = new KafkaClientTopicMetadataInfo(topicName, DateTime.UtcNow, false, null, null);
         }
 
-        public void ChangeMetadataState(bool isReady, KafkaClientTopicErrorCode? errorCode, [CanBeNull] KafkaTopicMetadata metadata)
+        public void ChangeMetadataState(bool isReady, KafkaClientTopicMetadataErrorCode? errorCode, [CanBeNull] KafkaTopicMetadata metadata)
         {
-            _diagnosticsInfo = new KafkaClientTopicInfo(TopicName, DateTime.UtcNow, isReady, errorCode, metadata);            
+            _metadataInfo = new KafkaClientTopicMetadataInfo(TopicName, DateTime.UtcNow, isReady, errorCode, metadata);            
             if (isReady && metadata != null)
             {
                 ApplyMetadata(metadata);
@@ -43,7 +42,7 @@ namespace NKafka.Client.Internal
             var producer = Producer;
             if (producer != null)
             {
-                producer.TopicDiagnosticsInfo = _diagnosticsInfo;
+                producer.TopicDiagnosticsInfo = _metadataInfo;
             }
         }
         
