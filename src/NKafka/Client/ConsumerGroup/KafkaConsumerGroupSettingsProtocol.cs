@@ -5,7 +5,7 @@ using NKafka.Client.ConsumerGroup.Assignment;
 namespace NKafka.Client.ConsumerGroup
 {
     [PublicAPI]
-    public sealed class KafkaConsumerGroupProtocolInfo
+    public sealed class KafkaConsumerGroupSettingsProtocol
     {
         public readonly string ProtocolName;
 
@@ -15,7 +15,7 @@ namespace NKafka.Client.ConsumerGroup
 
         public readonly byte[] CustomData;
 
-        public KafkaConsumerGroupProtocolInfo([NotNull] string protocolName, short protocolVersion,
+        public KafkaConsumerGroupSettingsProtocol([NotNull] string protocolName, short protocolVersion,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerAssignmentStrategyInfo> assignmentStrategies,
             [CanBeNull] byte[] customData)
         {

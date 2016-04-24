@@ -27,7 +27,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull] private readonly Dictionary<string, int> _offsetFetchRequests;
         [NotNull] private readonly Dictionary<string, int> _offsetCommitRequests;
 
-        private readonly TimeSpan _coordinatorClientTimeout;                
+        private readonly TimeSpan _coordinatorClientTimeout;
 
         public KafkaCoordinatorBroker([NotNull] KafkaBroker broker, TimeSpan consumePeriod)
         {

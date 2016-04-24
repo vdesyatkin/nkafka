@@ -14,6 +14,8 @@ namespace NKafka.Client.Internal
     {
         [NotNull] public readonly string GroupName;
 
+        [NotNull] public readonly KafkaCoordinatorGroup Coordinator;
+
         [NotNull, ItemNotNull] private readonly IReadOnlyList<KafkaClientTopic> _topics;
 
         public KafkaClientGroupStatus Status;
@@ -32,6 +34,7 @@ namespace NKafka.Client.Internal
             GroupName = groupName;
             _topics = topics;
             _settings = settings;
+            Coordinator = new KafkaCoordinatorGroup(GroupName, _topics, _settings);
             _diagnosticsInfo = new KafkaClientGroupInfo(groupName, DateTime.UtcNow, false, null, null);
         }
 
@@ -46,8 +49,7 @@ namespace NKafka.Client.Internal
 
         private void ApplyMetadata([NotNull] KafkaBrokerMetadata coordinatorBroker)
         {            
-            var coordinator = new KafkaCoordinatorGroup(GroupName, _topics, _settings);            
-            var brokerGroup = new KafkaClientBrokerGroup(GroupName, coordinatorBroker, coordinator);            
+            var brokerGroup = new KafkaClientBrokerGroup(GroupName, coordinatorBroker, Coordinator);            
             BrokerGroup = brokerGroup;
         }
 

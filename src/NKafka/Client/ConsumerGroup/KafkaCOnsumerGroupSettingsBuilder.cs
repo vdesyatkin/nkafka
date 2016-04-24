@@ -23,7 +23,7 @@ namespace NKafka.Client.ConsumerGroup
         private TimeSpan? _offsetCommitPeriod;
         private TimeSpan? _offsetCommitRetentionTime;
 
-        [NotNull] private List<KafkaConsumerGroupProtocolInfo> _protocols;
+        [NotNull] private List<KafkaConsumerGroupSettingsProtocol> _protocols;
         private string _offsetCommitCustomData;
 
         public static KafkaConsumerGroupSettings Default => new KafkaConsumerGroupSettingsBuilder().Build();
@@ -31,12 +31,12 @@ namespace NKafka.Client.ConsumerGroup
         public static readonly KafkaConsumerAssignmentStrategyInfo DefaultStrategy =
             new KafkaConsumerAssignmentStrategyInfo("round_robin", new KafkaConsumerAssignmentRoundRobinStrategy());
 
-        public static readonly KafkaConsumerGroupProtocolInfo DefaultProtocol =
-                new KafkaConsumerGroupProtocolInfo("nkafka_default", 1, new[] { DefaultStrategy }, null);        
+        public static readonly KafkaConsumerGroupSettingsProtocol DefaultProtocol =
+                new KafkaConsumerGroupSettingsProtocol("nkafka_default", 1, new[] { DefaultStrategy }, null);        
 
         public KafkaConsumerGroupSettingsBuilder()
         {
-            _protocols = new List<KafkaConsumerGroupProtocolInfo>();
+            _protocols = new List<KafkaConsumerGroupSettingsProtocol>();
         }               
 
         public KafkaConsumerGroupSettingsBuilder SetJoinGroupServerWaitTime(TimeSpan waitTime)
@@ -117,11 +117,11 @@ namespace NKafka.Client.ConsumerGroup
             if (assignmentStrategies == null) return this;
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore HeuristicUnreachableCode            
-            var protocol = new KafkaConsumerGroupProtocolInfo(protocolName, protocolVersion, assignmentStrategies, customData);
+            var protocol = new KafkaConsumerGroupSettingsProtocol(protocolName, protocolVersion, assignmentStrategies, customData);
             return AppendProtocol(protocol);
         }
 
-        public KafkaConsumerGroupSettingsBuilder AppendProtocol([NotNull] KafkaConsumerGroupProtocolInfo protocol)
+        public KafkaConsumerGroupSettingsBuilder AppendProtocol([NotNull] KafkaConsumerGroupSettingsProtocol protocol)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
             // ReSharper disable HeuristicUnreachableCode    
@@ -223,7 +223,7 @@ namespace NKafka.Client.ConsumerGroup
 
             public KafkaConsumerGroupSettingsBuilder EndAppendProtocol()
             {
-                var protocol = new KafkaConsumerGroupProtocolInfo(_protocolName, _protocolVersion, _strategies.ToArray(), _customData);
+                var protocol = new KafkaConsumerGroupSettingsProtocol(_protocolName, _protocolVersion, _strategies.ToArray(), _customData);
                 return _baseBuilder.AppendProtocol(protocol);
             }
         }

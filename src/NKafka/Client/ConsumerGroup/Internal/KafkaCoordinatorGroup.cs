@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.ConsumerGroup.Assignment;
+using NKafka.Client.ConsumerGroup.Diagnostics;
 using NKafka.Client.Internal;
 
 namespace NKafka.Client.ConsumerGroup.Internal
@@ -15,12 +16,14 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull]
         public readonly KafkaConsumerGroupSettings Settings;
 
-        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupProtocolInfo> Protocols;
+        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;
 
         public KafkaCoordinatorGroupStatus Status;
 
+        public DateTime GroupTimestampUtc; //todo
         public int GroupGenerationId;
         public string GroupProtocolName;
+        public string GroupAssignmentStrategyName; //todo
         public short GroupProtocolVersion;
         public string MemberId;
         public bool MemberIsLeader;
@@ -68,7 +71,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             }
             Topics = topicsDictionary;
 
-            var protocols = new List<KafkaConsumerGroupProtocolInfo>();
+            var protocols = new List<KafkaConsumerGroupSettingsProtocol>();
             var settingsProtocols = settings.Protocols;
             if (settingsProtocols != null)
             {
@@ -90,7 +93,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     }
                     if (strategies.Count == 0) continue;
 
-                    var protocol = new KafkaConsumerGroupProtocolInfo(settingsProtocol.ProtocolName,
+                    var protocol = new KafkaConsumerGroupSettingsProtocol(settingsProtocol.ProtocolName,
                         settingsProtocol.ProtocolVersion, strategies, settingsProtocol.CustomData);
                     protocols.Add(protocol);
                 }
