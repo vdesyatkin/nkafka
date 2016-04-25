@@ -109,16 +109,20 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 return;
             }
 
-            if (group.Error != null)
+            if (group.Error != null && group.Status != KafkaCoordinatorGroupStatus.Error)
+            {
+                group.Status = KafkaCoordinatorGroupStatus.Error;                
+            }
+
+            if (group.Status == KafkaCoordinatorGroupStatus.Error)
             {
                 if (DateTime.UtcNow - group.ErrorTimestampUtc < group.Settings.ErrorRetryPeriod)
                 {
                     return;
-                }
-                group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
+                }                
             }
 
-            if (group.Status == KafkaCoordinatorGroupStatus.NotInitialized)
+            if (group.Status == KafkaCoordinatorGroupStatus.NotInitialized || group.Status == KafkaCoordinatorGroupStatus.Error)
             {
                 var topics = group.Topics;
                 if (topics.Count == 0) return;

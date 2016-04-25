@@ -14,6 +14,7 @@
         FirstHeatbeatRequested = 9,
         OffsetFetchRequired = 10,
         OffsetFetchRequested = 11,
-        Ready = 12
+        Ready = 12,
+        Error = 13
     }
 }
