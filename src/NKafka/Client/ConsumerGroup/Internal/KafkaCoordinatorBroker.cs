@@ -108,12 +108,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             {
                 return;
             }
-
-            if (group.Error != null && group.Status != KafkaCoordinatorGroupStatus.Error)
-            {
-                group.Status = KafkaCoordinatorGroupStatus.Error;                
-            }
-
+           
             if (group.Status == KafkaCoordinatorGroupStatus.Error)
             {
                 if (DateTime.UtcNow - group.ErrorTimestampUtc < group.Settings.ErrorRetryPeriod)
@@ -135,15 +130,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     if (topic.Status != KafkaClientTopicStatus.Ready) return;
                 }
 
-                foreach (var topic in topics)
+                foreach (var topicPair in topics)
                 {
-                    var partitions = topic.Value.Partitions;
+                    var topic = topicPair.Value;
+                    if (topic == null) continue;
+
+                    var partitions = topic.Partitions;
                     var partitionIds = new List<int>(partitions.Count);
                     foreach (var partition in partitions)
                     {
                         partitionIds.Add(partition.PartitionId);
                     }
-                    group.AllTopicPartitions[topic.Value.TopicName] = partitionIds;
+                    group.AllTopicPartitions[topic.TopicName] = partitionIds;
                 }
 
                 var joinRequest = CreateJoinGroupRequest(group);
@@ -494,40 +492,42 @@ namespace NKafka.Client.ConsumerGroup.Internal
             }            
 
             if (response.ErrorCode != KafkaResponseErrorCode.NoError)
-            {               
+            {
+                var error = KafkaConsumerGroupSessionErrorCode.UnknownError;
+                bool isRearrangeRequired = false;
                 switch (response.ErrorCode)
                 {
                     //todo (E009)
                     case KafkaResponseErrorCode.GroupLoadInProgress:
-                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
-                        group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
+                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance; 
                         break;
                     case KafkaResponseErrorCode.GroupCoordinatorNotAvailable:
-                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
-                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
+                        isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.NotCoordinatorForGroup:
-                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
-                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
+                        isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.InconsistentGroupProtocol:
-                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
-                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
+                        isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.UnknownMemberId:
-                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
-                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
+                        isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.InvalidSessionTimeout:
-                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
-                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
+                        isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.GroupAuthorizationFailed:
-                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
-                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
+                        isRearrangeRequired = true;
                         break;
                 }
                 
+                group.SetError(error, isRearrangeRequired);
                 return false;
             }
             

@@ -133,10 +133,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 );
         }
 
-        public void SetError(KafkaConsumerGroupSessionErrorCode errorCode)
+        public void SetError(KafkaConsumerGroupSessionErrorCode errorCode, bool isRearrangeRequired = false)
         {
             ErrorTimestampUtc = DateTime.UtcNow;
             Error = errorCode;
+            Status = isRearrangeRequired ? KafkaCoordinatorGroupStatus.RearrangeRequired : KafkaCoordinatorGroupStatus.Error;
         }
 
         public void ResetError()
