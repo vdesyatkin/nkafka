@@ -12,6 +12,7 @@ namespace NKafka.Client.Producer
         private int? _batchMaxMessageCount;
         private int? _maxMessageSizeByteCount;
         private TimeSpan? _batchServerTimeout;
+        private TimeSpan? _errorRetryPeriod;
 
         [NotNull] public static KafkaProducerSettings Default => new KafkaProducerSettingsBuilder().Build();
 
@@ -58,6 +59,13 @@ namespace NKafka.Client.Producer
         }
 
         [PublicAPI, NotNull]
+        public KafkaProducerSettingsBuilder SetErrorRetryPeriod(TimeSpan period)
+        {
+            _errorRetryPeriod = period;
+            return this;
+        }
+
+        [PublicAPI, NotNull]
         public KafkaProducerSettings Build()
         {
             var consistencyLevel = _consistencyLevel ?? KafkaConsistencyLevel.OneReplica;
@@ -65,7 +73,8 @@ namespace NKafka.Client.Producer
             var batchSizeByteCount = _batchSizeByteCount ?? 200 * 200;
             var batchMaxMessageCount = _batchMaxMessageCount;
             var maxMessageSizeByteCount = _maxMessageSizeByteCount;
-            var produceTimeout = _batchServerTimeout ?? TimeSpan.FromSeconds(1);
+            var batchServerTimeout = _batchServerTimeout ?? TimeSpan.FromSeconds(1);
+            var errorRetryPeriod = _errorRetryPeriod ?? TimeSpan.FromSeconds(10);
 
             return new KafkaProducerSettings(
                 consistencyLevel,
@@ -73,7 +82,8 @@ namespace NKafka.Client.Producer
                 batchSizeByteCount,
                 batchMaxMessageCount,
                 maxMessageSizeByteCount,
-                produceTimeout);
+                batchServerTimeout,
+                errorRetryPeriod);
         }
     }
 }

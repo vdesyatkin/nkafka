@@ -109,6 +109,14 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 return;
             }
 
+            if (group.Error != null)
+            {
+                if (DateTime.UtcNow - group.ErrorTimestampUtc < group.Settings.ErrorRetryPeriod)
+                {
+                    return;
+                }
+            }
+
             if (group.Status == KafkaCoordinatorGroupStatus.NotInitialized)
             {
                 var topics = group.Topics;
@@ -134,7 +142,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 }
 
                 var joinRequest = CreateJoinGroupRequest(group);
-                var requestId = SendRequest(joinRequest, _coordinatorClientTimeout + group.Settings.JoinGroupServerWaitTime);
+                var requestId = SendRequest(joinRequest, _coordinatorClientTimeout + group.Settings.JoinGroupServerTimeout);
 
                 if (requestId == null) return;
                 _joinGroupRequests[group.GroupName] = requestId.Value;
@@ -216,7 +224,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 }
 
                 var syncRequest = CreateSyncGroupRequest(group);
-                var requestId = SendRequest(syncRequest, _coordinatorClientTimeout + group.Settings.SyncGroupServerWaitTime);
+                var requestId = SendRequest(syncRequest, _coordinatorClientTimeout + group.Settings.SyncGroupServerTimeout);
                 if (requestId == null) return;
 
                 _syncGroupRequests[group.GroupName] = requestId.Value;
@@ -247,7 +255,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             if (group.Status == KafkaCoordinatorGroupStatus.FirstHeatbeatRequired)
             {
                 var heartbeatRequest = CreateHeartbeatRequest(group);
-                var requestId = SendRequest(heartbeatRequest, _coordinatorClientTimeout + group.Settings.HeartbeatServerWaitTime);
+                var requestId = SendRequest(heartbeatRequest, _coordinatorClientTimeout + group.Settings.HeartbeatServerTimeout);
                 if (requestId == null) return;
 
                 group.HeartbeatTimestampUtc = DateTime.UtcNow;
@@ -299,7 +307,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     !_heartbeatRequests.ContainsKey(group.GroupName))
                 {
                     var heartbeatRequest = CreateHeartbeatRequest(group);
-                    var requestId = SendRequest(heartbeatRequest, _coordinatorClientTimeout + group.Settings.HeartbeatServerWaitTime);
+                    var requestId = SendRequest(heartbeatRequest, _coordinatorClientTimeout + group.Settings.HeartbeatServerTimeout);
                     if (requestId == null) return;
 
                     group.HeartbeatTimestampUtc = DateTime.UtcNow;
@@ -310,7 +318,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             if (group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequired)
             {
                 var offsetFetchRequest = CreateOffsetFetchRequest(group);
-                var requestId = SendRequest(offsetFetchRequest, _coordinatorClientTimeout + group.Settings.OffsetFetchServerWaitTime);
+                var requestId = SendRequest(offsetFetchRequest, _coordinatorClientTimeout + group.Settings.OffsetFetchServerTimeout);
                 if (requestId == null) return;
 
                 _offsetFetchRequests[group.GroupName] = requestId.Value;
@@ -363,7 +371,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     group.CommitTimestampUtc = DateTime.UtcNow;
 
                     var commitRequest = CreateOffsetCommitRequest(group);                    
-                    var requestId = SendRequest(commitRequest, _coordinatorClientTimeout + group.Settings.OffsetCommitServerWaitTime);
+                    var requestId = SendRequest(commitRequest, _coordinatorClientTimeout + group.Settings.OffsetCommitServerTimeout);
                     if (requestId == null) return;
                     
                     _offsetCommitRequests[group.GroupName] = requestId.Value;
@@ -456,7 +464,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (protocols.Count == 0) return null;
 
-            var request = new KafkaJoinGroupRequest(group.GroupName, group.MemberId, group.Settings.GroupSessionTimeout, protocols);
+            var request = new KafkaJoinGroupRequest(group.GroupName, group.MemberId, group.Settings.GroupSessionLifetime, protocols);
             return request;
         }
 

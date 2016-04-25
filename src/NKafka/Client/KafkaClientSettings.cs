@@ -10,21 +10,23 @@ namespace NKafka.Client
     {
         public readonly KafkaVersion KafkaVersion;
         public readonly string ClientId;
-        public readonly int WorkerThreadCount;
-        public readonly TimeSpan WorkerPeriod;
-
         public readonly IReadOnlyCollection<KafkaBrokerInfo> MetadataBrokers;
-        
+
+        public readonly int WorkerThreadCount;
+        public readonly TimeSpan WorkerPeriod;        
+        public readonly TimeSpan MetadataErrorRetryPeriod;
+
         public readonly KafkaConnectionSettings ConnectionSettings;
 
         public KafkaClientSettings(
             KafkaVersion kafkaVersion,
             [CanBeNull] string clientId,
-            [NotNull, ItemNotNull] IReadOnlyCollection<KafkaBrokerInfo> metadataBrokers,
+            [NotNull, ItemNotNull] IReadOnlyCollection<KafkaBrokerInfo> metadataBrokers,            
 
             int workerThreadCount,
             TimeSpan workerPeriod,
-                        
+            TimeSpan metadataErrorRetryPeriod,
+
             [CanBeNull] KafkaConnectionSettings connectionSettings            
             )
         {
@@ -33,6 +35,7 @@ namespace NKafka.Client
             MetadataBrokers = metadataBrokers;
             WorkerThreadCount = workerThreadCount;
             WorkerPeriod = workerPeriod;
+            MetadataErrorRetryPeriod = metadataErrorRetryPeriod;
             ConnectionSettings = connectionSettings;            
         }
     }

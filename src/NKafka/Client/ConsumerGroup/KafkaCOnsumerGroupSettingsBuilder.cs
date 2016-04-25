@@ -23,6 +23,8 @@ namespace NKafka.Client.ConsumerGroup
         private TimeSpan? _offsetCommitPeriod;
         private TimeSpan? _offsetCommitRetentionTime;
 
+        private TimeSpan? _errorRetryPeriod;
+
         [NotNull] private List<KafkaConsumerGroupSettingsProtocol> _protocols;
         private string _offsetCommitCustomData;
 
@@ -39,39 +41,39 @@ namespace NKafka.Client.ConsumerGroup
             _protocols = new List<KafkaConsumerGroupSettingsProtocol>();
         }               
 
-        public KafkaConsumerGroupSettingsBuilder SetJoinGroupServerWaitTime(TimeSpan waitTime)
+        public KafkaConsumerGroupSettingsBuilder SetJoinGroupServerTimeout(TimeSpan timeout)
         {
-            _joinGroupServerWaitTime = waitTime;
+            _joinGroupServerWaitTime = timeout;
             return this;
         }
 
-        public KafkaConsumerGroupSettingsBuilder SetSyncGroupServerWaitTime(TimeSpan waitTime)
+        public KafkaConsumerGroupSettingsBuilder SetSyncGroupServerTimeout(TimeSpan timeout)
         {
-            _syncGroupServerWaitTime = waitTime;
+            _syncGroupServerWaitTime = timeout;
             return this;
         }
 
-        public KafkaConsumerGroupSettingsBuilder SetHeartbeatServerWaitTime(TimeSpan waitTime)
+        public KafkaConsumerGroupSettingsBuilder SetHeartbeatServerTimeout(TimeSpan timeout)
         {
-            _heartbeatServerWaitTime = waitTime;
+            _heartbeatServerWaitTime = timeout;
             return this;
         }
 
-        public KafkaConsumerGroupSettingsBuilder SetOffsetFetchServerWaitTime(TimeSpan waitTime)
+        public KafkaConsumerGroupSettingsBuilder SetOffsetFetchServerTimeout(TimeSpan timeout)
         {
-            _offsetFetchServerWaitTime = waitTime;
+            _offsetFetchServerWaitTime = timeout;
             return this;
         }
 
-        public KafkaConsumerGroupSettingsBuilder SetOffsetCommitServerWaitTime(TimeSpan waitTime)
+        public KafkaConsumerGroupSettingsBuilder SetOffsetCommitServerTimeout(TimeSpan timeout)
         {
-            _offsetCommitServerWaitTime = waitTime;
+            _offsetCommitServerWaitTime = timeout;
             return this;
         }
 
-        public KafkaConsumerGroupSettingsBuilder SetGroupSessionTimeout(TimeSpan timeout)
+        public KafkaConsumerGroupSettingsBuilder SetGroupSessionLifetime(TimeSpan lifeTime)
         {
-            _groupSessionTimeout = timeout;
+            _groupSessionTimeout = lifeTime;
             return this;
         }
 
@@ -87,9 +89,15 @@ namespace NKafka.Client.ConsumerGroup
             return this;
         }
 
-        public KafkaConsumerGroupSettingsBuilder SetOffsetCommitRetentionTime(TimeSpan period)
+        public KafkaConsumerGroupSettingsBuilder SetOffsetCommitRetentionTime(TimeSpan retentionTime)
         {
-            _offsetCommitRetentionTime = period;
+            _offsetCommitRetentionTime = retentionTime;
+            return this;
+        }
+
+        public KafkaConsumerGroupSettingsBuilder SetErrorRetryPeriod(TimeSpan period)
+        {
+            _errorRetryPeriod = period;
             return this;
         }
 
@@ -146,6 +154,8 @@ namespace NKafka.Client.ConsumerGroup
             var offsetCommitPeriod = _offsetCommitPeriod ?? TimeSpan.FromMinutes(1);
             var offsetCommitRetentionTime = _offsetCommitRetentionTime ?? TimeSpan.FromDays(7);
 
+            var errorRetryPeriod = _errorRetryPeriod ?? TimeSpan.FromSeconds(10);
+
             var protocols = _protocols.ToArray();
             if (protocols.Length == 0)
             {
@@ -162,6 +172,7 @@ namespace NKafka.Client.ConsumerGroup
                 heartbeatPeriod,
                 offsetCommitPeriod,
                 offsetCommitRetentionTime,
+                errorRetryPeriod,
                 protocols,
                 _offsetCommitCustomData);
         }

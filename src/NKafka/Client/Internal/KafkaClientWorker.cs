@@ -36,9 +36,7 @@ namespace NKafka.Client.Internal
         public event ArrangeTopicDelegate ArrangeTopic;
 
         public delegate void ArrangeGroupDelegate([NotNull] string groupName, [NotNull] KafkaClientBrokerGroup groupCoordinator);
-        public event ArrangeGroupDelegate ArrangeGroup;
-
-        private readonly TimeSpan _retryMetadataRequestPeriod = TimeSpan.FromMinutes(1);
+        public event ArrangeGroupDelegate ArrangeGroup;        
         
         public KafkaClientWorker(int workerId, [NotNull] KafkaClientSettings settings)
         {
@@ -279,7 +277,7 @@ namespace NKafka.Client.Internal
         {
             if (topic.Status == KafkaClientTopicStatus.MetadataError)
             {
-                if (DateTime.UtcNow - topic.MetadataInfo.TimestampUtc < _retryMetadataRequestPeriod) return;                
+                if (DateTime.UtcNow - topic.MetadataInfo.TimestampUtc < _settings.MetadataErrorRetryPeriod) return;                
             }
 
             if (topic.Status == KafkaClientTopicStatus.NotInitialized || topic.Status == KafkaClientTopicStatus.MetadataError)
@@ -405,7 +403,7 @@ namespace NKafka.Client.Internal
         {
             if (group.Status == KafkaClientGroupStatus.MetadataError)
             {
-                if (DateTime.UtcNow - group.MetadataInfo.TimestampUtc < _retryMetadataRequestPeriod) return;
+                if (DateTime.UtcNow - group.MetadataInfo.TimestampUtc < _settings.MetadataErrorRetryPeriod) return;
             }
 
             if (group.Status == KafkaClientGroupStatus.NotInitialized || group.Status == KafkaClientGroupStatus.MetadataError)

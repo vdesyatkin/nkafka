@@ -11,7 +11,8 @@ namespace NKafka.Client.Producer.Internal
         [NotNull] public readonly KafkaProducerSettings Settings;
 
         public KafkaProducerBrokerPartitionStatus Status;
-        public KafkaProducerTopicPartitionErrorCode? Error;
+        public KafkaProducerTopicPartitionErrorCode? Error { get; private set; }
+        public DateTime? ErrorTimestampUtc { get; private set; }
         [NotNull] public KafkaProducerTopicPartitionLimitInfo LimitInfo { get; private set; }
 
         public long RetryEnqueuedMessageCount { get; private set; }
@@ -96,6 +97,18 @@ namespace NKafka.Client.Producer.Internal
         public void SetMaxMessageCount(int maxMessageCount)
         {
             LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow, LimitInfo.MaxMessageSizeByteCount, maxMessageCount);
+        }
+
+        public void SetError(KafkaProducerTopicPartitionErrorCode error)
+        {
+            ErrorTimestampUtc = DateTime.UtcNow;
+            Error = error;            
+        }
+
+        public void ResetError()
+        {
+            ErrorTimestampUtc = DateTime.UtcNow;
+            Error = null;
         }
     }
 }

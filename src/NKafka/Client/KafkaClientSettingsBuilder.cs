@@ -13,6 +13,7 @@ namespace NKafka.Client
 
         private int? _workerThreadCount;
         private TimeSpan? _workerPeriod;
+        private TimeSpan? _metadataErrorRetryPeriod;
 
         [NotNull] private readonly List<KafkaBrokerInfo> _metadataBrokers;
         
@@ -59,6 +60,13 @@ namespace NKafka.Client
         }
 
         [PublicAPI, NotNull]
+        public KafkaClientSettingsBuilder SetMetadataErrorRetryPeriod(TimeSpan period)
+        {
+            _metadataErrorRetryPeriod = period;
+            return this;
+        }
+
+        [PublicAPI, NotNull]
         public KafkaClientSettingsBuilder SetConnectionSettings([NotNull]KafkaConnectionSettings connectionSettings)
         {
             _connectionSettings = connectionSettings;
@@ -74,11 +82,12 @@ namespace NKafka.Client
 
             var workerThreadCount = _workerThreadCount ?? 0;
             var workerPeriod = _workerPeriod ?? TimeSpan.FromSeconds(1);
+            var metadataErrorRetryPeriod = _metadataErrorRetryPeriod ?? TimeSpan.FromSeconds(10);
 
             var connectionSettings = _connectionSettings ?? KafkaConnectionSettingsBuilder.Default;
 
             return new KafkaClientSettings(kafkaVersion, clientId, metadataBrokers, 
-                workerThreadCount, workerPeriod,
+                workerThreadCount, workerPeriod, metadataErrorRetryPeriod,
                 connectionSettings);
         }        
     }

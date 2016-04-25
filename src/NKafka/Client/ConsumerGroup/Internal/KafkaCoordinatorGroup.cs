@@ -20,8 +20,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public KafkaCoordinatorGroupStatus Status;
 
-        private KafkaConsumerGroupSessionErrorCode? _error;
-        private DateTime _timestampUtc;
+        public KafkaConsumerGroupSessionErrorCode? Error { get; private set; }
+        public DateTime ErrorTimestampUtc { get; private set; }
 
         public int GroupGenerationId;
         public string GroupProtocolName;
@@ -53,7 +53,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             CommitedTopicPartitionOffsets = new Dictionary<string, Dictionary<int, long?>>();
             Settings = settings;
 
-            var heartbeatPeriod = TimeSpan.FromSeconds(settings.GroupSessionTimeout.TotalSeconds/2 - 1);
+            var heartbeatPeriod = TimeSpan.FromSeconds(settings.GroupSessionLifetime.TotalSeconds/2 - 1);
             if (settings.HeartbeatPeriod < heartbeatPeriod)
             {
                 heartbeatPeriod = settings.HeartbeatPeriod;
@@ -123,7 +123,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull]
         public KafkaConsumerGroupSessionInfo GetSessionInfo()
         {
-            return new KafkaConsumerGroupSessionInfo(GroupName, _timestampUtc,
+            return new KafkaConsumerGroupSessionInfo(GroupName, ErrorTimestampUtc,
                 false, //todo 
                 KafkaConsumerGroupSessionStatus.ToDo, //todo 
                 KafkaConsumerGroupSessionErrorCode.UnknownError, //todo                
@@ -135,14 +135,14 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public void SetError(KafkaConsumerGroupSessionErrorCode errorCode)
         {
-            _timestampUtc = DateTime.UtcNow;
-            _error = errorCode;
+            ErrorTimestampUtc = DateTime.UtcNow;
+            Error = errorCode;
         }
 
         public void ResetError()
         {
-            _timestampUtc = DateTime.UtcNow;
-            _error = null;
+            ErrorTimestampUtc = DateTime.UtcNow;
+            Error = null;
         }
     }
 }

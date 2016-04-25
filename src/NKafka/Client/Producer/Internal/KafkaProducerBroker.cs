@@ -183,7 +183,15 @@ namespace NKafka.Client.Producer.Internal
                 }
 
                 var partition = partitionList[index];
-                if (partition == null) continue;                
+                if (partition == null) continue;
+
+                if (partition.Error != null)
+                {
+                    if (DateTime.UtcNow - partition.ErrorTimestampUtc > partition.Settings.ErrorReplyPeriod)
+                    {
+                        continue;
+                    }
+                }                
 
                 List<KafkaMessage> topicPartionMessages;
                 topicBatch.Partitions.TryGetValue(partition.PartitionId, out topicPartionMessages);                
@@ -378,7 +386,7 @@ namespace NKafka.Client.Producer.Internal
                         isRearrangeRequired = true;
                         break;
                 }
-                partition.Error = error;
+                partition.SetError(error);
                 partition.RollbackMessags(batchMessages);
                 if (isRearrangeRequired)
                 {
@@ -386,9 +394,9 @@ namespace NKafka.Client.Producer.Internal
                 }
                 return;
             }
-            
-            partition.ConfirmMessags(batchMessages);
-            partition.Error = null;            
+
+            partition.ResetError();
+            partition.ConfirmMessags(batchMessages);                                  
         }
 
         private void HandleBrokerError(
@@ -434,7 +442,7 @@ namespace NKafka.Client.Producer.Internal
                         isRearrangeRequired = true;
                         break;
                 }
-                partition.Error = error;
+                partition.SetError(error);
                 
                 if (isRearrangeRequired)
                 {

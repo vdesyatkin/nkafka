@@ -104,7 +104,7 @@ namespace NKafka.Client.Producer.Internal
 
                 var partitionInfo = new KafkaProducerTopicPartitionInfo(partition.PartitonId,
                     partitionBroker.Status == KafkaProducerBrokerPartitionStatus.Ready,
-                    partitionBroker.Error,
+                    partitionBroker.Error, partitionBroker.ErrorTimestampUtc,
                     partitionMessagesInfo,
                     partitionBroker.LimitInfo); 
                 partitionInfos.Add(partitionInfo);

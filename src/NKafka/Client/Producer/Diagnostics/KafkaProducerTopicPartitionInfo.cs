@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace NKafka.Client.Producer.Diagnostics
 {
@@ -11,12 +12,15 @@ namespace NKafka.Client.Producer.Diagnostics
 
         public readonly KafkaProducerTopicPartitionErrorCode? Error;
 
+        public readonly DateTime? ErrorTimestampUtc;
+
         [NotNull]
         public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;
 
         [NotNull] public readonly KafkaProducerTopicPartitionLimitInfo LimitInfo;
 
-        public KafkaProducerTopicPartitionInfo(int partitionId, bool isReady, KafkaProducerTopicPartitionErrorCode? error, 
+        public KafkaProducerTopicPartitionInfo(int partitionId, bool isReady, 
+            KafkaProducerTopicPartitionErrorCode? error, DateTime? errorTimestampUtc,
             [NotNull] KafkaProducerTopicMessageCountInfo messagesInfo, [NotNull] KafkaProducerTopicPartitionLimitInfo limitInfo)
         {
             PartitionId = partitionId;
