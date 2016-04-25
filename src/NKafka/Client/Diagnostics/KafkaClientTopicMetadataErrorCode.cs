@@ -7,11 +7,11 @@ namespace NKafka.Client.Diagnostics
     {
         UnknownError = 0,
         ConnectionClosed = 1,
-        Maintenance = 2,
+        ClientMaintenance = 2,
         TransportError = 3,
         ProtocolError = 4,
-        Timeout = 5,
-        InternalError = 6,
-        MetadataError = 7,        
+        ClientTimeout = 5,
+        ClientError = 6,
+        MetadataError = 7,     
     }
 }

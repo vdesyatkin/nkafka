@@ -20,10 +20,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public KafkaCoordinatorGroupStatus Status;
 
-        public DateTime GroupTimestampUtc; //todo
+        private KafkaConsumerGroupSessionErrorCode? _error;
+        private DateTime _timestampUtc;
+
         public int GroupGenerationId;
         public string GroupProtocolName;
-        public string GroupAssignmentStrategyName; //todo
+        public string GroupAssignmentStrategyName;
         public short GroupProtocolVersion;
         public string MemberId;
         public bool MemberIsLeader;
@@ -121,7 +123,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull]
         public KafkaConsumerGroupSessionInfo GetSessionInfo()
         {
-            return new KafkaConsumerGroupSessionInfo(GroupName, GroupTimestampUtc,
+            return new KafkaConsumerGroupSessionInfo(GroupName, _timestampUtc,
                 false, //todo 
                 KafkaConsumerGroupSessionStatus.ToDo, //todo 
                 KafkaConsumerGroupSessionErrorCode.UnknownError, //todo                
@@ -129,6 +131,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 new KafkaConsumerGroupSessionProtocolInfo(GroupProtocolName, GroupProtocolVersion, GroupAssignmentStrategyName, null), //todo
                 new KafkaConsumerGroupSessionMemberInfo(GroupGenerationId, MemberId, MemberIsLeader)              
                 );
+        }
+
+        public void SetError(KafkaConsumerGroupSessionErrorCode errorCode)
+        {
+            _timestampUtc = DateTime.UtcNow;
+            _error = errorCode;
+        }
+
+        public void ResetError()
+        {
+            _timestampUtc = DateTime.UtcNow;
+            _error = null;
         }
     }
 }

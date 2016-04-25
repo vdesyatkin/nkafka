@@ -6,10 +6,12 @@ namespace NKafka.Client.Diagnostics
     public enum KafkaClientGroupMetadataErrorCode 
     {
         UnknownError = 0,
-        InvalidState = 1,
-        TransportError = 2,
-        ProtocolError = 3,
-        MetadataError = 4,
-        InternalError = 5,
+        ConnectionClosed = 1,
+        ClientMaintenance = 2,
+        TransportError = 3,
+        ProtocolError = 4,
+        ClientTimeout = 5,
+        ClientError = 6,
+        MetadataError = 7
     }
 }

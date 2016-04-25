@@ -23,14 +23,19 @@ namespace NKafka.Client.ConsumerGroup
 
         public KafkaConsumerGroupInfo GetDiagnosticsInfo()
         {
-            var sessionInfo = ClientGroup?.Coordinator.GetSessionInfo();
-            var metadataInfo = ClientGroup?.MetadataInfo;
+            var clientGroup = ClientGroup;
+            if (clientGroup == null)
+            {
+                return new KafkaConsumerGroupInfo(GroupName, DateTime.UtcNow, false, null, null);
+            }
+            var metadataInfo = clientGroup.MetadataInfo;
+            var sessionInfo = clientGroup.Coordinator.GetSessionInfo();
 
             return new KafkaConsumerGroupInfo(GroupName, DateTime.UtcNow,
-                false, //todo 
-                metadataInfo, //todo empty value
-                sessionInfo //todo empty value
-                );   
+                metadataInfo.IsReady && sessionInfo.IsReady,
+                metadataInfo,
+                sessionInfo
+                );
         }
     }
 }

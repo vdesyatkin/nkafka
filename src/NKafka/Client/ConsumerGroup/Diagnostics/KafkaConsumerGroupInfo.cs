@@ -13,15 +13,15 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly bool IsReady;
 
-        [NotNull]
+        [CanBeNull]
         public readonly KafkaClientGroupMetadataInfo MetadataInfo;
 
-        [NotNull]
+        [CanBeNull]
         public readonly KafkaConsumerGroupSessionInfo SessionInfo;
 
         public KafkaConsumerGroupInfo(string groupName, DateTime timestampUtc, bool isReady,
-            [NotNull] KafkaClientGroupMetadataInfo metadataInfo,
-            [NotNull] KafkaConsumerGroupSessionInfo sessionInfo)
+            [CanBeNull] KafkaClientGroupMetadataInfo metadataInfo,
+            [CanBeNull] KafkaConsumerGroupSessionInfo sessionInfo)
         {
             GroupName = groupName;
             TimestampUtc = timestampUtc;

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.ConsumerGroup.Assignment;
+using NKafka.Client.ConsumerGroup.Diagnostics;
 using NKafka.Client.Internal;
 using NKafka.Connection;
 using NKafka.Protocol;
@@ -150,10 +151,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 }
 
                 var joinGroupResponse = _broker.Receive<KafkaJoinGroupResponse>(requestId);
-                if (!joinGroupResponse.HasData) return;
+                if (!joinGroupResponse.HasData && !joinGroupResponse.HasError) return;                
 
                 _joinGroupRequests.Remove(group.GroupName);
-                if (!TryProcessJoinGroupResponse(group, joinGroupResponse.Data))
+                if (!TryHandleJoinGroupResponse(group, joinGroupResponse.Data, joinGroupResponse.Error))
                 {
                     return;
                 }
@@ -383,6 +384,38 @@ namespace NKafka.Client.ConsumerGroup.Internal
             return requestId;
         }
 
+        private void HandleBrokerError([NotNull] KafkaCoordinatorGroup group, KafkaBrokerErrorCode errorCode)
+        {
+            KafkaConsumerGroupSessionErrorCode sessionErrorCode;
+            
+            switch (errorCode)
+            {
+                case KafkaBrokerErrorCode.Closed:
+                    sessionErrorCode = KafkaConsumerGroupSessionErrorCode.ConnectionClosed;
+                    break;
+                case KafkaBrokerErrorCode.Maintenance:
+                    sessionErrorCode = KafkaConsumerGroupSessionErrorCode.ClientMaintenance;
+                    break;
+                case KafkaBrokerErrorCode.BadRequest:
+                    sessionErrorCode = KafkaConsumerGroupSessionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.ProtocolError:
+                    sessionErrorCode = KafkaConsumerGroupSessionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.TransportError:
+                    sessionErrorCode = KafkaConsumerGroupSessionErrorCode.TransportError;
+                    break;
+                case KafkaBrokerErrorCode.Timeout:
+                    sessionErrorCode = KafkaConsumerGroupSessionErrorCode.ClientTimeout;
+                    break;
+                default:
+                    sessionErrorCode = KafkaConsumerGroupSessionErrorCode.UnknownError;
+                    break;
+            }
+            
+            group.SetError(sessionErrorCode);
+        }
+
         #region JoinGroup
 
         private KafkaJoinGroupRequest CreateJoinGroupRequest([NotNull] KafkaCoordinatorGroup group)
@@ -427,24 +460,57 @@ namespace NKafka.Client.ConsumerGroup.Internal
             return request;
         }
 
-        private bool TryProcessJoinGroupResponse([NotNull] KafkaCoordinatorGroup group, KafkaJoinGroupResponse response)
+        private bool TryHandleJoinGroupResponse([NotNull] KafkaCoordinatorGroup group, KafkaJoinGroupResponse response, KafkaBrokerErrorCode? brokerError)
         {
+            if (brokerError != null)
+            {
+                HandleBrokerError(group, brokerError.Value);
+                group.Status = KafkaCoordinatorGroupStatus.NotInitialized; //todo (E009) retry period
+                return false;
+            }
+
             if (response == null)
             {
+                group.SetError(KafkaConsumerGroupSessionErrorCode.ProtocolError);
                 group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
                 return false;
-            }
-
-            if (response.ErrorCode == KafkaResponseErrorCode.NotCoordinatorForGroup)
-            {
-                group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
-                return false;
-            }
+            }            
 
             if (response.ErrorCode != KafkaResponseErrorCode.NoError)
-            {
-                //todo (E009)
-                group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
+            {               
+                switch (response.ErrorCode)
+                {
+                    //todo (E009)
+                    case KafkaResponseErrorCode.GroupLoadInProgress:
+                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
+                        group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
+                        break;
+                    case KafkaResponseErrorCode.GroupCoordinatorNotAvailable:
+                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
+                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        break;
+                    case KafkaResponseErrorCode.NotCoordinatorForGroup:
+                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
+                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        break;
+                    case KafkaResponseErrorCode.InconsistentGroupProtocol:
+                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
+                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        break;
+                    case KafkaResponseErrorCode.UnknownMemberId:
+                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
+                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        break;
+                    case KafkaResponseErrorCode.InvalidSessionTimeout:
+                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
+                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        break;
+                    case KafkaResponseErrorCode.GroupAuthorizationFailed:
+                        group.SetError(KafkaConsumerGroupSessionErrorCode.ServerMaintenance);
+                        group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                        break;
+                }
+                
                 return false;
             }
             

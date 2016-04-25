@@ -363,7 +363,7 @@ namespace NKafka.Client.Internal
                 catch (Exception)
                 {
                     topic.Status = KafkaClientTopicStatus.MetadataError;
-                    topic.ChangeMetadataState(false, KafkaClientTopicMetadataErrorCode.InternalError, null);
+                    topic.ChangeMetadataState(false, KafkaClientTopicMetadataErrorCode.ClientError, null);
                     return;
                 }
             }
@@ -492,7 +492,7 @@ namespace NKafka.Client.Internal
                 catch (Exception)
                 {
                     group.Status = KafkaClientGroupStatus.MetadataError;
-                    group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.InternalError, null);
+                    group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.ClientError, null);
                     return;
                 }                
             }
@@ -625,7 +625,7 @@ namespace NKafka.Client.Internal
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.ConnectionClosed;
                         break;
                     case KafkaBrokerErrorCode.Maintenance:
-                        topicErrorCode = KafkaClientTopicMetadataErrorCode.Maintenance;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ClientMaintenance;
                         break;
                     case KafkaBrokerErrorCode.BadRequest:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.ProtocolError;
@@ -637,7 +637,7 @@ namespace NKafka.Client.Internal
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.TransportError;
                         break;                                        
                     case KafkaBrokerErrorCode.Timeout:
-                        topicErrorCode = KafkaClientTopicMetadataErrorCode.Timeout;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ClientTimeout;
                         break;
                     default:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.UnknownError;
@@ -735,21 +735,24 @@ namespace NKafka.Client.Internal
             if (errorCode.HasValue)
             {
                 switch (errorCode.Value)
-                {
+                {                    
+                    case KafkaBrokerErrorCode.Closed:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ConnectionClosed;
+                        break;
+                    case KafkaBrokerErrorCode.Maintenance:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ClientMaintenance;
+                        break;
                     case KafkaBrokerErrorCode.BadRequest:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.ProtocolError;
-                        break;
-                    case KafkaBrokerErrorCode.Closed:
-                        groupErrorCode = KafkaClientGroupMetadataErrorCode.InvalidState;
                         break;
                     case KafkaBrokerErrorCode.ProtocolError:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.ProtocolError;
                         break;
                     case KafkaBrokerErrorCode.TransportError:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.TransportError;
-                        break;
+                        break;                    
                     case KafkaBrokerErrorCode.Timeout:
-                        groupErrorCode = KafkaClientGroupMetadataErrorCode.TransportError;
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ClientTimeout;
                         break;
                     default:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.UnknownError;
