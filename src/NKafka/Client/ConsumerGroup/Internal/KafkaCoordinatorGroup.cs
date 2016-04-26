@@ -23,12 +23,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public KafkaConsumerGroupSessionErrorCode? Error { get; private set; }
         public DateTime ErrorTimestampUtc { get; private set; }
 
-        public int GroupGenerationId;
-        public string GroupProtocolName;
+        [CanBeNull]
+        public KafkaCoordinatorGroupSession SessionInfo { get; private set; }
+        
         public string GroupAssignmentStrategyName;
         public short GroupProtocolVersion;
-        public string MemberId;
-        public bool MemberIsLeader;
+        
         [CanBeNull] public IReadOnlyList<KafkaCoordinatorGroupMember> GroupMembers;
         [CanBeNull] public IReadOnlyDictionary<string, List<KafkaCoordinatorGroupMember>> TopicMembers;
 
@@ -121,15 +121,17 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         [NotNull]
-        public KafkaConsumerGroupSessionInfo GetSessionInfo()
+        public KafkaConsumerGroupSessionInfo GetSessionDiagnosticsInfo()
         {
+            var currentSession = SessionInfo;
+
             return new KafkaConsumerGroupSessionInfo(GroupName, ErrorTimestampUtc,
                 false, //todo 
                 KafkaConsumerGroupSessionStatus.ToDo, //todo 
                 KafkaConsumerGroupSessionErrorCode.UnknownError, //todo                
                 new KafkaConsumerGroupSessionTopicInfo[0], //todo
-                new KafkaConsumerGroupSessionProtocolInfo(GroupProtocolName, GroupProtocolVersion, GroupAssignmentStrategyName, null), //todo
-                new KafkaConsumerGroupSessionMemberInfo(GroupGenerationId, MemberId, MemberIsLeader)              
+                new KafkaConsumerGroupSessionProtocolInfo(currentSession?.ProtocolName, GroupProtocolVersion, GroupAssignmentStrategyName, null), //todo
+                new KafkaConsumerGroupSessionMemberInfo(currentSession?.GenerationId, currentSession?.MemberId, currentSession?.IsLeader ?? false)
                 );
         }
 
@@ -144,6 +146,16 @@ namespace NKafka.Client.ConsumerGroup.Internal
         {
             ErrorTimestampUtc = DateTime.UtcNow;
             Error = null;
+        }
+
+        public void SetSession(int generationId, string memberId, bool isLeader, string protocolName)
+        {
+            SessionInfo = new KafkaCoordinatorGroupSession(DateTime.UtcNow, generationId, memberId, isLeader, protocolName);
+        }
+
+        public void ResetSession()
+        {
+            SessionInfo = null;
         }
     }
 }

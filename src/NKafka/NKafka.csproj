@@ -43,6 +43,7 @@
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionInfo.cs" />
     <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupMember.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupSession.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\Strategies\KafkaConsumerAssignmentRoundRobinStrategy.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettings.cs" />
