@@ -11,12 +11,15 @@ namespace NKafka.Client.Producer.Internal
 
         [NotNull] public readonly ConcurrentDictionary<int, KafkaProducerBrokerPartition> Partitions;
 
-        public int ProducePartitionIndex;      
+        public int ProducePartitionIndex;
+
+        public KafkaConsistencyLevel ConsistencyLevel;
 
         public KafkaProducerBrokerTopic([NotNull]string topicName, [NotNull] KafkaProducerSettings settings)
         {
             TopicName = topicName;
             Settings = settings;
+            ConsistencyLevel = settings.ConsistencyLevel;
             Partitions = new ConcurrentDictionary<int, KafkaProducerBrokerPartition>();
         }
     }

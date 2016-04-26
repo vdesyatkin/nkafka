@@ -301,12 +301,12 @@ namespace NKafka.Client.Producer.Internal
                     List<KafkaMessage> batchMessages;
                     if (!topicBatch.Partitions.TryGetValue(partitionId, out batchMessages) || batchMessages == null) continue;
 
-                    HandlePartitionResponse(partition, partitionResponse, batchMessages);                    
+                    HandlePartitionResponse(topic, partition, partitionResponse, batchMessages);                    
                 }
             }
         }
 
-        private void HandlePartitionResponse([NotNull] KafkaProducerBrokerPartition partition, 
+        private void HandlePartitionResponse([NotNull] KafkaProducerBrokerTopic topic, [NotNull] KafkaProducerBrokerPartition partition, 
             [NotNull] KafkaProduceResponseTopicPartition response, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> batchMessages)
         {            
@@ -317,6 +317,7 @@ namespace NKafka.Client.Producer.Internal
 
                 switch (response.ErrorCode)
                 {
+                    //todo validate                    
                     case KafkaResponseErrorCode.InvalidMessage:
                         error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
                         break;
@@ -328,25 +329,25 @@ namespace NKafka.Client.Producer.Internal
                         error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
                         break;
                     case KafkaResponseErrorCode.LeaderNotAvailable:
-                        error = KafkaProducerTopicPartitionErrorCode.ServerMaintenance;
+                        error = KafkaProducerTopicPartitionErrorCode.LeaderNotAvailable;
                         break;
                     case KafkaResponseErrorCode.NotLeaderForPartition:
-                        error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                        error = KafkaProducerTopicPartitionErrorCode.NotLeaderForPartition;
                         isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.RequestTimedOut:
-                        error = KafkaProducerTopicPartitionErrorCode.ServerTimetout;
+                        error = KafkaProducerTopicPartitionErrorCode.ServerTimeout;
                         break;
-                    case KafkaResponseErrorCode.BrokerNotAvailable:
-                        error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                    case KafkaResponseErrorCode.BrokerNotAvailable: //todo ?
+                        error = KafkaProducerTopicPartitionErrorCode.LeaderNotAvailable;
                         isRearrangeRequired = true;
                         break;
-                    case KafkaResponseErrorCode.ReplicaNotAvailable:
-                        error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                    case KafkaResponseErrorCode.ReplicaNotAvailable: //todo ?
+                        error = KafkaProducerTopicPartitionErrorCode.LeaderNotAvailable;
                         isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.MessageSizeTooLarge:
-                        error = KafkaProducerTopicPartitionErrorCode.UnknownError;
+                        error = KafkaProducerTopicPartitionErrorCode.MessageSizeTooLarge;
                         var maxMessageSize = 2;
                         foreach (var message in batchMessages)
                         {
@@ -363,7 +364,7 @@ namespace NKafka.Client.Producer.Internal
                         isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.RecordListTooLarge:
-                        error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                        error = KafkaProducerTopicPartitionErrorCode.RecordListTooLarge;
                         var newMessageCountLimit = Math.Max(1, (int)Math.Round(batchMessages.Count * 0.66));
                         partition.SetMaxMessageCount(newMessageCountLimit);
                         break;
@@ -374,8 +375,8 @@ namespace NKafka.Client.Producer.Internal
                         error = KafkaProducerTopicPartitionErrorCode.NotEnoughReplicasAfterAppend;
                         break;
                     case KafkaResponseErrorCode.InvalidRequiredAcks:
-                        error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
-                        isRearrangeRequired = true;
+                        error = KafkaProducerTopicPartitionErrorCode.InvalidRequiredAcks;
+                        topic.ConsistencyLevel = KafkaConsistencyLevel.OneReplica;                        
                         break;
                     case KafkaResponseErrorCode.TopicAuthorizationFailed:
                         error = KafkaProducerTopicPartitionErrorCode.TopicAuthorizationFailed;
@@ -510,7 +511,7 @@ namespace NKafka.Client.Producer.Internal
             }
             var requestTopic = new KafkaProduceRequestTopic(topic.TopicName, requestPartitions);
             
-            var batchRequest = new KafkaProduceRequest(topic.Settings.ConsistencyLevel, topic.Settings.BatchServerTimeout, new [] { requestTopic});
+            var batchRequest = new KafkaProduceRequest(topic.ConsistencyLevel, topic.Settings.BatchServerTimeout, new [] { requestTopic});
             return batchRequest;
         }
 

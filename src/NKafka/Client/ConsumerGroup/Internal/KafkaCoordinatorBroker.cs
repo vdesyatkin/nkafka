@@ -499,30 +499,30 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 {
                     //todo (E009)
                     case KafkaResponseErrorCode.GroupLoadInProgress:
-                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance; 
+                        error = KafkaConsumerGroupSessionErrorCode.GroupLoadInProgress; 
                         break;
                     case KafkaResponseErrorCode.GroupCoordinatorNotAvailable:
-                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
+                        error = KafkaConsumerGroupSessionErrorCode.GroupCoordinatorNotAvailable;
                         isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.NotCoordinatorForGroup:
-                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
+                        error = KafkaConsumerGroupSessionErrorCode.NotCoordinatorForGroup;
                         isRearrangeRequired = true;
                         break;
                     case KafkaResponseErrorCode.InconsistentGroupProtocol:
-                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
-                        isRearrangeRequired = true;
+                        error = KafkaConsumerGroupSessionErrorCode.InconsistentGroupProtocol;
+                        //todo ???
                         break;
                     case KafkaResponseErrorCode.UnknownMemberId:
-                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
-                        isRearrangeRequired = true;
+                        error = KafkaConsumerGroupSessionErrorCode.UnknownMemberId;                        
+                        //todo ???
                         break;
                     case KafkaResponseErrorCode.InvalidSessionTimeout:
-                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
-                        isRearrangeRequired = true;
+                        error = KafkaConsumerGroupSessionErrorCode.InvalidSessionTimeout;
+                        //todo change session timeout
                         break;
                     case KafkaResponseErrorCode.GroupAuthorizationFailed:
-                        error = KafkaConsumerGroupSessionErrorCode.ServerMaintenance;
+                        error = KafkaConsumerGroupSessionErrorCode.GroupAuthorizationFailed;
                         isRearrangeRequired = true;
                         break;
                 }
