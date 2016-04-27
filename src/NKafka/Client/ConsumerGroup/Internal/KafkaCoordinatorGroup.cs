@@ -25,14 +25,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         [CanBeNull]
         public KafkaCoordinatorGroupSession SessionInfo { get; private set; }
-        
-        public string GroupAssignmentStrategyName;
-        public short GroupProtocolVersion;
-        
+
+        [CanBeNull]
+        public KafkaCoordinatorGroupProtocol ProtocolInfo { get; private set; }
+
+        public string GroupAssignmentStrategyName;                
         [CanBeNull] public IReadOnlyList<KafkaCoordinatorGroupMember> GroupMembers;
         [CanBeNull] public IReadOnlyDictionary<string, List<KafkaCoordinatorGroupMember>> TopicMembers;
-
         [CanBeNull] public IReadOnlyList<string> AdditionalTopicNames;
+
         [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> AllTopicPartitions;
 
         [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyList<int>> AssignedTopicPartitions;
@@ -124,22 +125,22 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public KafkaConsumerGroupSessionInfo GetSessionDiagnosticsInfo()
         {
             var currentSession = SessionInfo;
+            var currentProtocol = ProtocolInfo;
 
             return new KafkaConsumerGroupSessionInfo(GroupName, ErrorTimestampUtc,
                 false, //todo 
                 KafkaConsumerGroupSessionStatus.ToDo, //todo 
                 KafkaConsumerGroupSessionErrorCode.UnknownError, //todo                
                 new KafkaConsumerGroupSessionTopicInfo[0], //todo
-                new KafkaConsumerGroupSessionProtocolInfo(currentSession?.ProtocolName, GroupProtocolVersion, GroupAssignmentStrategyName, null), //todo
+                new KafkaConsumerGroupSessionProtocolInfo(currentProtocol?.ProtocolName, currentProtocol?.ProtocolVersion, GroupAssignmentStrategyName, null), //todo
                 new KafkaConsumerGroupSessionMemberInfo(currentSession?.GenerationId, currentSession?.MemberId, currentSession?.IsLeader ?? false)
                 );
         }
 
-        public void SetError(KafkaConsumerGroupSessionErrorCode errorCode, bool isRearrangeRequired = false)
+        public void SetError(KafkaConsumerGroupSessionErrorCode errorCode)
         {
             ErrorTimestampUtc = DateTime.UtcNow;
-            Error = errorCode;
-            Status = isRearrangeRequired ? KafkaCoordinatorGroupStatus.RearrangeRequired : KafkaCoordinatorGroupStatus.Error;
+            Error = errorCode;            
         }
 
         public void ResetError()
@@ -148,14 +149,24 @@ namespace NKafka.Client.ConsumerGroup.Internal
             Error = null;
         }
 
-        public void SetSession(int generationId, string memberId, bool isLeader, string protocolName)
+        public void SetSession(int generationId, string memberId, bool isLeader)
         {
-            SessionInfo = new KafkaCoordinatorGroupSession(DateTime.UtcNow, generationId, memberId, isLeader, protocolName);
+            SessionInfo = new KafkaCoordinatorGroupSession(generationId, memberId, isLeader, DateTime.UtcNow);
         }
 
         public void ResetSession()
         {
             SessionInfo = null;
+        }
+
+        public void SetProtocol(string protocolName, short? protocolVersion)
+        {
+            ProtocolInfo = new KafkaCoordinatorGroupProtocol(protocolName, protocolVersion, DateTime.UtcNow);
+        }
+
+        public void ResetProtocol()
+        {
+            ProtocolInfo = null;
         }
     }
 }

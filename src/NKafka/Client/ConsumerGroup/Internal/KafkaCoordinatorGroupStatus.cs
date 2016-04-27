@@ -15,6 +15,7 @@
         OffsetFetchRequired = 10,
         OffsetFetchRequested = 11,
         Ready = 12,
-        Error = 13
+        Error = 13,
+        Rebalance = 14
     }
 }
