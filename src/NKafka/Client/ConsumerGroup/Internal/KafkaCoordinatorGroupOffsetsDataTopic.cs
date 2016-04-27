@@ -6,8 +6,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 {
     internal sealed class KafkaCoordinatorGroupOffsetsDataTopic
     {
-        [NotNull] public IReadOnlyDictionary<int, KafkaCoordinatorGroupOffsetsDataPartition> Partitions;
-        [NotNull] public IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> PartitionsReadOnly;
+        [NotNull] public readonly IReadOnlyDictionary<int, KafkaCoordinatorGroupOffsetsDataPartition> Partitions;
+        [NotNull] public readonly IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> PartitionsReadOnly;
 
         public KafkaCoordinatorGroupOffsetsDataTopic([NotNull] IReadOnlyDictionary<int, KafkaCoordinatorGroupOffsetsDataPartition> partitions)
         {

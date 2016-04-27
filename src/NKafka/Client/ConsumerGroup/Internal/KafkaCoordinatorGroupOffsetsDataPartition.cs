@@ -10,10 +10,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public long ServerOffset;
 
         public DateTime TimestampUtc;
-
-        long IKafkaConsumerCoordinatorOffsetsData.ClientOffset => ClientOffset;
+        
         long IKafkaConsumerCoordinatorOffsetsData.ServerOffset => ServerOffset;
-        DateTime IKafkaConsumerCoordinatorOffsetsData.TimestampUtc => TimestampUtc;
 
         public KafkaCoordinatorGroupOffsetsDataPartition(long clientOffset, long serverOffset, DateTime timestampUtc)
         {

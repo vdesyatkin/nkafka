@@ -14,25 +14,19 @@ namespace NKafka.Client.Internal
     {
         [NotNull] public readonly string GroupName;
 
-        [NotNull] public readonly KafkaCoordinatorGroup Coordinator;
-
-        [NotNull, ItemNotNull] private readonly IReadOnlyList<KafkaClientTopic> _topics;
+        [NotNull] public readonly KafkaCoordinatorGroup Coordinator;        
 
         public KafkaClientGroupStatus Status;
 
-        [CanBeNull] public KafkaClientBrokerGroup BrokerGroup;
-
-        [NotNull] private readonly KafkaConsumerGroupSettings _settings;
+        [CanBeNull] public KafkaClientBrokerGroup BrokerGroup;        
 
         [NotNull] public KafkaClientGroupMetadataInfo MetadataInfo => _metadataInfo;
         [NotNull] private KafkaClientGroupMetadataInfo _metadataInfo;
 
         public KafkaClientGroup([NotNull] string groupName, [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, [NotNull] KafkaConsumerGroupSettings settings)
         {
-            GroupName = groupName;
-            _topics = topics;
-            _settings = settings;
-            Coordinator = new KafkaCoordinatorGroup(GroupName, _topics, _settings);
+            GroupName = groupName;            
+            Coordinator = new KafkaCoordinatorGroup(GroupName, topics, settings);
             _metadataInfo = new KafkaClientGroupMetadataInfo(groupName, DateTime.UtcNow, false, null, null);
         }
 

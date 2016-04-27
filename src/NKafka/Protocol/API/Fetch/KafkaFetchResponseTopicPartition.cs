@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
-using System;
 
 namespace NKafka.Protocol.API.Fetch
 {
