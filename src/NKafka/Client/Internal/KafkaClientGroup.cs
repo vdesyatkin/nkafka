@@ -51,7 +51,7 @@ namespace NKafka.Client.Internal
             BrokerGroup = brokerGroup;
         }
 
-        public IReadOnlyDictionary<int, long?> GetPartitionOffsets(string topicName)
+        public IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> GetPartitionOffsets(string topicName)
         {
             return BrokerGroup?.Coordinator.GetPartitionOffsets(topicName);
         }

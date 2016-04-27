@@ -42,10 +42,14 @@
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentRequest.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionInfo.cs" />
     <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroup.cs" />
-    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupLeader.cs" />
-    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupMember.cs" />
-    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupProtocol.cs" />
-    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupSession.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupAssignmentData.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupLeaderData.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupMemberData.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupOffsetsData.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupOffsetsDataPartition.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupOffsetsDataTopic.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupProtocolData.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupSessionData.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\Strategies\KafkaConsumerAssignmentRoundRobinStrategy.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettings.cs" />
@@ -60,6 +64,7 @@
     <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerCoordinator.cs" />
+    <Compile Include="Client\Consumer\Internal\IKafkaConsumerCoordinatorOffsetsData.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerMessageQueue.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBroker.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerPartition.cs" />

@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace NKafka.Client.ConsumerGroup.Internal
 {
-    internal sealed class KafkaCoordinatorGroupMember
+    internal sealed class KafkaCoordinatorGroupMemberData
     {
         [NotNull] public readonly string MemberId;
 
@@ -17,7 +17,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> TopicAssignments;
 
-        public KafkaCoordinatorGroupMember([NotNull] string memberId, bool isLeader, short protocolVersion, 
+        public KafkaCoordinatorGroupMemberData([NotNull] string memberId, bool isLeader, short protocolVersion, 
             [NotNull, ItemNotNull] IReadOnlyList<string> supportedAssignmentStrategies, [CanBeNull] byte[] customData)
         {
             MemberId = memberId;

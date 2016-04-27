@@ -73,7 +73,10 @@ namespace NKafka.Client.Internal
                 producerPartitions.Add(producerPartiton);
 
                 var consumerPartition = Consumer?.CreatePartition(partitionId);
-                consumerPartitions.Add(consumerPartition);
+                if (consumerPartition != null)
+                {
+                    consumerPartitions.Add(consumerPartition);
+                }
 
                 var partition = new KafkaClientTopicPartition(topicName, partitionId, brokerMetadata, producerPartiton, consumerPartition);
                 topicPartitions.Add(partition);

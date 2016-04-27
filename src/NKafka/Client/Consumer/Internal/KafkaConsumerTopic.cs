@@ -10,7 +10,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] public readonly string TopicName;
         [NotNull] public readonly string GroupName;
 
-        [NotNull] private IKafkaConsumerCoordinator _coordinator;
+        [CanBeNull] private IKafkaConsumerCoordinator _coordinator;
 
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
@@ -24,14 +24,14 @@ namespace NKafka.Client.Consumer.Internal
             GroupName = groupName;
             Settings = settings;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
-            _packages = new ConcurrentDictionary<int, PackageInfo>();
-            _coordinator = new NullCoordinator();
+            _packages = new ConcurrentDictionary<int, PackageInfo>();            
         }
 
-        [NotNull]
+        [CanBeNull]
         public KafkaConsumerTopicPartition CreatePartition(int partitionId)
         {
-            return new KafkaConsumerTopicPartition(TopicName, partitionId, Settings, _coordinator);
+            var coordinator = _coordinator;
+            return coordinator == null ? null : new KafkaConsumerTopicPartition(TopicName, partitionId, Settings, coordinator);
         }
 
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartition> partitions)
@@ -146,14 +146,6 @@ namespace NKafka.Client.Consumer.Internal
             {
                 PartitionOffsets = partitionOffsets;
             }
-        }
-
-        private class NullCoordinator : IKafkaConsumerCoordinator
-        {
-            public IReadOnlyDictionary<int, long?> GetPartitionOffsets(string topicName)
-            {
-                return new Dictionary<int, long?>();
-            }
-        }
+        }        
     }
 }

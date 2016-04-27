@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 
 namespace NKafka.Client.ConsumerGroup.Internal
 {
-    internal sealed class KafkaCoordinatorGroupSession
+    internal sealed class KafkaCoordinatorGroupSessionData
     {        
         public readonly int GenerationId;
 
@@ -13,7 +13,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaCoordinatorGroupSession(int generationId, string memberId, bool isLeader, DateTime timestampUtc)
+        public KafkaCoordinatorGroupSessionData(int generationId, string memberId, bool isLeader, DateTime timestampUtc)
         {            
             GenerationId = generationId;
             MemberId = memberId;

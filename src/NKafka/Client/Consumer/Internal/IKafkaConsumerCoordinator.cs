@@ -5,6 +5,6 @@ namespace NKafka.Client.Consumer.Internal
 {
     internal interface IKafkaConsumerCoordinator
     {
-        [CanBeNull] IReadOnlyDictionary<int, long?> GetPartitionOffsets([NotNull] string topicName);
+        [CanBeNull] IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> GetPartitionOffsets([NotNull] string topicName);
     }
 }

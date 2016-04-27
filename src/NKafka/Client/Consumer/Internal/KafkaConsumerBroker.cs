@@ -122,8 +122,8 @@ namespace NKafka.Client.Consumer.Internal
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
 
-                long? coordinatorOffset;
-                if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset))
+                IKafkaConsumerCoordinatorOffsetsData coordinatorOffset;
+                if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset) || coordinatorOffset == null)
                 {
                     continue; // partition is not allowed for this consumer node
                 }
@@ -132,9 +132,9 @@ namespace NKafka.Client.Consumer.Internal
                 if (!TryPreparePartition(partition)) continue;
 
                 var fetchOffset = partition.CurrentOffset;
-                if (coordinatorOffset.HasValue && coordinatorOffset.Value > fetchOffset)
+                if (coordinatorOffset.ServerOffset > fetchOffset)
                 {
-                    fetchOffset = coordinatorOffset.Value;
+                    fetchOffset = coordinatorOffset.ServerOffset;
                 }
 
                 newFetchBatch[partitionId] = fetchOffset + 1;

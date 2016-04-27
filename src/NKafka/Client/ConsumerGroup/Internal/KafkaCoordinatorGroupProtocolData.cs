@@ -2,7 +2,7 @@
 
 namespace NKafka.Client.ConsumerGroup.Internal
 {
-    internal sealed class KafkaCoordinatorGroupProtocol
+    internal sealed class KafkaCoordinatorGroupProtocolData
     {
         public readonly string ProtocolName;
 
@@ -10,7 +10,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaCoordinatorGroupProtocol(string protocolName, short? protocolVersion, DateTime timestampUtc)
+        public KafkaCoordinatorGroupProtocolData(string protocolName, short? protocolVersion, DateTime timestampUtc)
         {
             ProtocolName = protocolName;
             ProtocolVersion = protocolVersion;

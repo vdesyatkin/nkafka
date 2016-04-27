@@ -33,7 +33,7 @@ namespace NKafka.Client.Consumer.Internal
             TopicName = topicName;
             PartitionId = partitionId;
             Settings = settings;
-            Coordinator = coordinator;            
+            Coordinator = coordinator;
             _messageQueue = messageQueue;
             Reset();
         }

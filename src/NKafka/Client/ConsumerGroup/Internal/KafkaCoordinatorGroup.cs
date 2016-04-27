@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.ConsumerGroup.Diagnostics;
 using NKafka.Client.Internal;
@@ -11,33 +12,24 @@ namespace NKafka.Client.ConsumerGroup.Internal
     {
         [NotNull] public readonly string GroupName;
 
-        [NotNull, ItemNotNull] public readonly IReadOnlyDictionary<string, KafkaClientTopic> Topics;
-
         [NotNull]
         public readonly KafkaConsumerGroupSettings Settings;
-
-        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;
+        [NotNull, ItemNotNull] public readonly IReadOnlyDictionary<string, KafkaClientTopic> Topics;
+        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;        
+        
 
         public KafkaCoordinatorGroupStatus Status;
-
         public KafkaConsumerGroupSessionErrorCode? Error { get; private set; }
         public DateTime ErrorTimestampUtc { get; private set; }
 
-        [CanBeNull]
-        public KafkaCoordinatorGroupSession SessionData { get; private set; }
+        [CanBeNull] public KafkaCoordinatorGroupSessionData SessionData { get; private set; }
+        [CanBeNull] public KafkaCoordinatorGroupProtocolData ProtocolData { get; private set; }
+        [CanBeNull] public KafkaCoordinatorGroupLeaderData LeaderData { get; private set; }
+        [CanBeNull] public KafkaCoordinatorGroupAssignmentData AssignmentData { get; private set; }
+        [CanBeNull] public KafkaCoordinatorGroupOffsetsData OffsetsData { get; private set; }
 
-        [CanBeNull]
-        public KafkaCoordinatorGroupProtocol ProtocolData { get; private set; }
-
-        [CanBeNull]
-        public KafkaCoordinatorGroupLeader LeaderData { get; private set; }
-
-        [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> AllTopicPartitions;
-
-        [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyList<int>> AssignedTopicPartitions;
-        [CanBeNull] public IReadOnlyDictionary<string, IReadOnlyDictionary<int, long?>> AssignedTopicPartitionOffsets;
-        [NotNull] public readonly Dictionary<string, Dictionary<int, long?>> CommitedTopicPartitionOffsets;
-
+        [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> TopicMetadataPartitionIds;
+       
         public DateTime HeartbeatTimestampUtc;
         public readonly TimeSpan HeartbeatPeriod;
 
@@ -48,8 +40,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             [NotNull] KafkaConsumerGroupSettings settings)
         {
             GroupName = groupName;            
-            AllTopicPartitions = new Dictionary<string, IReadOnlyList<int>>();
-            CommitedTopicPartitionOffsets = new Dictionary<string, Dictionary<int, long?>>();
+            TopicMetadataPartitionIds = new Dictionary<string, IReadOnlyList<int>>();            
             Settings = settings;
 
             var heartbeatPeriod = TimeSpan.FromSeconds(settings.GroupSessionLifetime.TotalSeconds/2 - 1);
@@ -107,16 +98,20 @@ namespace NKafka.Client.ConsumerGroup.Internal
             Protocols = protocols;
         }
 
-        [CanBeNull] public IReadOnlyDictionary<int, long?> GetPartitionOffsets([NotNull] string topicName)
+        [CanBeNull] public IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> GetPartitionOffsets([NotNull] string topicName)
         {
             if (Status != KafkaCoordinatorGroupStatus.Ready) return null;
 
-            var topicPartitionOffsets = AssignedTopicPartitionOffsets;
-            if (topicPartitionOffsets == null) return null;
+            var topics = OffsetsData?.Topics;
+            if (topics == null) return null;
 
-            IReadOnlyDictionary<int, long?> partitionOffsets;
-            topicPartitionOffsets.TryGetValue(topicName, out partitionOffsets);
-            return partitionOffsets ?? new Dictionary<int, long?>();
+            KafkaCoordinatorGroupOffsetsDataTopic topic;
+            if (topics.TryGetValue(topicName, out topic) && topic != null)
+            {
+                return topic.PartitionsReadOnly;
+            }
+
+            return null;
         }
 
         [NotNull]
@@ -150,27 +145,36 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public void SetSessionData(int generationId, string memberId, bool isLeader)
         {
-            SessionData = new KafkaCoordinatorGroupSession(generationId, memberId, isLeader, DateTime.UtcNow);
+            SessionData = new KafkaCoordinatorGroupSessionData(generationId, memberId, isLeader, DateTime.UtcNow);
         }   
 
         public void SetProtocolData(string protocolName, short? protocolVersion)
         {
-            ProtocolData = new KafkaCoordinatorGroupProtocol(protocolName, protocolVersion, DateTime.UtcNow);
+            ProtocolData = new KafkaCoordinatorGroupProtocolData(protocolName, protocolVersion, DateTime.UtcNow);
         }
 
         public void SetLeaderData([CanBeNull] string assignmentStrategyName,
-            [NotNull] IReadOnlyList<KafkaCoordinatorGroupMember> groupMembers,
-            [NotNull] IReadOnlyDictionary<string, List<KafkaCoordinatorGroupMember>> topicMembers,
+            [NotNull] IReadOnlyList<KafkaCoordinatorGroupMemberData> groupMembers,
+            [NotNull] IReadOnlyDictionary<string, List<KafkaCoordinatorGroupMemberData>> topicMembers,
             [NotNull] IReadOnlyList<string> additionalTopicNames)
         {
-            LeaderData = new KafkaCoordinatorGroupLeader(assignmentStrategyName, groupMembers, topicMembers, additionalTopicNames, DateTime.UtcNow);
+            LeaderData = new KafkaCoordinatorGroupLeaderData(assignmentStrategyName, groupMembers, topicMembers, additionalTopicNames, DateTime.UtcNow);
+        }
+
+        public void SetAssignmentData([NotNull] IReadOnlyDictionary<string, IReadOnlyList<int>> topicPartitions)
+        {
+            AssignmentData = new KafkaCoordinatorGroupAssignmentData(topicPartitions, DateTime.UtcNow);
+        }
+
+        public void SetOffsetsData([NotNull] IReadOnlyDictionary<string, KafkaCoordinatorGroupOffsetsDataTopic> topics)
+        {
+            OffsetsData = new KafkaCoordinatorGroupOffsetsData(topics);
         }
 
         public void ResetData()
         {
-            SessionData = null;
-            ProtocolData = null;
-            LeaderData = null;
+            ResetDataExceptSession();
+            SessionData = null;            
         }
 
         public void ResetDataExceptSession()
@@ -178,6 +182,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
             SessionData = null;
             ProtocolData = null;
             LeaderData = null;
+            AssignmentData = null;
+            OffsetsData = null;
+            TopicMetadataPartitionIds.Clear();
         }
     }
 }
