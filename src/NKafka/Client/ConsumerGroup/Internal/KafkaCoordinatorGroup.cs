@@ -151,7 +151,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public void SetSessionData(int generationId, string memberId, bool isLeader)
         {
             SessionData = new KafkaCoordinatorGroupSession(generationId, memberId, isLeader, DateTime.UtcNow);
-        }        
+        }   
 
         public void SetProtocolData(string protocolName, short? protocolVersion)
         {
@@ -171,6 +171,13 @@ namespace NKafka.Client.ConsumerGroup.Internal
             SessionData = null;
             ProtocolData = null;
             LeaderData = null;
-        }        
+        }
+
+        public void ResetDataExceptSession()
+        {
+            SessionData = null;
+            ProtocolData = null;
+            LeaderData = null;
+        }
     }
 }

@@ -33,6 +33,11 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
         NotCoordinatorForGroup = 16,
 
         /// <summary>
+        /// Returned from group membership requests (such as heartbeats) when the generation id provided in the request is not the current generation.
+        /// </summary>
+        Rebalance = 22,
+
+        /// <summary>
         /// Returned in join group when the member provides a protocol type or set of protocols which is not compatible with the current group.
         /// </summary>
         InconsistentGroupProtocol = 23,

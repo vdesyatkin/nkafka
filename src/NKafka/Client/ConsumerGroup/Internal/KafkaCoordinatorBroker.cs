@@ -441,6 +441,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     break;
                 case GroupErrorType.Rebalance:
                     group.Status = KafkaCoordinatorGroupStatus.Rebalance;
+                    group.ResetDataExceptSession();
                     break;
                 case GroupErrorType.Error:
                     group.ResetData();                    
@@ -539,7 +540,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     case KafkaResponseErrorCode.InvalidSessionTimeout:
                         error = KafkaConsumerGroupSessionErrorCode.InvalidSessionTimeout;
                         errorType = GroupErrorType.Warning;
-                        //todo change session timeout
+                        //todo (E009) change session timeout
                         break;
                     case KafkaResponseErrorCode.GroupAuthorizationFailed:
                         error = KafkaConsumerGroupSessionErrorCode.GroupAuthorizationFailed;
@@ -547,7 +548,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         break;
                     default:
                         error = KafkaConsumerGroupSessionErrorCode.UnknownError;
-                        errorType = GroupErrorType.Error;
+                        errorType = GroupErrorType.Rearrange;
                         break;
                 }
                 
@@ -871,19 +872,46 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         private bool TryHandleSyncGroupResponse([NotNull] KafkaCoordinatorGroup group, [NotNull]KafkaSyncGroupResponse response)
-        {            
-            if (response.ErrorCode == KafkaResponseErrorCode.NotCoordinatorForGroup)
-            {
-                group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
-                return false;
-            }
-
+        {
             if (response.ErrorCode != KafkaResponseErrorCode.NoError)
             {
-                //todo (E009)
-                group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
+                KafkaConsumerGroupSessionErrorCode error;
+                GroupErrorType errorType;
+                switch (response.ErrorCode)
+                {                    
+                    case KafkaResponseErrorCode.GroupCoordinatorNotAvailable:
+                        error = KafkaConsumerGroupSessionErrorCode.GroupCoordinatorNotAvailable;
+                        errorType = GroupErrorType.Rearrange;
+                        break;
+                    case KafkaResponseErrorCode.NotCoordinatorForGroup:
+                        error = KafkaConsumerGroupSessionErrorCode.NotCoordinatorForGroup;
+                        errorType = GroupErrorType.Rearrange;
+                        break;
+                    case KafkaResponseErrorCode.IllegalGeneration:
+                        error = KafkaConsumerGroupSessionErrorCode.Rebalance;
+                        errorType = GroupErrorType.Rebalance;
+                        break;                    
+                    case KafkaResponseErrorCode.UnknownMemberId:
+                        error = KafkaConsumerGroupSessionErrorCode.UnknownMemberId;
+                        errorType = GroupErrorType.Error;
+                        break;
+                    case KafkaResponseErrorCode.RebalanceInProgress:
+                        error = KafkaConsumerGroupSessionErrorCode.InvalidSessionTimeout;
+                        errorType = GroupErrorType.Rebalance; //todo (E009) mb error? should we reuse member id?                      
+                        break;
+                    case KafkaResponseErrorCode.GroupAuthorizationFailed:
+                        error = KafkaConsumerGroupSessionErrorCode.GroupAuthorizationFailed;
+                        errorType = GroupErrorType.Rearrange;
+                        break;
+                    default:
+                        error = KafkaConsumerGroupSessionErrorCode.UnknownError;
+                        errorType = GroupErrorType.Rearrange;
+                        break;
+                }
+
+                SetGroupError(group, error, errorType);
                 return false;
-            }            
+            }
 
             var memberAssignment = new Dictionary<string, IReadOnlyList<int>>();
             var assignedTopics = response.AssignedTopics ?? new KafkaSyncGroupResponseTopic[0];
@@ -915,20 +943,47 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         private bool TryHandleHeartbeatResponse([NotNull] KafkaCoordinatorGroup group, [NotNull] KafkaHeartbeatResponse response)
-        {            
-            if (response.ErrorCode == KafkaResponseErrorCode.NotCoordinatorForGroup)
+        {
+            if (response.ErrorCode != KafkaResponseErrorCode.NoError)
             {
-                group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                KafkaConsumerGroupSessionErrorCode error;
+                GroupErrorType errorType;
+                switch (response.ErrorCode)
+                {
+                    case KafkaResponseErrorCode.GroupCoordinatorNotAvailable:
+                        error = KafkaConsumerGroupSessionErrorCode.GroupCoordinatorNotAvailable;
+                        errorType = GroupErrorType.Rearrange;
+                        break;
+                    case KafkaResponseErrorCode.NotCoordinatorForGroup:
+                        error = KafkaConsumerGroupSessionErrorCode.NotCoordinatorForGroup;
+                        errorType = GroupErrorType.Rearrange;
+                        break;
+                    case KafkaResponseErrorCode.IllegalGeneration:
+                        error = KafkaConsumerGroupSessionErrorCode.Rebalance;
+                        errorType = GroupErrorType.Rebalance;
+                        break;
+                    case KafkaResponseErrorCode.UnknownMemberId:
+                        error = KafkaConsumerGroupSessionErrorCode.UnknownMemberId;
+                        errorType = GroupErrorType.Error;
+                        break;
+                    case KafkaResponseErrorCode.RebalanceInProgress:
+                        error = KafkaConsumerGroupSessionErrorCode.InvalidSessionTimeout;
+                        errorType = GroupErrorType.Rebalance; //todo (E009) mb error? should we reuse member id?                      
+                        break;
+                    case KafkaResponseErrorCode.GroupAuthorizationFailed:
+                        error = KafkaConsumerGroupSessionErrorCode.GroupAuthorizationFailed;
+                        errorType = GroupErrorType.Rearrange;
+                        break;
+                    default:
+                        error = KafkaConsumerGroupSessionErrorCode.UnknownError;
+                        errorType = GroupErrorType.Rearrange;
+                        break;
+                }
+
+                SetGroupError(group, error, errorType);
                 return false;
             }
 
-            if (response.ErrorCode != KafkaResponseErrorCode.NoError)
-            {
-                //todo (E009)
-                group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
-                return false;
-            }
-                        
             return true;
         }
         #endregion Heartbeat
