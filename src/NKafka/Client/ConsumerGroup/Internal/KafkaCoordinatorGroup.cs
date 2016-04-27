@@ -24,15 +24,13 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public DateTime ErrorTimestampUtc { get; private set; }
 
         [CanBeNull]
-        public KafkaCoordinatorGroupSession SessionInfo { get; private set; }
+        public KafkaCoordinatorGroupSession SessionData { get; private set; }
 
         [CanBeNull]
-        public KafkaCoordinatorGroupProtocol ProtocolInfo { get; private set; }
+        public KafkaCoordinatorGroupProtocol ProtocolData { get; private set; }
 
-        public string GroupAssignmentStrategyName;                
-        [CanBeNull] public IReadOnlyList<KafkaCoordinatorGroupMember> GroupMembers;
-        [CanBeNull] public IReadOnlyDictionary<string, List<KafkaCoordinatorGroupMember>> TopicMembers;
-        [CanBeNull] public IReadOnlyList<string> AdditionalTopicNames;
+        [CanBeNull]
+        public KafkaCoordinatorGroupLeader LeaderData { get; private set; }
 
         [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> AllTopicPartitions;
 
@@ -124,16 +122,17 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull]
         public KafkaConsumerGroupSessionInfo GetSessionDiagnosticsInfo()
         {
-            var currentSession = SessionInfo;
-            var currentProtocol = ProtocolInfo;
+            var sessionData = SessionData;
+            var protocolData = ProtocolData;
+            var leaderData = LeaderData;
 
             return new KafkaConsumerGroupSessionInfo(GroupName, ErrorTimestampUtc,
                 false, //todo 
                 KafkaConsumerGroupSessionStatus.ToDo, //todo 
                 KafkaConsumerGroupSessionErrorCode.UnknownError, //todo                
                 new KafkaConsumerGroupSessionTopicInfo[0], //todo
-                new KafkaConsumerGroupSessionProtocolInfo(currentProtocol?.ProtocolName, currentProtocol?.ProtocolVersion, GroupAssignmentStrategyName, null), //todo
-                new KafkaConsumerGroupSessionMemberInfo(currentSession?.GenerationId, currentSession?.MemberId, currentSession?.IsLeader ?? false)
+                new KafkaConsumerGroupSessionProtocolInfo(protocolData?.ProtocolName, protocolData?.ProtocolVersion, leaderData?.AssignmentStrategyName, null), //todo
+                new KafkaConsumerGroupSessionMemberInfo(sessionData?.GenerationId, sessionData?.MemberId, sessionData?.IsLeader ?? false)
                 );
         }
 
@@ -149,24 +148,29 @@ namespace NKafka.Client.ConsumerGroup.Internal
             Error = null;
         }
 
-        public void SetSession(int generationId, string memberId, bool isLeader)
+        public void SetSessionData(int generationId, string memberId, bool isLeader)
         {
-            SessionInfo = new KafkaCoordinatorGroupSession(generationId, memberId, isLeader, DateTime.UtcNow);
+            SessionData = new KafkaCoordinatorGroupSession(generationId, memberId, isLeader, DateTime.UtcNow);
+        }        
+
+        public void SetProtocolData(string protocolName, short? protocolVersion)
+        {
+            ProtocolData = new KafkaCoordinatorGroupProtocol(protocolName, protocolVersion, DateTime.UtcNow);
         }
 
-        public void ResetSession()
+        public void SetLeaderData([CanBeNull] string assignmentStrategyName,
+            [NotNull] IReadOnlyList<KafkaCoordinatorGroupMember> groupMembers,
+            [NotNull] IReadOnlyDictionary<string, List<KafkaCoordinatorGroupMember>> topicMembers,
+            [NotNull] IReadOnlyList<string> additionalTopicNames)
         {
-            SessionInfo = null;
+            LeaderData = new KafkaCoordinatorGroupLeader(assignmentStrategyName, groupMembers, topicMembers, additionalTopicNames, DateTime.UtcNow);
         }
 
-        public void SetProtocol(string protocolName, short? protocolVersion)
+        public void ResetData()
         {
-            ProtocolInfo = new KafkaCoordinatorGroupProtocol(protocolName, protocolVersion, DateTime.UtcNow);
-        }
-
-        public void ResetProtocol()
-        {
-            ProtocolInfo = null;
-        }
+            SessionData = null;
+            ProtocolData = null;
+            LeaderData = null;
+        }        
     }
 }

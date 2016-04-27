@@ -12,6 +12,8 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
         TransportError = -3,
         ProtocolError = -4,
         ClientTimeout = -5,
+        ClientError = -6,
+        AssignmentError = -7,
 
         /// <summary>
         /// The broker returns this error code for an offset fetch request if it is still loading offsets (after a leader change for that offsets topic partition),<br/>
