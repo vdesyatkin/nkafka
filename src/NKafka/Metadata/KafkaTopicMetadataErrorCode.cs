@@ -21,6 +21,6 @@ namespace NKafka.Metadata
         /// <summary>
         /// Returned by the broker when the client is not authorized to access the requested topic.
         /// </summary>
-        AuthorizationFailed = 29
+        TopicAuthorizationFailed = 29
     }
 }

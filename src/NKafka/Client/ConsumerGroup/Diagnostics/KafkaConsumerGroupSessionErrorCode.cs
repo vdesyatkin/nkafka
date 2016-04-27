@@ -48,6 +48,11 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
         InvalidSessionTimeout = 26,
 
         /// <summary>
+        /// Returned by the broker when the client is not authorized to access the requested topic.
+        /// </summary>
+        TopicAuthorizationFailed = 29,
+
+        /// <summary>
         /// Returned by the broker when the client is not authorized to access a particular groupId.
         /// </summary>
         GroupAuthorizationFailed = 30

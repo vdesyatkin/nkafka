@@ -10,7 +10,7 @@
         AdditionalTopicsMetadataRequested = 5,
         JoinedAsLeader = 6,
         SyncGroupRequested = 7,
-        FirstHeatbeatRequired = 8,
+        FirstHeartbeatRequired = 8,
         FirstHeatbeatRequested = 9,
         OffsetFetchRequired = 10,
         OffsetFetchRequested = 11,

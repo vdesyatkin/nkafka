@@ -251,10 +251,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     return;
                 }                
 
-                group.Status = KafkaCoordinatorGroupStatus.FirstHeatbeatRequired;
+                group.Status = KafkaCoordinatorGroupStatus.FirstHeartbeatRequired;
             }
 
-            if (group.Status == KafkaCoordinatorGroupStatus.FirstHeatbeatRequired)
+            if (group.Status == KafkaCoordinatorGroupStatus.FirstHeartbeatRequired)
             {
                 var heartbeatRequest = CreateHeartbeatRequest(group);
                 if (!TrySendRequest(group, heartbeatRequest, _heartbeatRequests, _coordinatorClientTimeout + group.Settings.HeartbeatServerTimeout))
@@ -626,14 +626,36 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 var topicName = responseTopic?.TopicName;
                 if (string.IsNullOrEmpty(topicName)) continue;
 
+                if (responseTopic.ErrorCode != KafkaResponseErrorCode.NoError)
+                {
+                    if (responseTopic.ErrorCode == KafkaResponseErrorCode.UnknownTopicOrPartition ||
+                        responseTopic.ErrorCode == KafkaResponseErrorCode.InvalidTopic)
+                    {
+                        continue;
+                    }
+
+                    if (responseTopic.ErrorCode == KafkaResponseErrorCode.TopicAuthorizationFailed)
+                    {
+                        SetGroupError(group, KafkaConsumerGroupSessionErrorCode.TopicAuthorizationFailed, GroupErrorType.Error);
+                        return false;
+                    }
+                }
+
                 var responsePartitons = responseTopic.Partitions;
                 if (responsePartitons == null) continue;
 
                 var partitions = new List<int>(responsePartitons.Count);
                 foreach (var responsePartition in responsePartitons)
                 {
-                    //todo (E009) handling standard errors (responsePartition.ErrorCode)
-                    if (responsePartition?.ErrorCode != KafkaResponseErrorCode.NoError) continue;
+                    if (responsePartition == null) continue;                    
+                    if (responsePartition.ErrorCode != KafkaResponseErrorCode.NoError)
+                    {
+                        if (responsePartition.ErrorCode == KafkaResponseErrorCode.UnknownTopicOrPartition)
+                        {
+                            continue;
+                        }
+                    }
+                    
                     partitions.Add(responsePartition.PartitionId);
                 }
                 group.AllTopicPartitions[topicName] = partitions;

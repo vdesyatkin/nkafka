@@ -11,7 +11,7 @@ namespace NKafka.DevConsole
     class Program
     {
         static void Main()
-        {
+        {            
             var host = "192.168.137.196";
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);

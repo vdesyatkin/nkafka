@@ -673,7 +673,7 @@ namespace NKafka.Client.Internal
                         topicError = KafkaTopicMetadataErrorCode.InvalidTopic;
                         break;
                     case KafkaResponseErrorCode.TopicAuthorizationFailed:
-                        topicError = KafkaTopicMetadataErrorCode.AuthorizationFailed;
+                        topicError = KafkaTopicMetadataErrorCode.TopicAuthorizationFailed;
                         break;                    
                     default:
                         topicError = KafkaTopicMetadataErrorCode.UnknownError;
@@ -776,7 +776,7 @@ namespace NKafka.Client.Internal
                         groupError = KafkaGroupMetadataErrorCode.CoordinatorNotAvailable;
                         break;
                     case KafkaResponseErrorCode.GroupAuthorizationFailed:
-                        groupError = KafkaGroupMetadataErrorCode.AuthorizationFailed;
+                        groupError = KafkaGroupMetadataErrorCode.GroupAuthorizationFailed;
                         break;
                     default:
                         groupError = KafkaGroupMetadataErrorCode.UnknownError;

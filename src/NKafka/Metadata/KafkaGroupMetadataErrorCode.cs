@@ -7,6 +7,6 @@ namespace NKafka.Metadata
     {
         UnknownError = 0,
         CoordinatorNotAvailable = 15,
-        AuthorizationFailed = 30
+        GroupAuthorizationFailed = 30
     }
 }
