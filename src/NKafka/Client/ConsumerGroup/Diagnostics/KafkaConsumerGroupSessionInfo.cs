@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace NKafka.Client.ConsumerGroup.Diagnostics
@@ -18,27 +17,31 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly KafkaConsumerGroupSessionErrorCode? Error;
 
-        [NotNull, ItemNotNull]
-        public readonly IReadOnlyList<KafkaConsumerGroupSessionTopicInfo> Topics;
+        public readonly DateTime? ErrorTimestampUtcUtc;
 
-        [CanBeNull]
-        public readonly KafkaConsumerGroupSessionProtocolInfo ProtocolInfo;
+        [CanBeNull] public readonly KafkaConsumerGroupSessionMemberInfo MemberInfo;
 
-        [CanBeNull]
-        public readonly KafkaConsumerGroupSessionMemberInfo MemberInfo;
+        [CanBeNull] public readonly KafkaConsumerGroupSessionProtocolInfo ProtocolInfo;
+
+        [CanBeNull] public readonly KafkaConsumerGroupSessionOffsetsInfo OffsetsInfo;
+
+        
 
         public KafkaConsumerGroupSessionInfo([NotNull] string groupName, DateTime timestampUtc, bool isReady,
-            KafkaConsumerGroupSessionStatus status, KafkaConsumerGroupSessionErrorCode? error,
-            [NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerGroupSessionTopicInfo> topics, 
-            [CanBeNull]KafkaConsumerGroupSessionProtocolInfo protocolInfo,
-            [CanBeNull]KafkaConsumerGroupSessionMemberInfo memberInfo)
+            KafkaConsumerGroupSessionStatus status,
+            KafkaConsumerGroupSessionErrorCode? error, DateTime errorTimestampUtc,
+            [CanBeNull]KafkaConsumerGroupSessionMemberInfo memberInfo,
+            [CanBeNull] KafkaConsumerGroupSessionProtocolInfo protocolInfo,
+            [CanBeNull]KafkaConsumerGroupSessionOffsetsInfo offsetsInfo
+            )
         {
             GroupName = groupName;
             TimestampUtc = timestampUtc;
             IsReady = isReady;
             Status = status;
             Error = error;
-            Topics = topics;
+            ErrorTimestampUtcUtc = errorTimestampUtc;            
+            OffsetsInfo = offsetsInfo;
             ProtocolInfo = protocolInfo;
             MemberInfo = memberInfo;
         }

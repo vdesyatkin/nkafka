@@ -41,6 +41,8 @@
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentRequestMember.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentRequest.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionOffsetsPartitionInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionProtocolInfo.cs" />
     <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupAssignmentData.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupLeaderData.cs" />
@@ -58,9 +60,9 @@
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionErrorCode.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupInfo.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionMemberInfo.cs" />
-    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionProtocolInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionOffsetsInfo.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionStatus.cs" />
-    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionTopicInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionOffsetsTopicInfo.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerCoordinator.cs" />

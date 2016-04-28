@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
@@ -9,15 +10,16 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly short? ProtocolVersion;
 
-        public readonly string AssignmentStrategyName;
+        [CanBeNull] public readonly string AssignmentStrategyName;
 
-        public readonly byte[] CustomData;
+        public readonly DateTime TimestampUtc;
 
-        public KafkaConsumerGroupSessionProtocolInfo(string protocolName, short? protocolVersion, string assignmentStrategyName, byte[] customData)
+        public KafkaConsumerGroupSessionProtocolInfo(string protocolName, short? protocolVersion, string assignmentStrategyName, DateTime timestampUtc)
         {
             ProtocolName = protocolName;
             ProtocolVersion = protocolVersion;
             AssignmentStrategyName = assignmentStrategyName;
+            TimestampUtc = timestampUtc;
         }
     }
 }

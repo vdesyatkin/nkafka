@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 
 namespace NKafka.Client.ConsumerGroup.Internal
-{
+{    
     internal sealed class KafkaCoordinatorGroupMemberData
     {
         [NotNull] public readonly string MemberId;

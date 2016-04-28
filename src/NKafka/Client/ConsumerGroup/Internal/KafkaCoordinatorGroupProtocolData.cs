@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace NKafka.Client.ConsumerGroup.Internal
-{
+{    
     internal sealed class KafkaCoordinatorGroupProtocolData
     {
         public readonly string ProtocolName;

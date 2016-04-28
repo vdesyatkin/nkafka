@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
@@ -11,11 +12,14 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly bool IsLeader;
 
-        public KafkaConsumerGroupSessionMemberInfo(int? generationId, string memberId, bool isLeader)
+        public readonly DateTime TimestampUtc;
+
+        public KafkaConsumerGroupSessionMemberInfo(int? generationId, string memberId, bool isLeader, DateTime timestampUtc)
         {
             GenerationId = generationId;
             MemberId = memberId;
             IsLeader = isLeader;
+            TimestampUtc = timestampUtc;
         }
     }
 }

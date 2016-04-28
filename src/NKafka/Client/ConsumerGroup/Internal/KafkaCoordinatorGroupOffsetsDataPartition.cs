@@ -2,7 +2,7 @@
 using NKafka.Client.Consumer.Internal;
 
 namespace NKafka.Client.ConsumerGroup.Internal
-{
+{    
     internal sealed class KafkaCoordinatorGroupOffsetsDataPartition : IKafkaConsumerCoordinatorOffsetsData
     {
         public long ClientOffset;

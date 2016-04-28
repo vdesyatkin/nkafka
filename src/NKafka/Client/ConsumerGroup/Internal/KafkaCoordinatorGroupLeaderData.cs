@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace NKafka.Client.ConsumerGroup.Internal
-{
+{    
     internal sealed class KafkaCoordinatorGroupLeaderData
     {
         [CanBeNull] public readonly string AssignmentStrategyName;

@@ -19,7 +19,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         
 
         public KafkaCoordinatorGroupStatus Status;
-        public KafkaConsumerGroupSessionErrorCode? Error { get; private set; }
+        private KafkaConsumerGroupSessionErrorCode? _error;
         public DateTime ErrorTimestampUtc { get; private set; }
 
         [CanBeNull] public KafkaCoordinatorGroupSessionData SessionData { get; private set; }
@@ -29,8 +29,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [CanBeNull] public KafkaCoordinatorGroupOffsetsData OffsetsData { get; private set; }
 
         [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> TopicMetadataPartitionIds;
-       
-        //todo change session time and hearbeat period
+               
         public DateTime HeartbeatTimestampUtc;
         public TimeSpan HeartbeatPeriod { get; private set; }
         public TimeSpan? CustomSessionLifetime { get; private set; }
@@ -112,30 +111,112 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public KafkaConsumerGroupSessionInfo GetSessionDiagnosticsInfo()
         {
             var sessionData = SessionData;
+            var assignmentData = AssignmentData;
+            var offsetsData = OffsetsData;
             var protocolData = ProtocolData;
             var leaderData = LeaderData;
 
-            return new KafkaConsumerGroupSessionInfo(GroupName, ErrorTimestampUtc,
-                false, //todo 
+            var memberInfo = new KafkaConsumerGroupSessionMemberInfo(
+                sessionData?.GenerationId,
+                sessionData?.MemberId,
+                sessionData?.IsLeader ?? false,
+                sessionData?.TimestampUtc ?? DateTime.UtcNow);
+
+            KafkaConsumerGroupSessionProtocolInfo protcolInfo = null;
+
+            if (protocolData != null)
+            {
+                var protocolName = protocolData.ProtocolName;
+                var protocolVersion = protocolData.ProtocolVersion;
+                var protocolTimestampUtc = protocolData.TimestampUtc;
+                string assignmentStrategyName = null;
+                if (leaderData != null)
+                {
+                    assignmentStrategyName = leaderData.AssignmentStrategyName;
+                    if (leaderData.TimestampUtc > protocolTimestampUtc)
+                    {
+                        protocolTimestampUtc = leaderData.TimestampUtc;
+                    }
+                }
+
+                protcolInfo = new KafkaConsumerGroupSessionProtocolInfo(protocolName, protocolVersion, assignmentStrategyName, protocolTimestampUtc);
+            }
+
+            KafkaConsumerGroupSessionOffsetsInfo offsetsInfo = null;
+            if (offsetsData != null)
+            {
+                var topicInfos = new List<KafkaConsumerGroupSessionOffsetsTopicInfo>(offsetsData.Topics.Count);
+                foreach (var topicPair in offsetsData.Topics)
+                {
+                    var topic = topicPair.Value;
+                    var topicName = topicPair.Key;
+                    if (topic == null || topicName == null) continue;                    
+
+                    var partitionInfos = new List<KafkaConsumerGroupSessionOffsetsPartitionInfo>(topic.Partitions.Count);
+                    foreach (var partitionPair in topic.Partitions)
+                    {
+                        var partition = partitionPair.Value;
+                        if (partition == null) continue;
+                        var partitionId = partitionPair.Key;
+
+                        var partitionInfo = new KafkaConsumerGroupSessionOffsetsPartitionInfo(partitionId, 
+                            partition.ClientOffset, partition.ServerOffset, partition.TimestampUtc);
+                        partitionInfos.Add(partitionInfo);
+                    }
+                    var topicInfo = new KafkaConsumerGroupSessionOffsetsTopicInfo(topicName, partitionInfos);
+                    topicInfos.Add(topicInfo);
+                }
+                offsetsInfo = new KafkaConsumerGroupSessionOffsetsInfo(topicInfos, offsetsData.TimestampUtc);
+            }
+            else
+            {
+                if (assignmentData != null)
+                {
+                    var topicInfos = new List<KafkaConsumerGroupSessionOffsetsTopicInfo>(assignmentData.AssignedTopicPartitions.Count);
+                    foreach (var topicPair in assignmentData.AssignedTopicPartitions)
+                    {
+                        var topicPartitions = topicPair.Value;
+                        var topicName = topicPair.Key;
+                        if (topicPartitions == null || topicName == null) continue;
+
+                        var partitionInfos = new List<KafkaConsumerGroupSessionOffsetsPartitionInfo>(topicPartitions.Count);
+                        foreach (var partitionId in topicPartitions)
+                        {                            
+
+                            var partitionInfo = new KafkaConsumerGroupSessionOffsetsPartitionInfo(partitionId,
+                                null, null, assignmentData.TimestampUtc);
+                            partitionInfos.Add(partitionInfo);
+                        }
+                        var topicInfo = new KafkaConsumerGroupSessionOffsetsTopicInfo(topicName, partitionInfos);
+                        topicInfos.Add(topicInfo);
+                    }
+                    offsetsInfo = new KafkaConsumerGroupSessionOffsetsInfo(topicInfos, assignmentData.TimestampUtc);
+                }
+            }
+                        
+
+            return new KafkaConsumerGroupSessionInfo(GroupName, DateTime.UtcNow,
+                Status == KafkaCoordinatorGroupStatus.Ready,
                 KafkaConsumerGroupSessionStatus.ToDo, //todo 
-                KafkaConsumerGroupSessionErrorCode.UnknownError, //todo                
-                new KafkaConsumerGroupSessionTopicInfo[0], //todo
-                new KafkaConsumerGroupSessionProtocolInfo(protocolData?.ProtocolName, protocolData?.ProtocolVersion, leaderData?.AssignmentStrategyName, null), //todo
-                new KafkaConsumerGroupSessionMemberInfo(sessionData?.GenerationId, sessionData?.MemberId, sessionData?.IsLeader ?? false)
+                _error,
+                ErrorTimestampUtc,
+                memberInfo,
+                protcolInfo,
+                offsetsInfo
                 );
         }
 
         public void SetError(KafkaConsumerGroupSessionErrorCode errorCode)
         {
             ErrorTimestampUtc = DateTime.UtcNow;
-            Error = errorCode;            
+            _error = errorCode;            
         }
 
         //todo (E009)
         public void ResetError()
         {
             ErrorTimestampUtc = DateTime.UtcNow;
-            Error = null;
+            _error = null;
         }
 
         public void SetSessionData(int generationId, string memberId, bool isLeader)
@@ -163,7 +244,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public void SetOffsetsData([NotNull] IReadOnlyDictionary<string, KafkaCoordinatorGroupOffsetsDataTopic> topics)
         {
-            OffsetsData = new KafkaCoordinatorGroupOffsetsData(topics);
+            OffsetsData = new KafkaCoordinatorGroupOffsetsData(topics, DateTime.UtcNow);
         }
 
         public void SetSessionLifetime(TimeSpan sessionLifetime)

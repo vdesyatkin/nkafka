@@ -1219,8 +1219,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         {
                             case KafkaResponseErrorCode.OffsetMetadataTooLarge:
                                 error = KafkaConsumerGroupSessionErrorCode.OffsetMetadataTooLarge;
-                                group.SetCommitMetadata(null);
-                                errorType = GroupErrorType.Warning;
+                                if (group.CommitMetadata != null)
+                                {
+                                    group.SetCommitMetadata(null);
+                                    errorType = GroupErrorType.Warning;
+                                }
+                                else
+                                {
+                                    errorType = GroupErrorType.Error;
+                                }
                                 break;
                             case KafkaResponseErrorCode.GroupLoadInProgress:
                                 error = KafkaConsumerGroupSessionErrorCode.GroupLoadInProgress;
@@ -1248,8 +1255,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
                                 break;
                             case KafkaResponseErrorCode.InvalidCommitOffsetSize:
                                 error = KafkaConsumerGroupSessionErrorCode.InvalidCommitOffsetSize;
-                                group.SetCommitMetadata(null);
-                                errorType = GroupErrorType.Warning;
+                                if (group.CommitMetadata != null)
+                                {
+                                    group.SetCommitMetadata(null);
+                                    errorType = GroupErrorType.Warning;
+                                }
+                                else
+                                {
+                                    errorType = GroupErrorType.Error;
+                                }
                                 break;
                             case KafkaResponseErrorCode.TopicAuthorizationFailed:
                                 error = KafkaConsumerGroupSessionErrorCode.TopicAuthorizationFailed;
