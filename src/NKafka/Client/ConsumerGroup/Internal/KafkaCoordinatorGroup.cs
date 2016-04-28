@@ -30,31 +30,23 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> TopicMetadataPartitionIds;
        
+        //todo change session time and hearbeat period
         public DateTime HeartbeatTimestampUtc;
-        public readonly TimeSpan HeartbeatPeriod;
+        public TimeSpan HeartbeatPeriod { get; private set; }
+        public TimeSpan? CustomSessionLifetime { get; private set; }
 
         public DateTime CommitTimestampUtc;
         public readonly TimeSpan CommitPeriod;
+        [CanBeNull] public string CommitMetadata { get; private set; }
 
         public KafkaCoordinatorGroup([NotNull] string groupName, [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
             [NotNull] KafkaConsumerGroupSettings settings)
         {
-            GroupName = groupName;            
+            GroupName = groupName;
             TopicMetadataPartitionIds = new Dictionary<string, IReadOnlyList<int>>();            
-            Settings = settings;
-
-            var heartbeatPeriod = TimeSpan.FromSeconds(settings.GroupSessionLifetime.TotalSeconds/2 - 1);
-            if (settings.HeartbeatPeriod < heartbeatPeriod)
-            {
-                heartbeatPeriod = settings.HeartbeatPeriod;
-            }
-            if (heartbeatPeriod < TimeSpan.FromMilliseconds(100))
-            {
-                heartbeatPeriod = TimeSpan.FromMilliseconds(100); //todo (E006)
-            }
-            HeartbeatPeriod = heartbeatPeriod;
+            Settings = settings;            
             
-            CommitPeriod = settings.OffsetCommitPeriod;
+            CommitPeriod = settings.OffsetCommitPeriod;            
 
             var topicsDictionary = new Dictionary<string, KafkaClientTopic>(topics.Count);
             foreach (var topic in topics)
@@ -96,6 +88,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 protocols.Add(KafkaConsumerGroupSettingsBuilder.DefaultProtocol);
             }
             Protocols = protocols;
+
+            ResetSettings();
         }
 
         [CanBeNull] public IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> GetPartitionOffsets([NotNull] string topicName)
@@ -137,6 +131,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             Error = errorCode;            
         }
 
+        //todo (E009)
         public void ResetError()
         {
             ErrorTimestampUtc = DateTime.UtcNow;
@@ -146,7 +141,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public void SetSessionData(int generationId, string memberId, bool isLeader)
         {
             SessionData = new KafkaCoordinatorGroupSessionData(generationId, memberId, isLeader, DateTime.UtcNow);
-        }   
+        }        
 
         public void SetProtocolData(string protocolName, short? protocolVersion)
         {
@@ -171,13 +166,39 @@ namespace NKafka.Client.ConsumerGroup.Internal
             OffsetsData = new KafkaCoordinatorGroupOffsetsData(topics);
         }
 
-        public void ResetData()
+        public void SetSessionLifetime(TimeSpan sessionLifetime)
         {
-            ResetDataExceptSession();
-            SessionData = null;            
+            CustomSessionLifetime = sessionLifetime; 
+            UpdateHeartbeatPeriod(sessionLifetime);
         }
 
-        public void ResetDataExceptSession()
+        private void UpdateHeartbeatPeriod(TimeSpan sessionLifetime)
+        {
+            var heartbeatPeriod = TimeSpan.FromSeconds(sessionLifetime.TotalSeconds / 2 - 1);
+            if (Settings.HeartbeatPeriod < heartbeatPeriod)
+            {
+                heartbeatPeriod = Settings.HeartbeatPeriod;
+            }
+            if (heartbeatPeriod < TimeSpan.FromSeconds(1))
+            {
+                heartbeatPeriod = TimeSpan.FromSeconds(1); //todo (E006)
+            }
+            HeartbeatPeriod = heartbeatPeriod;
+        }
+
+        public void SetCommitMetadata(string metadata)
+        {
+            CommitMetadata = metadata;
+        }
+
+        public void ResetSettings()
+        {
+            CustomSessionLifetime = null;
+            UpdateHeartbeatPeriod(Settings.GroupSessionLifetime);
+            CommitMetadata = Settings.OffsetCommitMetadata;            
+        }
+
+        public void ResetData()
         {
             SessionData = null;
             ProtocolData = null;

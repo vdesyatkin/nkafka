@@ -16,6 +16,11 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
         AssignmentError = -7,
 
         /// <summary>
+        /// If you specify a string larger than configured maximum for offset metadata.
+        /// </summary>
+        OffsetMetadataTooLarge = 12,
+
+        /// <summary>
         /// The broker returns this error code for an offset fetch request if it is still loading offsets (after a leader change for that offsets topic partition),<br/>
         ///  or in response to group membership requests (such as heartbeats) when group metadata is being loaded by the coordinator.
         /// </summary>
@@ -51,6 +56,11 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
         /// Return in join group when the requested session timeout is outside of the allowed range on the broker.
         /// </summary>
         InvalidSessionTimeout = 26,
+
+        /// <summary>
+        /// This error indicates that an offset commit was rejected because of oversize metadata.
+        /// </summary>
+        InvalidCommitOffsetSize = 28,
 
         /// <summary>
         /// Returned by the broker when the client is not authorized to access the requested topic.

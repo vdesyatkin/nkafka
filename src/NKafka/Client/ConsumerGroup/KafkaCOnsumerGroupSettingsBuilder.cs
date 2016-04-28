@@ -26,7 +26,7 @@ namespace NKafka.Client.ConsumerGroup
         private TimeSpan? _errorRetryPeriod;
 
         [NotNull] private List<KafkaConsumerGroupSettingsProtocol> _protocols;
-        private string _offsetCommitCustomData;
+        private string _offsetCommitMetadta;
 
         public static KafkaConsumerGroupSettings Default => new KafkaConsumerGroupSettingsBuilder().Build();
 
@@ -101,9 +101,9 @@ namespace NKafka.Client.ConsumerGroup
             return this;
         }
 
-        public KafkaConsumerGroupSettingsBuilder SetOffsetCommitCustomData(string customData)
+        public KafkaConsumerGroupSettingsBuilder SetOffsetCommitMetadata(string metadata)
         {
-            _offsetCommitCustomData = customData;
+            _offsetCommitMetadta = metadata;
             return this;
         }
 
@@ -174,7 +174,7 @@ namespace NKafka.Client.ConsumerGroup
                 offsetCommitRetentionTime,
                 errorRetryPeriod,
                 protocols,
-                _offsetCommitCustomData);
+                _offsetCommitMetadta);
         }
 
         [PublicAPI]

@@ -21,7 +21,7 @@ namespace NKafka.Client.ConsumerGroup
         public readonly TimeSpan ErrorRetryPeriod;
 
         public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;
-        public readonly string OffsetCommitCustomData;
+        public readonly string OffsetCommitMetadata;
         
 
         public KafkaConsumerGroupSettings(TimeSpan joinGroupServerTimeout, TimeSpan syncGroupServerTimeout,
@@ -30,7 +30,7 @@ namespace NKafka.Client.ConsumerGroup
             TimeSpan offsetCommitRetentionTime, 
             TimeSpan errorRetryPeriod,
             IReadOnlyList<KafkaConsumerGroupSettingsProtocol> protocols,
-            string offsetCommitCustomData)
+            string offsetCommitMetadata)
         {
             JoinGroupServerTimeout = joinGroupServerTimeout;
             SyncGroupServerTimeout = syncGroupServerTimeout;
@@ -43,7 +43,7 @@ namespace NKafka.Client.ConsumerGroup
             OffsetCommitRetentionTime = offsetCommitRetentionTime;
             ErrorRetryPeriod = errorRetryPeriod;
             Protocols = protocols;
-            OffsetCommitCustomData = offsetCommitCustomData;
+            OffsetCommitMetadata = offsetCommitMetadata;
         }
     }
 }
