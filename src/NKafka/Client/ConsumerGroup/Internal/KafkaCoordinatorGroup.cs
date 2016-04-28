@@ -211,11 +211,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
             ErrorTimestampUtc = DateTime.UtcNow;
             _error = errorCode;            
         }
-
-        //todo (E009)
+        
         public void ResetError()
-        {
-            ErrorTimestampUtc = DateTime.UtcNow;
+        {            
             _error = null;
         }
 

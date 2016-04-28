@@ -221,8 +221,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             if (group.Status == KafkaCoordinatorGroupStatus.JoinedAsLeader)
             {
                 if (!TryAssignTopics(group))                
-                {
-                    group.Status = KafkaCoordinatorGroupStatus.NotInitialized;
+                {                    
                     return;
                 }
 
@@ -345,19 +344,17 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     group.CommitTimestampUtc = DateTime.UtcNow;
 
                     var commitRequest = CreateOffsetCommitRequest(group);
-                    if (commitRequest == null)
+                    if (commitRequest != null)
                     {
-                        return;
-                    }
-
-                    if (!TrySendRequest(group, commitRequest, _offsetCommitRequests, _coordinatorClientTimeout + group.Settings.OffsetCommitServerTimeout))
-                    {
-                        return;
-                    }
-                    
-                    group.Status = KafkaCoordinatorGroupStatus.Ready;               
+                        if (!TrySendRequest(group, commitRequest, _offsetCommitRequests, _coordinatorClientTimeout + group.Settings.OffsetCommitServerTimeout))
+                        {
+                            return;
+                        }
+                    }                    
                 }
-            }            
+
+                group.ResetError();
+            }
         }
         
         private bool TrySendRequest<TRequest>([NotNull] KafkaCoordinatorGroup group, [NotNull] TRequest request, [NotNull] Dictionary<string, int> requests, TimeSpan timeout)
@@ -397,7 +394,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 return false;
             }
 
-            return handleMethod(group, response.Data);
+            return handleMethod(group, response.Data);            
         }
 
         private void HandleBrokerError([NotNull] KafkaCoordinatorGroup group, KafkaBrokerErrorCode errorCode)
