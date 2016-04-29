@@ -193,11 +193,50 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     offsetsInfo = new KafkaConsumerGroupSessionOffsetsInfo(topicInfos, assignmentData.TimestampUtc);
                 }
             }
-                        
+
+            var status = KafkaConsumerGroupSessionStatus.NotInitialized;
+            switch (Status)
+            {
+                case KafkaCoordinatorGroupStatus.NotInitialized:
+                    status = KafkaConsumerGroupSessionStatus.NotInitialized;
+                    break;
+                case KafkaCoordinatorGroupStatus.RearrangeRequired:
+                    status = KafkaConsumerGroupSessionStatus.Rearrange;
+                    break;
+                case KafkaCoordinatorGroupStatus.JoinGroupRequested:
+                    status = KafkaConsumerGroupSessionStatus.JoinGroup;
+                    break;
+                case KafkaCoordinatorGroupStatus.JoinedAsMember:                    
+                case KafkaCoordinatorGroupStatus.AdditionalTopicsRequired:
+                case KafkaCoordinatorGroupStatus.AdditionalTopicsMetadataRequested:
+                case KafkaCoordinatorGroupStatus.JoinedAsLeader:
+                    status = KafkaConsumerGroupSessionStatus.Assigning;
+                    break;
+                case KafkaCoordinatorGroupStatus.SyncGroupRequested:
+                    status = KafkaConsumerGroupSessionStatus.SyncGroup;
+                    break;
+                case KafkaCoordinatorGroupStatus.FirstHeartbeatRequired:
+                case KafkaCoordinatorGroupStatus.FirstHeatbeatRequested:
+                    status = KafkaConsumerGroupSessionStatus.FirstHeatbeat;
+                    break;
+                case KafkaCoordinatorGroupStatus.OffsetFetchRequired:
+                case KafkaCoordinatorGroupStatus.OffsetFetchRequested:
+                    status = KafkaConsumerGroupSessionStatus.OffsetsFilling;
+                    break;
+                case KafkaCoordinatorGroupStatus.Ready:
+                    status = KafkaConsumerGroupSessionStatus.Ready;
+                    break;
+                case KafkaCoordinatorGroupStatus.Error:
+                    status = KafkaConsumerGroupSessionStatus.Error;
+                    break;
+                case KafkaCoordinatorGroupStatus.Rebalance:
+                    status = KafkaConsumerGroupSessionStatus.Rebalance;
+                    break;
+            }
 
             return new KafkaConsumerGroupSessionInfo(GroupName, DateTime.UtcNow,
-                Status == KafkaCoordinatorGroupStatus.Ready,
-                KafkaConsumerGroupSessionStatus.ToDo, //todo 
+                status == KafkaConsumerGroupSessionStatus.Ready,
+                status, //todo 
                 _error,
                 ErrorTimestampUtc,
                 memberInfo,
