@@ -11,6 +11,7 @@ namespace NKafka.Client.Consumer
         private TimeSpan? _consumeServerWaitTime;
         private int? _bufferMaxMessageCount;
         private int? _bufferMaxSizeBytes;
+        private TimeSpan? _errorRetryPeriod;
 
         [NotNull] public static readonly KafkaConsumerSettings Default = new KafkaConsumerSettingsBuilder().Build();
 
@@ -57,13 +58,15 @@ namespace NKafka.Client.Consumer
             var consumerServerWaitTime = _consumeServerWaitTime ?? TimeSpan.Zero;
             var bufferMaxMessageCount = _bufferMaxMessageCount;
             var bufferMaxSizeBytes = _bufferMaxSizeBytes ?? 10*1000*1000;
+            var errorRetryPeriod = _errorRetryPeriod ?? TimeSpan.FromSeconds(10);
 
             return new KafkaConsumerSettings(                
                 batchMinSizeBytes,
                 batchMaxSizeBytes,
                 consumerServerWaitTime,
                 bufferMaxMessageCount,
-                bufferMaxSizeBytes);
+                bufferMaxSizeBytes,
+                errorRetryPeriod);
         }        
     }
 }

@@ -11,13 +11,15 @@ namespace NKafka.Client.Consumer
         public readonly TimeSpan ConsumeServerWaitTime;
         public readonly int? BufferMaxMessageCount;
         public readonly int? BufferedMaxSizeBytes;
+        public readonly TimeSpan ErrorRetryPeriod;
 
         public KafkaConsumerSettings(          
           int consumeBatchMinSizeBytes,
           int consumeBatchMaxSizeBytes,
           TimeSpan consumeServerWaitTime,
           int? bufferMaxMesageCount,
-          int? bufferedMaxSizeBytes
+          int? bufferedMaxSizeBytes,
+          TimeSpan errorRetryPeriod
           )
         {            
             ConsumeBatchMinSizeBytes = consumeBatchMinSizeBytes;
@@ -25,6 +27,7 @@ namespace NKafka.Client.Consumer
             ConsumeServerWaitTime = consumeServerWaitTime;
             BufferMaxMessageCount = bufferMaxMesageCount;
             BufferedMaxSizeBytes = bufferedMaxSizeBytes;
+            ErrorRetryPeriod = errorRetryPeriod;
         }
     }
 }

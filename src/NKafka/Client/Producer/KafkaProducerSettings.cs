@@ -12,7 +12,7 @@ namespace NKafka.Client.Producer
         public readonly int? BatchMaxMessageCount;
         public readonly int? MaxMessageSizeByteCount;
         public readonly TimeSpan BatchServerTimeout;
-        public readonly TimeSpan ErrorReplyPeriod;
+        public readonly TimeSpan ErrorRetryPeriod;
 
         public KafkaProducerSettings(         
           KafkaConsistencyLevel consistencyLevel,
@@ -21,7 +21,7 @@ namespace NKafka.Client.Producer
           int? batchMaxMessageCount,
           int? maxMessageSizeByteCount,
           TimeSpan batchServerTimeout,
-          TimeSpan errorReplyPeriod
+          TimeSpan errorRetryPeriod
           )
         {
             ConsistencyLevel = consistencyLevel;
@@ -30,7 +30,7 @@ namespace NKafka.Client.Producer
             BatchMaxMessageCount = batchMaxMessageCount;
             MaxMessageSizeByteCount = maxMessageSizeByteCount;
             BatchServerTimeout = batchServerTimeout;
-            ErrorReplyPeriod = errorReplyPeriod;
+            ErrorRetryPeriod = errorRetryPeriod;
         }
     }
 }

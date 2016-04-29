@@ -187,11 +187,11 @@ namespace NKafka.Client.Producer.Internal
 
                 if (partition.Error != null)
                 {
-                    if (DateTime.UtcNow - partition.ErrorTimestampUtc > partition.Settings.ErrorReplyPeriod)
+                    if (DateTime.UtcNow - partition.ErrorTimestampUtc > partition.Settings.ErrorRetryPeriod)
                     {
                         continue;
                     }
-                }                
+                }
 
                 List<KafkaMessage> topicPartionMessages;
                 topicBatch.Partitions.TryGetValue(partition.PartitionId, out topicPartionMessages);                

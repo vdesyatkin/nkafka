@@ -108,6 +108,8 @@ namespace NKafka.Client.Consumer.Internal
                 }
             }
 
+            //todo (E009) if broker error return
+
             var coordinator = topic.Coordinator;
             var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);
             if (coordinatorPartitionOffsets == null)
@@ -143,7 +145,9 @@ namespace NKafka.Client.Consumer.Internal
 
             //send new fetch batch
             var fetchRequest = CreateFetchRequest(topic, newFetchBatch);
+            //todo (E009) null/empty fetch request
             var fetchResult = _broker.Send(fetchRequest, _consumeClientTimeout + topic.Settings.ConsumeServerWaitTime);
+            //todo (E009) broker error
             if (fetchResult.HasData)
             {
                 var fetchRequestId = fetchResult.Data;
@@ -158,10 +162,19 @@ namespace NKafka.Client.Consumer.Internal
         {
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired) return false;
 
+            //todo (E009) uncomment and implement
+            //if (partition.Error != null)
+            //{
+            //    if (DateTime.UtcNow - partition.ErrorTimestampUtc > partition.Settings.ErrorRetryPeriod)
+            //    {
+            //        return false;
+            //    }
+            //}
+
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.NotInitialized)
             {
                 partition.Reset();
-                var request = RequestOffsets(partition.TopicName, partition.PartitionId);
+                var request = SendRequestOffsets(partition.TopicName, partition.PartitionId);
                 if (request.HasData)
                 {
                     partition.OffsetRequestId = request.Data;
@@ -179,8 +192,10 @@ namespace NKafka.Client.Consumer.Internal
                 }
 
                 var offsetResponse = GetOffsetsResponse(offsetRequestId.Value);
+                //todo (E009) broker error
                 if (offsetResponse.HasData)
                 {
+                    //todo (E009) response error
                     bool needRearrange;
                     var minPartitionOffset = ExtractMinOffset(offsetResponse.Data, out needRearrange);
                     if (needRearrange)
@@ -214,7 +229,7 @@ namespace NKafka.Client.Consumer.Internal
 
             if (response.HasError)
             {
-                //todo (E009)
+                //todo (E009) broker error
                 return;
             }
 
@@ -227,7 +242,7 @@ namespace NKafka.Client.Consumer.Internal
                 if (topicName != topic.TopicName) continue;
 
                 var responsePartitions = responseTopic.Partitions;
-                if (responsePartitions == null) continue;
+                if (responsePartitions == null) continue;                
 
                 foreach (var partitionResponse in responsePartitions)
                 {
@@ -242,7 +257,7 @@ namespace NKafka.Client.Consumer.Internal
 
                     var errorCode = partitionResponse.ErrorCode;
 
-                    //todo (E009)
+                    //todo (E009) response error
                     if (errorCode == KafkaResponseErrorCode.NotLeaderForPartition)
                     {
                         partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;                        
@@ -259,11 +274,12 @@ namespace NKafka.Client.Consumer.Internal
 
         #region Topic offsets
 
-            private
-            KafkaBrokerResult<int?> RequestOffsets([NotNull] string topicName, int partitionId)
+
+        private KafkaBrokerResult<int?> SendRequestOffsets([NotNull] string topicName, int partitionId)
         {
             var partitionRequest = new KafkaOffsetRequestTopicPartition(partitionId, null, 1000); // 1000 is overkill, in fact there will be 2 items.
             var topicRequest = new KafkaOffsetRequestTopic(topicName, new [] { partitionRequest });
+            //todo (E009) broker error
             return _broker.Send(new KafkaOffsetRequest(new[] { topicRequest }), _consumeClientTimeout);
         }
 
@@ -327,6 +343,8 @@ namespace NKafka.Client.Consumer.Internal
             }
             var topicRequest = new KafkaFetchRequestTopic(topic.TopicName, partitionRequests);
             var fetchRequest = new KafkaFetchRequest(topic.Settings.ConsumeServerWaitTime, topic.Settings.ConsumeBatchMinSizeBytes, new [] { topicRequest});
+
+            //todo (E009) null if empty?
             return fetchRequest;
         }
 
