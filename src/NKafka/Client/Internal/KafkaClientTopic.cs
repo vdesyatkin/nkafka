@@ -42,7 +42,13 @@ namespace NKafka.Client.Internal
             var producer = Producer;
             if (producer != null)
             {
-                producer.TopicDiagnosticsInfo = _metadataInfo;
+                producer.TopicMetadataInfo = _metadataInfo;
+            }
+
+            var consumer = Consumer;
+            if (consumer != null)
+            {
+                consumer.TopicMetadataInfo = _metadataInfo;
             }
         }
         

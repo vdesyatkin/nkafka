@@ -9,7 +9,8 @@ namespace NKafka.Client.Producer.Internal
     {        
         public readonly int PartitonId;
 
-        public long EnqueuedCount => _enqueuedCount;
+        public int EnqueuedCount => _enqueuedCount;
+        public long TotalEnqueuedCount => _totalEnqueuedCount;
         public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
 
         public long FallbackCount => _fallbackCount;
@@ -21,7 +22,8 @@ namespace NKafka.Client.Producer.Internal
         [NotNull] private readonly ConcurrentQueue<KafkaMessage> _messageQueue;
         [CanBeNull] private readonly IKafkaProducerFallbackHandler _fallbackHandler;
 
-        private long _enqueuedCount;
+        private int _enqueuedCount;
+        private long _totalEnqueuedCount;
         private DateTime? _enqueueTimestampUtc;
         private long _fallbackCount;
         private DateTime? _fallbackTimestampUtc;
@@ -40,6 +42,7 @@ namespace NKafka.Client.Producer.Internal
         {
             _messageQueue.Enqueue(message);
             Interlocked.Increment(ref _enqueuedCount);
+            Interlocked.Increment(ref _totalEnqueuedCount);
             _enqueueTimestampUtc = DateTime.UtcNow;
         }
 

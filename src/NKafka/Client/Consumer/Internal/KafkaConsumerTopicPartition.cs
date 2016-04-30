@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using JetBrains.Annotations;
 
@@ -13,12 +13,24 @@ namespace NKafka.Client.Consumer.Internal
         
         [NotNull] public readonly KafkaConsumerBrokerPartition BrokerPartition;
         
-        public int EnqueuedCount => _enqueuedCount;        
+        public int EnqueuedCount => _enqueuedCount;
+        public long TotalEnqueuedCount => _totalEnqueuedCount;
+        public DateTime? EnqueueTimestampUtc { get; private set; }
+
+        public long TotalConsumedCount => _totalConsumedCount;
+        public DateTime? ConsumeTimestampUtc { get; private set; }
+
+        public long TotalCommitedCount => _totalCommitedCount;
+        public DateTime? CommitTimestampUtc { get; private set; }
 
         [NotNull] private readonly ConcurrentQueue<KafkaMessageAndOffset> _messageQueue;
+
         private int _enqueuedCount;
-        private int _enqueuedSize;
-        private long _maxOffset;
+        private long _totalEnqueuedCount;
+        private long _totalConsumedCount;
+        private long _totalCommitedCount;
+
+        private long _enqueuedSize;
 
         public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId, 
             [NotNull] KafkaConsumerSettings settings, [NotNull] IKafkaConsumerCoordinator coordinator)
@@ -26,8 +38,7 @@ namespace NKafka.Client.Consumer.Internal
             PartitonId = partitionId;
             _settings = settings;
             BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, settings, coordinator, this);
-            _messageQueue = new ConcurrentQueue<KafkaMessageAndOffset>();
-            _maxOffset = -1;
+            _messageQueue = new ConcurrentQueue<KafkaMessageAndOffset>();            
         }
 
         public bool CanEnqueue()
@@ -53,27 +64,25 @@ namespace NKafka.Client.Consumer.Internal
             return true;
         }
 
-        public void Enqueue(IReadOnlyList<KafkaMessageAndOffset> messages)
+        public void EnqueueMessage(KafkaMessageAndOffset message)
         {
-            if (messages == null) return;
-            foreach (var message in messages)
+            if (message == null) return;
+            
+            Interlocked.Increment(ref _enqueuedCount);
+            Interlocked.Increment(ref _totalEnqueuedCount);
+            var messageSize = 0;
+            if (message.Key != null)
             {
-                if (message == null) continue;
-                if (message.Offset <= _maxOffset) continue;
-                _maxOffset = message.Offset;
-                Interlocked.Increment(ref _enqueuedCount);
-                var messageSize = 0;
-                if (message.Key != null)
-                {
-                    messageSize += message.Key.Length;
-                }
-                if (message.Data != null)
-                {
-                    messageSize += message.Data.Length;
-                }
-                Interlocked.Add(ref _enqueuedSize, messageSize);
-                _messageQueue.Enqueue(message);
+                messageSize += message.Key.Length;
             }
+            if (message.Data != null)
+            {
+                messageSize += message.Data.Length;
+            }
+            Interlocked.Add(ref _enqueuedSize, messageSize);
+            _messageQueue.Enqueue(message);
+
+            EnqueueTimestampUtc = DateTime.UtcNow;
         }
 
         public bool TryDequeue(out KafkaMessageAndOffset message)
@@ -83,7 +92,8 @@ namespace NKafka.Client.Consumer.Internal
                 return false;
             }
 
-            Interlocked.Decrement(ref _enqueuedCount);
+            Interlocked.Increment(ref _totalConsumedCount);
+            ConsumeTimestampUtc = DateTime.UtcNow;
             if (message == null) return true;
 
             var messageSize = 0;
@@ -95,13 +105,15 @@ namespace NKafka.Client.Consumer.Internal
             {
                 messageSize += message.Data.Length;
             }
-            Interlocked.Add(ref _enqueuedSize, -messageSize);
+            Interlocked.Add(ref _enqueuedSize, -messageSize);            
             return true;
         }
 
-        public void SetCommitClientOffset(long offset)
+        public void SetCommitClientOffset(long offset, int messageCount)
         {
             BrokerPartition.SetCommitClientOffset(offset);
+            Interlocked.Add(ref _totalCommitedCount, messageCount);
+            CommitTimestampUtc = DateTime.UtcNow;
         }
 
         public void SetCommitServerOffset(long offset)

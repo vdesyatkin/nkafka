@@ -83,7 +83,7 @@ namespace NKafka.DevConsole
                         {
                             Console.WriteLine("empty package");
                         }
-                        topicConsumer.Commit(package.PackageNumber);
+                        topicConsumer.EnqueueCommit(package.PackageNumber);
                     }
                     else
                     {

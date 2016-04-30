@@ -21,9 +21,9 @@ namespace NKafka.Client.Consumer.Internal
             _serializer = serializer;
         }
 
-        public KafkaMessagePackage<TKey, TData> Consume()
+        public KafkaMessagePackage<TKey, TData> Consume(int? maxMessageCount = null)
         {
-            var package = _topic.Consume();
+            var package = _topic.Consume(maxMessageCount);
             var messages = package?.Messages;
             if (messages == null) return null;
 
@@ -46,9 +46,9 @@ namespace NKafka.Client.Consumer.Internal
             return new KafkaMessagePackage<TKey, TData>(package.PackageNumber, genericMessages);
         }
 
-        public void Commit(int packageNumber)
+        public void EnqueueCommit(long packageNumber)
         {
-            _topic.Commit(packageNumber);
+            _topic.EnqueueCommit(packageNumber);
         }
 
         public KafkaConsumerTopicInfo GetDiagnosticsInfo()

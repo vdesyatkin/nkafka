@@ -14,12 +14,16 @@ namespace NKafka.Client.Consumer.Diagnostics
 
         public readonly DateTime? ErrorTimestampUtc;
 
-        public KafkaConsumerTopicPartitionInfo(int partitionId, bool isReady, KafkaConsumerTopicPartitionErrorCode? error, DateTime? errorTimestampUtc)
+        [NotNull] public readonly KafkaConsumerTopicMessagesInfo MessagesInfo;
+
+        public KafkaConsumerTopicPartitionInfo(int partitionId, bool isReady, KafkaConsumerTopicPartitionErrorCode? error, DateTime? errorTimestampUtc, 
+            [NotNull] KafkaConsumerTopicMessagesInfo messagesInfo)
         {
             PartitionId = partitionId;
             IsReady = isReady;
             Error = error;
             ErrorTimestampUtc = errorTimestampUtc;
+            MessagesInfo = messagesInfo;
         }
     }
 }

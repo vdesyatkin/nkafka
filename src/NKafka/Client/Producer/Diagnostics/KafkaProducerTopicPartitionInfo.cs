@@ -14,14 +14,13 @@ namespace NKafka.Client.Producer.Diagnostics
 
         public readonly DateTime? ErrorTimestampUtc;
 
-        [NotNull]
-        public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;
+        [NotNull] public readonly KafkaProducerTopicMessagesInfo MessagesInfo;
 
         [NotNull] public readonly KafkaProducerTopicPartitionLimitInfo LimitInfo;
 
         public KafkaProducerTopicPartitionInfo(int partitionId, bool isReady, 
             KafkaProducerTopicPartitionErrorCode? error, DateTime? errorTimestampUtc,
-            [NotNull] KafkaProducerTopicMessageCountInfo messagesInfo, [NotNull] KafkaProducerTopicPartitionLimitInfo limitInfo)
+            [NotNull] KafkaProducerTopicMessagesInfo messagesInfo, [NotNull] KafkaProducerTopicPartitionLimitInfo limitInfo)
         {
             PartitionId = partitionId;
             IsReady = isReady;

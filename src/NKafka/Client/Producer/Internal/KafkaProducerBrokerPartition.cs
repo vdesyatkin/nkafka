@@ -11,12 +11,13 @@ namespace NKafka.Client.Producer.Internal
         [NotNull] public readonly KafkaProducerSettings Settings;
 
         public KafkaProducerBrokerPartitionStatus Status;
+        public bool IsReady => Status == KafkaProducerBrokerPartitionStatus.Ready && Error == null;
         public KafkaProducerTopicPartitionErrorCode? Error { get; private set; }
         public DateTime? ErrorTimestampUtc { get; private set; }
         [NotNull] public KafkaProducerTopicPartitionLimitInfo LimitInfo { get; private set; }
 
-        public long RetryEnqueuedMessageCount { get; private set; }
-        public long SentMessageCount { get; private set; }
+        public int RetryEnqueuedMessageCount { get; private set; }
+        public long TotalSentMessageCount { get; private set; }
         public DateTime? SendMessageTimestampUtc { get; private set; }
 
         [NotNull] private readonly IKafkaProducerMessageQueue _mainQueue;
@@ -68,7 +69,7 @@ namespace NKafka.Client.Producer.Internal
         {
             if (messages == null) return;
 
-            SentMessageCount += messages.Count;
+            TotalSentMessageCount += messages.Count;
             SendMessageTimestampUtc = DateTime.UtcNow;            
         }
 

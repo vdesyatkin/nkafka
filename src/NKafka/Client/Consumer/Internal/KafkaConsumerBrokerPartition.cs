@@ -15,6 +15,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] public readonly KafkaConsumerSettings Settings;
         
         public KafkaConsumerBrokerPartitionStatus Status;
+        public bool IsReady => Status == KafkaConsumerBrokerPartitionStatus.Ready && Error == null;
         public KafkaConsumerTopicPartitionErrorCode? Error { get; private set; }
         public DateTime? ErrorTimestampUtc { get; private set; }    
 
@@ -59,14 +60,16 @@ namespace NKafka.Client.Consumer.Internal
 
             _currentReceivedClientOffset = lastMessage.Offset;
 
-            try
+            var lastOffset = _currentReceivedClientOffset;
+
+            foreach (var message in messages)
             {
-                _messageQueue.Enqueue(messages);
+                if (message.Offset <= lastOffset) continue;
+                lastOffset = message.Offset;
+                _messageQueue.EnqueueMessage(message);
             }
-            catch (Exception)
-            {
-                // ignored
-            }
+
+            _currentReceivedClientOffset = lastOffset;
         }
 
         public long? GetReceivedClientOffset()

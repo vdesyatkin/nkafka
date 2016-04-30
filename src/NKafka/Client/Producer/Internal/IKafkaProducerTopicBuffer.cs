@@ -5,7 +5,7 @@ namespace NKafka.Client.Producer.Internal
 {
     internal interface IKafkaProducerTopicBuffer
     {
-        long EnqueuedCount { get; }
+        int EnqueuedCount { get; }
         DateTime? EnqueueTimestampUtc { get; }
         IKafkaProducerFallbackHandler FallbackHandler { get; }
 

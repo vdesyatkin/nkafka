@@ -8,7 +8,7 @@ namespace NKafka.Client.Producer.Internal
 {
     internal sealed class KafkaProducerTopicBuffer : IKafkaProducerTopicBuffer
     {
-        public long EnqueuedCount => _enqueuedCount;
+        public int EnqueuedCount => _enqueuedCount;
         public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
 
         [CanBeNull] public IKafkaProducerFallbackHandler FallbackHandler { get; }
@@ -81,7 +81,7 @@ namespace NKafka.Client.Producer.Internal
 
     internal sealed class KafkaProducerTopicBuffer<TKey, TData> : IKafkaProducerTopicBuffer
     {
-        public long EnqueuedCount => _enqueuedCount;
+        public int EnqueuedCount => _enqueuedCount;
         public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
         [CanBeNull] public IKafkaProducerFallbackHandler FallbackHandler { get; }
 

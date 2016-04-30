@@ -8,25 +8,21 @@ namespace NKafka.Client.Producer.Diagnostics
     [PublicAPI]
     public sealed class KafkaProducerTopicInfo
     {
-        [NotNull]
-        public readonly string TopicName;
+        [NotNull] public readonly string TopicName;
 
-        [NotNull]
-        public readonly KafkaClientTopicMetadataInfo MetadataInfo;
+        [NotNull] public readonly KafkaClientTopicMetadataInfo MetadataInfo;
 
         public readonly DateTime TimestampUtc;
 
         public readonly bool IsReady;
 
-        [NotNull]
-        public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;
+        [NotNull] public readonly KafkaProducerTopicMessagesInfo MessagesInfo;
 
-        [NotNull, ItemNotNull]
-        public readonly IReadOnlyList<KafkaProducerTopicPartitionInfo> Partitions;                   
+        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaProducerTopicPartitionInfo> Partitions;                   
 
         public KafkaProducerTopicInfo([NotNull] string topicName, [NotNull] KafkaClientTopicMetadataInfo metadataInfo, DateTime timestampUtc, 
             bool isReady,
-            [NotNull]KafkaProducerTopicMessageCountInfo messagesInfo, 
+            [NotNull]KafkaProducerTopicMessagesInfo messagesInfo, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartitionInfo> partitions)
         {
             TopicName = topicName;

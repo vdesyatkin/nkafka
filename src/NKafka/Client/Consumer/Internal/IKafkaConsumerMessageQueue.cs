@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-
-namespace NKafka.Client.Consumer.Internal
+﻿namespace NKafka.Client.Consumer.Internal
 {
     internal interface IKafkaConsumerMessageQueue
     {
         bool CanEnqueue();
-        void Enqueue(IReadOnlyList<KafkaMessageAndOffset> messages);
+        void EnqueueMessage(KafkaMessageAndOffset message);
     }
 }
