@@ -280,7 +280,9 @@ namespace NKafka.Client.Internal
                 if (DateTime.UtcNow - topic.MetadataInfo.TimestampUtc < _settings.MetadataErrorRetryPeriod) return;                
             }
 
-            if (topic.Status == KafkaClientTopicStatus.NotInitialized || topic.Status == KafkaClientTopicStatus.MetadataError)
+            if (topic.Status == KafkaClientTopicStatus.NotInitialized || 
+                topic.Status == KafkaClientTopicStatus.MetadataError ||
+                topic.Status == KafkaClientTopicStatus.Rearrange)
             {
                 var metadataBroker = GetMetadataBroker();
                 if (metadataBroker != null)
@@ -394,7 +396,7 @@ namespace NKafka.Client.Internal
 
                 if (areAllUnplugged)
                 {
-                    topic.Status = KafkaClientTopicStatus.NotInitialized;
+                    topic.Status = KafkaClientTopicStatus.Rearrange;
                 }
             }
         }

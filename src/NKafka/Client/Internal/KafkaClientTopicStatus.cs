@@ -9,6 +9,7 @@ namespace NKafka.Client.Internal
         MetadataRequested = 1,
         MetadataError = 2,
         Ready = 3,
-        RearrangeRequired = 4
+        RearrangeRequired = 4,
+        Rearrange = 5
     }
 }

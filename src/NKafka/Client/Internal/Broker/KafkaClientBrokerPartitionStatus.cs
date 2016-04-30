@@ -5,7 +5,7 @@ namespace NKafka.Client.Internal.Broker
     [PublicAPI]
     internal enum KafkaClientBrokerPartitionStatus
     {
-        Unplugged = 0,        
+        Unplugged = 0,      
         Plugged = 1,
         RearrangeRequired = 2,
     }

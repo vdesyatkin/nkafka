@@ -10,12 +10,18 @@ namespace NKafka.Client.Internal
     {
         public readonly int PartitionId;
 
-        [NotNull] public readonly KafkaClientBrokerPartition BrokerPartition;        
+        [NotNull] public readonly KafkaClientBrokerPartition BrokerPartition;
+
+        [CanBeNull] public readonly KafkaProducerTopicPartition ProducerPartition;
+
+        [CanBeNull] public readonly KafkaConsumerTopicPartition ConsumerPartition;
 
         public KafkaClientTopicPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaBrokerMetadata brokerMetadata,
             [CanBeNull] KafkaProducerTopicPartition producerPartition, [CanBeNull] KafkaConsumerTopicPartition consumerPartition)
         {
             PartitionId = partitionId;
+            ProducerPartition = producerPartition;
+            ConsumerPartition = consumerPartition;
             BrokerPartition = new KafkaClientBrokerPartition(topicName, partitionId, brokerMetadata,
                 producerPartition?.BrokerPartition, consumerPartition?.BrokerPartition);
         }

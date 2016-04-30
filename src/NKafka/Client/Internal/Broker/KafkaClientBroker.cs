@@ -129,7 +129,7 @@ namespace NKafka.Client.Internal.Broker
                     if (partition == null) continue;
 
                     partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
-                }                
+                }
             }
             _broker.Close();
         }

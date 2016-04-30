@@ -58,9 +58,13 @@ namespace NKafka.Client.Internal
             foreach (var brokerMetadata in topicMetadata.Brokers)
             {
                 partitionBrokers[brokerMetadata.BrokerId] = brokerMetadata;
-            }
+            }            
 
-            var topicName = topicMetadata.TopicName;
+            var oldPartitions = new Dictionary<int, KafkaClientTopicPartition>(Partitions.Count);
+            foreach (var partition in Partitions)
+            {
+                oldPartitions[partition.PartitionId] = partition;
+            }
 
             var topicPartitions = new List<KafkaClientTopicPartition>(topicMetadata.Partitions.Count);
             var producerPartitions = new List<KafkaProducerTopicPartition>(topicMetadata.Partitions.Count);
@@ -75,16 +79,32 @@ namespace NKafka.Client.Internal
                     continue;
                 }
 
-                var producerPartiton = Producer?.CreatePartition(partitionId);
-                producerPartitions.Add(producerPartiton);
+                KafkaProducerTopicPartition producerPartition;
+                KafkaConsumerTopicPartition consumerPartition;
 
-                var consumerPartition = Consumer?.CreatePartition(partitionId);
+                KafkaClientTopicPartition oldPartition;
+                if (oldPartitions.TryGetValue(partitionId, out oldPartition) && oldPartition != null)
+                {
+                    producerPartition = oldPartition.ProducerPartition;
+                    consumerPartition = oldPartition.ConsumerPartition;
+                }
+                else
+                {
+                    producerPartition = Producer?.CreatePartition(partitionId);
+                    consumerPartition = Consumer?.CreatePartition(partitionId);
+                }
+
+                if (producerPartition != null)
+                {
+                    producerPartitions.Add(producerPartition);
+                }
+                
                 if (consumerPartition != null)
                 {
                     consumerPartitions.Add(consumerPartition);
                 }
 
-                var partition = new KafkaClientTopicPartition(topicName, partitionId, brokerMetadata, producerPartiton, consumerPartition);
+                var partition = new KafkaClientTopicPartition(TopicName, partitionId, brokerMetadata, producerPartition, consumerPartition);
                 topicPartitions.Add(partition);
             }
 
