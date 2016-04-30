@@ -131,8 +131,16 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull]
         public KafkaConsumerTopicPartitionOffsetsInfo GetOffsetsInfo()
         {
-            return new KafkaConsumerTopicPartitionOffsetsInfo(_currentReceivedClientOffset, _currentAvailableServerOffset,
-                _currentCommitClientOffset, _currentCommitServerOffset, 
+            var currentReceivedClientOffset = _currentReceivedClientOffset;
+            var currentAvailableServerOffset = _currentAvailableServerOffset;
+            var currentCommitClientOffset = _currentCommitClientOffset;
+            var currentCommitServerOffset = _currentCommitServerOffset;
+
+            return new KafkaConsumerTopicPartitionOffsetsInfo(
+                currentReceivedClientOffset != UnknownOffset ? currentReceivedClientOffset : (long?)null,
+                currentAvailableServerOffset != UnknownOffset ? currentAvailableServerOffset : (long?)null,
+                currentCommitClientOffset != UnknownOffset ? currentCommitClientOffset : (long?)null,
+                currentCommitServerOffset != UnknownOffset ? currentCommitServerOffset : (long?)null,
                 DateTime.UtcNow);
         }
    

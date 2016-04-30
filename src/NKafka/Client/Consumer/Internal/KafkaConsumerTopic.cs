@@ -169,8 +169,11 @@ namespace NKafka.Client.Consumer.Internal
             long serverCommitPendingCount = 0;
             long totalServerCommitedMessageCount = 0;
             var serverCommitMessageTimestampUtc = (DateTime?)null;
-
-            foreach (var partitionPair in _topicPartitions)
+            
+            //todo (E008) pending params for producer
+            //todo (E008) total ready
+            //todo (E008) only assigned
+            foreach (var partitionPair in _topicPartitions) 
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
@@ -180,6 +183,10 @@ namespace NKafka.Client.Consumer.Internal
                 var partitionOffsetsInfo = partitionBroker.GetOffsetsInfo();
 
                 var partitionReceivePendingCount = partitionOffsetsInfo.AvailableOffset - (partitionOffsetsInfo.ReceivedOffset ?? partitionOffsetsInfo.CommitedServerOffset);
+                if (partitionReceivePendingCount < 0)
+                {
+                    partitionReceivePendingCount = null;
+                }
                 var partitionTotalReceivedCount = partition.TotalReceivedCount;
                 var partitionReceivedTimestampUtc = partition.ReceiveTimestampUtc;
 
@@ -189,12 +196,19 @@ namespace NKafka.Client.Consumer.Internal
 
                 var partitionClientCommitMessageCount = partition.TotalClientCommitedCount;
                 var partitionClientCommitPendingCount = partitionConsumeMessageCount - partitionClientCommitMessageCount;
+                if (partitionClientCommitPendingCount < 0)
+                {
+                    partitionClientCommitPendingCount = 0;
+                }
                 var partitionClientCommitMessageTimestampUtc = partition.ClientCommitTimestampUtc;
 
                 var partitionServerCommitPendingCount = (partitionOffsetsInfo.CommitedServerOffset - partitionOffsetsInfo.CommitedServerOffset) ?? partitionClientCommitMessageCount;
+                if (partitionServerCommitPendingCount < 0)
+                {
+                    partitionServerCommitPendingCount = 0;
+                }
                 var partitionServerCommitMessageCount = partitionClientCommitMessageCount - partitionServerCommitPendingCount;
                 var partitionServerCommitMessageTimestampUtc = partition.ServerCommitTimestampUtc;
-
                                                
                 receivePendingCount += partitionReceivePendingCount ?? 0;
                 consumePendingCount += consumePendingCount;
@@ -251,7 +265,7 @@ namespace NKafka.Client.Consumer.Internal
                 metadataInfo, 
                 topicMessagesInfo,
                 partitionInfos, 
-                DateTime.UtcNow); //todo (E008) message count to highwatermark
+                DateTime.UtcNow);
         }
 
         private class PackageInfo
