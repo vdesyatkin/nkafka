@@ -408,7 +408,9 @@ namespace NKafka.Client.Internal
                 if (DateTime.UtcNow - group.MetadataInfo.TimestampUtc < _settings.MetadataErrorRetryPeriod) return;
             }
 
-            if (group.Status == KafkaClientGroupStatus.NotInitialized || group.Status == KafkaClientGroupStatus.MetadataError)
+            if (group.Status == KafkaClientGroupStatus.NotInitialized || 
+                group.Status == KafkaClientGroupStatus.MetadataError ||
+                group.Status == KafkaClientGroupStatus.Rearrange)
             {
                 var metadataBroker = GetMetadataBroker();
                 if (metadataBroker != null)
@@ -425,10 +427,9 @@ namespace NKafka.Client.Internal
                     var metadataRequestId = metadataRequestResult.HasData ? metadataRequestResult.Data : null;
                     if (metadataRequestId.HasValue)
                     {
-
                         _groupMetadataRequests[group.GroupName] = new MetadataRequestInfo(metadataRequestId.Value, metadataBroker);
                         group.Status = KafkaClientGroupStatus.MetadataRequested;
-                    }                    
+                    }
                 }
             }
 
