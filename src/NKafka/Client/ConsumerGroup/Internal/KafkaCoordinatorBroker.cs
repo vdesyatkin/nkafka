@@ -987,10 +987,17 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                         SetGroupError(group, error, errorType);
                         return false;
-                    }                  
+                    }
 
                     var initialOffset = responsePartition.Offset;
-                    partitionOffsets[responsePartition.PartitionId] = new KafkaCoordinatorGroupOffsetsDataPartition(initialOffset, initialOffset, DateTime.UtcNow);                    
+
+                    partitionOffsets[responsePartition.PartitionId] = new KafkaCoordinatorGroupOffsetsDataPartition(initialOffset, initialOffset, DateTime.UtcNow);
+
+                    KafkaClientTopic groupTopic;
+                    if (group.Topics.TryGetValue(topicName, out groupTopic) && groupTopic != null)
+                    {
+                        groupTopic.Consumer?.SetCommitServerOffset(responsePartition.PartitionId, initialOffset);
+                    }
                 }
 
                 topicPartitionOffsets[topicName] = new KafkaCoordinatorGroupOffsetsDataTopic(partitionOffsets);

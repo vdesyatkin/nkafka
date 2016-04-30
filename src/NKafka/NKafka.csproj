@@ -65,6 +65,7 @@
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupOffsetsTopicInfo.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicInfo.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicMessagesInfo.cs" />
+    <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionOffsetsInfo.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionErrorCode.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionInfo.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />

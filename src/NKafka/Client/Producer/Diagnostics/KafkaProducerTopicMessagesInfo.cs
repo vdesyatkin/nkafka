@@ -6,7 +6,7 @@ namespace NKafka.Client.Producer.Diagnostics
     [PublicAPI]
     public sealed class KafkaProducerTopicMessagesInfo
     {
-        public readonly int EnqueuedMessageCount;
+        public readonly long EnqueuedMessageCount;
 
         public readonly long TotalEnqueuedMessageCount;
 
@@ -21,7 +21,7 @@ namespace NKafka.Client.Producer.Diagnostics
         public readonly DateTime? SendTimestampUtc;
 
         public KafkaProducerTopicMessagesInfo(
-            int enqueuedMessageCount, long totalEnqueuedMessageCount, DateTime? enqueueTimestampUtc,
+            long enqueuedMessageCount, long totalEnqueuedMessageCount, DateTime? enqueueTimestampUtc,
             long totalFallbackMessageCount, DateTime? fallbackTimestampUtc,
             long totalSentMessageCount, DateTime? sendTimestampUtc)
         {

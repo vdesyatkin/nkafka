@@ -63,7 +63,7 @@ namespace NKafka.Client.Consumer.Internal
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
-                count += partition.EnqueuedCount;
+                count += partition.ConsumePendingCount;
             }
 
             if (count == 0) return null;
@@ -76,7 +76,7 @@ namespace NKafka.Client.Consumer.Internal
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
 
-                var partitionEnqueuedCount = partition.EnqueuedCount;
+                var partitionEnqueuedCount = partition.ConsumePendingCount;
                 var partitionPackageCount = 0;
                 KafkaMessageAndOffset messageAndOffset = null;
                 while (partitionPackageCount < partitionEnqueuedCount && partition.TryDequeue(out messageAndOffset))
@@ -154,13 +154,21 @@ namespace NKafka.Client.Consumer.Internal
         {
             var partitionInfos = new List<KafkaConsumerTopicPartitionInfo>(_topicPartitions.Count);
 
-            int enqueuedMessageCount = 0;
+            long receivePendingCount = 0;
             long totalReceivedMessageCount = 0;
-            long totalConsumedMessageCount = 0;
-            long totalCommitedMessageCount = 0;
             var receiveMessageTimestampUtc = (DateTime?)null;
+
+            long consumePendingCount = 0;
+            long totalConsumedMessageCount = 0;
             var consumeMessageTimestampUtc = (DateTime?)null;
-            var commitMessageTimestampUtc = (DateTime?)null;
+
+            long clientCommitPendingCount = 0;
+            long totalClientCommitedMessageCount = 0;
+            var clientCommitMessageTimestampUtc = (DateTime?)null;
+
+            long serverCommitPendingCount = 0;
+            long totalServerCommitedMessageCount = 0;
+            var serverCommitMessageTimestampUtc = (DateTime?)null;
 
             foreach (var partitionPair in _topicPartitions)
             {
@@ -169,51 +177,75 @@ namespace NKafka.Client.Consumer.Internal
 
                 var partitionBroker = partition.BrokerPartition;
 
-                var partitionEnqueuedCount = partition.EnqueuedCount;
-                var partitionTotalEnqueuedCount = partition.TotalEnqueuedCount;
-                var partitionEnqueueTimestampUtc = partition.EnqueueTimestampUtc;
+                var partitionOffsetsInfo = partitionBroker.GetOffsetsInfo();
+
+                var partitionReceivePendingCount = partitionOffsetsInfo.AvailableOffset - (partitionOffsetsInfo.ReceivedOffset ?? partitionOffsetsInfo.CommitedServerOffset);
+                var partitionTotalReceivedCount = partition.TotalReceivedCount;
+                var partitionReceivedTimestampUtc = partition.ReceiveTimestampUtc;
+
+                var partitionConsumePendingCount = partition.ConsumePendingCount;
                 var partitionConsumeMessageCount = partition.TotalConsumedCount;
                 var partitionConsumeMessageTimestampUtc = partition.ConsumeTimestampUtc;
-                var partitionCommitMessageCount = partition.TotalCommitedCount;
-                var partitionCommitMessageTimestampUtc = partition.CommitTimestampUtc;
 
-                enqueuedMessageCount += partitionEnqueuedCount;
-                totalReceivedMessageCount += partitionTotalEnqueuedCount;
-                if (receiveMessageTimestampUtc == null || receiveMessageTimestampUtc < partitionEnqueueTimestampUtc)
+                var partitionClientCommitMessageCount = partition.TotalClientCommitedCount;
+                var partitionClientCommitPendingCount = partitionConsumeMessageCount - partitionClientCommitMessageCount;
+                var partitionClientCommitMessageTimestampUtc = partition.ClientCommitTimestampUtc;
+
+                var partitionServerCommitPendingCount = (partitionOffsetsInfo.CommitedServerOffset - partitionOffsetsInfo.CommitedServerOffset) ?? partitionClientCommitMessageCount;
+                var partitionServerCommitMessageCount = partitionClientCommitMessageCount - partitionServerCommitPendingCount;
+                var partitionServerCommitMessageTimestampUtc = partition.ServerCommitTimestampUtc;
+
+                                               
+                receivePendingCount += partitionReceivePendingCount ?? 0;
+                consumePendingCount += consumePendingCount;
+                totalReceivedMessageCount += partitionTotalReceivedCount;
+                if (receiveMessageTimestampUtc == null || receiveMessageTimestampUtc < partitionReceivedTimestampUtc)
                 {
-                    receiveMessageTimestampUtc = partitionEnqueueTimestampUtc;
+                    receiveMessageTimestampUtc = partitionReceivedTimestampUtc;
                 }
 
+                consumePendingCount += partitionConsumePendingCount;
                 totalConsumedMessageCount += partitionConsumeMessageCount;
                 if (consumeMessageTimestampUtc == null || consumeMessageTimestampUtc < partitionConsumeMessageTimestampUtc)
                 {
                     consumeMessageTimestampUtc = partitionConsumeMessageTimestampUtc;
                 }
 
-                totalCommitedMessageCount += partitionCommitMessageCount;
-                if (commitMessageTimestampUtc == null || commitMessageTimestampUtc < partitionCommitMessageTimestampUtc)
+                clientCommitPendingCount += partitionClientCommitPendingCount;
+                totalClientCommitedMessageCount += partitionClientCommitMessageCount;
+                if (clientCommitMessageTimestampUtc == null || clientCommitMessageTimestampUtc < partitionClientCommitMessageTimestampUtc)
                 {
-                    commitMessageTimestampUtc = partitionCommitMessageTimestampUtc;
+                    clientCommitMessageTimestampUtc = partitionClientCommitMessageTimestampUtc;
+                }
+
+                serverCommitPendingCount += partitionServerCommitPendingCount;
+                totalServerCommitedMessageCount += partitionServerCommitMessageCount;
+                if (serverCommitMessageTimestampUtc == null || serverCommitMessageTimestampUtc < partitionServerCommitMessageTimestampUtc)
+                {
+                    serverCommitMessageTimestampUtc = partitionServerCommitMessageTimestampUtc;
                 }
 
                 var partitionMessagesInfo = new KafkaConsumerTopicMessagesInfo(
-                    partitionEnqueuedCount, partitionTotalEnqueuedCount, partitionEnqueueTimestampUtc,
-                    partitionConsumeMessageCount, partitionConsumeMessageTimestampUtc,
-                    partitionCommitMessageCount, partitionCommitMessageTimestampUtc);
+                    partitionReceivePendingCount, partitionTotalReceivedCount, partitionReceivedTimestampUtc,
+                    partitionConsumePendingCount, partitionConsumeMessageCount, partitionConsumeMessageTimestampUtc,
+                    partitionClientCommitPendingCount, partitionClientCommitMessageCount, partitionClientCommitMessageTimestampUtc,
+                    partitionServerCommitPendingCount, partitionServerCommitMessageCount, partitionServerCommitMessageTimestampUtc);
 
                 var partitionInfo = new KafkaConsumerTopicPartitionInfo(partition.PartitonId,
                     partitionBroker.IsReady,
                     partitionBroker.Error, partitionBroker.ErrorTimestampUtc,
-                    partitionMessagesInfo); //todo (E008) Offsets info
+                    partitionMessagesInfo,
+                    partitionOffsetsInfo);
                 partitionInfos.Add(partitionInfo);
-            }            
+            }
 
             var metadataInfo = TopicMetadataInfo;
 
             var topicMessagesInfo = new KafkaConsumerTopicMessagesInfo(
-                enqueuedMessageCount, totalReceivedMessageCount, receiveMessageTimestampUtc,
-                totalConsumedMessageCount, commitMessageTimestampUtc,
-                totalCommitedMessageCount, receiveMessageTimestampUtc);
+                receivePendingCount, totalReceivedMessageCount, receiveMessageTimestampUtc,
+                consumePendingCount, totalConsumedMessageCount, consumeMessageTimestampUtc,
+                clientCommitPendingCount, totalClientCommitedMessageCount, clientCommitMessageTimestampUtc,
+                serverCommitPendingCount, totalServerCommitedMessageCount, serverCommitMessageTimestampUtc);
 
             return new KafkaConsumerTopicInfo(TopicName, 
                 metadataInfo, 

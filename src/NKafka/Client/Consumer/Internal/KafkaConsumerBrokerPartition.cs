@@ -10,14 +10,14 @@ namespace NKafka.Client.Consumer.Internal
     {
         [NotNull] public readonly string TopicName;
         [NotNull] public readonly IKafkaConsumerCoordinator Coordinator;
-        
+
         public readonly int PartitionId;
         [NotNull] public readonly KafkaConsumerSettings Settings;
-        
+
         public KafkaConsumerBrokerPartitionStatus Status;
         public bool IsReady => Status == KafkaConsumerBrokerPartitionStatus.Ready && Error == null;
         public KafkaConsumerTopicPartitionErrorCode? Error { get; private set; }
-        public DateTime? ErrorTimestampUtc { get; private set; }    
+        public DateTime? ErrorTimestampUtc { get; private set; }        
 
         private long _currentReceivedClientOffset;
         private long _currentAvailableServerOffset;
@@ -27,12 +27,10 @@ namespace NKafka.Client.Consumer.Internal
 
         public int? OffsetRequestId;
 
-        [NotNull]
-        private readonly IKafkaConsumerMessageQueue _messageQueue;
+        [NotNull] private readonly IKafkaConsumerMessageQueue _messageQueue;
 
-
-        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, 
-            [NotNull] KafkaConsumerSettings settings, 
+        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId,
+            [NotNull] KafkaConsumerSettings settings,
             [NotNull] IKafkaConsumerCoordinator coordinator, [NotNull] IKafkaConsumerMessageQueue messageQueue)
         {
             TopicName = topicName;
@@ -52,7 +50,7 @@ namespace NKafka.Client.Consumer.Internal
         }
 
         public void EnqueueMessages([NotNull, ItemNotNull] IReadOnlyList<KafkaMessageAndOffset> messages)
-        {            
+        {
             if (messages.Count == 0) return;
 
             var lastMessage = messages[messages.Count - 1];
@@ -75,7 +73,7 @@ namespace NKafka.Client.Consumer.Internal
         public long? GetReceivedClientOffset()
         {
             var currenEnqueuedClientOffset = _currentReceivedClientOffset;
-            return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?)null;
+            return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?) null;
         }
 
         public void SetAvailableServerOffset(long offset)
@@ -89,13 +87,13 @@ namespace NKafka.Client.Consumer.Internal
         public long? GetAvailableServerOffset()
         {
             var currenEnqueuedClientOffset = _currentReceivedClientOffset;
-            return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?)null;
+            return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?) null;
         }
 
         public long? GetCommitClientOffset()
         {
             var currenConsumedClientOffset = _currentCommitClientOffset;
-            return currenConsumedClientOffset != UnknownOffset ? currenConsumedClientOffset : (long?)null;
+            return currenConsumedClientOffset != UnknownOffset ? currenConsumedClientOffset : (long?) null;
         }
 
         public void SetCommitClientOffset(long offset)
@@ -104,7 +102,7 @@ namespace NKafka.Client.Consumer.Internal
             {
                 Interlocked.CompareExchange(ref _currentCommitClientOffset, offset, _currentCommitClientOffset);
             }
-        }        
+        }
 
         public void SetCommitServerOffset(long offset)
         {
@@ -116,7 +114,7 @@ namespace NKafka.Client.Consumer.Internal
 
         public void ResetData()
         {
-            OffsetRequestId = null;            
+            OffsetRequestId = null;
         }
 
         public void SetError(KafkaConsumerTopicPartitionErrorCode error)
@@ -129,5 +127,14 @@ namespace NKafka.Client.Consumer.Internal
         {
             Error = null;
         }
+
+        [NotNull]
+        public KafkaConsumerTopicPartitionOffsetsInfo GetOffsetsInfo()
+        {
+            return new KafkaConsumerTopicPartitionOffsetsInfo(_currentReceivedClientOffset, _currentAvailableServerOffset,
+                _currentCommitClientOffset, _currentCommitServerOffset, 
+                DateTime.UtcNow);
+        }
+   
     }
 }
