@@ -135,7 +135,7 @@ namespace NKafka.Client.Consumer.Internal
             _packages.TryRemove(packageNumber, out package);
         }
 
-        public void SetCommitServerOffset(int partitionId, long offset)
+        public void SetCommitServerOffset(int partitionId, long? offset)
         {
             KafkaConsumerTopicPartition partition;
             if (!_topicPartitions.TryGetValue(partitionId, out partition) || partition == null) return;
@@ -182,7 +182,7 @@ namespace NKafka.Client.Consumer.Internal
 
                 var partitionOffsetsInfo = partitionBroker.GetOffsetsInfo();
 
-                var partitionReceivePendingCount = partitionOffsetsInfo.AvailableOffset - (partitionOffsetsInfo.ReceivedOffset ?? partitionOffsetsInfo.CommitedServerOffset);
+                var partitionReceivePendingCount = partitionOffsetsInfo.MaxAvailableOffset - (partitionOffsetsInfo.ReceivedOffset ?? partitionOffsetsInfo.CommitedServerOffset);
                 if (partitionReceivePendingCount < 0)
                 {
                     partitionReceivePendingCount = null;

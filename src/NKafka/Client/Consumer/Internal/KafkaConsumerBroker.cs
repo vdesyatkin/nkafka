@@ -131,13 +131,20 @@ namespace NKafka.Client.Consumer.Internal
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(partition)) continue;
 
-                var clientOffset = partition.GetReceivedClientOffset() ?? partition.GetAvailableServerOffset();
-                if (clientOffset == null || coordinatorOffset.GroupServerOffset > clientOffset)
+                var clientOffset = partition.GetReceivedClientOffset() ?? coordinatorOffset.GroupServerOffset ?? partition.GetMaxAvailableServerOffset();
+                var minAvailableOffset = partition.GetMinAvailableServerOffset();
+                
+                if (clientOffset < minAvailableOffset)
+                {
+                    clientOffset = minAvailableOffset;
+                }
+
+                if (clientOffset < coordinatorOffset.GroupServerOffset)
                 {
                     clientOffset = coordinatorOffset.GroupServerOffset;
                 }
 
-                newFetchBatch[partitionId] = clientOffset.Value + 1;
+                newFetchBatch[partitionId] = (clientOffset ?? -1) + 1;
             }
             if (newFetchBatch.Count == 0) return;
 
@@ -290,13 +297,18 @@ namespace NKafka.Client.Consumer.Internal
                 SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
                 return false;
             }
-            
+                        
             long? minOffset = null;
+            long? maxOffset = null;
             foreach (var offset in offsets)
             {
                 if (minOffset == null || offset < minOffset.Value)
                 {
                     minOffset = offset;
+                }
+                if (maxOffset == null || offset > maxOffset.Value)
+                {
+                    maxOffset = offset;
                 }
             }
 
@@ -306,7 +318,8 @@ namespace NKafka.Client.Consumer.Internal
                 return false;
             }
 
-            partition.SetAvailableServerOffset(minOffset.Value - 1);
+            partition.SetMinAvailableServerOffset(minOffset.Value - 1);
+            partition.SetMaxAvailableServerOffset(maxOffset.Value - 1);
             return true;
         }
 
@@ -428,7 +441,7 @@ namespace NKafka.Client.Consumer.Internal
                     }
 
                     partition.ResetError();
-                    partition.SetAvailableServerOffset(responsePartition.HighwaterMarkOffset);
+                    partition.SetMaxAvailableServerOffset(responsePartition.HighwaterMarkOffset);
                     partition.EnqueueMessages(responsePartition.Messages ?? new KafkaMessageAndOffset[0]);
                 }
             }

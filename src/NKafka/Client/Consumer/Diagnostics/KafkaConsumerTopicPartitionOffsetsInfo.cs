@@ -7,15 +7,15 @@ namespace NKafka.Client.Consumer.Diagnostics
     public sealed class KafkaConsumerTopicPartitionOffsetsInfo
     {
         public readonly long? ReceivedOffset;        
-        public readonly long? AvailableOffset;
+        public readonly long? MaxAvailableOffset;
         public readonly long? CommitedClientOffset;
         public readonly long? CommitedServerOffset;
         public readonly DateTime TimestampUtc;
 
-        public KafkaConsumerTopicPartitionOffsetsInfo(long? receivedOffset, long? availableOffset, long? commitedClientOffset, long? commitedServerOffset, DateTime timestampUtc)
+        public KafkaConsumerTopicPartitionOffsetsInfo(long? receivedOffset, long? maxAvailableOffset, long? commitedClientOffset, long? commitedServerOffset, DateTime timestampUtc)
         {
             ReceivedOffset = receivedOffset;            
-            AvailableOffset = availableOffset;
+            MaxAvailableOffset = maxAvailableOffset;
             CommitedClientOffset = commitedClientOffset;
             CommitedServerOffset = commitedServerOffset;
             TimestampUtc = timestampUtc;

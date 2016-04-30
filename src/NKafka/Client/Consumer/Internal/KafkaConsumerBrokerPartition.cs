@@ -20,7 +20,8 @@ namespace NKafka.Client.Consumer.Internal
         public DateTime? ErrorTimestampUtc { get; private set; }        
 
         private long _currentReceivedClientOffset;
-        private long _currentAvailableServerOffset;
+        private long _currentMinAvailableServerOffset;
+        private long _currentMaxAvailableServerOffset;
         private long _currentCommitClientOffset;
         private long _currentCommitServerOffset;
         private const long UnknownOffset = -1;
@@ -39,7 +40,7 @@ namespace NKafka.Client.Consumer.Internal
             Coordinator = coordinator;
             _messageQueue = messageQueue;
             _currentReceivedClientOffset = UnknownOffset;
-            _currentAvailableServerOffset = UnknownOffset;
+            _currentMinAvailableServerOffset = UnknownOffset;
             _currentCommitClientOffset = UnknownOffset;
             _currentCommitServerOffset = UnknownOffset;
         }
@@ -72,22 +73,30 @@ namespace NKafka.Client.Consumer.Internal
 
         public long? GetReceivedClientOffset()
         {
-            var currenEnqueuedClientOffset = _currentReceivedClientOffset;
-            return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?) null;
+            var currenReceivedClientOffset = _currentReceivedClientOffset;
+            return currenReceivedClientOffset != UnknownOffset ? currenReceivedClientOffset : (long?) null;
         }
 
-        public void SetAvailableServerOffset(long offset)
+        public void SetMinAvailableServerOffset(long offset)
         {
-            while (offset > _currentAvailableServerOffset)
-            {
-                Interlocked.CompareExchange(ref _currentAvailableServerOffset, offset, _currentAvailableServerOffset);
-            }
+            _currentMinAvailableServerOffset = offset;            
         }
 
-        public long? GetAvailableServerOffset()
+        public void SetMaxAvailableServerOffset(long offset)
         {
-            var currenEnqueuedClientOffset = _currentReceivedClientOffset;
-            return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?) null;
+            _currentMaxAvailableServerOffset = offset;
+        }
+
+        public long? GetMinAvailableServerOffset()
+        {
+            var currenMinAvailableClientOffset = _currentMinAvailableServerOffset;
+            return currenMinAvailableClientOffset != UnknownOffset ? currenMinAvailableClientOffset : (long?) null;
+        }
+
+        public long? GetMaxAvailableServerOffset()
+        {
+            var currenMaxAvailableClientOffset = _currentMaxAvailableServerOffset;
+            return currenMaxAvailableClientOffset != UnknownOffset ? currenMaxAvailableClientOffset : (long?)null;
         }
 
         public long? GetCommitClientOffset()
@@ -104,12 +113,9 @@ namespace NKafka.Client.Consumer.Internal
             }
         }
 
-        public void SetCommitServerOffset(long offset)
+        public void SetCommitServerOffset(long? offset)
         {
-            while (offset > _currentCommitServerOffset)
-            {
-                Interlocked.CompareExchange(ref _currentCommitServerOffset, offset, _currentCommitServerOffset);
-            }
+            _currentCommitServerOffset = offset ?? UnknownOffset;
         }
 
         public void ResetData()
@@ -132,13 +138,13 @@ namespace NKafka.Client.Consumer.Internal
         public KafkaConsumerTopicPartitionOffsetsInfo GetOffsetsInfo()
         {
             var currentReceivedClientOffset = _currentReceivedClientOffset;
-            var currentAvailableServerOffset = _currentAvailableServerOffset;
+            var currentMaxAvailableServerOffset = _currentMaxAvailableServerOffset;
             var currentCommitClientOffset = _currentCommitClientOffset;
             var currentCommitServerOffset = _currentCommitServerOffset;
 
             return new KafkaConsumerTopicPartitionOffsetsInfo(
                 currentReceivedClientOffset != UnknownOffset ? currentReceivedClientOffset : (long?)null,
-                currentAvailableServerOffset != UnknownOffset ? currentAvailableServerOffset : (long?)null,
+                currentMaxAvailableServerOffset != UnknownOffset ? currentMaxAvailableServerOffset : (long?)null,
                 currentCommitClientOffset != UnknownOffset ? currentCommitClientOffset : (long?)null,
                 currentCommitServerOffset != UnknownOffset ? currentCommitServerOffset : (long?)null,
                 DateTime.UtcNow);

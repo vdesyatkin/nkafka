@@ -119,7 +119,7 @@ namespace NKafka.Client.Consumer.Internal
             ClientCommitTimestampUtc = DateTime.UtcNow;
         }
 
-        public void SetCommitServerOffset(long offset)
+        public void SetCommitServerOffset(long? offset)
         {        
             BrokerPartition.SetCommitServerOffset(offset);
             ServerCommitTimestampUtc = DateTime.UtcNow;
