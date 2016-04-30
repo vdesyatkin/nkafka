@@ -19,8 +19,9 @@ namespace NKafka.Client.Consumer.Internal
         public DateTime? ErrorTimestampUtc { get; private set; }    
 
         private long _currentReceivedClientOffset;
-        private long _currentConsumedClientOffset;
-        private long _currentServerOffset;
+        private long _currentAvailableServerOffset;
+        private long _currentCommitClientOffset;
+        private long _currentCommitServerOffset;
         private const long UnknownOffset = -1;
 
         public int? OffsetRequestId;
@@ -39,8 +40,9 @@ namespace NKafka.Client.Consumer.Internal
             Coordinator = coordinator;
             _messageQueue = messageQueue;
             _currentReceivedClientOffset = UnknownOffset;
-            _currentConsumedClientOffset = UnknownOffset;
-            _currentServerOffset = UnknownOffset;
+            _currentAvailableServerOffset = UnknownOffset;
+            _currentCommitClientOffset = UnknownOffset;
+            _currentCommitServerOffset = UnknownOffset;
         }
 
         public bool CanEnqueue()
@@ -54,8 +56,8 @@ namespace NKafka.Client.Consumer.Internal
 
             var lastMessage = messages[messages.Count - 1];
             if (lastMessage == null) return;
-            
-            SetReceivedClientOffset(lastMessage.Offset);            
+
+            _currentReceivedClientOffset = lastMessage.Offset;
 
             try
             {
@@ -73,33 +75,39 @@ namespace NKafka.Client.Consumer.Internal
             return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?)null;
         }
 
-        public void SetReceivedClientOffset(long offset)
+        public void SetAvailableServerOffset(long offset)
         {
-            while (offset > _currentReceivedClientOffset)
+            while (offset > _currentAvailableServerOffset)
             {
-                Interlocked.CompareExchange(ref _currentReceivedClientOffset, offset, _currentReceivedClientOffset);
+                Interlocked.CompareExchange(ref _currentAvailableServerOffset, offset, _currentAvailableServerOffset);
             }
         }
 
-        public long? GetConsumedClientOffset()
+        public long? GetAvailableServerOffset()
         {
-            var currenConsumedClientOffset = _currentConsumedClientOffset;
+            var currenEnqueuedClientOffset = _currentReceivedClientOffset;
+            return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?)null;
+        }
+
+        public long? GetCommitClientOffset()
+        {
+            var currenConsumedClientOffset = _currentCommitClientOffset;
             return currenConsumedClientOffset != UnknownOffset ? currenConsumedClientOffset : (long?)null;
         }
 
-        public void SetConsumedClientOffset(long offset)
+        public void SetCommitClientOffset(long offset)
         {
-            while (offset > _currentConsumedClientOffset)
+            while (offset > _currentCommitClientOffset)
             {
-                Interlocked.CompareExchange(ref _currentConsumedClientOffset, offset, _currentConsumedClientOffset);
+                Interlocked.CompareExchange(ref _currentCommitClientOffset, offset, _currentCommitClientOffset);
             }
         }        
 
-        public void SetServerOffset(long offset)
+        public void SetCommitServerOffset(long offset)
         {
-            while (offset > _currentServerOffset)
+            while (offset > _currentCommitServerOffset)
             {
-                Interlocked.CompareExchange(ref _currentServerOffset, offset, _currentServerOffset);
+                Interlocked.CompareExchange(ref _currentCommitServerOffset, offset, _currentCommitServerOffset);
             }
         }
 

@@ -5,18 +5,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
 {    
     internal sealed class KafkaCoordinatorGroupOffsetsDataPartition : IKafkaConsumerCoordinatorOffsetsData
     {
-        public long ClientOffset;
+        public long GroupClientOffset;
 
-        public long ServerOffset;
+        public long GroupServerOffset;
 
         public DateTime TimestampUtc;
         
-        long IKafkaConsumerCoordinatorOffsetsData.ServerOffset => ServerOffset;
+        long IKafkaConsumerCoordinatorOffsetsData.GroupServerOffset => GroupServerOffset;
 
-        public KafkaCoordinatorGroupOffsetsDataPartition(long clientOffset, long serverOffset, DateTime timestampUtc)
+        public KafkaCoordinatorGroupOffsetsDataPartition(long groupClientOffset, long groupServerOffset, DateTime timestampUtc)
         {
-            ClientOffset = clientOffset;
-            ServerOffset = serverOffset;
+            GroupClientOffset = groupClientOffset;
+            GroupServerOffset = groupServerOffset;
             TimestampUtc = timestampUtc;
         }                
     }

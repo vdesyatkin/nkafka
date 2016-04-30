@@ -2,6 +2,6 @@
 {
     public interface IKafkaConsumerCoordinatorOffsetsData
     {        
-        long ServerOffset { get; }     
+        long GroupServerOffset { get; }     
     }
 }

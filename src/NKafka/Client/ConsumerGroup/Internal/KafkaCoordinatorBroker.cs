@@ -1032,11 +1032,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     var partitionOffsets = partitonPair.Value;
                     if (partitionOffsets == null) continue;
 
-                    var newClientOffset = groupTopic.Consumer?.GetConsumedClientOffset(partitionId);
+                    var newClientOffset = groupTopic.Consumer?.GetCommitClientOffset(partitionId);
                     if (newClientOffset == null) continue;
                     
-                    if (partitionOffsets.ServerOffset >= newClientOffset.Value) continue;
-                    partitionOffsets.ClientOffset = newClientOffset.Value;
+                    if (partitionOffsets.GroupServerOffset >= newClientOffset.Value) continue;
+                    partitionOffsets.GroupClientOffset = newClientOffset.Value;
                     partitionOffsets.TimestampUtc = DateTime.UtcNow;
 
                     requestPartitions.Add(new KafkaOffsetCommitRequestTopicPartition(partitionId, newClientOffset.Value, group.CommitMetadata));                    
@@ -1171,9 +1171,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         continue; // don't return! may be part of topics is successfull.
                     }
 
-                    partitionOffsets.ServerOffset = partitionOffsets.ClientOffset;
+                    partitionOffsets.GroupServerOffset = partitionOffsets.GroupClientOffset;
                     partitionOffsets.TimestampUtc = DateTime.UtcNow;
-                    groupTopic?.Consumer?.ApproveCommitOffset(responsePartition.PartitionId, partitionOffsets.ServerOffset);
+                    groupTopic?.Consumer?.SetCommitServerOffset(responsePartition.PartitionId, partitionOffsets.GroupServerOffset);
                 }
             }
 

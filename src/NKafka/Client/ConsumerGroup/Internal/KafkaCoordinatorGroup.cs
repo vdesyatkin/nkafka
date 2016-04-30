@@ -159,7 +159,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         var partitionId = partitionPair.Key;
 
                         var partitionInfo = new KafkaConsumerGroupOffsetsPartitionInfo(partitionId, 
-                            partition.ClientOffset, partition.ServerOffset, partition.TimestampUtc);
+                            partition.GroupClientOffset, partition.GroupServerOffset, partition.TimestampUtc);
                         partitionInfos.Add(partitionInfo);
                     }
                     var topicInfo = new KafkaConsumerGroupOffsetsTopicInfo(topicName, partitionInfos);

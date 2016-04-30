@@ -131,10 +131,10 @@ namespace NKafka.Client.Consumer.Internal
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(partition)) continue;
 
-                var clientOffset = partition.GetReceivedClientOffset();
-                if (clientOffset == null || coordinatorOffset.ServerOffset > clientOffset)
+                var clientOffset = partition.GetReceivedClientOffset() ?? partition.GetAvailableServerOffset();
+                if (clientOffset == null || coordinatorOffset.GroupServerOffset > clientOffset)
                 {
-                    clientOffset = coordinatorOffset.ServerOffset;
+                    clientOffset = coordinatorOffset.GroupServerOffset;
                 }
 
                 newFetchBatch[partitionId] = clientOffset.Value + 1;
@@ -304,7 +304,7 @@ namespace NKafka.Client.Consumer.Internal
                 return false;
             }
 
-            partition.SetReceivedClientOffset(minOffset.Value - 1);
+            partition.SetAvailableServerOffset(minOffset.Value - 1);
             return true;
         }
 
@@ -425,6 +425,8 @@ namespace NKafka.Client.Consumer.Internal
                         continue;
                     }
 
+                    partition.ResetError();
+                    partition.SetAvailableServerOffset(responsePartition.HighwaterMarkOffset);
                     partition.EnqueueMessages(responsePartition.Messages ?? new KafkaMessageAndOffset[0]);
                 }
             }
