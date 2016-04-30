@@ -150,6 +150,8 @@ namespace NKafka.Client.Consumer.Internal
                         
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.NotInitialized)
             {
+                partition.ResetData();
+
                 if (!TrySendRequestOffsets(partition))
                 {
                     return false;

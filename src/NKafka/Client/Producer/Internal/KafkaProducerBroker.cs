@@ -152,7 +152,7 @@ namespace NKafka.Client.Producer.Internal
                 }
                 if (partition.Status == KafkaProducerBrokerPartitionStatus.NotInitialized)
                 {
-                    partition.ResetLimits();
+                    partition.ResetData();
                     partition.Status = KafkaProducerBrokerPartitionStatus.Ready;
                 }
                 partitionList.Add(partition);
@@ -485,7 +485,7 @@ namespace NKafka.Client.Producer.Internal
                     partition.Status = KafkaProducerBrokerPartitionStatus.Error;
                     break;
                 case ProducerErrorType.Rearrange:
-                    partition.ResetError();
+                    partition.ResetData();
                     partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
                     break;
             }

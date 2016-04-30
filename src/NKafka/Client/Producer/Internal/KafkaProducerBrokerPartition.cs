@@ -84,7 +84,7 @@ namespace NKafka.Client.Producer.Internal
             }
         }
 
-        public void ResetLimits()
+        public void ResetData()
         {
             LimitInfo = new KafkaProducerTopicPartitionLimitInfo(DateTime.UtcNow, Settings.MaxMessageSizeByteCount, Settings.BatchMaxMessageCount);
         }
