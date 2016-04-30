@@ -108,7 +108,7 @@ namespace NKafka.Client.Producer.Internal
                 var response = _broker.Receive<KafkaProduceResponse>(requestId);
                 if (!response.HasData && !response.HasError) continue; // has not received
 
-                ProcessProduceResponse(topic, request.Value, response);
+                HandleProduceResponse(topic, request.Value, response);
                 processedRequests.Add(requestId);
             }
             foreach (var requestId in processedRequests)
@@ -129,7 +129,7 @@ namespace NKafka.Client.Producer.Internal
                 var batchRequestId = batchRequestResult.Data;
                 if (batchRequestId == null)
                 {
-                    RollbackBatch(batchRequest, batchRequestResult.Error);
+                    RollbackBatch(batchRequest, batchRequestResult.Error ?? KafkaBrokerErrorCode.TransportError);
                     continue;
                 }
 
@@ -185,7 +185,7 @@ namespace NKafka.Client.Producer.Internal
                 var partition = partitionList[index];
                 if (partition == null) continue;
 
-                if (partition.Error != null)
+                if (partition.Status == KafkaProducerBrokerPartitionStatus.Error)
                 {
                     if (DateTime.UtcNow - partition.ErrorTimestampUtc > partition.Settings.ErrorRetryPeriod)
                     {
@@ -268,14 +268,14 @@ namespace NKafka.Client.Producer.Internal
             return requests;
         }
 
-        private void ProcessProduceResponse([NotNull] KafkaProducerBrokerTopic topic,
+        private void HandleProduceResponse([NotNull] KafkaProducerBrokerTopic topic,
             [NotNull] ProduceBatch topicBatch, KafkaBrokerResult<KafkaProduceResponse> response)
         {
             if (!response.HasData && !response.HasError) return;
 
             if (response.HasError || !response.HasData || response.Data == null)
             {
-                RollbackBatch(topic, topicBatch, response.Error);                
+                RollbackBatch(topic, topicBatch, response.Error ?? KafkaBrokerErrorCode.TransportError);                                
                 return;
             }
 
@@ -301,50 +301,59 @@ namespace NKafka.Client.Producer.Internal
                     List<KafkaMessage> batchMessages;
                     if (!topicBatch.Partitions.TryGetValue(partitionId, out batchMessages) || batchMessages == null) continue;
 
-                    HandlePartitionResponse(topic, partition, partitionResponse, batchMessages);                    
+                    if (!TryHandlePartitionResponse(topic, partition, partitionResponse, batchMessages))
+                    {
+                        continue;
+                    }
+
+                    partition.ResetError();
+                    partition.Status = KafkaProducerBrokerPartitionStatus.Ready;
                 }
             }
         }
 
-        private void HandlePartitionResponse([NotNull] KafkaProducerBrokerTopic topic, [NotNull] KafkaProducerBrokerPartition partition, 
+        private bool TryHandlePartitionResponse([NotNull] KafkaProducerBrokerTopic topic, [NotNull] KafkaProducerBrokerPartition partition, 
             [NotNull] KafkaProduceResponseTopicPartition response, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> batchMessages)
         {            
             if (response.ErrorCode != KafkaResponseErrorCode.NoError)
             {
                 KafkaProducerTopicPartitionErrorCode error;
-                var isRearrangeRequired = false;
+                ProducerErrorType errorType;
 
                 switch (response.ErrorCode)
                 {
-                    //todo validate                    
                     case KafkaResponseErrorCode.InvalidMessage:
                         error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                        errorType = ProducerErrorType.Error;
                         break;
                     case KafkaResponseErrorCode.UnknownTopicOrPartition:
                         error = KafkaProducerTopicPartitionErrorCode.UnknownTopicOrPartition;
-                        isRearrangeRequired = true;
+                        errorType = ProducerErrorType.Rearrange;
                         break;
                     case KafkaResponseErrorCode.InvalidMessageSize:
                         error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                        errorType = ProducerErrorType.Error;
                         break;
                     case KafkaResponseErrorCode.LeaderNotAvailable:
                         error = KafkaProducerTopicPartitionErrorCode.LeaderNotAvailable;
+                        errorType = ProducerErrorType.Rearrange;
                         break;
                     case KafkaResponseErrorCode.NotLeaderForPartition:
                         error = KafkaProducerTopicPartitionErrorCode.NotLeaderForPartition;
-                        isRearrangeRequired = true;
+                        errorType = ProducerErrorType.Rearrange;
                         break;
                     case KafkaResponseErrorCode.RequestTimedOut:
                         error = KafkaProducerTopicPartitionErrorCode.ServerTimeout;
+                        errorType = ProducerErrorType.Error;
                         break;
-                    case KafkaResponseErrorCode.BrokerNotAvailable: //todo ?
+                    case KafkaResponseErrorCode.BrokerNotAvailable:
                         error = KafkaProducerTopicPartitionErrorCode.LeaderNotAvailable;
-                        isRearrangeRequired = true;
+                        errorType = ProducerErrorType.Error;
                         break;
-                    case KafkaResponseErrorCode.ReplicaNotAvailable: //todo ?
-                        error = KafkaProducerTopicPartitionErrorCode.LeaderNotAvailable;
-                        isRearrangeRequired = true;
+                    case KafkaResponseErrorCode.ReplicaNotAvailable:
+                        error = KafkaProducerTopicPartitionErrorCode.ReplicaNotAvailable;
+                        errorType = ProducerErrorType.Warning;
                         break;
                     case KafkaResponseErrorCode.MessageSizeTooLarge:
                         error = KafkaProducerTopicPartitionErrorCode.MessageSizeTooLarge;
@@ -358,103 +367,133 @@ namespace NKafka.Client.Producer.Internal
                             }
                         }
                         partition.SetMaxMessageSizeByteCount(maxMessageSize - 1);
+                        errorType = ProducerErrorType.Warning;
                         break;
                     case KafkaResponseErrorCode.InvalidTopic:
                         error = KafkaProducerTopicPartitionErrorCode.InvalidTopic;
-                        isRearrangeRequired = true;
+                        errorType = ProducerErrorType.Rearrange;
                         break;
                     case KafkaResponseErrorCode.RecordListTooLarge:
                         error = KafkaProducerTopicPartitionErrorCode.RecordListTooLarge;
                         var newMessageCountLimit = Math.Max(1, (int)Math.Round(batchMessages.Count * 0.66));
                         partition.SetMaxMessageCount(newMessageCountLimit);
+                        errorType = ProducerErrorType.Warning;
                         break;
                     case KafkaResponseErrorCode.NotEnoughReplicas:
                         error = KafkaProducerTopicPartitionErrorCode.NotEnoughReplicas;
+                        errorType = ProducerErrorType.Error;
                         break;
                     case KafkaResponseErrorCode.NotEnoughReplicasAfterAppend:
                         error = KafkaProducerTopicPartitionErrorCode.NotEnoughReplicasAfterAppend;
+                        errorType = ProducerErrorType.Error;
                         break;
                     case KafkaResponseErrorCode.InvalidRequiredAcks:
                         error = KafkaProducerTopicPartitionErrorCode.InvalidRequiredAcks;
-                        topic.ConsistencyLevel = KafkaConsistencyLevel.OneReplica;                        
+                        if (topic.ConsistencyLevel == KafkaConsistencyLevel.None ||
+                            topic.ConsistencyLevel == KafkaConsistencyLevel.OneReplica ||
+                            topic.ConsistencyLevel == KafkaConsistencyLevel.AllReplicas)
+                        {
+                            errorType = ProducerErrorType.Error;
+                        }
+                        else
+                        {
+                            topic.ConsistencyLevel = KafkaConsistencyLevel.OneReplica;
+                            errorType = ProducerErrorType.Warning;
+                        }                        
                         break;
                     case KafkaResponseErrorCode.TopicAuthorizationFailed:
                         error = KafkaProducerTopicPartitionErrorCode.TopicAuthorizationFailed;
-                        isRearrangeRequired = true;
+                        errorType = ProducerErrorType.Rearrange;
                         break;
                     default:
                         error = KafkaProducerTopicPartitionErrorCode.UnknownError;
-                        isRearrangeRequired = true;
+                        errorType = ProducerErrorType.Rearrange;
                         break;
                 }
-                partition.SetError(error);
-                partition.RollbackMessags(batchMessages);
-                if (isRearrangeRequired)
-                {
-                    partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
-                }
-                return;
+                SetPartitionError(partition, error, errorType);
+                partition.RollbackMessags(batchMessages);                
+                return false;
             }
+                   
+            partition.ConfirmMessags(batchMessages);
+            return true;
+        }       
 
-            partition.ResetError();
-            partition.ConfirmMessags(batchMessages);                                  
+        [NotNull]
+        private KafkaProduceRequest CreateBatchRequest([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch)
+        {            
+            var requestPartitions = new List<KafkaProduceRequestTopicPartition>(batch.Partitions.Count);
+            foreach (var batchPartiton in batch.Partitions)
+            {
+                var partitonId = batchPartiton.Key;
+                var messages = batchPartiton.Value;
+                var requestPartiton = new KafkaProduceRequestTopicPartition(partitonId, topic.Settings.CodecType, messages);
+                requestPartitions.Add(requestPartiton);
+            }
+            var requestTopic = new KafkaProduceRequestTopic(topic.TopicName, requestPartitions);
+            
+            var batchRequest = new KafkaProduceRequest(topic.ConsistencyLevel, topic.Settings.BatchServerTimeout, new [] { requestTopic});
+            return batchRequest;
         }
+
+        #region Error handling
 
         private void HandleBrokerError(
-            [NotNull] KafkaProducerBrokerPartition partition,
-            KafkaBrokerErrorCode? brokerError,
-            [CanBeNull] IReadOnlyList<KafkaMessage> batchMessages)
-        {
-            if (batchMessages != null)
+           [NotNull] KafkaProducerBrokerPartition partition,
+           KafkaBrokerErrorCode brokerError)
+        {            
+            KafkaProducerTopicPartitionErrorCode partitionErrorCode;
+
+            switch (brokerError)
             {
-                partition.RollbackMessags(batchMessages);
+                case KafkaBrokerErrorCode.Closed:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ConnectionClosed;
+                    break;
+                case KafkaBrokerErrorCode.Maintenance:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                    break;
+                case KafkaBrokerErrorCode.BadRequest:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.ProtocolError:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.TransportError:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportError;
+                    break;
+                case KafkaBrokerErrorCode.Timeout:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ClientTimeout;
+                    break;
+                default:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.UnknownError;
+                    break;
             }
 
-            if (brokerError != null)
-            {
-                KafkaProducerTopicPartitionErrorCode error;
-                var isRearrangeRequired = false;
-
-                switch (brokerError.Value)
-                {
-                    case KafkaBrokerErrorCode.Closed:
-                        error = KafkaProducerTopicPartitionErrorCode.ConnectionClosed;
-                        isRearrangeRequired = true;
-                        break;
-                    case KafkaBrokerErrorCode.Maintenance:
-                        error = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
-                        break;
-                    case KafkaBrokerErrorCode.BadRequest:
-                        error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
-                        break;
-                    case KafkaBrokerErrorCode.ProtocolError:
-                        error = KafkaProducerTopicPartitionErrorCode.ProtocolError;
-                        break;
-                    case KafkaBrokerErrorCode.TransportError:
-                        error = KafkaProducerTopicPartitionErrorCode.TransportError;
-                        isRearrangeRequired = true;
-                        break;
-                    case KafkaBrokerErrorCode.Timeout:
-                        error = KafkaProducerTopicPartitionErrorCode.ClientTimeout;
-                        isRearrangeRequired = true;
-                        break;
-                    default:
-                        error = KafkaProducerTopicPartitionErrorCode.UnknownError;
-                        isRearrangeRequired = true;
-                        break;
-                }
-                partition.SetError(error);
-                
-                if (isRearrangeRequired)
-                {
-                    partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
-                }
-            }            
+            SetPartitionError(partition, partitionErrorCode, ProducerErrorType.Rearrange);
         }
 
-        private void RollbackBatch([NotNull] KafkaProduceRequest request, KafkaBrokerErrorCode? brokerError)
+        private void SetPartitionError([NotNull] KafkaProducerBrokerPartition partition,
+            KafkaProducerTopicPartitionErrorCode errorCode,
+            ProducerErrorType errorType)
         {
-            if (request.Topics == null) return;            
+            partition.SetError(errorCode);
+            switch (errorType)
+            {
+                case ProducerErrorType.Warning:
+                    break;
+                case ProducerErrorType.Error:                    
+                    partition.Status = KafkaProducerBrokerPartitionStatus.Error;
+                    break;
+                case ProducerErrorType.Rearrange:
+                    partition.ResetError();
+                    partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
+                    break;
+            }
+        }
+
+        private void RollbackBatch([NotNull] KafkaProduceRequest request, KafkaBrokerErrorCode brokerError)
+        {
+            if (request.Topics == null) return;
 
             foreach (var requestTopic in request.Topics)
             {
@@ -476,13 +515,18 @@ namespace NKafka.Client.Producer.Internal
                         continue;
                     }
 
-                    HandleBrokerError(partition, brokerError, requestPartition.Messages);
+                    if (requestPartition.Messages != null)
+                    {
+                        partition.RollbackMessags(requestPartition.Messages);
+                    }
+
+                    HandleBrokerError(partition, brokerError);
                 }
             }
         }
 
-        private void RollbackBatch([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch, KafkaBrokerErrorCode? brokerError)
-        {            
+        private void RollbackBatch([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch, KafkaBrokerErrorCode brokerError)
+        {
             foreach (var batchPartition in batch.Partitions)
             {
                 var partitionId = batchPartition.Key;
@@ -494,26 +538,23 @@ namespace NKafka.Client.Producer.Internal
                     continue;
                 }
 
-                HandleBrokerError(partition, brokerError, batchMessags);
-            }
-        }       
+                if (batchMessags != null)
+                {
+                    partition.RollbackMessags(batchMessags);
+                }
 
-        [NotNull]
-        private KafkaProduceRequest CreateBatchRequest([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch)
-        {            
-            var requestPartitions = new List<KafkaProduceRequestTopicPartition>(batch.Partitions.Count);
-            foreach (var batchPartiton in batch.Partitions)
-            {
-                var partitonId = batchPartiton.Key;
-                var messages = batchPartiton.Value;
-                var requestPartiton = new KafkaProduceRequestTopicPartition(partitonId, topic.Settings.CodecType, messages);
-                requestPartitions.Add(requestPartiton);
+                HandleBrokerError(partition, brokerError);
             }
-            var requestTopic = new KafkaProduceRequestTopic(topic.TopicName, requestPartitions);
-            
-            var batchRequest = new KafkaProduceRequest(topic.ConsistencyLevel, topic.Settings.BatchServerTimeout, new [] { requestTopic});
-            return batchRequest;
         }
+
+        private enum ProducerErrorType
+        {
+            Warning = 0,
+            Error = 1,
+            Rearrange = 2
+        }
+
+        #endregion Error handling
 
         private class ProduceBatch
         {

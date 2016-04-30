@@ -6,8 +6,8 @@ namespace NKafka.Client.Producer.Internal
     public enum KafkaProducerBrokerPartitionStatus
     {
         NotInitialized = 0,
-        RearrangeRequired = 1,
-        Ready = 2,        
+        RearrangeRequired = 1,        
+        Ready = 2,
         Error = 3
     }
 }

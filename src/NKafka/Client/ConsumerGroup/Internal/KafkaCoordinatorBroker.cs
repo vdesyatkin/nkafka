@@ -1202,7 +1202,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             var requestResult = _broker.Send(request, timeout);
             if (requestResult.HasError || requestResult.Data == null)
             {
-                HandleBrokerError(group, requestResult.Error ?? KafkaBrokerErrorCode.UnknownError);
+                HandleBrokerError(group, requestResult.Error ?? KafkaBrokerErrorCode.TransportError);
                 return false;
             }
 

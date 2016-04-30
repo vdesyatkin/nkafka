@@ -22,6 +22,11 @@ namespace NKafka.Client.Consumer.Diagnostics
         /// <summary>
         /// This error is thrown if the client attempts to send messages to a replica that is not the leader for some partition. It indicates that the clients metadata is out of date.
         /// </summary>
-        NotLeaderForPartition = 6
+        NotLeaderForPartition = 6,
+
+        /// <summary>
+        /// If replica is expected on a broker, but is not (this can be safely ignored).
+        /// </summary>
+        ReplicaNotAvailable = 9
     }
 }

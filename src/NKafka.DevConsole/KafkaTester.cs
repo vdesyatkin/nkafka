@@ -1117,8 +1117,8 @@ namespace NKafka.DevConsole
                 Send(stream, PackGroupCoordinatorRequest(groupCoordinatorRequest));
                 var groupCoordinatorResponse = UnpackGroupCoordinatorResponse(Receive(stream));
 
-                var offsetRequestTopicPartition0 = new OffsetRequestTopicPartition { PartitionId = partitionIds[0], Time = OffsetTime.TheEarliest, MaxNumberOfOffsets = 1000 };
-                var offsetRequestTopicPartition1 = new OffsetRequestTopicPartition { PartitionId = partitionIds[1], Time = OffsetTime.TheEarliest, MaxNumberOfOffsets = 1000 };
+                var offsetRequestTopicPartition0 = new OffsetRequestTopicPartition { PartitionId = partitionIds[0], Time = OffsetTime.TheLatest, MaxNumberOfOffsets = 2 };
+                var offsetRequestTopicPartition1 = new OffsetRequestTopicPartition { PartitionId = partitionIds[1], Time = OffsetTime.TheLatest, MaxNumberOfOffsets = 2 };
                 var offsetRequestTopic = new OffsetRequestTopic { TopicName = testTopicName, Partitions = new[] { offsetRequestTopicPartition0, offsetRequestTopicPartition1 } };
                 var offsetRequest = new OffsetRequest { Topics = new[] { offsetRequestTopic } };
                 Send(stream, PackOffsetRequest(offsetRequest));

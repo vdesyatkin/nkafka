@@ -235,7 +235,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             return new KafkaConsumerGroupSessionInfo(GroupName, DateTime.UtcNow,
                 status == KafkaConsumerGroupStatus.Ready,
-                status, //todo 
+                status,
                 _error,
                 ErrorTimestampUtc,
                 memberInfo,

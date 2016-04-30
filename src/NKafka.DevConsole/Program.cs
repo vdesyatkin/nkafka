@@ -11,12 +11,17 @@ namespace NKafka.DevConsole
     class Program
     {
         static void Main()
-        {            
+        {
             var host = "192.168.137.196";
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);
             var topicName = "test2";
             var groupName = "group53";
+
+            //var tester = new KafkaTester();
+            //tester.Test(host, port, topicName);
+            //Console.ReadLine();
+            //return;
 
             var clientConfigBuilder = new KafkaClientSettingsBuilder(metadataBroker)
                 .SetClientId("nkafka")
@@ -93,11 +98,7 @@ namespace NKafka.DevConsole
 
             Console.WriteLine("stopped");
 
-            Console.ReadLine();
-
-            //var tester = new KafkaTester();
-            //tester.Test(host, port, topicName);
-            //Console.ReadLine();
+            Console.ReadLine();            
         }
 
         private class TestSerializer : IKafkaProducerSerializer<string, string>, IKafkaConsumerSerializer<String, string>

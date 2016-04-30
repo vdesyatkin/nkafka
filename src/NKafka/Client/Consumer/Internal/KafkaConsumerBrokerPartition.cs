@@ -16,7 +16,7 @@ namespace NKafka.Client.Consumer.Internal
         
         public KafkaConsumerBrokerPartitionStatus Status;
         public KafkaConsumerTopicPartitionErrorCode? Error { get; private set; }
-        public DateTime? ErrorTimestampUtc { get; private set; }        
+        public DateTime? ErrorTimestampUtc { get; private set; }    
 
         private long _currentReceivedClientOffset;
         private long _currentConsumedClientOffset;
@@ -54,13 +54,8 @@ namespace NKafka.Client.Consumer.Internal
 
             var lastMessage = messages[messages.Count - 1];
             if (lastMessage == null) return;
-
-            var newOffset = lastMessage.Offset;
-
-            if (newOffset > _currentReceivedClientOffset)
-            {
-                _currentReceivedClientOffset = newOffset;
-            }
+            
+            SetReceivedClientOffset(lastMessage.Offset);            
 
             try
             {
@@ -78,6 +73,14 @@ namespace NKafka.Client.Consumer.Internal
             return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?)null;
         }
 
+        public void SetReceivedClientOffset(long offset)
+        {
+            while (offset > _currentReceivedClientOffset)
+            {
+                Interlocked.CompareExchange(ref _currentReceivedClientOffset, offset, _currentReceivedClientOffset);
+            }
+        }
+
         public long? GetConsumedClientOffset()
         {
             var currenConsumedClientOffset = _currentConsumedClientOffset;
@@ -86,25 +89,19 @@ namespace NKafka.Client.Consumer.Internal
 
         public void SetConsumedClientOffset(long offset)
         {
-            if (offset > _currentConsumedClientOffset)
+            while (offset > _currentConsumedClientOffset)
             {
                 Interlocked.CompareExchange(ref _currentConsumedClientOffset, offset, _currentConsumedClientOffset);
             }
-        }
-
-        public long? GetServerClientOffset()
-        {
-            var currentServerOffset = _currentServerOffset;
-            return currentServerOffset != UnknownOffset ? currentServerOffset : (long?)null;
-        }
+        }        
 
         public void SetServerOffset(long offset)
         {
-            if (offset > _currentServerOffset)
+            while (offset > _currentServerOffset)
             {
                 Interlocked.CompareExchange(ref _currentServerOffset, offset, _currentServerOffset);
             }
-        }        
+        }
 
         public void ResetData()
         {

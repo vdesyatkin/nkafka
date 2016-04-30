@@ -35,6 +35,11 @@ namespace NKafka.Client.Producer.Diagnostics
         ServerTimeout = 7,
 
         /// <summary>
+        /// If replica is expected on a broker, but is not (this can be safely ignored).
+        /// </summary>
+        ReplicaNotAvailable = 9,
+
+        /// <summary>
         /// The server has a configurable maximum message size to avoid unbounded memory allocation. <br/>
         /// This error is thrown if the client attempt to produce a message larger than this maximum.
         /// </summary>
