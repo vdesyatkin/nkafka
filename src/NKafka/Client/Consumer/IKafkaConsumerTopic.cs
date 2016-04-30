@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using NKafka.Client.Consumer.Diagnostics;
 
 namespace NKafka.Client.Consumer
 {
@@ -7,6 +8,7 @@ namespace NKafka.Client.Consumer
     {
         [CanBeNull] KafkaMessagePackage Consume();        
         void Commit(int packageNumber);
+        KafkaConsumerTopicInfo GetDiagnosticsInfo();
     }
 
     [PublicAPI]
@@ -14,5 +16,6 @@ namespace NKafka.Client.Consumer
     {
         [CanBeNull] KafkaMessagePackage<TKey,TData> Consume();
         void Commit(int packageNumber);
+        KafkaConsumerTopicInfo GetDiagnosticsInfo();
     }
 }

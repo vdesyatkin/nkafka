@@ -16,7 +16,7 @@ namespace NKafka.Client.Producer.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public readonly bool IsReady;        
+        public readonly bool IsReady;
 
         [NotNull]
         public readonly KafkaProducerTopicMessageCountInfo MessagesInfo;

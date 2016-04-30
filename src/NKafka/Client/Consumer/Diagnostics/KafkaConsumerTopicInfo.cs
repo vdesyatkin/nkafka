@@ -1,12 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace NKafka.Client.Consumer.Diagnostics
 {
-    class KafkaConsumerTopicInfo
+    [PublicAPI]
+    public sealed class KafkaConsumerTopicInfo
     {
+        [NotNull] public readonly string TopicName;
+        [NotNull] public readonly IReadOnlyList<KafkaConsumerTopicPartitionInfo> Partitions;
+        public readonly DateTime TimestampUtc;
+
+        public KafkaConsumerTopicInfo([NotNull] string topicName, [NotNull] IReadOnlyList<KafkaConsumerTopicPartitionInfo> partitions, DateTime timestampUtc)
+        {
+            TopicName = topicName;
+            Partitions = partitions;
+            TimestampUtc = timestampUtc;
+        }
     }
 }

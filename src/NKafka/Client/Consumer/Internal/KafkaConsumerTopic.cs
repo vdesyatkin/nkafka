@@ -1,7 +1,9 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Diagnostics;
 
 namespace NKafka.Client.Consumer.Internal
 {
@@ -135,6 +137,24 @@ namespace NKafka.Client.Consumer.Internal
             KafkaConsumerTopicPartition partition;
             if (!_topicPartitions.TryGetValue(partitionId, out partition) || partition == null) return null;
             return partition.GetCommitClientOffset();
+        }
+
+        public KafkaConsumerTopicInfo GetDiagnosticsInfo()
+        {
+            var partitionInfos = new List<KafkaConsumerTopicPartitionInfo>(_topicPartitions.Count);
+            foreach (var partitionPair in _topicPartitions)
+            {
+                var partition = partitionPair.Value;
+                if (partition == null) continue;
+
+                var partitionIsReady = partition.BrokerPartition.Status == KafkaConsumerBrokerPartitionStatus.Ready;
+                var partitionInfo = new KafkaConsumerTopicPartitionInfo(partition.PartitonId, 
+                    partitionIsReady,
+                    partition.BrokerPartition.Error,
+                    partition.BrokerPartition.ErrorTimestampUtc);
+                partitionInfos.Add(partitionInfo);
+            }
+            return new KafkaConsumerTopicInfo(TopicName, partitionInfos, DateTime.UtcNow);
         }
 
         private class PackageInfo

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Diagnostics;
 
 namespace NKafka.Client.Consumer.Internal
 {
@@ -48,6 +49,11 @@ namespace NKafka.Client.Consumer.Internal
         public void Commit(int packageNumber)
         {
             _topic.Commit(packageNumber);
+        }
+
+        public KafkaConsumerTopicInfo GetDiagnosticsInfo()
+        {
+            return _topic.GetDiagnosticsInfo();
         }
     }
 }
