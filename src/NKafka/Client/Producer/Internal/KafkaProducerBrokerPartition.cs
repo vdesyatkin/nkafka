@@ -110,5 +110,11 @@ namespace NKafka.Client.Producer.Internal
         {            
             Error = null;
         }
+
+        public void Unplug()
+        {
+            ResetData();
+            Status = KafkaProducerBrokerPartitionStatus.NotInitialized;
+        }
     }
 }

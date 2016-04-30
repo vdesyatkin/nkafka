@@ -386,7 +386,7 @@ namespace NKafka.Client.Internal
             {
                 var areAllUnplugged = true;
                 foreach (var paritition in topic.Partitions)
-                {
+                {                    
                     paritition.BrokerPartition.IsUnplugRequired = true;
                     if (paritition.BrokerPartition.Status != KafkaClientBrokerPartitionStatus.Unplugged)
                     {

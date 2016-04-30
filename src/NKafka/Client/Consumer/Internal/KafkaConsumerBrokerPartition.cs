@@ -149,6 +149,11 @@ namespace NKafka.Client.Consumer.Internal
                 currentCommitServerOffset != UnknownOffset ? currentCommitServerOffset : (long?)null,
                 DateTime.UtcNow);
         }
-   
+
+        public void Unplug()
+        {
+            ResetData();
+            Status = KafkaConsumerBrokerPartitionStatus.NotInitialized;
+        }
     }
 }

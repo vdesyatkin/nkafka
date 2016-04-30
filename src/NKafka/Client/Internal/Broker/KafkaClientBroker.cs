@@ -163,6 +163,8 @@ namespace NKafka.Client.Internal.Broker
                 if (partition.IsUnplugRequired)
                 {
                     partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
+                    partition.Producer?.Unplug();
+                    partition.Consumer?.Unplug();
                     var partitionId = partition.PartitionId;
                     topic.Partitions.TryRemove(partitionPair.Key, out partition);
                     _producer.RemoveTopicPartition(topic.TopicName, partitionId);
