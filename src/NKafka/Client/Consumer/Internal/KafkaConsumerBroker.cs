@@ -488,12 +488,12 @@ namespace NKafka.Client.Consumer.Internal
             {
                 case ConsumerErrorType.Warning:
                     break;                
-                case ConsumerErrorType.Error:
-                    partition.ResetData();
+                case ConsumerErrorType.Error:     
+                    partition.ResetData();               
                     partition.Status = KafkaConsumerBrokerPartitionStatus.Error;
                     break;
                 case ConsumerErrorType.Rearrange:
-                    partition.ResetData();                    
+                    partition.ResetData();
                     partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
                     break;
             }

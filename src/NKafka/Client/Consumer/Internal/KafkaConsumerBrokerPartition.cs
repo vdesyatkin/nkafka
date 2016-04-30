@@ -105,8 +105,7 @@ namespace NKafka.Client.Consumer.Internal
 
         public void ResetData()
         {
-            OffsetRequestId = null;
-            //todo (E009)
+            OffsetRequestId = null;            
         }
 
         public void SetError(KafkaConsumerTopicPartitionErrorCode error)
