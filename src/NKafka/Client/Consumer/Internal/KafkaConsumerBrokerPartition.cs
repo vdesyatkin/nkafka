@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Diagnostics;
 
 namespace NKafka.Client.Consumer.Internal
 {
@@ -11,20 +12,22 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] public readonly IKafkaConsumerCoordinator Coordinator;
         
         public readonly int PartitionId;
-
         [NotNull] public readonly KafkaConsumerSettings Settings;
         
         public KafkaConsumerBrokerPartitionStatus Status;
+        public KafkaConsumerTopicPartitionErrorCode? Error { get; private set; }
+        public DateTime? ErrorTimestampUtc { get; private set; }        
 
-        public long CurrentOffset => _lastEnqueuedOffset;
+        private long _currentReceivedClientOffset;
+        private long _currentConsumedClientOffset;
+        private long _currentServerOffset;
+        private const long UnknownOffset = -1;
 
-        [NotNull] private readonly IKafkaConsumerMessageQueue _messageQueue;
-        
         public int? OffsetRequestId;
 
-        private long _lastEnqueuedOffset;
-        private long _lastCommittedOffsetRequired;
-        private long _lastCommittedOffsetApproved;
+        [NotNull]
+        private readonly IKafkaConsumerMessageQueue _messageQueue;
+
 
         public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, 
             [NotNull] KafkaConsumerSettings settings, 
@@ -35,7 +38,9 @@ namespace NKafka.Client.Consumer.Internal
             Settings = settings;
             Coordinator = coordinator;
             _messageQueue = messageQueue;
-            Reset();
+            _currentReceivedClientOffset = UnknownOffset;
+            _currentConsumedClientOffset = UnknownOffset;
+            _currentServerOffset = UnknownOffset;
         }
 
         public bool CanEnqueue()
@@ -52,9 +57,9 @@ namespace NKafka.Client.Consumer.Internal
 
             var newOffset = lastMessage.Offset;
 
-            if (newOffset > _lastEnqueuedOffset)
+            if (newOffset > _currentReceivedClientOffset)
             {
-                _lastEnqueuedOffset = newOffset;
+                _currentReceivedClientOffset = newOffset;
             }
 
             try
@@ -67,41 +72,55 @@ namespace NKafka.Client.Consumer.Internal
             }
         }
 
-        public void RequestCommitOffset(long offset)
+        public long? GetReceivedClientOffset()
         {
-            if (offset > _lastCommittedOffsetRequired)
+            var currenEnqueuedClientOffset = _currentReceivedClientOffset;
+            return currenEnqueuedClientOffset != UnknownOffset ? currenEnqueuedClientOffset : (long?)null;
+        }
+
+        public long? GetConsumedClientOffset()
+        {
+            var currenConsumedClientOffset = _currentConsumedClientOffset;
+            return currenConsumedClientOffset != UnknownOffset ? currenConsumedClientOffset : (long?)null;
+        }
+
+        public void SetConsumedClientOffset(long offset)
+        {
+            if (offset > _currentConsumedClientOffset)
             {
-                Interlocked.CompareExchange(ref _lastCommittedOffsetRequired, offset, _lastCommittedOffsetRequired);
+                Interlocked.CompareExchange(ref _currentConsumedClientOffset, offset, _currentConsumedClientOffset);
             }
         }
 
-        public void ApproveCommitOffset(long offset)
+        public long? GetServerClientOffset()
         {
-            if (offset > _lastCommittedOffsetApproved)
+            var currentServerOffset = _currentServerOffset;
+            return currentServerOffset != UnknownOffset ? currentServerOffset : (long?)null;
+        }
+
+        public void SetServerOffset(long offset)
+        {
+            if (offset > _currentServerOffset)
             {
-                Interlocked.CompareExchange(ref _lastCommittedOffsetApproved, offset, _lastCommittedOffsetApproved);
+                Interlocked.CompareExchange(ref _currentServerOffset, offset, _currentServerOffset);
             }
+        }        
+
+        public void ResetData()
+        {
+            OffsetRequestId = null;
+            //todo (E009)
         }
 
-        public long? GetCommitOffset()
+        public void SetError(KafkaConsumerTopicPartitionErrorCode error)
         {
-            var required = _lastCommittedOffsetRequired;
-            var approved = _lastCommittedOffsetApproved;
-            return required > approved ? (long?)required : null;
+            ErrorTimestampUtc = DateTime.UtcNow;
+            Error = error;
         }
 
-        public void InitOffsets(long initialOffset)
+        public void ResetError()
         {
-            _lastEnqueuedOffset = initialOffset;
-            _lastCommittedOffsetApproved = initialOffset;
-            _lastCommittedOffsetRequired = initialOffset;            
-        }
-
-        public void Reset()
-        {
-            OffsetRequestId = null;            
-            Status = KafkaConsumerBrokerPartitionStatus.NotInitialized;
-            InitOffsets(-1);
+            Error = null;
         }
     }
 }

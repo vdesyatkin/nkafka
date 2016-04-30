@@ -5,14 +5,14 @@ using JetBrains.Annotations;
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaConsumerGroupSessionOffsetsInfo
+    public sealed class KafkaConsumerGroupOffsetsInfo
     {
         [NotNull]
-        public readonly IReadOnlyList<KafkaConsumerGroupSessionOffsetsTopicInfo> Topics;
+        public readonly IReadOnlyList<KafkaConsumerGroupOffsetsTopicInfo> Topics;
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaConsumerGroupSessionOffsetsInfo([NotNull] IReadOnlyList<KafkaConsumerGroupSessionOffsetsTopicInfo> topics, DateTime timestampUtc)
+        public KafkaConsumerGroupOffsetsInfo([NotNull] IReadOnlyList<KafkaConsumerGroupOffsetsTopicInfo> topics, DateTime timestampUtc)
         {
             Topics = topics;
             TimestampUtc = timestampUtc;

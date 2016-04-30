@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Diagnostics;
 using NKafka.Connection;
 using NKafka.Protocol;
 using NKafka.Protocol.API.Fetch;
@@ -33,8 +34,7 @@ namespace NKafka.Client.Consumer.Internal
                 topic = _topics.AddOrUpdate(topicName,
                     new KafkaConsumerBrokerTopic(topicName, topicPartition.Settings, topicPartition.Coordinator),
                     (oldKey, oldValue) => oldValue);
-            }
-            topicPartition.Reset();
+            }            
 
             if (topic != null)
             {
@@ -53,7 +53,7 @@ namespace NKafka.Client.Consumer.Internal
             if (topic != null)
             {
                 KafkaConsumerBrokerPartition partition;
-                topic.Partitions.TryRemove(partitionId, out partition);
+                topic.Partitions.TryRemove(partitionId, out partition);                
             }
         }
 
@@ -133,13 +133,13 @@ namespace NKafka.Client.Consumer.Internal
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(partition)) continue;
 
-                var fetchOffset = partition.CurrentOffset;
-                if (coordinatorOffset.ServerOffset > fetchOffset)
+                var clientOffset = partition.GetReceivedClientOffset() ?? partition.GetServerClientOffset();
+                if (clientOffset == null || coordinatorOffset.ServerOffset > clientOffset)
                 {
-                    fetchOffset = coordinatorOffset.ServerOffset;
+                    clientOffset = coordinatorOffset.ServerOffset;
                 }
 
-                newFetchBatch[partitionId] = fetchOffset + 1;
+                newFetchBatch[partitionId] = clientOffset.Value + 1;  //todo !
             }
             if (newFetchBatch.Count == 0) return;
 
@@ -161,60 +161,36 @@ namespace NKafka.Client.Consumer.Internal
         private bool TryPreparePartition([NotNull] KafkaConsumerBrokerPartition partition)
         {
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired) return false;
-
-            //todo (E009) uncomment and implement
-            //if (partition.Error != null)
-            //{
-            //    if (DateTime.UtcNow - partition.ErrorTimestampUtc > partition.Settings.ErrorRetryPeriod)
-            //    {
-            //        return false;
-            //    }
-            //}
+            
+            if (partition.Error != null)
+            {
+                if (DateTime.UtcNow - partition.ErrorTimestampUtc > partition.Settings.ErrorRetryPeriod)
+                {
+                    return false;
+                }
+            }
 
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.NotInitialized)
             {
-                partition.Reset();
-                var request = SendRequestOffsets(partition.TopicName, partition.PartitionId);
-                if (request.HasData)
+                if (!TrySendRequestOffsets(partition))
                 {
-                    partition.OffsetRequestId = request.Data;
-                    partition.Status = KafkaConsumerBrokerPartitionStatus.OffsetRequested;
+                    return false;
                 }
+                
+                partition.Status = KafkaConsumerBrokerPartitionStatus.OffsetRequested;                
             }
 
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.OffsetRequested)
             {
-                var offsetRequestId = partition.OffsetRequestId;
-                if (offsetRequestId == null)
+                if (!TryHandleOffsetResponse(partition))
                 {
-                    partition.Status = KafkaConsumerBrokerPartitionStatus.NotInitialized;
                     return false;
                 }
 
-                var offsetResponse = GetOffsetsResponse(offsetRequestId.Value);
-                //todo (E009) broker error
-                if (offsetResponse.HasData)
-                {
-                    //todo (E009) response error
-                    bool needRearrange;
-                    var minPartitionOffset = ExtractMinOffset(offsetResponse.Data, out needRearrange);
-                    if (needRearrange)
-                    {
-                        partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
-                        return false;
-                    }
-                    if (minPartitionOffset == null)
-                    {
-                        partition.Status = KafkaConsumerBrokerPartitionStatus.NotInitialized;
-                        return false;
-                    }
-
-                    partition.InitOffsets(minPartitionOffset.Value);
-                    partition.Status = KafkaConsumerBrokerPartitionStatus.Plugged;
-                }
+                partition.Status = KafkaConsumerBrokerPartitionStatus.Ready;
             }
 
-            if (partition.Status == KafkaConsumerBrokerPartitionStatus.Plugged)
+            if (partition.Status == KafkaConsumerBrokerPartitionStatus.Ready)
             {
                 return partition.CanEnqueue();
             }
@@ -275,46 +251,99 @@ namespace NKafka.Client.Consumer.Internal
         #region Topic offsets
 
 
-        private KafkaBrokerResult<int?> SendRequestOffsets([NotNull] string topicName, int partitionId)
+        private bool TrySendRequestOffsets([NotNull] KafkaConsumerBrokerPartition partition)
         {
-            var partitionRequest = new KafkaOffsetRequestTopicPartition(partitionId, null, 1000); // 1000 is overkill, in fact there will be 2 items.
-            var topicRequest = new KafkaOffsetRequestTopic(topicName, new [] { partitionRequest });
-            //todo (E009) broker error
-            return _broker.Send(new KafkaOffsetRequest(new[] { topicRequest }), _consumeClientTimeout);
+            var partitionRequest = new KafkaOffsetRequestTopicPartition(partition.PartitionId, null, 1000); // 1000 is overkill, in fact there will be 2 items.
+            var topicRequest = new KafkaOffsetRequestTopic(partition.TopicName, new [] { partitionRequest });
+            var requestResult = _broker.Send(new KafkaOffsetRequest(new[] { topicRequest }), _consumeClientTimeout);
+            
+            if (requestResult.HasError || requestResult.Data == null)
+            {
+                HandleBrokerError(partition, requestResult.Error ?? KafkaBrokerErrorCode.UnknownError);
+                return false;
+            }
+
+            var requestId = requestResult.Data.Value;
+            partition.OffsetRequestId = requestId;
+            return true;
         }
 
-        private KafkaBrokerResult<KafkaOffsetResponse> GetOffsetsResponse(int requestId)
+        private bool TryHandleOffsetResponse([NotNull] KafkaConsumerBrokerPartition partition)
         {
-            var response = _broker.Receive<KafkaOffsetResponse>(requestId);
-            return response;
-        }
+            var requestId = partition.OffsetRequestId;
+            if (requestId == null)
+            {
+                SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ClientError, ConsumerErrorType.Error);
+                return false;
+            }
 
-        private static long? ExtractMinOffset(KafkaOffsetResponse offsetResponse, out bool needRearrange)
-        {
-            needRearrange = false;
-            var offsetResponseTopics = offsetResponse?.Topics;
+            var response = _broker.Receive<KafkaOffsetResponse>(requestId.Value);
+
+            if (!response.HasData && !response.HasError) return false;
+
+            partition.OffsetRequestId = null;
+
+            if (response.Error != null || response.Data == null)
+            {
+                HandleBrokerError(partition, response.Error ?? KafkaBrokerErrorCode.TransportError);
+                return false;
+            }
+
+            partition.OffsetRequestId = null;
+                        
+            var offsetResponseTopics = response.Data.Topics;
 
             if (offsetResponseTopics == null || offsetResponseTopics.Count == 0)
             {
-                return null;
+                SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
+                return false;
             }
 
             var offsetResponsePartitions = offsetResponseTopics[0]?.Partitions;
             if (offsetResponsePartitions == null || offsetResponsePartitions.Count == 0)
             {
-                return null;
+                SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
+                return false;
             }
 
             var offsetResponsePartition = offsetResponsePartitions[0];
-
-            var offsets = offsetResponsePartition?.Offsets;
-            if (offsets == null || offsets.Count == 0)
+            if (offsetResponsePartition == null)
             {
-                return null;
+                SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
+                return false;
             }
 
-            needRearrange = offsetResponsePartition.ErrorCode == KafkaResponseErrorCode.NotLeaderForPartition; //todo (E009)
+            if (offsetResponsePartition.ErrorCode != KafkaResponseErrorCode.NoError)
+            {
+                KafkaConsumerTopicPartitionErrorCode errorCode;
+                ConsumerErrorType errorType;
+                switch (offsetResponsePartition.ErrorCode)
+                {
+                    case KafkaResponseErrorCode.UnknownTopicOrPartition:
+                        errorCode = KafkaConsumerTopicPartitionErrorCode.UnknownTopicOrPartition;
+                        errorType = ConsumerErrorType.Rearrange;
+                        break;
+                    case KafkaResponseErrorCode.NotLeaderForPartition:
+                        errorCode = KafkaConsumerTopicPartitionErrorCode.NotLeaderForPartition;                        
+                        errorType = ConsumerErrorType.Rearrange;
+                        break;
+                    default:
+                        errorCode = KafkaConsumerTopicPartitionErrorCode.UnknownError;
+                        errorType = ConsumerErrorType.Rearrange;
+                        break;
+                }
 
+                SetPartitionError(partition, errorCode, errorType);
+                return false;
+            }
+
+            var offsets = offsetResponsePartition.Offsets;
+            if (offsets == null || offsets.Count == 0)
+            {
+                SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
+                return false;
+            }
+            
             long? minOffset = null;
             foreach (var offset in offsets)
             {
@@ -324,7 +353,8 @@ namespace NKafka.Client.Consumer.Internal
                 }
             }
 
-            return minOffset;
+            partition.SetServerOffset(minOffset ?? -1); //todo
+            return true;
         }
 
         #endregion Topic offsets
@@ -361,6 +391,69 @@ namespace NKafka.Client.Consumer.Internal
             }
         }
 
-        #endregion Fetch                
+        #endregion Fetch     
+
+        #region Error handling        
+
+        private void HandleBrokerError([NotNull] KafkaConsumerBrokerPartition partition, KafkaBrokerErrorCode errorCode)
+        {
+            KafkaConsumerTopicPartitionErrorCode partitionErrorCode;
+
+            switch (errorCode)
+            {
+                case KafkaBrokerErrorCode.Closed:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ConnectionClosed;
+                    break;
+                case KafkaBrokerErrorCode.Maintenance:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ClientMaintenance;
+                    break;
+                case KafkaBrokerErrorCode.BadRequest:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.ProtocolError:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.TransportError:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.TransportError;
+                    break;
+                case KafkaBrokerErrorCode.Timeout:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ClientTimeout;
+                    break;
+                default:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.UnknownError;
+                    break;
+            }
+
+            SetPartitionError(partition, partitionErrorCode, ConsumerErrorType.Rearrange);
+        }
+
+        private void SetPartitionError([NotNull] KafkaConsumerBrokerPartition partition, 
+            KafkaConsumerTopicPartitionErrorCode errorCode,
+            ConsumerErrorType errorType)
+        {
+            partition.SetError(errorCode);
+            switch (errorType)
+            {
+                case ConsumerErrorType.Warning:
+                    break;                
+                case ConsumerErrorType.Error:
+                    partition.ResetData();
+                    partition.Status = KafkaConsumerBrokerPartitionStatus.NotInitialized;
+                    break;
+                case ConsumerErrorType.Rearrange:
+                    partition.ResetData();                    
+                    partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
+                    break;
+            }
+        }
+
+        private enum ConsumerErrorType
+        {
+            Warning = 0,
+            Error = 1,
+            Rearrange = 2
+        }
+
+        #endregion Error handling           
     }
 }

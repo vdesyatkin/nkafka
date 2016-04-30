@@ -99,19 +99,19 @@ namespace NKafka.Client.Consumer.Internal
             return true;
         }
 
-        public void RequestCommitOffset(long offset)
+        public void SetConsumedClientOffset(long offset)
         {
-            BrokerPartition.RequestCommitOffset(offset);
+            BrokerPartition.SetConsumedClientOffset(offset);
         }
 
-        public void ApproveCommitOffset(long offset)
+        public void SetServerOffset(long offset)
         {        
-            BrokerPartition.ApproveCommitOffset(offset);    
+            BrokerPartition.SetServerOffset(offset);    
         }
 
-        public long? GetCommitOffset()
+        public long? GetConsumedClientOffset()
         {
-            return BrokerPartition.GetCommitOffset();
+            return BrokerPartition.GetConsumedClientOffset();
         }
     }
 }

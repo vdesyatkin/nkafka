@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaConsumerGroupSessionProtocolInfo
+    public sealed class KafkaConsumerGroupProtocolInfo
     {
         public readonly string ProtocolName;
 
@@ -14,7 +14,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaConsumerGroupSessionProtocolInfo(string protocolName, short? protocolVersion, string assignmentStrategyName, DateTime timestampUtc)
+        public KafkaConsumerGroupProtocolInfo(string protocolName, short? protocolVersion, string assignmentStrategyName, DateTime timestampUtc)
         {
             ProtocolName = protocolName;
             ProtocolVersion = protocolVersion;

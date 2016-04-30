@@ -3,8 +3,9 @@
     public enum KafkaConsumerBrokerPartitionStatus
     {
         NotInitialized = 0,
-        OffsetRequested = 1,
-        Plugged = 2,
-        RearrangeRequired = 3
+        RearrangeRequired = 1,
+        OffsetRequested = 2,
+        Ready = 3,
+        Error = 4
     }
 }

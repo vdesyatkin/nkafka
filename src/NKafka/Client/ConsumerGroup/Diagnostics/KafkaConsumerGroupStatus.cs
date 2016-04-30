@@ -3,7 +3,7 @@
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
     [PublicAPI]
-    public enum KafkaConsumerGroupSessionStatus
+    public enum KafkaConsumerGroupStatus
     {
         NotInitialized = 0,
         Rearrange = 1,

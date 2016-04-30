@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaConsumerGroupSessionOffsetsPartitionInfo
+    public sealed class KafkaConsumerGroupOffsetsPartitionInfo
     {
         public readonly int PartitionId;
 
@@ -14,7 +14,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaConsumerGroupSessionOffsetsPartitionInfo(int partitionId, long? clientOffset, long? serverOffset, DateTime timestampUtc)
+        public KafkaConsumerGroupOffsetsPartitionInfo(int partitionId, long? clientOffset, long? serverOffset, DateTime timestampUtc)
         {
             PartitionId = partitionId;
             ClientOffset = clientOffset;

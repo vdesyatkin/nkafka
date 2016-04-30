@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Client.ConsumerGroup.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaConsumerGroupSessionMemberInfo
+    public sealed class KafkaConsumerGroupMemberInfo
     {
         public readonly int? GenerationId;
 
@@ -14,7 +14,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaConsumerGroupSessionMemberInfo(int? generationId, string memberId, bool isLeader, DateTime timestampUtc)
+        public KafkaConsumerGroupMemberInfo(int? generationId, string memberId, bool isLeader, DateTime timestampUtc)
         {
             GenerationId = generationId;
             MemberId = memberId;

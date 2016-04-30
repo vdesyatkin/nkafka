@@ -11,7 +11,8 @@ namespace NKafka.Client.Producer.Diagnostics
         ClientMaintenance = -2,        
         TransportError = -3,
         ProtocolError = -4,
-        ClientTimeout = -5,        
+        ClientTimeout = -5,
+        ClientError = -6,
 
         /// <summary>
         /// This request is for a topic or partition that does not exist on this broker.

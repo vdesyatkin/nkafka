@@ -102,12 +102,11 @@ namespace NKafka.Client.Producer.Internal
         public void SetError(KafkaProducerTopicPartitionErrorCode error)
         {
             ErrorTimestampUtc = DateTime.UtcNow;
-            Error = error;            
+            Error = error;
         }
 
         public void ResetError()
-        {
-            ErrorTimestampUtc = DateTime.UtcNow;
+        {            
             Error = null;
         }
     }

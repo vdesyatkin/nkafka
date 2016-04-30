@@ -116,7 +116,7 @@ namespace NKafka.Client.Consumer.Internal
                     continue;
                 }
 
-                partition.RequestCommitOffset(newOffset);                
+                partition.SetConsumedClientOffset(newOffset);                
             }
 
             _packages.TryRemove(packageNumber, out package);
@@ -127,14 +127,14 @@ namespace NKafka.Client.Consumer.Internal
             KafkaConsumerTopicPartition partition;
             if (!_topicPartitions.TryGetValue(partitionId, out partition) || partition == null) return;
 
-            partition.ApproveCommitOffset(offset);
+            partition.SetServerOffset(offset);
         }
 
-        public long? GetCommitOffset(int partitionId)
+        public long? GetConsumedClientOffset(int partitionId)
         {
             KafkaConsumerTopicPartition partition;
             if (!_topicPartitions.TryGetValue(partitionId, out partition) || partition == null) return null;
-            return partition.GetCommitOffset();
+            return partition.GetConsumedClientOffset();
         }
 
         private class PackageInfo

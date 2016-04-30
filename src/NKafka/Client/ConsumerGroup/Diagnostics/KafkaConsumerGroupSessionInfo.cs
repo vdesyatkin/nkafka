@@ -13,26 +13,26 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly bool IsReady;
 
-        public readonly KafkaConsumerGroupSessionStatus Status;
+        public readonly KafkaConsumerGroupStatus Status;
 
-        public readonly KafkaConsumerGroupSessionErrorCode? Error;
+        public readonly KafkaConsumerGroupErrorCode? Error;
 
         public readonly DateTime? ErrorTimestampUtcUtc;
 
-        [CanBeNull] public readonly KafkaConsumerGroupSessionMemberInfo MemberInfo;
+        [CanBeNull] public readonly KafkaConsumerGroupMemberInfo MemberInfo;
 
-        [CanBeNull] public readonly KafkaConsumerGroupSessionProtocolInfo ProtocolInfo;
+        [CanBeNull] public readonly KafkaConsumerGroupProtocolInfo ProtocolInfo;
 
-        [CanBeNull] public readonly KafkaConsumerGroupSessionOffsetsInfo OffsetsInfo;
+        [CanBeNull] public readonly KafkaConsumerGroupOffsetsInfo OffsetsInfo;
 
         
 
         public KafkaConsumerGroupSessionInfo([NotNull] string groupName, DateTime timestampUtc, bool isReady,
-            KafkaConsumerGroupSessionStatus status,
-            KafkaConsumerGroupSessionErrorCode? error, DateTime errorTimestampUtc,
-            [CanBeNull]KafkaConsumerGroupSessionMemberInfo memberInfo,
-            [CanBeNull] KafkaConsumerGroupSessionProtocolInfo protocolInfo,
-            [CanBeNull]KafkaConsumerGroupSessionOffsetsInfo offsetsInfo
+            KafkaConsumerGroupStatus status,
+            KafkaConsumerGroupErrorCode? error, DateTime errorTimestampUtc,
+            [CanBeNull]KafkaConsumerGroupMemberInfo memberInfo,
+            [CanBeNull] KafkaConsumerGroupProtocolInfo protocolInfo,
+            [CanBeNull]KafkaConsumerGroupOffsetsInfo offsetsInfo
             )
         {
             GroupName = groupName;

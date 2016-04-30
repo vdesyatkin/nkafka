@@ -41,8 +41,8 @@
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentRequestMember.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentRequest.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionInfo.cs" />
-    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionOffsetsPartitionInfo.cs" />
-    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionProtocolInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupOffsetsPartitionInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupProtocolInfo.cs" />
     <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupAssignmentData.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupLeaderData.cs" />
@@ -57,12 +57,15 @@
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettings.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\IKafkaConsumerAssignmentStrategy.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettingsBuilder.cs" />
-    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionErrorCode.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupErrorCode.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupInfo.cs" />
-    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionMemberInfo.cs" />
-    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionOffsetsInfo.cs" />
-    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionStatus.cs" />
-    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupSessionOffsetsTopicInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupMemberInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupOffsetsInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupStatus.cs" />
+    <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupOffsetsTopicInfo.cs" />
+    <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicInfo.cs" />
+    <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionErrorCode.cs" />
+    <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionInfo.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerCoordinator.cs" />
@@ -226,9 +229,7 @@
     <Compile Include="Protocol\Serialization\KafkaCrc32.cs" />
     <Compile Include="ResharperAnnotations.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Client\Consumer\Diagnostics\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
