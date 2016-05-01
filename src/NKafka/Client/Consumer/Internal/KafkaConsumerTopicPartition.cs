@@ -8,7 +8,7 @@ namespace NKafka.Client.Consumer.Internal
     internal sealed class KafkaConsumerTopicPartition : IKafkaConsumerMessageQueue
     {
         public readonly int PartitonId;
-        public bool IsAssigned => true; //todo (E008)
+        public bool IsAssigned => BrokerPartition.IsAssigned;
 
         [NotNull] private readonly KafkaConsumerSettings _settings;
         

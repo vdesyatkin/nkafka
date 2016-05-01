@@ -109,11 +109,7 @@ namespace NKafka.Client.Consumer.Internal
             }            
 
             var coordinator = topic.Coordinator;
-            var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);
-            if (coordinatorPartitionOffsets == null)
-            {
-                return; // coordinator is not ready or topic is not allowed for this consumer node
-            }
+            var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);            
 
             // prepare new fetch batch
             foreach (var partitionPair in topic.Partitions)
@@ -122,11 +118,18 @@ namespace NKafka.Client.Consumer.Internal
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
 
+                if (coordinatorPartitionOffsets == null)
+                {
+                    partition.IsAssigned = false; // coordinator is not ready or topic is not allowed for this consumer node
+                    continue; 
+                }
                 IKafkaConsumerCoordinatorOffsetsData coordinatorOffset;
                 if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset) || coordinatorOffset == null)
                 {
-                    continue; // partition is not allowed for this consumer node
+                    partition.IsAssigned = false; // partition is not allowed for this consumer node
+                    continue; 
                 }
+                partition.IsAssigned = true;
 
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(partition)) continue;
@@ -146,6 +149,7 @@ namespace NKafka.Client.Consumer.Internal
 
                 newFetchBatch[partitionId] = (clientOffset ?? -1) + 1;
             }
+
             if (newFetchBatch.Count == 0) return;
 
             SendFetchRequest(topic, newFetchBatch);

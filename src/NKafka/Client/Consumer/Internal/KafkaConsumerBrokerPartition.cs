@@ -15,6 +15,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
         public KafkaConsumerBrokerPartitionStatus Status;
+        public bool IsAssigned;
         public bool IsReady => Status == KafkaConsumerBrokerPartitionStatus.Ready && Error == null;
         public KafkaConsumerTopicPartitionErrorCode? Error { get; private set; }
         public DateTime? ErrorTimestampUtc { get; private set; }        

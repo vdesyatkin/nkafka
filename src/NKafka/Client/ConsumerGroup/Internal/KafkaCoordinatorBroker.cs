@@ -991,7 +991,6 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                     var initialOffset = responsePartition.Offset >= 0 ? responsePartition.Offset : (long?)null;
 
-
                     partitionOffsets[responsePartition.PartitionId] = new KafkaCoordinatorGroupOffsetsDataPartition(initialOffset, initialOffset, DateTime.UtcNow);
 
                     KafkaClientTopic groupTopic;
