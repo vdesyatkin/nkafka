@@ -58,7 +58,7 @@ namespace NKafka.Protocol.API.OffsetFetch
             var metadata = reader.ReadString();
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();
 
-            return new KafkaOffsetFetchResponseTopicPartition(partitionId, errorCode, offset, metadata);
+            return new KafkaOffsetFetchResponseTopicPartition(partitionId, errorCode, offset >= 0 ? offset : (long?)null, metadata);
         }
 
         #endregion OffsetFetchResponse

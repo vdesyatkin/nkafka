@@ -165,7 +165,7 @@ namespace NKafka.Client.Consumer.Internal
             var topicIsReady = true;
 
             //todo (E008) size statistics
-            foreach (var partitionPair in _topicPartitions) 
+            foreach (var partitionPair in _topicPartitions)
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;

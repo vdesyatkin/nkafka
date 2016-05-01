@@ -989,7 +989,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         return false;
                     }
 
-                    var initialOffset = responsePartition.Offset >= 0 ? responsePartition.Offset : (long?)null;
+                    var initialOffset = responsePartition.Offset;
 
                     partitionOffsets[responsePartition.PartitionId] = new KafkaCoordinatorGroupOffsetsDataPartition(initialOffset, initialOffset, DateTime.UtcNow);
 

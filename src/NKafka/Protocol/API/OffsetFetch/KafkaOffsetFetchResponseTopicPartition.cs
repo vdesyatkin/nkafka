@@ -9,11 +9,11 @@ namespace NKafka.Protocol.API.OffsetFetch
 
         public readonly KafkaResponseErrorCode ErrorCode;
 
-        public readonly long Offset;
+        public readonly long? Offset;
 
         public string Metadata;
 
-        public KafkaOffsetFetchResponseTopicPartition(int partitionId, KafkaResponseErrorCode errorCode, long offset, string metadata)
+        public KafkaOffsetFetchResponseTopicPartition(int partitionId, KafkaResponseErrorCode errorCode, long? offset, string metadata)
         {
             ErrorCode = errorCode;
             PartitionId = partitionId;
