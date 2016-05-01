@@ -8,6 +8,7 @@ namespace NKafka.Client.Consumer.Internal
     internal sealed class KafkaConsumerTopicPartition : IKafkaConsumerMessageQueue
     {
         public readonly int PartitonId;
+        public bool IsAssigned => true; //todo (E008)
 
         [NotNull] private readonly KafkaConsumerSettings _settings;
         
@@ -112,10 +113,10 @@ namespace NKafka.Client.Consumer.Internal
             return true;
         }
 
-        public void SetCommitClientOffset(long offset, int messageCount)
+        public void SetCommitClientOffset(long beginOffset, long endOffset)
         {
-            BrokerPartition.SetCommitClientOffset(offset);
-            Interlocked.Add(ref _totalClientCommitedCount, messageCount);
+            BrokerPartition.SetCommitClientOffset(endOffset);
+            Interlocked.Add(ref _totalClientCommitedCount, endOffset - beginOffset);
             ClientCommitTimestampUtc = DateTime.UtcNow;
         }
 

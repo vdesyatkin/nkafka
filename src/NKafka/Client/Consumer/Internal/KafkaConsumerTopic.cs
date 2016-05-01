@@ -56,83 +56,75 @@ namespace NKafka.Client.Consumer.Internal
             _coordinator = coordinator;
         }
         
-        public KafkaMessagePackage Consume(int? maxMessageCount = null)
-        {
-            int count = 0;
-            foreach (var partitionPair in _topicPartitions)
-            {
-                var partition = partitionPair.Value;
-                if (partition == null) continue;
-                count += partition.ConsumePendingCount;
-            }
-
-            if (count == 0) return null;
-
-            var packagePartitions = new List<PackagePartitionInfo>(_topicPartitions.Count);
-
-            var messages = new List<KafkaMessage>(count);
+        public IReadOnlyList<KafkaMessagePackage> Consume(int? maxMessageCount = null)
+        {            
+            var resultPackages = new List<KafkaMessagePackage>(_topicPartitions.Count);
+            var totalMessageCount = 0;
+            
             foreach (var partitionPair in _topicPartitions)
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
 
-                var partitionEnqueuedCount = partition.ConsumePendingCount;
-                var partitionPackageCount = 0;
-                KafkaMessageAndOffset messageAndOffset = null;
-                while (partitionPackageCount < partitionEnqueuedCount && partition.TryDequeue(out messageAndOffset))
+                var partitionConsumePendingCount = partition.ConsumePendingCount;                
+                var partitionMessages = new List<KafkaMessage>(partitionConsumePendingCount);
+
+                long beginOffset = 0;
+                long endOffset = 0;
+
+                KafkaMessageAndOffset messageAndOffset;
+                while (partitionMessages.Count < partitionConsumePendingCount && partition.TryDequeue(out messageAndOffset))
                 {
-                    if (messageAndOffset != null)
-                    {
-                        var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data);
-                        messages.Add(message);
-                    }                
+                    if (messageAndOffset == null) continue;                    
                     
-                    partitionPackageCount++;
-                    if (messages.Count >= maxMessageCount)
+                    var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data);
+
+                    if (partitionMessages.Count == 0)
+                    {
+                        beginOffset = messageAndOffset.Offset;
+                    }
+                    partitionMessages.Add(message);
+                    endOffset = messageAndOffset.Offset;                 
+
+                    totalMessageCount++;
+                    if (totalMessageCount >= maxMessageCount)
                     {
                         break;
                     }
                 }
-                if (messageAndOffset != null)
+                if (partitionMessages.Count > 0)
                 {
-                    packagePartitions[partitionPair.Key] = new PackagePartitionInfo(partition.PartitonId, messageAndOffset.Offset, partitionPackageCount);
+                    var packageId = Interlocked.Increment(ref _currentPackageId);                    
+                    _packages[packageId] = new PackageInfo(partition.PartitonId, beginOffset, endOffset);
+                    resultPackages.Add(new KafkaMessagePackage(packageId, partitionMessages));
                 }
 
-                if (messages.Count >= maxMessageCount)
+                if (totalMessageCount >= maxMessageCount)
                 {
                     break;
                 }
             }
 
-            if (messages.Count == 0) return null;
-            var packageId = Interlocked.Increment(ref _currentPackageId);
-
-            var packageInfo = new PackageInfo(packagePartitions);
-            _packages[packageId] = packageInfo;
-
-            return new KafkaMessagePackage(packageId, messages);
+            return resultPackages;
         }
 
-        public void EnqueueCommit(long packageNumber)
+        public bool TryEnqueueCommit(long packageId)
         {
             PackageInfo package;
-            if (!_packages.TryGetValue(packageNumber, out package) || package == null)
+            if (!_packages.TryGetValue(packageId, out package) || package == null)
             {
-                return;
+                return true;
             }
 
-            foreach (var partitionData in package.Partitions)
-            {                
-                KafkaConsumerTopicPartition partition;
-                if (!_topicPartitions.TryGetValue(partitionData.PartitionId, out partition) || partition == null)
-                {
-                    continue;
-                }
-
-                partition.SetCommitClientOffset(partitionData.LastOffset, partitionData.Count);
+            KafkaConsumerTopicPartition partition;
+            if (_topicPartitions.TryGetValue(package.PartitionId, out partition) && partition != null)
+            {
+                if (!partition.IsAssigned) return false;
+                partition.SetCommitClientOffset(package.BeginOffset, package.EndOffset);
             }
 
-            _packages.TryRemove(packageNumber, out package);
+            _packages.TryRemove(packageId, out package);            
+            return true;
         }
 
         public void SetCommitServerOffset(int partitionId, long? offset)
@@ -172,15 +164,15 @@ namespace NKafka.Client.Consumer.Internal
 
             var topicIsReady = true;
 
-            //todo (E008) size statistics            
-            //todo (E008) only assigned
+            //todo (E008) size statistics
             foreach (var partitionPair in _topicPartitions) 
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
 
                 var partitionBroker = partition.BrokerPartition;
-                topicIsReady = topicIsReady && partitionBroker.IsReady;
+                
+                var partitionIsAssigned = partition.IsAssigned;
 
                 var partitionOffsetsInfo = partitionBroker.GetOffsetsInfo();
 
@@ -211,34 +203,38 @@ namespace NKafka.Client.Consumer.Internal
                 }
                 var partitionServerCommitMessageCount = partitionClientCommitMessageCount - partitionServerCommitPendingCount;
                 var partitionServerCommitMessageTimestampUtc = partition.ServerCommitTimestampUtc;
-                                               
-                topicReceivePendingCount += partitionReceivePendingCount ?? 0;
-                topicConsumePendingCount += topicConsumePendingCount;
+
                 topicTotalReceivedMessageCount += partitionTotalReceivedCount;
                 if (topicReceiveMessageTimestampUtc == null || topicReceiveMessageTimestampUtc < partitionReceivedTimestampUtc)
                 {
                     topicReceiveMessageTimestampUtc = partitionReceivedTimestampUtc;
                 }
 
-                topicConsumePendingCount += partitionConsumePendingCount;
                 topicTotalConsumedMessageCount += partitionConsumeMessageCount;
                 if (topicConsumeMessageTimestampUtc == null || topicConsumeMessageTimestampUtc < partitionConsumeMessageTimestampUtc)
                 {
                     topicConsumeMessageTimestampUtc = partitionConsumeMessageTimestampUtc;
                 }
 
-                topicClientCommitPendingCount += partitionClientCommitPendingCount;
                 topicTotalClientCommitedMessageCount += partitionClientCommitMessageCount;
                 if (topicClientCommitMessageTimestampUtc == null || topicClientCommitMessageTimestampUtc < partitionClientCommitMessageTimestampUtc)
                 {
                     topicClientCommitMessageTimestampUtc = partitionClientCommitMessageTimestampUtc;
                 }
-
-                topicServerCommitPendingCount += partitionServerCommitPendingCount;
+                
                 topicTotalServerCommitedMessageCount += partitionServerCommitMessageCount;
                 if (topicServerCommitMessageTimestampUtc == null || topicServerCommitMessageTimestampUtc < partitionServerCommitMessageTimestampUtc)
                 {
                     topicServerCommitMessageTimestampUtc = partitionServerCommitMessageTimestampUtc;
+                }
+
+                if (partitionIsAssigned)
+                {
+                    topicIsReady = topicIsReady && partitionBroker.IsReady;
+                    topicReceivePendingCount += partitionReceivePendingCount ?? 0;
+                    topicConsumePendingCount += partitionConsumePendingCount;
+                    topicClientCommitPendingCount += partitionClientCommitPendingCount;
+                    topicServerCommitPendingCount += partitionServerCommitPendingCount; //todo (E009) the main kafka problem =( some fallback on partition unassign?
                 }
 
                 var partitionMessagesInfo = new KafkaConsumerTopicMessagesInfo(
@@ -248,7 +244,7 @@ namespace NKafka.Client.Consumer.Internal
                     partitionServerCommitPendingCount, partitionServerCommitMessageCount, partitionServerCommitMessageTimestampUtc);
 
                 var partitionInfo = new KafkaConsumerTopicPartitionInfo(partition.PartitonId,
-                    partitionBroker.IsReady,
+                    partitionIsAssigned, partitionBroker.IsReady,
                     partitionBroker.Error, partitionBroker.ErrorTimestampUtc,
                     partitionMessagesInfo,
                     partitionOffsetsInfo);
@@ -275,29 +271,18 @@ namespace NKafka.Client.Consumer.Internal
 
         private class PackageInfo
         {
-            [NotNull]
-            public readonly IReadOnlyList<PackagePartitionInfo> Partitions;
-
-            public PackageInfo([NotNull] IReadOnlyList<PackagePartitionInfo> partitions)
-            {
-                Partitions = partitions;
-            }
-        }
-
-        private struct PackagePartitionInfo
-        {
             public readonly int PartitionId;
 
-            public readonly long LastOffset;
+            public readonly long BeginOffset;
 
-            public readonly int Count;
+            public readonly long EndOffset;            
 
-            public PackagePartitionInfo(int partitionId, long lastOffset, int count)
+            public PackageInfo(int partitionId, long beginOffset, long endOffset)
             {
                 PartitionId = partitionId;
-                LastOffset = lastOffset;
-                Count = count;
+                BeginOffset = beginOffset;
+                EndOffset = endOffset;
             }
-        }      
+        }        
     }
 }

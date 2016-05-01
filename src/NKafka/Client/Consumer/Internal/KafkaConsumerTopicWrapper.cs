@@ -21,34 +21,40 @@ namespace NKafka.Client.Consumer.Internal
             _serializer = serializer;
         }
 
-        public KafkaMessagePackage<TKey, TData> Consume(int? maxMessageCount = null)
+        public IReadOnlyList<KafkaMessagePackage<TKey, TData>> Consume(int? maxMessageCount = null)
         {
-            var package = _topic.Consume(maxMessageCount);
-            var messages = package?.Messages;
-            if (messages == null) return null;
+            var packages = _topic.Consume(maxMessageCount);
+            var wrappedPackages = new List<KafkaMessagePackage<TKey, TData>>(packages.Count);
 
-            var genericMessages = new List<KafkaMessage<TKey, TData>>(messages.Count);
-            foreach (var message in messages)
-            {                
-                try
+            foreach (var package in packages)
+            {
+                var messages = package.Messages;                
+
+                var genericMessages = new List<KafkaMessage<TKey, TData>>(messages.Count);
+                foreach (var message in messages)
                 {
-                    var key = _serializer.DeserializeKey(message.Key);
-                    var data = _serializer.DeserializeData(message.Data);
-                    var genericMessage = new KafkaMessage<TKey, TData>(key, data);
-                    genericMessages.Add(genericMessage);
+                    try
+                    {
+                        var key = _serializer.DeserializeKey(message.Key);
+                        var data = _serializer.DeserializeData(message.Data);
+                        var genericMessage = new KafkaMessage<TKey, TData>(key, data);
+                        genericMessages.Add(genericMessage);
+                    }
+                    catch (Exception)
+                    {
+                        //ignored
+                    }
                 }
-                catch (Exception)
-                {
-                    //ignored
-                }
+
+                wrappedPackages.Add(new KafkaMessagePackage<TKey, TData>(package.PackageId, genericMessages));
             }
 
-            return new KafkaMessagePackage<TKey, TData>(package.PackageNumber, genericMessages);
+            return wrappedPackages;
         }
 
-        public void EnqueueCommit(long packageNumber)
+        public bool TryEnqueueCommit(long packageNumber)
         {
-            _topic.EnqueueCommit(packageNumber);
+            return _topic.TryEnqueueCommit(packageNumber);
         }
 
         public KafkaConsumerTopicInfo GetDiagnosticsInfo()

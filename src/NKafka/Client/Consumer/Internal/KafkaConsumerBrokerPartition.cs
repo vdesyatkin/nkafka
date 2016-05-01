@@ -138,12 +138,14 @@ namespace NKafka.Client.Consumer.Internal
         public KafkaConsumerTopicPartitionOffsetsInfo GetOffsetsInfo()
         {
             var currentReceivedClientOffset = _currentReceivedClientOffset;
+            var currentMinAvailableServerOffset = _currentMinAvailableServerOffset;
             var currentMaxAvailableServerOffset = _currentMaxAvailableServerOffset;
             var currentCommitClientOffset = _currentCommitClientOffset;
             var currentCommitServerOffset = _currentCommitServerOffset;
 
             return new KafkaConsumerTopicPartitionOffsetsInfo(
                 currentReceivedClientOffset != UnknownOffset ? currentReceivedClientOffset : (long?)null,
+                currentMinAvailableServerOffset != UnknownOffset ? currentMaxAvailableServerOffset : (long?)null,
                 currentMaxAvailableServerOffset != UnknownOffset ? currentMaxAvailableServerOffset : (long?)null,
                 currentCommitClientOffset != UnknownOffset ? currentCommitClientOffset : (long?)null,
                 currentCommitServerOffset != UnknownOffset ? currentCommitServerOffset : (long?)null,

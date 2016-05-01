@@ -8,7 +8,9 @@ namespace NKafka.Client.Consumer.Diagnostics
     {
         public readonly int PartitionId;
 
-        public readonly bool IsReady;
+        public readonly bool IsAssigned;
+
+        public readonly bool IsReady;        
 
         public readonly KafkaConsumerTopicPartitionErrorCode? Error;
 
@@ -18,7 +20,8 @@ namespace NKafka.Client.Consumer.Diagnostics
 
         [NotNull] public readonly KafkaConsumerTopicPartitionOffsetsInfo OffsetsInfo;
 
-        public KafkaConsumerTopicPartitionInfo(int partitionId, bool isReady, KafkaConsumerTopicPartitionErrorCode? error, DateTime? errorTimestampUtc, 
+        public KafkaConsumerTopicPartitionInfo(int partitionId, bool isAssigned, bool isReady, 
+            KafkaConsumerTopicPartitionErrorCode? error, DateTime? errorTimestampUtc, 
             [NotNull] KafkaConsumerTopicMessagesInfo messagesInfo, [NotNull] KafkaConsumerTopicPartitionOffsetsInfo offsetsInfo)
         {
             PartitionId = partitionId;
