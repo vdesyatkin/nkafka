@@ -5,33 +5,31 @@ namespace NKafka.Client.Producer.Diagnostics
 {
     [PublicAPI]
     public sealed class KafkaProducerTopicMessagesInfo
-    {
-        public readonly long EnqueuedMessageCount;
+    {        
+        public readonly long TotalEnqueuedCount;
+        public readonly DateTime? EnqueueTimestampUtc;        
 
-        public readonly long TotalEnqueuedMessageCount;
-
-        public readonly DateTime? EnqueueTimestampUtc;                
-
-        public readonly long TotalFallbackMessageCount;
-
-        public readonly DateTime? FallbackTimestampUtc;
-
-        public readonly long TotalSentMessageCount;
-
+        public readonly long SendPendingCount;
+        public readonly long TotalSentCount;
         public readonly DateTime? SendTimestampUtc;
 
+        public readonly long TotalFallbackCount;
+        public readonly DateTime? FallbackTimestampUtc;
+
         public KafkaProducerTopicMessagesInfo(
-            long enqueuedMessageCount, long totalEnqueuedMessageCount, DateTime? enqueueTimestampUtc,
-            long totalFallbackMessageCount, DateTime? fallbackTimestampUtc,
-            long totalSentMessageCount, DateTime? sendTimestampUtc)
-        {
-            EnqueuedMessageCount = enqueuedMessageCount;
-            TotalEnqueuedMessageCount = totalEnqueuedMessageCount;
+            long totalEnqueuedCount, DateTime? enqueueTimestampUtc,
+            long sendPendingCount, long totalSentCount, DateTime? sendTimestampUtc,
+            long totalFallbackCount, DateTime? fallbackTimestampUtc)
+        {            
+            TotalEnqueuedCount = totalEnqueuedCount;
             EnqueueTimestampUtc = enqueueTimestampUtc;
-            TotalFallbackMessageCount = totalFallbackMessageCount;
-            FallbackTimestampUtc = fallbackTimestampUtc;
-            TotalSentMessageCount = totalSentMessageCount;
+            
+            SendPendingCount = sendPendingCount;
+            TotalSentCount = totalSentCount;
             SendTimestampUtc = sendTimestampUtc;
+
+            TotalFallbackCount = totalFallbackCount;
+            FallbackTimestampUtc = fallbackTimestampUtc;
         }
     }
 }

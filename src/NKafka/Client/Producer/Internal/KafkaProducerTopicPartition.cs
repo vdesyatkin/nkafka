@@ -9,12 +9,12 @@ namespace NKafka.Client.Producer.Internal
     {        
         public readonly int PartitonId;
 
-        public int EnqueuedCount => _enqueuedCount;
+        public int SendPendingCount => _sendPendingCount;
         public long TotalEnqueuedCount => _totalEnqueuedCount;
         public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
 
-        public long FallbackCount => _fallbackCount;
-        public DateTime? FallabackTimestampUtc => _fallbackTimestampUtc;
+        public long TotalFallbackCount => _totalFallbackCount;
+        public DateTime? FallbackTimestampUtc => _fallbackTimestampUtc;
 
         [NotNull] public readonly KafkaProducerBrokerPartition BrokerPartition;
 
@@ -22,10 +22,10 @@ namespace NKafka.Client.Producer.Internal
         [NotNull] private readonly ConcurrentQueue<KafkaMessage> _messageQueue;
         [CanBeNull] private readonly IKafkaProducerFallbackHandler _fallbackHandler;
 
-        private int _enqueuedCount;
+        private int _sendPendingCount;
         private long _totalEnqueuedCount;
         private DateTime? _enqueueTimestampUtc;
-        private long _fallbackCount;
+        private long _totalFallbackCount;
         private DateTime? _fallbackTimestampUtc;
 
         public KafkaProducerTopicPartition([NotNull] string topicName, int partitionId, 
@@ -41,7 +41,7 @@ namespace NKafka.Client.Producer.Internal
         public void EnqueueMessage([NotNull] KafkaMessage message)
         {
             _messageQueue.Enqueue(message);
-            Interlocked.Increment(ref _enqueuedCount);
+            Interlocked.Increment(ref _sendPendingCount);
             Interlocked.Increment(ref _totalEnqueuedCount);
             _enqueueTimestampUtc = DateTime.UtcNow;
         }
@@ -53,13 +53,13 @@ namespace NKafka.Client.Producer.Internal
                 return false;
             }
 
-            Interlocked.Decrement(ref _enqueuedCount);
+            Interlocked.Decrement(ref _sendPendingCount);
             return true;
         }        
 
         public void FallbackMessage(KafkaMessage message, DateTime timestampUtc, KafkaProdcuerFallbackErrorCode reason)
         {
-            Interlocked.Increment(ref _fallbackCount);
+            Interlocked.Increment(ref _totalFallbackCount);
             _fallbackTimestampUtc = timestampUtc;
 
             try
