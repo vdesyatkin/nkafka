@@ -10,6 +10,8 @@ namespace NKafka.Client.Consumer.Diagnostics
     {
         [NotNull] public readonly string TopicName;
 
+        public readonly bool IsReady;
+
         [NotNull] public readonly KafkaClientTopicMetadataInfo MetadataInfo;
 
         [NotNull] public readonly KafkaConsumerTopicMessagesInfo MessagesInfo;
@@ -18,13 +20,14 @@ namespace NKafka.Client.Consumer.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaConsumerTopicInfo([NotNull] string topicName, 
+        public KafkaConsumerTopicInfo([NotNull] string topicName, bool isReady, 
             [NotNull] KafkaClientTopicMetadataInfo metadataInfo, 
             [NotNull] KafkaConsumerTopicMessagesInfo messagesInfo, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartitionInfo> partitions, 
             DateTime timestampUtc)
         {
             TopicName = topicName;
+            IsReady = isReady;
             MetadataInfo = metadataInfo;
             MessagesInfo = messagesInfo;
             Partitions = partitions;

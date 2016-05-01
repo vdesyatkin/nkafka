@@ -169,9 +169,10 @@ namespace NKafka.Client.Consumer.Internal
             long topicServerCommitPendingCount = 0;
             long topicTotalServerCommitedMessageCount = 0;
             var topicServerCommitMessageTimestampUtc = (DateTime?)null;
-            
+
+            var topicIsReady = true;
+
             //todo (E008) size statistics            
-            //todo (E008) total ready
             //todo (E008) only assigned
             foreach (var partitionPair in _topicPartitions) 
             {
@@ -179,6 +180,7 @@ namespace NKafka.Client.Consumer.Internal
                 if (partition == null) continue;
 
                 var partitionBroker = partition.BrokerPartition;
+                topicIsReady = topicIsReady && partitionBroker.IsReady;
 
                 var partitionOffsetsInfo = partitionBroker.GetOffsetsInfo();
 
@@ -261,10 +263,13 @@ namespace NKafka.Client.Consumer.Internal
                 topicClientCommitPendingCount, topicTotalClientCommitedMessageCount, topicClientCommitMessageTimestampUtc,
                 topicServerCommitPendingCount, topicTotalServerCommitedMessageCount, topicServerCommitMessageTimestampUtc);
 
+            topicIsReady = topicIsReady && metadataInfo.IsReady;
+
             return new KafkaConsumerTopicInfo(TopicName, 
+                topicIsReady,
                 metadataInfo, 
                 topicMessagesInfo,
-                partitionInfos, 
+                partitionInfos,
                 DateTime.UtcNow);
         }
 

@@ -69,13 +69,17 @@ namespace NKafka.Client.Producer.Internal
             long topicTotalSentMessageCount = 0;
             var topicFallbackMessageTimestampUtc = (DateTime?)null;
 
+            var topicIsReady = true;
+
+            //todo (E008) size statistics            
             foreach (var partitionPair in _topicPartitions)
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
-
-                var partitionBroker = partition.BrokerPartition;
                 
+                var partitionBroker = partition.BrokerPartition;
+                topicIsReady = topicIsReady && partitionBroker.IsReady;
+
                 var partitionTotalEnqueuedCount = partition.TotalEnqueuedCount;
                 var partitionEnqueueTimestampUtc = partition.EnqueueTimestampUtc;
 
@@ -125,13 +129,15 @@ namespace NKafka.Client.Producer.Internal
                 topicSendPendingMessageCount, topicTotalSentMessageCount, topicSendMessageTimestampUtc,
                 topicTotalFallbackMessageCount, topicFallbackMessageTimestampUtc);
 
+            topicIsReady = topicIsReady && metadataInfo.IsReady;
+
             return new KafkaProducerTopicInfo(
                 TopicName,
-                metadataInfo,
-                DateTime.UtcNow,
-                metadataInfo.IsReady,
+                topicIsReady,
+                metadataInfo,                                
                 topicMessagesInfo,
-                partitionInfos);
+                partitionInfos,
+                DateTime.UtcNow);
         }
     }
 }

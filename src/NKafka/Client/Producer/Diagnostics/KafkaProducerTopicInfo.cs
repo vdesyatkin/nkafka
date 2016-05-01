@@ -10,20 +10,21 @@ namespace NKafka.Client.Producer.Diagnostics
     {
         [NotNull] public readonly string TopicName;
 
-        [NotNull] public readonly KafkaClientTopicMetadataInfo MetadataInfo;
-
-        public readonly DateTime TimestampUtc;
+        [NotNull] public readonly KafkaClientTopicMetadataInfo MetadataInfo;        
 
         public readonly bool IsReady;
 
         [NotNull] public readonly KafkaProducerTopicMessagesInfo MessagesInfo;
 
-        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaProducerTopicPartitionInfo> Partitions;                   
+        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaProducerTopicPartitionInfo> Partitions;
 
-        public KafkaProducerTopicInfo([NotNull] string topicName, [NotNull] KafkaClientTopicMetadataInfo metadataInfo, DateTime timestampUtc, 
-            bool isReady,
+        public readonly DateTime TimestampUtc;
+
+        public KafkaProducerTopicInfo([NotNull] string topicName, bool isReady,
+            [NotNull] KafkaClientTopicMetadataInfo metadataInfo,
             [NotNull]KafkaProducerTopicMessagesInfo messagesInfo, 
-            [NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartitionInfo> partitions)
+            [NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartitionInfo> partitions,
+            DateTime timestampUtc)
         {
             TopicName = topicName;
             MetadataInfo = metadataInfo;
