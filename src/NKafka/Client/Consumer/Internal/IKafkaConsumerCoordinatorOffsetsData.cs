@@ -1,7 +1,10 @@
-﻿namespace NKafka.Client.Consumer.Internal
+﻿using System;
+
+namespace NKafka.Client.Consumer.Internal
 {
     public interface IKafkaConsumerCoordinatorOffsetsData
     {        
-        long? GroupServerOffset { get; }     
+        long? GroupServerOffset { get; }  
+        DateTime TimestampUtc { get; }   
     }
 }

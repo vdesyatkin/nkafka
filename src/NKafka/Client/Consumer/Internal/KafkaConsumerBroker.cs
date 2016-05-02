@@ -130,6 +130,7 @@ namespace NKafka.Client.Consumer.Internal
                     continue; 
                 }
                 partition.IsAssigned = true;
+                partition.SetCommitServerOffset(coordinatorOffset.GroupServerOffset, coordinatorOffset.TimestampUtc);
 
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(partition)) continue;

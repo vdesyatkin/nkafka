@@ -24,7 +24,7 @@ namespace NKafka.Client.Consumer.Internal
         public long TotalClientCommitedCount => _totalClientCommitedCount;
         public DateTime? ClientCommitTimestampUtc { get; private set; }
 
-        public DateTime? ServerCommitTimestampUtc { get; private set; }
+        public DateTime? ServerCommitTimestampUtc => BrokerPartition.ServerCommitTimestampUtc;
 
         [NotNull] private readonly ConcurrentQueue<KafkaMessageAndOffset> _messageQueue;
 
@@ -119,13 +119,7 @@ namespace NKafka.Client.Consumer.Internal
             Interlocked.Add(ref _totalClientCommitedCount, endOffset - beginOffset);
             ClientCommitTimestampUtc = DateTime.UtcNow;
         }
-
-        public void SetCommitServerOffset(long? offset)
-        {        
-            BrokerPartition.SetCommitServerOffset(offset);
-            ServerCommitTimestampUtc = DateTime.UtcNow;
-        }
-
+                
         public long? GetCommitClientOffset()
         {
             return BrokerPartition.GetCommitClientOffset();

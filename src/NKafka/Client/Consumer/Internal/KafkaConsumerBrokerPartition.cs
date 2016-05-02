@@ -18,7 +18,9 @@ namespace NKafka.Client.Consumer.Internal
         public bool IsAssigned;
         public bool IsReady => Status == KafkaConsumerBrokerPartitionStatus.Ready && Error == null;
         public KafkaConsumerTopicPartitionErrorCode? Error { get; private set; }
-        public DateTime? ErrorTimestampUtc { get; private set; }        
+        public DateTime? ErrorTimestampUtc { get; private set; }
+
+        public DateTime? ServerCommitTimestampUtc { get; private set; }
 
         private long _currentReceivedClientOffset;
         private long _currentMinAvailableServerOffset;
@@ -114,9 +116,10 @@ namespace NKafka.Client.Consumer.Internal
             }
         }
 
-        public void SetCommitServerOffset(long? offset)
+        public void SetCommitServerOffset(long? offset, DateTime timestampUtc)
         {
             _currentCommitServerOffset = offset ?? UnknownOffset;
+            ServerCommitTimestampUtc = timestampUtc;
         }
 
         public void ResetData()

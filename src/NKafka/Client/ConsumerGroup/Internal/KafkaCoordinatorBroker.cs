@@ -991,13 +991,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                     var initialOffset = responsePartition.Offset;
 
-                    partitionOffsets[responsePartition.PartitionId] = new KafkaCoordinatorGroupOffsetsDataPartition(initialOffset, initialOffset, DateTime.UtcNow);
-
-                    KafkaClientTopic groupTopic;
-                    if (group.Topics.TryGetValue(topicName, out groupTopic) && groupTopic != null)
-                    {
-                        groupTopic.Consumer?.SetCommitServerOffset(responsePartition.PartitionId, initialOffset);
-                    }
+                    partitionOffsets[responsePartition.PartitionId] = new KafkaCoordinatorGroupOffsetsDataPartition(initialOffset, initialOffset, DateTime.UtcNow);                    
                 }
 
                 topicPartitionOffsets[topicName] = new KafkaCoordinatorGroupOffsetsDataTopic(partitionOffsets);
@@ -1081,13 +1075,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (!offsets.TryGetValue(topicName, out topicOffsets) || topicOffsets == null)
                 {
                     continue;
-                }
-
-                KafkaClientTopic groupTopic;
-                if (!group.Topics.TryGetValue(topicName, out groupTopic))
-                {
-                    continue;
-                }
+                }               
                 
                 foreach (var responsePartition in responseTopicPartitions)
                 {
@@ -1179,8 +1167,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     }
 
                     partitionOffsets.GroupServerOffset = partitionOffsets.GroupClientOffset;
-                    partitionOffsets.TimestampUtc = DateTime.UtcNow;
-                    groupTopic?.Consumer?.SetCommitServerOffset(responsePartition.PartitionId, partitionOffsets.GroupServerOffset);
+                    partitionOffsets.TimestampUtc = DateTime.UtcNow;                    
                 }
             }
 

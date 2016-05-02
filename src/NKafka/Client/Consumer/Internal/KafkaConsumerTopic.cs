@@ -125,15 +125,7 @@ namespace NKafka.Client.Consumer.Internal
 
             _packages.TryRemove(packageId, out package);            
             return true;
-        }
-
-        public void SetCommitServerOffset(int partitionId, long? offset)
-        {
-            KafkaConsumerTopicPartition partition;
-            if (!_topicPartitions.TryGetValue(partitionId, out partition) || partition == null) return;
-
-            partition.SetCommitServerOffset(offset);
-        }
+        }       
 
         public long? GetCommitClientOffset(int partitionId)
         {
