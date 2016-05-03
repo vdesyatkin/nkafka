@@ -16,7 +16,7 @@ namespace NKafka.DevConsole
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);
             var topicName = "test2";
-            var groupName = "group53";
+            var groupName = "group56";
 
             //var tester = new KafkaTester();
             //tester.Test(host, port, topicName);
@@ -35,7 +35,7 @@ namespace NKafka.DevConsole
             var consumerConfigBuilder = new KafkaConsumerSettingsBuilder()
                 .SetBatchMinSizeBytes(1)
                 .SetBatchMaxSizeBytes(10000)
-                .SetConsumeServerWaitTime(TimeSpan.FromSeconds(5));            
+                .SetConsumeServerWaitTime(TimeSpan.FromSeconds(5));
 
             var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());
             var group = clientBuilder.CreateConsumerGroup(groupName);

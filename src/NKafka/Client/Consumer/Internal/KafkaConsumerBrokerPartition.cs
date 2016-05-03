@@ -57,11 +57,6 @@ namespace NKafka.Client.Consumer.Internal
         {
             if (messages.Count == 0) return;
 
-            var lastMessage = messages[messages.Count - 1];
-            if (lastMessage == null) return;
-
-            _currentReceivedClientOffset = lastMessage.Offset;
-
             var lastOffset = _currentReceivedClientOffset;
 
             foreach (var message in messages)
@@ -70,7 +65,7 @@ namespace NKafka.Client.Consumer.Internal
                 lastOffset = message.Offset;
                 _messageQueue.EnqueueMessage(message);
             }
-
+            
             _currentReceivedClientOffset = lastOffset;
         }
 

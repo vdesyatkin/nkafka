@@ -446,8 +446,11 @@ namespace NKafka.Client.Consumer.Internal
                     }
 
                     partition.ResetError();
-                    partition.SetMaxAvailableServerOffset(responsePartition.HighwaterMarkOffset);
-                    partition.EnqueueMessages(responsePartition.Messages ?? new KafkaMessageAndOffset[0]);
+                    if (responsePartition.Messages != null && responsePartition.Messages.Count > 0)
+                    {
+                        partition.SetMaxAvailableServerOffset(responsePartition.HighwaterMarkOffset - 1);
+                        partition.EnqueueMessages(responsePartition.Messages);
+                    }
                 }
             }
         }        
