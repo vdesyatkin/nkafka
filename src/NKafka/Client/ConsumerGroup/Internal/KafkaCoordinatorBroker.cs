@@ -153,15 +153,27 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     group.TopicMetadataPartitionIds[topic.TopicName] = partitionIds;
                 }
 
-                var joinRequest = CreateJoinGroupRequest(group);
-                if (joinRequest == null) return;
-
-                if (!TrySendRequest(group, joinRequest, _joinGroupRequests, _coordinatorClientTimeout + group.Settings.JoinGroupServerTimeout))
+                if (group.GroupType == KafkaConsumerGroupType.SingleConsumer)
                 {
-                    return;
+                    group.SetSessionData(DefaultGenerationId, DefaultMemberId, false);
+                    group.SetAssignmentData(group.TopicMetadataPartitionIds);
+                    group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequired;
                 }
-                
-                group.Status = KafkaCoordinatorGroupStatus.JoinGroupRequested;
+
+                if (group.GroupType == KafkaConsumerGroupType.BalancedConsumers)
+                {
+                    var joinRequest = CreateJoinGroupRequest(group);
+                    if (joinRequest == null) return;
+
+                    if (
+                        !TrySendRequest(group, joinRequest, _joinGroupRequests,
+                            _coordinatorClientTimeout + group.Settings.JoinGroupServerTimeout))
+                    {
+                        return;
+                    }
+
+                    group.Status = KafkaCoordinatorGroupStatus.JoinGroupRequested;
+                }
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.JoinGroupRequested)
@@ -277,8 +289,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequired;
             }
 
-            if (group.Status == KafkaCoordinatorGroupStatus.Ready ||
-                group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequired || group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequested)
+            if (group.GroupType == KafkaConsumerGroupType.BalancedConsumers &&
+                (group.Status == KafkaCoordinatorGroupStatus.Ready ||
+                 group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequired || 
+                 group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequested))
             {
                 //regular heartbeat
 
