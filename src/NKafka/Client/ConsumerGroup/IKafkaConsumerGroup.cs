@@ -7,6 +7,7 @@ namespace NKafka.Client.ConsumerGroup
     public interface IKafkaConsumerGroup
     {
         string GroupName { get; }
+        KafkaConsumerGroupType GroupType { get; }
         KafkaConsumerGroupInfo GetDiagnosticsInfo();
     }
 }

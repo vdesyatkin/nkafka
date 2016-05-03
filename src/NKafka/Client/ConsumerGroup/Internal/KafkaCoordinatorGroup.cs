@@ -11,6 +11,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
     internal sealed class KafkaCoordinatorGroup
     {
         [NotNull] public readonly string GroupName;
+        public readonly KafkaConsumerGroupType GroupType;
 
         [NotNull]
         public readonly KafkaConsumerGroupSettings Settings;
@@ -37,10 +38,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public readonly TimeSpan CommitPeriod;
         [CanBeNull] public string CommitMetadata { get; private set; }
 
-        public KafkaCoordinatorGroup([NotNull] string groupName, [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
+        public KafkaCoordinatorGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, 
+            [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
             [NotNull] KafkaConsumerGroupSettings settings)
         {
             GroupName = groupName;
+            GroupType = groupType;
             TopicMetadataPartitionIds = new Dictionary<string, IReadOnlyList<int>>();            
             Settings = settings;            
             

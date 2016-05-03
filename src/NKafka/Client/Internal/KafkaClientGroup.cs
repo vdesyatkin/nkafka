@@ -23,10 +23,12 @@ namespace NKafka.Client.Internal
         [NotNull] public KafkaClientGroupMetadataInfo MetadataInfo => _metadataInfo;
         [NotNull] private KafkaClientGroupMetadataInfo _metadataInfo;
 
-        public KafkaClientGroup([NotNull] string groupName, [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, [NotNull] KafkaConsumerGroupSettings settings)
+        public KafkaClientGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, 
+            [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
+            [NotNull] KafkaConsumerGroupSettings settings)
         {
             GroupName = groupName;            
-            Coordinator = new KafkaCoordinatorGroup(GroupName, topics, settings);
+            Coordinator = new KafkaCoordinatorGroup(GroupName, groupType, topics, settings);
             _metadataInfo = new KafkaClientGroupMetadataInfo(groupName, DateTime.UtcNow, false, null, null);
         }
 

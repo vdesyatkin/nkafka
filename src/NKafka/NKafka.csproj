@@ -63,6 +63,7 @@
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupOffsetsInfo.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupStatus.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupOffsetsTopicInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupType.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicInfo.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicMessagesInfo.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionOffsetsInfo.cs" />

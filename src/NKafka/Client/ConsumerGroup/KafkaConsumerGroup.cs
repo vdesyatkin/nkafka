@@ -8,16 +8,20 @@ namespace NKafka.Client.ConsumerGroup
     internal sealed class KafkaConsumerGroup : IKafkaConsumerGroup
     {
         string IKafkaConsumerGroup.GroupName => GroupName;
-        public readonly string GroupName;
+        KafkaConsumerGroupType IKafkaConsumerGroup.GroupType => GroupType;
+
+        [NotNull] public readonly string GroupName;
+        public readonly KafkaConsumerGroupType GroupType;
 
         public readonly KafkaConsumerGroupSettings Settings;
 
         [CanBeNull]
         public KafkaClientGroup ClientGroup;
 
-        public KafkaConsumerGroup(string groupName, KafkaConsumerGroupSettings settings)
+        public KafkaConsumerGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, [NotNull] KafkaConsumerGroupSettings settings)
         {
             GroupName = groupName;
+            GroupType = groupType;
             Settings = settings;
         }
 

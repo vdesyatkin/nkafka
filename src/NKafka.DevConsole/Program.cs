@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NKafka.Client;
 using NKafka.Client.Consumer;
+using NKafka.Client.ConsumerGroup;
 using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.Producer;
 // ReSharper disable ClassNeverInstantiated.Global
@@ -39,7 +40,7 @@ namespace NKafka.DevConsole
                 .SetConsumeServerWaitTime(TimeSpan.FromSeconds(5));
 
             var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());
-            var group = clientBuilder.CreateConsumerGroup(groupName);
+            var group = clientBuilder.CreateConsumerGroup(groupName, KafkaConsumerGroupType.BalancedConsumers);
             var topicProducer = clientBuilder.CreateTopicProducer(topicName,
                 new TestPartitioner(), new TestSerializer(), null, producerConfigBuilder.Build());
             var topicConsumer = clientBuilder.CreateTopicConsumer(topicName, group,

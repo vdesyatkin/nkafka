@@ -103,7 +103,7 @@ namespace NKafka.Client
             return wrapper;
         }
 
-        public IKafkaConsumerGroup CreateConsumerGroup([NotNull] string groupName, [CanBeNull] KafkaConsumerGroupSettings settings = null)
+        public IKafkaConsumerGroup CreateConsumerGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, [CanBeNull] KafkaConsumerGroupSettings settings = null)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             // ReSharper disable ConstantNullCoalescingCondition
@@ -112,9 +112,10 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            _consumerGroups[groupName] = new KafkaConsumerGroup(groupName, settings);
+            var group = new KafkaConsumerGroup(groupName, groupType, settings);
+            _consumerGroups[groupName] = group;
 
-            return new KafkaConsumerGroup(groupName, settings);
+            return group;
         }
 
         [NotNull]
@@ -181,7 +182,7 @@ namespace NKafka.Client
                 }
                 if (group.Settings == null) continue;
 
-                var clientGroup = new KafkaClientGroup(groupName, groupTopics, group.Settings);
+                var clientGroup = new KafkaClientGroup(groupName, group.GroupType, groupTopics, group.Settings);
                 group.ClientGroup = clientGroup;
 
                 foreach (var topic in groupTopics)
