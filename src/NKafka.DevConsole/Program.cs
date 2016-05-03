@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NKafka.Client;
 using NKafka.Client.Consumer;
+using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.Producer;
 // ReSharper disable ClassNeverInstantiated.Global
 
@@ -16,7 +17,7 @@ namespace NKafka.DevConsole
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);
             var topicName = "test2";
-            var groupName = "group56";
+            var groupName = "group61";
 
             //var tester = new KafkaTester();
             //tester.Test(host, port, topicName);
@@ -68,7 +69,7 @@ namespace NKafka.DevConsole
                         continue;
                     }
                     topicProducer.EnqueueMessage(data[1].Trim(), data[2].Trim());
-                }
+                }                
 
                 if (command == "consume" || command == "c")
                 {
@@ -87,8 +88,36 @@ namespace NKafka.DevConsole
                     else
                     {
                         Console.WriteLine("no packages");
+                    }                   
+                }
+
+                if (command == "produceinfo" || command == "pi")
+                {
+                    var info = topicProducer?.GetDiagnosticsInfo();
+                    if (info != null)
+                    {
+                        Console.WriteLine(info.IsReady);
                     }
                 }
+
+                if (command == "consumeinfo" || command == "ci")
+                {
+                    var info = topicConsumer.GetDiagnosticsInfo();
+                    if (info != null)
+                    {
+                        Console.WriteLine(info.IsReady);
+                    }
+                }
+
+                if (command == "groupinfo" || command == "gi")
+                {
+                    var info = group?.GetDiagnosticsInfo();
+                    if (info != null)
+                    {
+                        Console.WriteLine(info.IsReady);
+                    }
+                }
+
             } while (userText != "exit" && userText != "q" && userText != "quit");            
 
             Console.WriteLine("stopping...");
@@ -100,7 +129,7 @@ namespace NKafka.DevConsole
             Console.ReadLine();            
         }
 
-        private class TestSerializer : IKafkaProducerSerializer<string, string>, IKafkaConsumerSerializer<String, string>
+        private class TestSerializer : IKafkaProducerSerializer<string, string>, IKafkaConsumerSerializer<string, string>
         {
             public byte[] SerializeKey(string key)
             {
@@ -130,9 +159,17 @@ namespace NKafka.DevConsole
             public int GetPartition(string key, string data, IReadOnlyList<int> partitions)
             {
                 if (key == null) return 0;
+                if (partitions == null) return 0;
                 if (partitions.Count == 0) return 0;
+
+                int intKey;
+                if (int.TryParse(key, out intKey))
+                {
+                    return partitions[intKey%partitions.Count];
+                }
+
                 return partitions[_rand.Next(0, 100) % partitions.Count];
             }
-        }
+        }        
     }
 }
