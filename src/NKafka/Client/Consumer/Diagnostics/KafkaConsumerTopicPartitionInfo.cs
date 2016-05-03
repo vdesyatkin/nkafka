@@ -25,6 +25,7 @@ namespace NKafka.Client.Consumer.Diagnostics
             [NotNull] KafkaConsumerTopicMessagesInfo messagesInfo, [NotNull] KafkaConsumerTopicPartitionOffsetsInfo offsetsInfo)
         {
             PartitionId = partitionId;
+            IsAssigned = isAssigned;
             IsReady = isReady;
             Error = error;
             ErrorTimestampUtc = errorTimestampUtc;

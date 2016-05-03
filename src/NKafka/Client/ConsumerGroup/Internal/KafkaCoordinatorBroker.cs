@@ -250,7 +250,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (!TryHandleResponse<KafkaSyncGroupResponse>(group, _syncGroupRequests, TryHandleSyncGroupResponse))
                 {
                     return;
-                }                
+                }
 
                 group.Status = KafkaCoordinatorGroupStatus.FirstHeartbeatRequired;
             }
@@ -744,7 +744,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (groupMembers == null)
             {
-                return new KafkaSyncGroupRequest(group.GroupName, groupGenerationId, groupMemberId, null);
+                return new KafkaSyncGroupRequest(group.GroupName, groupGenerationId, groupMemberId, new KafkaSyncGroupRequestMember[0]);
             }
 
             var requestMembers = new List<KafkaSyncGroupRequestMember>(groupMembers.Count);
@@ -935,6 +935,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 
                 IReadOnlyList<int> assignedTopicPartitions;
                 if (!assignmentTopics.TryGetValue(topicName, out assignedTopicPartitions) || assignedTopicPartitions == null) continue;
+
                 var assignedPartitionSet = new HashSet<int>(assignedTopicPartitions);
 
                 var partitionOffsets = new Dictionary<int, KafkaCoordinatorGroupOffsetsDataPartition>(assignedTopicPartitions.Count);

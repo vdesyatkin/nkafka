@@ -21,7 +21,7 @@ namespace NKafka.Protocol.API.SyncGroup
             writer.WriteString(request.GroupName);
             writer.WriteInt32(request.GroupGenerationId);
             writer.WriteString(request.MemberId);            
-            writer.WriteCollection(request.Members, WriteSyncGroupRequestMember);
+            writer.WriteCollection(request.Members ?? new KafkaSyncGroupRequestMember[0], WriteSyncGroupRequestMember);
         }
 
         private static void WriteSyncGroupRequestMember([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaSyncGroupRequestMember member)
