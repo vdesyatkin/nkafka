@@ -78,7 +78,9 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition            
 
-            var topic = new KafkaConsumerTopic(topicName, group.GroupName, settings ?? KafkaConsumerSettingsBuilder.Default);
+            var topic = new KafkaConsumerTopic(topicName, 
+                group.GroupName, null, 
+                settings ?? KafkaConsumerSettingsBuilder.Default);
             _topicConsumers.Add(topic);
             return topic;
         }
@@ -97,7 +99,56 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topic = new KafkaConsumerTopic(topicName, group.GroupName, settings ?? KafkaConsumerSettingsBuilder.Default);
+            var topic = new KafkaConsumerTopic(topicName, 
+                group.GroupName, null, 
+                settings ?? KafkaConsumerSettingsBuilder.Default);
+            var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer);
+            _topicConsumers.Add(topic);
+            return wrapper;
+        }
+
+        public IKafkaConsumerTopic CreateTopicCatchUpConsumer([NotNull] string topicName, 
+            [NotNull] IKafkaConsumerGroup consumerGroup,
+            [NotNull] IKafkaConsumerGroup catchUpGroup,
+            [CanBeNull] KafkaConsumerSettings settings = null)
+        {
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse
+            // ReSharper disable ConstantNullCoalescingCondition
+            // ReSharper disable ConstantConditionalAccessQualifier
+            if (string.IsNullOrEmpty(topicName)) return null;
+            if (string.IsNullOrEmpty(consumerGroup?.GroupName)) return null;
+            if (string.IsNullOrEmpty(catchUpGroup?.GroupName)) return null;
+            // ReSharper restore ConstantConditionalAccessQualifier
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+            // ReSharper restore ConstantNullCoalescingCondition            
+
+            var topic = new KafkaConsumerTopic(topicName, 
+                consumerGroup.GroupName, catchUpGroup.GroupName,
+                settings ?? KafkaConsumerSettingsBuilder.Default);
+            _topicConsumers.Add(topic);
+            return topic;
+        }
+
+        public IKafkaConsumerTopic<TKey, TData> CreateTopicCatchUpConsumer<TKey, TData>([NotNull] string topicName, 
+            [NotNull] IKafkaConsumerGroup consumerGroup,
+            [NotNull] IKafkaConsumerGroup catchUpGroup,
+            [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer,
+            [CanBeNull] KafkaConsumerSettings settings = null
+           )
+        {
+            // ReSharper disable ConditionIsAlwaysTrueOrFalse            
+            // ReSharper disable ConstantNullCoalescingCondition
+            // ReSharper disable ConstantConditionalAccessQualifier
+            if (string.IsNullOrEmpty(topicName) || (serializer == null)) return null;
+            if (string.IsNullOrEmpty(consumerGroup?.GroupName)) return null;
+            if (string.IsNullOrEmpty(catchUpGroup?.GroupName)) return null;
+            // ReSharper restore ConstantConditionalAccessQualifier
+            // ReSharper restore ConditionIsAlwaysTrueOrFalse
+            // ReSharper restore ConstantNullCoalescingCondition
+
+            var topic = new KafkaConsumerTopic(topicName,
+                consumerGroup.GroupName, catchUpGroup.GroupName,
+                settings ?? KafkaConsumerSettingsBuilder.Default);
             var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer);
             _topicConsumers.Add(topic);
             return wrapper;
@@ -137,6 +188,7 @@ namespace NKafka.Client
                 consumers[consumer.TopicName] = consumer;
             }
 
+            // create topics and groupping by consumer group
             var topics = new List<KafkaClientTopic>(topicNames.Count);            
             var groupTopicsDictionary = new Dictionary<string, List<KafkaClientTopic>>(_topicConsumers.Count);
             foreach (var topicName in topicNames)
@@ -165,9 +217,25 @@ namespace NKafka.Client
                     }
                     groupTopicList.Add(topic);
                 }
+
+                var catchUpGroupName = consumer?.CatchUpGroupName;
+                if (!string.IsNullOrEmpty(catchUpGroupName))
+                {
+                    if (!_consumerGroups.ContainsKey(catchUpGroupName)) continue;
+
+                    List<KafkaClientTopic> groupTopicList;
+                    if (!groupTopicsDictionary.TryGetValue(catchUpGroupName, out groupTopicList) || groupTopicList == null)
+                    {
+                        groupTopicList = new List<KafkaClientTopic>();
+                        groupTopicsDictionary[catchUpGroupName] = groupTopicList;
+                    }
+                    groupTopicList.Add(topic);
+                }
             }
 
+            // create groups
             var groups = new List<KafkaClientGroup>(groupTopicsDictionary.Count);
+            var groupsDictionary = new Dictionary<string, KafkaClientGroup>(groupTopicsDictionary.Count);
             foreach (var groupPair in groupTopicsDictionary)
             {
                 var groupName = groupPair.Key;
@@ -180,17 +248,38 @@ namespace NKafka.Client
                 {
                     continue;
                 }
-                if (group.Settings == null) continue;
 
                 var clientGroup = new KafkaClientGroup(groupName, group.GroupType, groupTopics, group.Settings);
-                group.ClientGroup = clientGroup;
-
-                foreach (var topic in groupTopics)
-                {
-                    topic?.Consumer?.ApplyCoordinator(clientGroup, null); //todo (E012)
-                }
+                group.ClientGroup = clientGroup;                
 
                 groups.Add(clientGroup);
+                groupsDictionary[groupName] = clientGroup;
+            }
+
+            // apply group for topics
+            foreach (var topic in topics)
+            {
+                if (topic == null) continue;
+
+                KafkaConsumerTopic consumer;
+                if (!consumers.TryGetValue(topic.TopicName, out consumer) || consumer == null)
+                {
+                    continue;
+                }
+
+                KafkaClientGroup consumerGroup;
+                if (!groupsDictionary.TryGetValue(consumer.GroupName, out consumerGroup) || consumerGroup == null)
+                {
+                    continue;
+                }
+
+                KafkaClientGroup catchUpGroup;
+                if (string.IsNullOrEmpty(consumer.CatchUpGroupName) || !groupsDictionary.TryGetValue(consumer.CatchUpGroupName, out catchUpGroup))
+                {
+                    catchUpGroup = null;
+                }
+
+                topic.Consumer?.ApplyCoordinator(consumerGroup, catchUpGroup);
             }
 
             return new KafkaClient(_settings, topics, groups);

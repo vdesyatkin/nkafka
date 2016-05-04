@@ -12,6 +12,7 @@ namespace NKafka.Client.Consumer.Internal
     {
         [NotNull] public readonly string TopicName;
         [NotNull] public readonly string GroupName;
+        [CanBeNull] public readonly string CatchUpGroupName;
         [NotNull] public KafkaClientTopicMetadataInfo TopicMetadataInfo;
 
         [CanBeNull] private KafkaConsumerGroupData _group;
@@ -22,7 +23,9 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentDictionary<long, PackageInfo> _packages;
         private long _currentPackageId;
 
-        public KafkaConsumerTopic([NotNull] string topicName, [NotNull] string groupName, [NotNull] KafkaConsumerSettings settings)
+        public KafkaConsumerTopic([NotNull] string topicName, 
+            [NotNull] string groupName, [CanBeNull] string catchUpGroupName,
+            [NotNull] KafkaConsumerSettings settings)
         { 
             TopicName = topicName;
             GroupName = groupName;
@@ -73,9 +76,9 @@ namespace NKafka.Client.Consumer.Internal
                 long endOffset = 0;
 
                 KafkaMessageAndOffset messageAndOffset;
-                while (partitionMessages.Count < partitionConsumePendingCount && partition.TryDequeue(out messageAndOffset))
+                while (partitionMessages.Count < partitionConsumePendingCount && partition.TryConsumeMessage(out messageAndOffset))
                 {
-                    if (messageAndOffset == null) continue;                    
+                    if (messageAndOffset == null) continue;
                     
                     var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data);
 
@@ -194,7 +197,7 @@ namespace NKafka.Client.Consumer.Internal
                     partitionServerCommitPendingCount = 0;
                 }
                 var partitionServerCommitMessageCount = partitionClientCommitMessageCount - partitionServerCommitPendingCount;
-                var partitionServerCommitMessageTimestampUtc = partition.ServerCommitTimestampUtc;
+                var partitionServerCommitMessageTimestampUtc = partition.CommitServerOffsetTimestampUtc;
 
                 topicTotalReceivedMessageCount += partitionTotalReceivedCount;
                 if (topicReceiveMessageTimestampUtc == null || topicReceiveMessageTimestampUtc < partitionReceivedTimestampUtc)
@@ -230,7 +233,7 @@ namespace NKafka.Client.Consumer.Internal
                     topicReceivePendingCount += partitionReceivePendingCount ?? 0;
                     topicConsumePendingCount += partitionConsumePendingCount;
                     topicClientCommitPendingCount += partitionClientCommitPendingCount;
-                    topicServerCommitPendingCount += partitionServerCommitPendingCount; //todo (E009) the main kafka problem =( some fallback on partition unassign?
+                    topicServerCommitPendingCount += partitionServerCommitPendingCount; //todo (E015) the main kafka problem =( some fallback on partition unassign?
                 }
 
                 var partitionMessagesInfo = new KafkaConsumerTopicMessagesInfo(

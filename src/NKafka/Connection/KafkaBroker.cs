@@ -381,7 +381,7 @@ namespace NKafka.Connection
             catch (Exception)
             {
                 return false;
-            }            
+            }
         }
 
         [CanBeNull]

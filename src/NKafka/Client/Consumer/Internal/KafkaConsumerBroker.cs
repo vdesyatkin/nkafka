@@ -108,8 +108,11 @@ namespace NKafka.Client.Consumer.Internal
                 }
             }            
 
-            var coordinator = topic.Group.GroupCoordinator; //todo (E012)
-            var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);            
+            var coordinator = topic.Group.GroupCoordinator;
+            var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);
+
+            var catchUpCoordinator = topic.Group.CatchUpGroupCoordinator;
+            var catchUpPartitionOffsets = catchUpCoordinator?.GetPartitionOffsets(topic.TopicName);
 
             // prepare new fetch batch
             foreach (var partitionPair in topic.Partitions)
@@ -132,15 +135,37 @@ namespace NKafka.Client.Consumer.Internal
                 partition.IsAssigned = true;
                 partition.SetCommitServerOffset(coordinatorOffset.GroupServerOffset, coordinatorOffset.TimestampUtc);
 
+                IKafkaConsumerCoordinatorOffsetsData catchUpOffset = null;
+                if (catchUpCoordinator != null)
+                {
+                    // uses catch-up group
+                    if (catchUpPartitionOffsets == null)
+                    {
+                        // catch-up group coordinator is not ready
+                        continue;
+                    }
+                    
+                    if (!catchUpPartitionOffsets.TryGetValue(partitionId, out catchUpOffset) || catchUpOffset == null)
+                    {
+                        // catch-up group coordinator has not received partition offset
+                        continue;
+                    }
+                    partition.SetCatchUpServerOffset(catchUpOffset.GroupServerOffset);
+                }
+
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(partition)) continue;
 
-                var clientOffset = partition.GetReceivedClientOffset() ?? coordinatorOffset.GroupServerOffset ?? partition.GetMaxAvailableServerOffset();
+                var currentReceivedOffset = partition.GetReceivedClientOffset();
                 var minAvailableOffset = partition.GetMinAvailableServerOffset();
-                
+
+                var clientOffset = currentReceivedOffset ?? coordinatorOffset.GroupServerOffset ?? partition.GetMaxAvailableServerOffset();
+
+                if (clientOffset == null) continue;
+
                 if (clientOffset < minAvailableOffset)
                 {
-                    clientOffset = minAvailableOffset;
+                    clientOffset = minAvailableOffset - 1;
                 }
 
                 if (clientOffset < coordinatorOffset.GroupServerOffset)
@@ -148,7 +173,12 @@ namespace NKafka.Client.Consumer.Internal
                     clientOffset = coordinatorOffset.GroupServerOffset;
                 }
 
-                newFetchBatch[partitionId] = (clientOffset ?? -1) + 1;
+                // uses catch-up group
+                if (clientOffset >= catchUpOffset?.GroupServerOffset) continue;
+
+                if (clientOffset == null) continue;
+
+                newFetchBatch[partitionId] = clientOffset.Value + 1;
             }
 
             if (newFetchBatch.Count == 0) return;
@@ -200,7 +230,7 @@ namespace NKafka.Client.Consumer.Internal
 
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.Ready)
             {
-                return partition.CanEnqueue();
+                return partition.CanEnqueueForConsume();
             }
 
             return false;
@@ -449,7 +479,7 @@ namespace NKafka.Client.Consumer.Internal
                     if (responsePartition.Messages != null && responsePartition.Messages.Count > 0)
                     {
                         partition.SetMaxAvailableServerOffset(responsePartition.HighwaterMarkOffset - 1);
-                        partition.EnqueueMessages(responsePartition.Messages);
+                        partition.EnqueueMessagesForConsume(responsePartition.Messages);
                     }
                 }
             }

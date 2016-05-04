@@ -73,7 +73,6 @@
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerCoordinator.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerCoordinatorOffsetsData.cs" />
-    <Compile Include="Client\Consumer\Internal\IKafkaConsumerMessageQueue.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBroker.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerPartition.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerPartitionStatus.cs" />

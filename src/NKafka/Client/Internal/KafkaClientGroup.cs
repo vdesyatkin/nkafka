@@ -11,8 +11,7 @@ using NKafka.Metadata;
 namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClientGroup : IKafkaConsumerCoordinator
-    {
-        string IKafkaConsumerCoordinator.GroupName => GroupName;
+    {        
         [NotNull] public readonly string GroupName;
 
         [NotNull] public readonly KafkaCoordinatorGroup Coordinator;        
