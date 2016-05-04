@@ -32,7 +32,7 @@ namespace NKafka.Client.Consumer.Internal
             if (!_topics.TryGetValue(topicName, out topic) || topic == null)
             {
                 topic = _topics.AddOrUpdate(topicName,
-                    new KafkaConsumerBrokerTopic(topicName, topicPartition.Settings, topicPartition.Coordinator),
+                    new KafkaConsumerBrokerTopic(topicName, topicPartition.Group, topicPartition.Settings),
                     (oldKey, oldValue) => oldValue);
             }            
 
@@ -108,7 +108,7 @@ namespace NKafka.Client.Consumer.Internal
                 }
             }            
 
-            var coordinator = topic.Coordinator;
+            var coordinator = topic.Group.GroupCoordinator; //todo (E012)
             var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);            
 
             // prepare new fetch batch

@@ -14,7 +14,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] public readonly string GroupName;
         [NotNull] public KafkaClientTopicMetadataInfo TopicMetadataInfo;
 
-        [CanBeNull] private IKafkaConsumerCoordinator _coordinator;
+        [CanBeNull] private KafkaConsumerGroupData _group;
 
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
@@ -35,8 +35,8 @@ namespace NKafka.Client.Consumer.Internal
         [CanBeNull]
         public KafkaConsumerTopicPartition CreatePartition(int partitionId)
         {
-            var coordinator = _coordinator;
-            return coordinator == null ? null : new KafkaConsumerTopicPartition(TopicName, partitionId, Settings, coordinator);
+            var group = _group;
+            return group == null ? null : new KafkaConsumerTopicPartition(TopicName, partitionId, group, Settings);
         }
 
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartition> partitions)
@@ -51,9 +51,9 @@ namespace NKafka.Client.Consumer.Internal
             _topicPartitions = topicPartitions;
         }
 
-        public void ApplyCoordinator([NotNull] IKafkaConsumerCoordinator coordinator)
+        public void ApplyCoordinator([NotNull] IKafkaConsumerCoordinator groupCoordinator, [CanBeNull] IKafkaConsumerCoordinator catchUpGroupCoordinator)
         {
-            _coordinator = coordinator;
+            _group = new KafkaConsumerGroupData(groupCoordinator, catchUpGroupCoordinator);
         }
         
         public IReadOnlyList<KafkaMessagePackage> Consume(int? maxMessageCount = null)

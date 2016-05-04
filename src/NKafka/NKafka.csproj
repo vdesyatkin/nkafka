@@ -78,6 +78,7 @@
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerPartition.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerPartitionStatus.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerBrokerTopic.cs" />
+    <Compile Include="Client\Consumer\Internal\KafkaConsumerGroupData.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicPartition.cs" />
     <Compile Include="Client\Consumer\Internal\KafkaConsumerTopicWrapper.cs" />

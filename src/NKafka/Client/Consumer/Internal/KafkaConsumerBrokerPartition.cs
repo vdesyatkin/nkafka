@@ -9,7 +9,7 @@ namespace NKafka.Client.Consumer.Internal
     internal sealed class KafkaConsumerBrokerPartition
     {
         [NotNull] public readonly string TopicName;
-        [NotNull] public readonly IKafkaConsumerCoordinator Coordinator;
+        [NotNull] public readonly KafkaConsumerGroupData Group;        
 
         public readonly int PartitionId;
         [NotNull] public readonly KafkaConsumerSettings Settings;
@@ -33,14 +33,15 @@ namespace NKafka.Client.Consumer.Internal
 
         [NotNull] private readonly IKafkaConsumerMessageQueue _messageQueue;
 
-        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId,
+        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaConsumerGroupData group,
             [NotNull] KafkaConsumerSettings settings,
-            [NotNull] IKafkaConsumerCoordinator coordinator, [NotNull] IKafkaConsumerMessageQueue messageQueue)
+            [NotNull] IKafkaConsumerMessageQueue messageQueue)
         {
             TopicName = topicName;
             PartitionId = partitionId;
             Settings = settings;
-            Coordinator = coordinator;
+            Group = group;          
+
             _messageQueue = messageQueue;
             _currentReceivedClientOffset = UnknownOffset;
             _currentMinAvailableServerOffset = UnknownOffset;

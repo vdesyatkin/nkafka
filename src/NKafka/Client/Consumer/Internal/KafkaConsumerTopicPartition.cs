@@ -35,12 +35,13 @@ namespace NKafka.Client.Consumer.Internal
 
         private long _enqueuedSize;
 
-        public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId, 
-            [NotNull] KafkaConsumerSettings settings, [NotNull] IKafkaConsumerCoordinator coordinator)
+        public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId,
+            [NotNull] KafkaConsumerGroupData group,
+            [NotNull] KafkaConsumerSettings settings)
         {            
             PartitonId = partitionId;
             _settings = settings;
-            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, settings, coordinator, this);
+            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, group, settings, this);
             _messageQueue = new ConcurrentQueue<KafkaMessageAndOffset>();            
         }
 

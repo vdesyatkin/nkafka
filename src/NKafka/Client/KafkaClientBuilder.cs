@@ -187,7 +187,7 @@ namespace NKafka.Client
 
                 foreach (var topic in groupTopics)
                 {
-                    topic?.Consumer?.ApplyCoordinator(clientGroup);
+                    topic?.Consumer?.ApplyCoordinator(clientGroup, null); //todo (E012)
                 }
 
                 groups.Add(clientGroup);
