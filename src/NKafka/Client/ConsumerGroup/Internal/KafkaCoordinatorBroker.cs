@@ -160,20 +160,26 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequired;
                 }
 
+                if (group.GroupType == KafkaConsumerGroupType.Observer)
+                {
+                    group.SetSessionData(DefaultGenerationId, DefaultMemberId, false);
+                    group.SetAssignmentData(group.TopicMetadataPartitionIds);
+                    group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequired;
+                }
+
                 if (group.GroupType == KafkaConsumerGroupType.BalancedConsumers)
                 {
                     var joinRequest = CreateJoinGroupRequest(group);
                     if (joinRequest == null) return;
 
-                    if (
-                        !TrySendRequest(group, joinRequest, _joinGroupRequests,
+                    if (!TrySendRequest(group, joinRequest, _joinGroupRequests,
                             _coordinatorClientTimeout + group.Settings.JoinGroupServerTimeout))
                     {
                         return;
                     }
 
                     group.Status = KafkaCoordinatorGroupStatus.JoinGroupRequested;
-                }
+                }                
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.JoinGroupRequested)
@@ -302,7 +308,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     if (!TryHandleResponse<KafkaHeartbeatResponse>(group, _heartbeatRequests, TryHandleHeartbeatResponse))
                     {
                         return;
-                    }                    
+                    }
                 }
 
                 if (group.HeartbeatTimestampUtc + group.HeartbeatPeriod >= DateTime.UtcNow &&
@@ -334,7 +340,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (!TryHandleResponse<KafkaOffsetFetchResponse>(group, _offsetFetchRequests, TryHandleOffsetFetchResponse))
                 {
                     return;
-                }               
+                }
 
                 group.CommitTimestampUtc = DateTime.UtcNow;
                 group.Status = KafkaCoordinatorGroupStatus.Ready;
@@ -342,32 +348,63 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.Ready)
             {
-                //regular commit
-                
-                if (_offsetCommitRequests.ContainsKey(group.GroupName))
+                if (group.GroupType == KafkaConsumerGroupType.SingleConsumer ||
+                    group.GroupType == KafkaConsumerGroupType.BalancedConsumers)
                 {
-                    if (!TryHandleResponse<KafkaOffsetCommitResponse>(group, _offsetCommitRequests, TryHandleOffsetCommitResponse))
-                    {
-                        return;
-                    }
-                }
+                    //regular commit
 
-                if (group.CommitTimestampUtc + group.CommitPeriod >= DateTime.UtcNow &&
-                    !_offsetCommitRequests.ContainsKey(group.GroupName))
-                {
-                    group.CommitTimestampUtc = DateTime.UtcNow;
-
-                    var commitRequest = CreateOffsetCommitRequest(group);
-                    if (commitRequest != null)
+                    if (_offsetCommitRequests.ContainsKey(group.GroupName))
                     {
-                        if (!TrySendRequest(group, commitRequest, _offsetCommitRequests, _coordinatorClientTimeout + group.Settings.OffsetCommitServerTimeout))
+                        if (!TryHandleResponse<KafkaOffsetCommitResponse>(group, _offsetCommitRequests,
+                                TryHandleOffsetCommitResponse))
                         {
                             return;
                         }
-                    }                    
+                    }
+
+                    if (group.CommitTimestampUtc + group.CommitPeriod >= DateTime.UtcNow &&
+                        !_offsetCommitRequests.ContainsKey(group.GroupName))
+                    {
+                        group.CommitTimestampUtc = DateTime.UtcNow;
+
+                        var commitRequest = CreateOffsetCommitRequest(group);
+                        if (commitRequest != null)
+                        {
+                            if (!TrySendRequest(group, commitRequest, _offsetCommitRequests,
+                                    _coordinatorClientTimeout + group.Settings.OffsetCommitServerTimeout))
+                            {
+                                return;
+                            }
+                        }
+                    }
+
+                    group.ResetError();
                 }
 
-                group.ResetError();
+                if (group.GroupType == KafkaConsumerGroupType.Observer)
+                {
+                    if (_offsetFetchRequests.ContainsKey(group.GroupName))
+                    {
+                        if (!TryHandleResponse<KafkaOffsetFetchResponse>(group, _offsetFetchRequests, TryHandleOffsetFetchResponse))
+                        {
+                            return;
+                        }
+                    }
+
+                    if (group.CommitTimestampUtc + group.CommitPeriod >= DateTime.UtcNow &&
+                        !_offsetFetchRequests.ContainsKey(group.GroupName))
+                    {
+                        group.CommitTimestampUtc = DateTime.UtcNow;
+
+                        var offsetFetchRequest = CreateOffsetFetchRequest(group);
+                        if (!TrySendRequest(group, offsetFetchRequest, _offsetFetchRequests, _coordinatorClientTimeout + group.Settings.OffsetFetchServerTimeout))
+                        {
+                            return;
+                        }
+                    }
+
+                    group.ResetError();
+                }
             }
         }              
 

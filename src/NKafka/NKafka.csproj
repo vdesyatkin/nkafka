@@ -36,15 +36,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client\ConsumerGroupObserver\Diagnostics\KafkaConsumerGroupObserverErrorCode.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\Diagnostics\KafkaConsumerGroupObserverInfo.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\Diagnostics\KafkaConsumerGroupObserverOffsetsInfo.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\Diagnostics\KafkaConsumerGroupObserverOffsetsPartitionInfo.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\Diagnostics\KafkaConsumerGroupObserverOffsetsTopicInfo.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\Diagnostics\KafkaConsumerGroupObserverSessionInfo.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\Diagnostics\KafkaConsumerGroupObserverStatus.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\KafkaConsumerGroupObserverSettings.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\KafkaConsumerGroupObserverSettingsBuilder.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignment.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentMember.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentRequestMember.cs" />
@@ -53,7 +44,6 @@
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupOffsetsPartitionInfo.cs" />
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupProtocolInfo.cs" />
     <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroup.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\IKafkaConsumerGroupObserver.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupAssignmentData.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupLeaderData.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupMemberData.cs" />
@@ -64,7 +54,6 @@
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupSessionData.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\Strategies\KafkaConsumerAssignmentRoundRobinStrategy.cs" />
-    <Compile Include="Client\ConsumerGroupObserver\KafkaConsumerGroupObserver.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettings.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\IKafkaConsumerAssignmentStrategy.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettingsBuilder.cs" />
