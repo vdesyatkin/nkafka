@@ -326,7 +326,7 @@ namespace NKafka.Connection
                 var stream = result?.AsyncState as NetworkStream;
                 if (stream == null) return;
 
-                while (stream.DataAvailable)
+                while (IsStreamDataAvailable(stream))
                 {
                     var responseHeader = ReadResponseHeader(stream, result);
                     if (responseHeader == null)
@@ -370,6 +370,18 @@ namespace NKafka.Connection
             {
                 BeginRead();
             }
+        }
+
+        private bool IsStreamDataAvailable([NotNull] NetworkStream stream)
+        {
+            try
+            {
+                return stream.DataAvailable;
+            }
+            catch (Exception)
+            {
+                return false;
+            }            
         }
 
         [CanBeNull]
