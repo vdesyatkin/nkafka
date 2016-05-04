@@ -13,10 +13,9 @@ namespace NKafka.Client.ConsumerGroup
         [NotNull] public readonly string GroupName;
         public readonly KafkaConsumerGroupType GroupType;
 
-        public readonly KafkaConsumerGroupSettings Settings;
+        [NotNull] public readonly KafkaConsumerGroupSettings Settings;
 
-        [CanBeNull]
-        public KafkaClientGroup ClientGroup;
+        [CanBeNull] public KafkaClientGroup ClientGroup;
 
         public KafkaConsumerGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, [NotNull] KafkaConsumerGroupSettings settings)
         {
@@ -38,8 +37,7 @@ namespace NKafka.Client.ConsumerGroup
             return new KafkaConsumerGroupInfo(GroupName, DateTime.UtcNow,
                 metadataInfo.IsReady && sessionInfo.IsReady,
                 metadataInfo,
-                sessionInfo
-                );
+                sessionInfo);
         }
     }
 }

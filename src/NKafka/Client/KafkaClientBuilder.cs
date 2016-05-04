@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using NKafka.Client.Consumer;
 using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup;
+using NKafka.Client.ConsumerGroupObserver;
 using NKafka.Client.Internal;
 using NKafka.Client.Producer;
 using NKafka.Client.Producer.Internal;
@@ -15,6 +16,7 @@ namespace NKafka.Client
         [NotNull, ItemNotNull] private readonly List<KafkaProducerTopic> _topicProducers;
         [NotNull, ItemNotNull] private readonly List<KafkaConsumerTopic> _topicConsumers;
         [NotNull] private readonly Dictionary<string, KafkaConsumerGroup> _consumerGroups;
+        [NotNull] private readonly Dictionary<string, KafkaConsumerGroupObserver> _consumerGroupObservers;
         [NotNull] private readonly KafkaClientSettings _settings;
 
         public KafkaClientBuilder([NotNull] KafkaBrokerInfo metadataBroker)
@@ -27,6 +29,7 @@ namespace NKafka.Client
             _topicProducers = new List<KafkaProducerTopic>();
             _topicConsumers = new List<KafkaConsumerTopic>();
             _consumerGroups = new Dictionary<string, KafkaConsumerGroup>();
+            _consumerGroupObservers = new Dictionary<string, KafkaConsumerGroupObserver>();
             // ReSharper disable once ConstantNullCoalescingCondition
             _settings = settings ?? new KafkaClientSettingsBuilder(null).Build();
         }

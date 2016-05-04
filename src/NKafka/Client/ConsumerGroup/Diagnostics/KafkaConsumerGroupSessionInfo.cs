@@ -23,9 +23,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         [CanBeNull] public readonly KafkaConsumerGroupProtocolInfo ProtocolInfo;
 
-        [CanBeNull] public readonly KafkaConsumerGroupOffsetsInfo OffsetsInfo;
-
-        
+        [CanBeNull] public readonly KafkaConsumerGroupOffsetsInfo OffsetsInfo;        
 
         public KafkaConsumerGroupSessionInfo([NotNull] string groupName, DateTime timestampUtc, bool isReady,
             KafkaConsumerGroupStatus status,
@@ -40,7 +38,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
             IsReady = isReady;
             Status = status;
             Error = error;
-            ErrorTimestampUtcUtc = errorTimestampUtc;            
+            ErrorTimestampUtcUtc = errorTimestampUtc;
             OffsetsInfo = offsetsInfo;
             ProtocolInfo = protocolInfo;
             MemberInfo = memberInfo;
