@@ -10,6 +10,8 @@ namespace NKafka.Client.Producer.Diagnostics
 
         public readonly bool IsReady;
 
+        public readonly bool IsSynchronized;
+
         public readonly KafkaProducerTopicPartitionErrorCode? Error;
 
         public readonly DateTime? ErrorTimestampUtc;
@@ -20,7 +22,8 @@ namespace NKafka.Client.Producer.Diagnostics
 
         [NotNull] public readonly KafkaProducerTopicPartitionLimitInfo LimitInfo;
 
-        public KafkaProducerTopicPartitionInfo(int partitionId, bool isReady, 
+        public KafkaProducerTopicPartitionInfo(int partitionId, 
+            bool isReady, bool isSynchronized,
             KafkaProducerTopicPartitionErrorCode? error, DateTime? errorTimestampUtc,
             [NotNull] KafkaProducerTopicMessageCountInfo messageCountInfo,
             [NotNull] KafkaProducerTopicMessageSizeInfo messageSizeInfo,
@@ -28,6 +31,7 @@ namespace NKafka.Client.Producer.Diagnostics
         {
             PartitionId = partitionId;
             IsReady = isReady;
+            IsSynchronized = isSynchronized;
             Error = error;
             MessageCountInfo = messageCountInfo;
             MessageSizeInfo = messageSizeInfo;

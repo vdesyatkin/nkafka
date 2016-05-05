@@ -14,6 +14,8 @@ namespace NKafka.Client.Producer.Diagnostics
 
         public readonly bool IsReady;
 
+        public readonly bool IsSynchronized;
+
         [NotNull] public readonly KafkaProducerTopicMessageCountInfo MessageCountInfo;
 
         [NotNull] public readonly KafkaProducerTopicMessageSizeInfo MessageSizeInfo;
@@ -22,7 +24,8 @@ namespace NKafka.Client.Producer.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaProducerTopicInfo([NotNull] string topicName, bool isReady,
+        public KafkaProducerTopicInfo([NotNull] string topicName, 
+            bool isReady, bool isSynchronized,
             [NotNull] KafkaClientTopicMetadataInfo metadataInfo,
             [NotNull]KafkaProducerTopicMessageCountInfo messageCountInfo,
             [NotNull] KafkaProducerTopicMessageSizeInfo messageSizeInfo,
@@ -30,8 +33,9 @@ namespace NKafka.Client.Producer.Diagnostics
             DateTime timestampUtc)
         {
             TopicName = topicName;
-            MetadataInfo = metadataInfo;            
-            IsReady = isReady;            
+            MetadataInfo = metadataInfo;
+            IsReady = isReady;
+            IsSynchronized = isSynchronized;  
             MessageCountInfo = messageCountInfo;
             MessageSizeInfo = messageSizeInfo;
             Partitions = partitions;

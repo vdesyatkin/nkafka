@@ -55,6 +55,40 @@ namespace NKafka.Client.Producer.Internal
             _buffer.Flush(_topicPartitionIds, _topicPartitions);
         }
 
+        #region Diagnostics
+
+        public bool IsReady
+        {
+            get
+            {
+                bool? isReady = null;
+                foreach (var partition in _topicPartitions)
+                {
+                    var partitionBroker = partition.Value?.BrokerPartition;
+                    if (partitionBroker == null) continue;
+                    isReady = (isReady ?? true) && partitionBroker.IsReady;
+                }
+
+                return isReady == true;
+            }
+        }
+
+        public bool IsSynchronized
+        {
+            get
+            {
+                bool isSynchronized = true;
+                foreach (var partition in _topicPartitions)
+                {
+                    var partitionBroker = partition.Value?.BrokerPartition;
+                    if (partitionBroker == null) continue;
+                    isSynchronized = isSynchronized && partitionBroker.IsSynchronized;
+                }
+
+                return isSynchronized;
+            }
+        }
+
         [NotNull]
         public KafkaProducerTopicInfo GetDiagnosticsInfo()
         {
@@ -74,15 +108,15 @@ namespace NKafka.Client.Producer.Internal
             long topicTotalSentMessageSizeBytes = 0;
             long topicSendPendingMessageSizeBytes = 0;
 
-            var topicIsReady = true;
+            bool? topicIsReady = null;
+            bool topicIsSynchronized = true;
             
             foreach (var partitionPair in _topicPartitions)
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
                 
-                var partitionBroker = partition.BrokerPartition;
-                topicIsReady = topicIsReady && partitionBroker.IsReady;
+                var partitionBroker = partition.BrokerPartition;                
 
                 var partitionTotalEnqueuedMessageCount = partitionBroker.TotalEnqueuedMessageCount;
                 var partitionEnqueueTimestampUtc = partitionBroker.EnqueueTimestampUtc;
@@ -128,8 +162,14 @@ namespace NKafka.Client.Producer.Internal
                 var partitionMessageSizeInfo = new KafkaProducerTopicMessageSizeInfo(
                     partitionTotalEnqueuedMessageSizeBytes, partitionTotalSentMessageSizeBytes, partitionSendPendingMessageSizeBytes);
 
+                var partitionIsReady = partitionBroker.IsReady;
+                var partitionIsSynchronized = partitionBroker.IsSynchronized;
+
+                topicIsReady = (topicIsReady ?? true) && partitionIsReady;
+                topicIsSynchronized = topicIsSynchronized && partitionIsSynchronized;
+
                 var partitionInfo = new KafkaProducerTopicPartitionInfo(partition.PartitonId,
-                    partitionBroker.IsReady,
+                    partitionIsReady, partitionIsSynchronized,
                     partitionBroker.Error, partitionBroker.ErrorTimestampUtc,
                     partitionMessageCountInfo,
                     partitionMessageSizeInfo,
@@ -152,16 +192,18 @@ namespace NKafka.Client.Producer.Internal
             var topicMessageSizeInfo = new KafkaProducerTopicMessageSizeInfo(
                 topicTotalEnqueuedMessageSizeBytes, topicTotalSentMessageSizeBytes, topicSendPendingMessageSizeBytes);
 
-            topicIsReady = topicIsReady && metadataInfo.IsReady;
+            topicIsReady = topicIsReady == true && metadataInfo.IsReady;
 
             return new KafkaProducerTopicInfo(
                 TopicName,
-                topicIsReady,
+                topicIsReady == true, topicIsSynchronized,
                 metadataInfo,                                
                 topicMessageCountInfo,
                 topicMessageSizeInfo,
                 partitionInfos,
                 DateTime.UtcNow);
         }
+
+        #endregion Diagnostics
     }
 }

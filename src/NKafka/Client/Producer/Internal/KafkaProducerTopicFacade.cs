@@ -32,11 +32,31 @@ namespace NKafka.Client.Producer.Internal
             _buffer.EnqueueMessage(message);
         }
 
+        #region Diagnostics
+
+        public bool IsReady
+        {
+            get
+            {
+                return _topic.IsReady;
+            }
+        }
+
+        public bool IsSynchronized
+        {
+            get
+            {
+                return _topic.IsSynchronized;
+            }
+        }
+
         [NotNull]
         public KafkaProducerTopicInfo GetDiagnosticsInfo()
         {
             return _topic.GetDiagnosticsInfo();
         }
+
+        #endregion Diagnostics
     }
 
     internal sealed class KafkaProducerTopicFacade<TKey, TData> : IKafkaProducerTopic<TKey, TData>
@@ -68,10 +88,31 @@ namespace NKafka.Client.Producer.Internal
             _buffer.EnqueueMessage(message);
         }
 
+
+        #region Diagnostics
+
+        public bool IsReady
+        {
+            get
+            {
+                return _topic.IsReady;
+            }
+        }
+
+        public bool IsSynchronized
+        {
+            get
+            {
+                return _topic.IsSynchronized;
+            }
+        }
+
         [NotNull]
         public KafkaProducerTopicInfo GetDiagnosticsInfo()
         {
             return _topic.GetDiagnosticsInfo();
         }
+
+        #endregion Diagnostics
     }
 }

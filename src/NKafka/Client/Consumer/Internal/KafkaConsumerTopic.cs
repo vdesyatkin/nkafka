@@ -160,15 +160,15 @@ namespace NKafka.Client.Consumer.Internal
         {
             get
             {
-                bool? isSynchronized = null;
+                bool isSynchronized = true;
                 foreach (var partitionPair in _topicPartitions)
                 {
                     var partitionBroker = partitionPair.Value?.BrokerPartition;
                     if (partitionBroker == null || !partitionBroker.IsSynchronized) continue;
-                    isSynchronized = (isSynchronized ?? true) && partitionBroker.IsSynchronized;
+                    isSynchronized = isSynchronized && partitionBroker.IsSynchronized;
                 }
 
-                return isSynchronized == true;
+                return isSynchronized;
             }
         }
 
@@ -198,7 +198,7 @@ namespace NKafka.Client.Consumer.Internal
             long topicBufferedMessageSizeBytes = 0;
 
             bool? topicIsReady = null;
-            bool? topicIsSynchronized = null;
+            bool topicIsSynchronized = true;
 
             foreach (var partitionPair in _topicPartitions)
             {
@@ -268,7 +268,7 @@ namespace NKafka.Client.Consumer.Internal
                 if (partitionIsAssigned)
                 {                    
                     topicIsReady = (topicIsReady ?? true) && partitionIsReady;
-                    topicIsSynchronized = (topicIsSynchronized ?? true) && partitionIsSynchronized;
+                    topicIsSynchronized = topicIsSynchronized && partitionIsSynchronized;
                     topicReceivePendingCount += partitionReceivePendingCount ?? 0;
                     topicConsumePendingCount += partitionConsumePendingCount;
                     topicClientCommitPendingCount += partitionClientCommitPendingCount;
@@ -321,7 +321,7 @@ namespace NKafka.Client.Consumer.Internal
             topicIsReady = topicIsReady == true && metadataInfo.IsReady && consumerGroupInfo.IsReady && (catchUpGroupInfo?.IsReady != false);
 
             return new KafkaConsumerTopicInfo(TopicName, 
-                topicIsReady.Value, topicIsSynchronized.Value,
+                topicIsReady == true, topicIsSynchronized,
                 metadataInfo, consumerGroupInfo, catchUpGroupInfo,
                 topicMessageCountInfo,
                 topicMessageSizeInfo,

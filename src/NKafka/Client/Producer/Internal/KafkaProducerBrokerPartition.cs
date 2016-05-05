@@ -17,6 +17,7 @@ namespace NKafka.Client.Producer.Internal
 
         public KafkaProducerBrokerPartitionStatus Status;
         public bool IsReady => Status == KafkaProducerBrokerPartitionStatus.Ready && Error == null;
+        public bool IsSynchronized => _sendPendingMessageCount == 0;
         public KafkaProducerTopicPartitionErrorCode? Error { get; private set; }
         public DateTime? ErrorTimestampUtc { get; private set; }
         [NotNull] public KafkaProducerTopicPartitionLimitInfo LimitInfo { get; private set; }

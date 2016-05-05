@@ -10,6 +10,9 @@ namespace NKafka.Client.Producer
         void EnqueueMessage([NotNull] KafkaMessage message);
         void EnqueueMessage([NotNull] byte[] key, [NotNull] byte[] data);
         void EnqueueMessage([NotNull] byte[] data);
+
+        bool IsReady { get; }
+        bool IsSynchronized { get; }
         KafkaProducerTopicInfo GetDiagnosticsInfo();        
     }
 
@@ -21,6 +24,9 @@ namespace NKafka.Client.Producer
         void EnqueueMessage([NotNull] KafkaMessage<TKey, TData> message);
         void EnqueueMessage([NotNull] TKey key, [NotNull] TData data);
         void EnqueueMessage([NotNull] TData data);
+
+        bool IsReady { get; }
+        bool IsSynchronized { get; }
         KafkaProducerTopicInfo GetDiagnosticsInfo();
     }
 }
