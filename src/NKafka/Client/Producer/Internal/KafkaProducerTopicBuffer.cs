@@ -72,7 +72,7 @@ namespace NKafka.Client.Producer.Internal
                     continue;
                 }
 
-                partition.EnqueueMessage(message);                
+                partition.BrokerPartition.EnqueueMessage(message);                
             }
 
             Interlocked.Add(ref _enqueuedCount, -processedCount);            
@@ -157,7 +157,7 @@ namespace NKafka.Client.Producer.Internal
                     continue;
                 }
 
-                partition.EnqueueMessage(new KafkaMessage(key, data));
+                partition.BrokerPartition.EnqueueMessage(new KafkaMessage(key, data));
             }
 
             Interlocked.Add(ref _enqueuedCount, -processedCount);

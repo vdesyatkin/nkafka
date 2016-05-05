@@ -66,16 +66,16 @@ namespace NKafka.Client.Producer.Internal
             var topicSendMessageTimestampUtc = (DateTime?) null;
 
             long topicSendPendingMessageCount = 0;
+            long topicRetrySendPendingMessageCount = 0;
             long topicTotalSentMessageCount = 0;
             var topicFallbackMessageTimestampUtc = (DateTime?)null;
 
-            var topicTotalEnqueuedMessageSizeBytes = 0;
-            var topicTotalSentMessageSizeBytes = 0;
-            var topicSendPendingMessageSizeBytes = 0;
+            long topicTotalEnqueuedMessageSizeBytes = 0;
+            long topicTotalSentMessageSizeBytes = 0;
+            long topicSendPendingMessageSizeBytes = 0;
 
             var topicIsReady = true;
-
-            //todo (E008) size statistics            
+            
             foreach (var partitionPair in _topicPartitions)
             {
                 var partition = partitionPair.Value;
@@ -84,17 +84,18 @@ namespace NKafka.Client.Producer.Internal
                 var partitionBroker = partition.BrokerPartition;
                 topicIsReady = topicIsReady && partitionBroker.IsReady;
 
-                var partitionTotalEnqueuedCount = partition.TotalEnqueuedCount;
-                var partitionEnqueueTimestampUtc = partition.EnqueueTimestampUtc;
+                var partitionTotalEnqueuedMessageCount = partitionBroker.TotalEnqueuedMessageCount;
+                var partitionEnqueueTimestampUtc = partitionBroker.EnqueueTimestampUtc;
 
-                var partitionFallbackMessageCount = partition.TotalFallbackCount;
-                var partitionFallbackMessageTimestampUtc = partition.FallbackTimestampUtc;
+                var partitionFallbackMessageCount = partitionBroker.TotalFallbackMessageCount;
+                var partitionFallbackMessageTimestampUtc = partitionBroker.FallbackTimestampUtc;
 
-                var partitionSendPendingCount = partition.SendPendingCount + partitionBroker.RetryEnqueuedMessageCount;
-                var partitionSentMessageCount = partitionBroker.TotalSentMessageCount;
+                var partitionSendPendingMessageCount = partitionBroker.SendPendingMessageMessageCount;
+                var partitionRetrySendPendingMessageCount = partitionBroker.RetrySendPendingMessageCount;
+                var partitionTotalSentMessageCount = partitionBroker.TotalSentMessageCount;
                 var partitionSendMessageTimestampUtc = partitionBroker.SendMessageTimestampUtc;
                 
-                topicTotalEnqueuedMessageCount += partitionTotalEnqueuedCount;
+                topicTotalEnqueuedMessageCount += partitionTotalEnqueuedMessageCount;
 
                 topicTotalFallbackMessageCount += partitionFallbackMessageCount;
                 if (topicFallbackMessageTimestampUtc == null || topicFallbackMessageTimestampUtc < partitionFallbackMessageTimestampUtc)
@@ -102,21 +103,23 @@ namespace NKafka.Client.Producer.Internal
                     topicFallbackMessageTimestampUtc = partitionFallbackMessageTimestampUtc;
                 }
 
-                topicSendPendingMessageCount += partitionSendPendingCount;
-                topicTotalSentMessageCount += partitionSentMessageCount;                
+                topicSendPendingMessageCount += partitionSendPendingMessageCount;
+                topicRetrySendPendingMessageCount += partitionRetrySendPendingMessageCount;
+                topicTotalSentMessageCount += partitionTotalSentMessageCount;                
                 if (topicSendMessageTimestampUtc == null || topicSendMessageTimestampUtc < partitionSendMessageTimestampUtc)
                 {
                     topicSendMessageTimestampUtc = partitionSendMessageTimestampUtc;
                 }                
 
                 var partitionMessageCountInfo = new KafkaProducerTopicMessageCountInfo(
-                    partitionTotalEnqueuedCount, partitionEnqueueTimestampUtc,
-                    partitionSendPendingCount, partitionSentMessageCount, partitionSendMessageTimestampUtc,
+                    partitionTotalEnqueuedMessageCount, partitionEnqueueTimestampUtc,
+                    partitionSendPendingMessageCount, partitionRetrySendPendingMessageCount, 
+                    partitionTotalSentMessageCount, partitionSendMessageTimestampUtc,
                     partitionFallbackMessageCount, partitionFallbackMessageTimestampUtc);
 
-                var partitionTotalEnqueuedMessageSizeBytes = 0; //todo (E008)
-                var partitionTotalSentMessageSizeBytes = 0;
-                var partitionSendPendingMessageSizeBytes = 0;
+                var partitionTotalEnqueuedMessageSizeBytes = partitionBroker.TotalEnqueuedMessageSizeBytes;
+                var partitionTotalSentMessageSizeBytes = partitionBroker.TotalSentMessageSizeBytes;
+                var partitionSendPendingMessageSizeBytes = partitionBroker.SendPendingMessageMessageSizeBytes;
 
                 topicTotalEnqueuedMessageSizeBytes += partitionTotalEnqueuedMessageSizeBytes;
                 topicTotalSentMessageSizeBytes += partitionTotalSentMessageSizeBytes;
@@ -142,7 +145,8 @@ namespace NKafka.Client.Producer.Internal
 
             var topicMessageCountInfo = new KafkaProducerTopicMessageCountInfo(
                 topicTotalEnqueuedMessageCount, _buffer.EnqueueTimestampUtc,
-                topicSendPendingMessageCount, topicTotalSentMessageCount, topicSendMessageTimestampUtc,
+                topicSendPendingMessageCount, topicRetrySendPendingMessageCount,
+                topicTotalSentMessageCount, topicSendMessageTimestampUtc,
                 topicTotalFallbackMessageCount, topicFallbackMessageTimestampUtc);
 
             var topicMessageSizeInfo = new KafkaProducerTopicMessageSizeInfo(

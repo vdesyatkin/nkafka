@@ -10,6 +10,7 @@ namespace NKafka.Client.Producer.Diagnostics
         public readonly DateTime? EnqueueTimestampUtc;        
 
         public readonly long SendPendingCount;
+        public readonly long RetrySendPendingCount;
         public readonly long TotalSentCount;
         public readonly DateTime? SendTimestampUtc;
 
@@ -18,13 +19,14 @@ namespace NKafka.Client.Producer.Diagnostics
 
         public KafkaProducerTopicMessageCountInfo(
             long totalEnqueuedCount, DateTime? enqueueTimestampUtc,
-            long sendPendingCount, long totalSentCount, DateTime? sendTimestampUtc,
+            long sendPendingCount, long retrySendPendingCount, long totalSentCount, DateTime? sendTimestampUtc,
             long totalFallbackCount, DateTime? fallbackTimestampUtc)
         {            
             TotalEnqueuedCount = totalEnqueuedCount;
             EnqueueTimestampUtc = enqueueTimestampUtc;
             
             SendPendingCount = sendPendingCount;
+            RetrySendPendingCount = retrySendPendingCount;
             TotalSentCount = totalSentCount;
             SendTimestampUtc = sendTimestampUtc;
 
