@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup;
 using NKafka.Client.ConsumerGroup.Internal;
 using NKafka.Client.Diagnostics;
@@ -10,7 +9,7 @@ using NKafka.Metadata;
 
 namespace NKafka.Client.Internal
 {
-    internal sealed class KafkaClientGroup : IKafkaConsumerCoordinator
+    internal sealed class KafkaClientGroup
     {        
         [NotNull] public readonly string GroupName;
 
@@ -20,8 +19,7 @@ namespace NKafka.Client.Internal
 
         [CanBeNull] public KafkaClientBrokerGroup BrokerGroup;        
 
-        [NotNull] public KafkaClientGroupMetadataInfo MetadataInfo => _metadataInfo;
-        [NotNull] private KafkaClientGroupMetadataInfo _metadataInfo;
+        [NotNull] public KafkaClientGroupMetadataInfo MetadataInfo { get; private set; }
 
         public KafkaClientGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
@@ -29,12 +27,13 @@ namespace NKafka.Client.Internal
         {
             GroupName = groupName;            
             Coordinator = new KafkaCoordinatorGroup(GroupName, groupType, topics, settings);
-            _metadataInfo = new KafkaClientGroupMetadataInfo(groupName, DateTime.UtcNow, false, null, null);
+            MetadataInfo = new KafkaClientGroupMetadataInfo(groupName, false, null, null, DateTime.UtcNow);
         }
 
         public void ChangeMetadataState(bool isReady, KafkaClientGroupMetadataErrorCode? errorCode, [CanBeNull] KafkaGroupMetadata metadata)
         {
-            _metadataInfo = new KafkaClientGroupMetadataInfo(GroupName, DateTime.UtcNow, isReady, errorCode, metadata);
+            MetadataInfo = new KafkaClientGroupMetadataInfo(GroupName, isReady, errorCode, metadata, DateTime.UtcNow);
+            Coordinator.GroupMetadataInfo = MetadataInfo;
             if (isReady && metadata?.Coordinator != null)
             {
                 ApplyMetadata(metadata.Coordinator);
@@ -44,12 +43,7 @@ namespace NKafka.Client.Internal
         private void ApplyMetadata([NotNull] KafkaBrokerMetadata coordinatorBroker)
         {            
             var brokerGroup = new KafkaClientBrokerGroup(GroupName, coordinatorBroker, Coordinator);            
-            BrokerGroup = brokerGroup;
-        }
-
-        public IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> GetPartitionOffsets(string topicName)
-        {
-            return BrokerGroup?.Coordinator.GetPartitionOffsets(topicName);
+            BrokerGroup = brokerGroup;            
         }
     }
 }

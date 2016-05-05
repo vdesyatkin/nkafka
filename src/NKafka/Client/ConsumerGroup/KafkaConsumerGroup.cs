@@ -29,15 +29,10 @@ namespace NKafka.Client.ConsumerGroup
             var clientGroup = ClientGroup;
             if (clientGroup == null)
             {
-                return new KafkaConsumerGroupInfo(GroupName, DateTime.UtcNow, false, null, null);
+                return new KafkaConsumerGroupInfo(GroupName, false, null, null, DateTime.UtcNow);
             }
-            var metadataInfo = clientGroup.MetadataInfo;
-            var sessionInfo = clientGroup.Coordinator.GetSessionDiagnosticsInfo();
 
-            return new KafkaConsumerGroupInfo(GroupName, DateTime.UtcNow,
-                metadataInfo.IsReady && sessionInfo.IsReady,
-                metadataInfo,
-                sessionInfo);
+            return clientGroup.Coordinator.GetDiagnosticsInfo();
         }
     }
 }

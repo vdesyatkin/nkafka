@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Client.Consumer.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaConsumerTopicMessagesInfo
+    public sealed class KafkaConsumerTopicMessageCountInfo
     {        
         public readonly long? ReceivePendingCount;
         public readonly long TotalReceivedCount;
@@ -22,7 +22,7 @@ namespace NKafka.Client.Consumer.Diagnostics
         public readonly long TotalServerCommitedCount;
         public readonly DateTime? ServerCommitTimestampUtc;
 
-        public KafkaConsumerTopicMessagesInfo(
+        public KafkaConsumerTopicMessageCountInfo(
             long? receivePendingCount, long totalReceivedCount, DateTime? receiveTimestampUtc, 
             long consumePendingCount, long totalConsumedCount, DateTime? consumeTimestampUtc, 
             long clientCommitPendingCount, long totalClientCommitedCount, DateTime? clientCommitTimestampUtc, 

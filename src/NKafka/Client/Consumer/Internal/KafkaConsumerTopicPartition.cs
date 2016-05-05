@@ -9,14 +9,7 @@ namespace NKafka.Client.Consumer.Internal
         public readonly int PartitonId;
         public bool IsAssigned => BrokerPartition.IsAssigned;        
         
-        [NotNull] public readonly KafkaConsumerBrokerPartition BrokerPartition;
-        
-        public int ConsumePendingCount => BrokerPartition.ConsumePendingMessageCount;
-        public long TotalConsumedCount => BrokerPartition.TotalConsumedMessageCount;
-        public DateTime? ConsumeTimestampUtc => BrokerPartition.ConsumeTimestampUtc;
-
-        public long TotalReceivedCount => BrokerPartition.TotalReceivedMessageCount;
-        public DateTime? ReceiveTimestampUtc => BrokerPartition.ReceiveTimestampUtc;
+        [NotNull] public readonly KafkaConsumerBrokerPartition BrokerPartition;        
 
         public long TotalClientCommitedCount => _totalClientCommitedCount;
         public DateTime? ClientCommitTimestampUtc { get; private set; }
@@ -31,17 +24,7 @@ namespace NKafka.Client.Consumer.Internal
         {            
             PartitonId = partitionId;            
             BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, group, settings);            
-        }                
-
-        public bool TryConsumeMessage(out KafkaMessageAndOffset message)
-        {
-            if (!BrokerPartition.TryConsumeMessage(out message))
-            {                
-                return false;
-            }
-            
-            return true;         
-        }
+        }        
 
         public void SetCommitClientOffset(long beginOffset, long endOffset)
         {

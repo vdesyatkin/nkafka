@@ -24,33 +24,37 @@ namespace NKafka.Client.Consumer.Internal
         public DateTime? CommitServerOffsetTimestampUtc { get; private set; }
         public DateTime? ReceiveTimestampUtc { get; private set; }
         public DateTime? ConsumeTimestampUtc { get; private set; }
-        public int ConsumePendingMessageCount => _consumePendingMessageCount;
-        public long TotalConsumedMessageCount => _totalConsumedMessageCount;
+
         public long TotalReceivedMessageCount => _totalReceivedMessageCount;
+        public long TotalReceivedMessageSizeBytes => _totalReceivedMessageSizeBytes;
+        public int ConsumePendingMessageCount => _consumePendingMessageCount;
+        public long ConsumePendingMessageSizeBytes => _consumePendingMessageSizeBytes;
+        public long BufferedMessageSizeBytes => _consumePendingMessageSizeBytes + _catchUpPendingMessageSizeBytes;
+        public long TotalConsumedMessageCount => _totalConsumedMessageCount;
+        public long TotalConsumedMessageSizeBytes => _totalConsumedMessageSizeBytes;        
 
         private long _currentReceivedClientOffset;
         private long _currentMinAvailableServerOffset;
         private long _currentMaxAvailableServerOffset;
-        private long _currentCatchUpServerOffset;
+        private long _currentCatchUpGroupServerOffset;
         private long _currentCommitClientOffset;
         private long _currentCommitServerOffset;
         private const long UnknownOffset = -1;
 
         private long _totalReceivedMessageCount;
-        private long _totalReceivedMessageSize;
+        private long _totalReceivedMessageSizeBytes;
 
         private int _consumePendingMessageCount;
-        private long _consumePendingMessageSize;
+        private long _consumePendingMessageSizeBytes;
 
         private long _totalConsumedMessageCount;
-        private long _totalConsumedMessageSize;
+        private long _totalConsumedMessageSizeBytes;
 
         private int _catchUpPendingMessageCount;
-        private long _catchUpPendingMessageSize;
+        private long _catchUpPendingMessageSizeBytes;
 
         public int? OffsetRequestId;
         
-
         [NotNull] private readonly ConcurrentQueue<KafkaMessageAndOffset> _consumeMessagesQueue;
         [NotNull] private readonly Queue<KafkaMessageAndOffset> _catchUpMesagesQueue;
 
@@ -78,7 +82,7 @@ namespace NKafka.Client.Consumer.Internal
                 return false;
             }
 
-            if (_consumePendingMessageSize + _catchUpPendingMessageSize >= Settings.BufferedMaxSizeBytes)
+            if (_consumePendingMessageSizeBytes + _catchUpPendingMessageSizeBytes >= Settings.BufferedMaxSizeBytes)
             {
                 return false;
             }
@@ -91,7 +95,7 @@ namespace NKafka.Client.Consumer.Internal
             if (messages.Count == 0) return;
 
             var lastOffset = _currentReceivedClientOffset;
-            var catchUpOffset = _currentCatchUpServerOffset;
+            var catchUpOffset = _currentCatchUpGroupServerOffset;
 
             foreach (var message in messages)
             {
@@ -100,18 +104,18 @@ namespace NKafka.Client.Consumer.Internal
                 if (message.Offset <= lastOffset) continue;
 
                 lastOffset = message.Offset;
-                Interlocked.Add(ref _totalReceivedMessageSize, messageSize);
+                Interlocked.Add(ref _totalReceivedMessageSizeBytes, messageSize);
                 Interlocked.Increment(ref _totalReceivedMessageCount);
 
                 if (message.Offset > catchUpOffset)
                 {                    
-                    Interlocked.Add(ref _catchUpPendingMessageSize, messageSize);
+                    Interlocked.Add(ref _catchUpPendingMessageSizeBytes, messageSize);
                     Interlocked.Increment(ref _catchUpPendingMessageCount);
                     _catchUpMesagesQueue.Enqueue(message);
                 }
                 else
                 {                    
-                    Interlocked.Add(ref _consumePendingMessageSize, messageSize);
+                    Interlocked.Add(ref _consumePendingMessageSizeBytes, messageSize);
                     Interlocked.Increment(ref _consumePendingMessageCount);
                     _consumeMessagesQueue.Enqueue(message);
                 }
@@ -134,8 +138,8 @@ namespace NKafka.Client.Consumer.Internal
             if (message == null) return true;
 
             var messageSize = GetMessageSize(message);            
-            Interlocked.Add(ref _consumePendingMessageSize, -messageSize);
-            Interlocked.Add(ref _totalConsumedMessageSize, messageSize);
+            Interlocked.Add(ref _consumePendingMessageSizeBytes, -messageSize);
+            Interlocked.Add(ref _totalConsumedMessageSizeBytes, messageSize);
             return true;
         }
 
@@ -159,8 +163,8 @@ namespace NKafka.Client.Consumer.Internal
                 Interlocked.Increment(ref _consumePendingMessageCount);                
 
                 var messageSize = GetMessageSize(message);
-                Interlocked.Add(ref _catchUpPendingMessageSize, -messageSize);
-                Interlocked.Add(ref _consumePendingMessageSize, messageSize);
+                Interlocked.Add(ref _catchUpPendingMessageSizeBytes, -messageSize);
+                Interlocked.Add(ref _consumePendingMessageSizeBytes, messageSize);
 
                 _consumeMessagesQueue.Enqueue(message);
             }
@@ -176,7 +180,7 @@ namespace NKafka.Client.Consumer.Internal
 
         #endregion ReceivedClientOffset
 
-        #region MinAvailableOffset
+        #region MinAvailableServerOffset
 
         public long? GetMinAvailableServerOffset()
         {
@@ -189,9 +193,9 @@ namespace NKafka.Client.Consumer.Internal
             _currentMinAvailableServerOffset = offset;            
         }
 
-        #endregion MinAvailableOffset
+        #endregion MinAvailableServerOffset
 
-        #region MaxAvailableOffset
+        #region MaxAvailableServerOffset
 
         public long? GetMaxAvailableServerOffset()
         {
@@ -204,13 +208,13 @@ namespace NKafka.Client.Consumer.Internal
             _currentMaxAvailableServerOffset = offset;
         }
 
-        #endregion MaxAvailableOffset    
+        #endregion MaxAvailableServerOffset    
 
-        #region CatchUpServerOffset        
+        #region CatchUpGroupServerOffset        
 
-        public void SetCatchUpServerOffset(long? offset)
+        public void SetCatchUpGroupServerOffset(long? offset)
         {
-            _currentCatchUpServerOffset = offset ?? UnknownOffset;
+            _currentCatchUpGroupServerOffset = offset ?? UnknownOffset;
             if (offset != null)
             {
                 CatchUpMessages(offset.Value);
@@ -269,13 +273,15 @@ namespace NKafka.Client.Consumer.Internal
             var currentReceivedClientOffset = _currentReceivedClientOffset;
             var currentMinAvailableServerOffset = _currentMinAvailableServerOffset;
             var currentMaxAvailableServerOffset = _currentMaxAvailableServerOffset;
+            var currentCatchUpGroupServerOffset = _currentCatchUpGroupServerOffset;
             var currentCommitClientOffset = _currentCommitClientOffset;
             var currentCommitServerOffset = _currentCommitServerOffset;
 
             return new KafkaConsumerTopicPartitionOffsetsInfo(
                 currentReceivedClientOffset != UnknownOffset ? currentReceivedClientOffset : (long?)null,
-                currentMinAvailableServerOffset != UnknownOffset ? currentMaxAvailableServerOffset : (long?)null,
+                currentMinAvailableServerOffset != UnknownOffset ? currentMinAvailableServerOffset : (long?)null,
                 currentMaxAvailableServerOffset != UnknownOffset ? currentMaxAvailableServerOffset : (long?)null,
+                currentCatchUpGroupServerOffset != UnknownOffset ? currentCatchUpGroupServerOffset : (long?)null,
                 currentCommitClientOffset != UnknownOffset ? currentCommitClientOffset : (long?)null,
                 currentCommitServerOffset != UnknownOffset ? currentCommitServerOffset : (long?)null,
                 DateTime.UtcNow);

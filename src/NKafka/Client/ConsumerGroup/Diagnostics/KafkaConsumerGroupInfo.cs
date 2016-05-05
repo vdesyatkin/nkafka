@@ -7,26 +7,26 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
     [PublicAPI]
     public sealed class KafkaConsumerGroupInfo
     {
-        public readonly string GroupName;
-
-        public readonly DateTime TimestampUtc;
+        public readonly string GroupName;        
 
         public readonly bool IsReady;
 
-        [CanBeNull]
-        public readonly KafkaClientGroupMetadataInfo MetadataInfo;
+        [CanBeNull] public readonly KafkaClientGroupMetadataInfo MetadataInfo;
 
-        [CanBeNull]
-        public readonly KafkaConsumerGroupSessionInfo SessionInfo;
+        [CanBeNull] public readonly KafkaConsumerGroupSessionInfo SessionInfo;
 
-        public KafkaConsumerGroupInfo(string groupName, DateTime timestampUtc, bool isReady,
+        public readonly DateTime TimestampUtc;
+
+        public KafkaConsumerGroupInfo(string groupName, bool isReady,
             [CanBeNull] KafkaClientGroupMetadataInfo metadataInfo,
-            [CanBeNull] KafkaConsumerGroupSessionInfo sessionInfo)
+            [CanBeNull] KafkaConsumerGroupSessionInfo sessionInfo,
+            DateTime timestampUtc)
         {
-            GroupName = groupName;
-            TimestampUtc = timestampUtc;
+            GroupName = groupName;            
             IsReady = isReady;            
-            MetadataInfo = metadataInfo;            
+            MetadataInfo = metadataInfo;
+            SessionInfo = sessionInfo;
+            TimestampUtc = timestampUtc;
         }
     }
 }

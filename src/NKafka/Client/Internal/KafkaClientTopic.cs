@@ -28,12 +28,12 @@ namespace NKafka.Client.Internal
             Producer = producer;
             Consumer = consumer;
             Partitions = new KafkaClientTopicPartition[0];
-            _metadataInfo = new KafkaClientTopicMetadataInfo(topicName, DateTime.UtcNow, false, null, null);
+            _metadataInfo = new KafkaClientTopicMetadataInfo(topicName, false, null, null, DateTime.UtcNow);
         }
 
         public void ChangeMetadataState(bool isReady, KafkaClientTopicMetadataErrorCode? errorCode, [CanBeNull] KafkaTopicMetadata metadata)
         {
-            _metadataInfo = new KafkaClientTopicMetadataInfo(TopicName, DateTime.UtcNow, isReady, errorCode, metadata);            
+            _metadataInfo = new KafkaClientTopicMetadataInfo(TopicName, isReady, errorCode, metadata, DateTime.UtcNow);
             if (isReady && metadata != null)
             {
                 ApplyMetadata(metadata);

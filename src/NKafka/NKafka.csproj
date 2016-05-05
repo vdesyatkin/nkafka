@@ -46,12 +46,12 @@
     <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupAssignmentData.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupLeaderData.cs" />
-    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupMemberData.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupMemberAssignmentData.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupOffsetsData.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupOffsetsDataPartition.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupOffsetsDataTopic.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupProtocolData.cs" />
-    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupSessionData.cs" />
+    <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupMemberData.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\Strategies\KafkaConsumerAssignmentRoundRobinStrategy.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupSettings.cs" />
@@ -65,7 +65,8 @@
     <Compile Include="Client\ConsumerGroup\Diagnostics\KafkaConsumerGroupOffsetsTopicInfo.cs" />
     <Compile Include="Client\ConsumerGroup\KafkaConsumerGroupType.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicInfo.cs" />
-    <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicMessagesInfo.cs" />
+    <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicMessageCountInfo.cs" />
+    <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicMessageSizeInfo.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionOffsetsInfo.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionErrorCode.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionInfo.cs" />
@@ -113,10 +114,11 @@
     <Compile Include="Client\KafkaClientSettingsBuilder.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettings.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettingsBuilder.cs" />
+    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicMessageSizeInfo.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicPartitionErrorCode.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicInfo.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicPartitionLimitInfo.cs" />
-    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicMessagesInfo.cs" />
+    <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicMessageCountInfo.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicPartitionInfo.cs" />
     <Compile Include="Client\Producer\IKafkaProducerPartitioner.cs" />
     <Compile Include="Client\Producer\IKafkaProducerSerializer.cs" />

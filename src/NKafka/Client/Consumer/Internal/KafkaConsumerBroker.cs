@@ -150,7 +150,7 @@ namespace NKafka.Client.Consumer.Internal
                         // catch-up group coordinator has not received partition offset
                         continue;
                     }
-                    partition.SetCatchUpServerOffset(catchUpOffset.GroupServerOffset);
+                    partition.SetCatchUpGroupServerOffset(catchUpOffset.GroupServerOffset);
                 }
 
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;

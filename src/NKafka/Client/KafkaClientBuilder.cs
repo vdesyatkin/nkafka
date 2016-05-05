@@ -279,7 +279,7 @@ namespace NKafka.Client
                     catchUpGroup = null;
                 }
 
-                topic.Consumer?.ApplyCoordinator(consumerGroup, catchUpGroup);
+                topic.Consumer?.ApplyCoordinator(consumerGroup.Coordinator, catchUpGroup?.Coordinator);
             }
 
             return new KafkaClient(_settings, topics, groups);

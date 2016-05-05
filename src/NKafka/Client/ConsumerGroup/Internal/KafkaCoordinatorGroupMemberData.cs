@@ -1,31 +1,24 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using JetBrains.Annotations;
 
 namespace NKafka.Client.ConsumerGroup.Internal
 {    
     internal sealed class KafkaCoordinatorGroupMemberData
-    {
-        [NotNull] public readonly string MemberId;
+    {        
+        public readonly int GenerationId;
 
-        public readonly bool IsLeader;        
+        [CanBeNull] public readonly string MemberId;
 
-        public readonly short ProtocolVersion;
+        public readonly bool IsLeader;
 
-        [NotNull, ItemNotNull] public readonly IReadOnlyList<string> SupportedAssignmentStrategies;
+        public readonly DateTime TimestampUtc;
 
-        [CanBeNull] public readonly byte[] CustomData;
-
-        [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> TopicAssignments;
-
-        public KafkaCoordinatorGroupMemberData([NotNull] string memberId, bool isLeader, short protocolVersion, 
-            [NotNull, ItemNotNull] IReadOnlyList<string> supportedAssignmentStrategies, [CanBeNull] byte[] customData)
-        {
+        public KafkaCoordinatorGroupMemberData(int generationId, string memberId, bool isLeader, DateTime timestampUtc)
+        {            
+            GenerationId = generationId;
             MemberId = memberId;
-            IsLeader = isLeader;            
-            ProtocolVersion = protocolVersion;
-            SupportedAssignmentStrategies = supportedAssignmentStrategies;
-            CustomData = customData;
-            TopicAssignments = new Dictionary<string, IReadOnlyList<int>>();
+            IsLeader = isLeader;
+            TimestampUtc = timestampUtc;
         }
     }
 }

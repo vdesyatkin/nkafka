@@ -7,9 +7,7 @@ namespace NKafka.Client.Diagnostics
     [PublicAPI]
     public sealed class KafkaClientWorkerInfo
     {        
-        public readonly int WorkerId;
-
-        public readonly DateTime TimestampUtc;
+        public readonly int WorkerId;        
 
         [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaClientTopicMetadataInfo> Topics;
@@ -23,18 +21,21 @@ namespace NKafka.Client.Diagnostics
         [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaClientBrokerInfo> MetadataBrokers;
 
-        public KafkaClientWorkerInfo(int workerId, DateTime timestampUtc,
+        public readonly DateTime TimestampUtc;
+
+        public KafkaClientWorkerInfo(int workerId,
             [NotNull, ItemNotNull]IReadOnlyList<KafkaClientTopicMetadataInfo> topics, 
             [NotNull, ItemNotNull]IReadOnlyList<KafkaClientGroupMetadataInfo> groups,
             [NotNull, ItemNotNull]IReadOnlyList<KafkaClientBrokerInfo> brokers,
-            [NotNull, ItemNotNull]IReadOnlyList<KafkaClientBrokerInfo> metadataBrokers)
+            [NotNull, ItemNotNull]IReadOnlyList<KafkaClientBrokerInfo> metadataBrokers,
+            DateTime timestampUtc)
         {
-            WorkerId = workerId;
-            TimestampUtc = timestampUtc;
+            WorkerId = workerId;            
             Topics = topics;
             Groups = groups;
             Brokers = brokers;
-            MetadataBrokers = metadataBrokers;            
+            MetadataBrokers = metadataBrokers;
+            TimestampUtc = timestampUtc;
         }
     }
 }

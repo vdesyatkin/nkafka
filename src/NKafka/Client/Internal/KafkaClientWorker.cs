@@ -110,7 +110,7 @@ namespace NKafka.Client.Internal
                 metadataBrokerInfos.Add(metadataBrokerInfo);
             }
 
-            return new KafkaClientWorkerInfo(_workerId, DateTime.UtcNow, topicInfos, groupInfos, brokerInfos, metadataBrokerInfos);
+            return new KafkaClientWorkerInfo(_workerId, topicInfos, groupInfos, brokerInfos, metadataBrokerInfos, DateTime.UtcNow);
         }
 
         public void AssignTopic([NotNull] KafkaClientTopic topic)

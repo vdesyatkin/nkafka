@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Client.Producer.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaProducerTopicMessagesInfo
+    public sealed class KafkaProducerTopicMessageCountInfo
     {        
         public readonly long TotalEnqueuedCount;
         public readonly DateTime? EnqueueTimestampUtc;        
@@ -16,7 +16,7 @@ namespace NKafka.Client.Producer.Diagnostics
         public readonly long TotalFallbackCount;
         public readonly DateTime? FallbackTimestampUtc;
 
-        public KafkaProducerTopicMessagesInfo(
+        public KafkaProducerTopicMessageCountInfo(
             long totalEnqueuedCount, DateTime? enqueueTimestampUtc,
             long sendPendingCount, long totalSentCount, DateTime? sendTimestampUtc,
             long totalFallbackCount, DateTime? fallbackTimestampUtc)

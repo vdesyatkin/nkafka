@@ -7,9 +7,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
     public sealed class KafkaConsumerGroupSessionInfo
     {
         [NotNull]
-        public readonly string GroupName;
-
-        public readonly DateTime TimestampUtc;
+        public readonly string GroupName;        
 
         public readonly bool IsReady;
 
@@ -23,25 +21,28 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         [CanBeNull] public readonly KafkaConsumerGroupProtocolInfo ProtocolInfo;
 
-        [CanBeNull] public readonly KafkaConsumerGroupOffsetsInfo OffsetsInfo;        
+        [CanBeNull] public readonly KafkaConsumerGroupOffsetsInfo OffsetsInfo;
 
-        public KafkaConsumerGroupSessionInfo([NotNull] string groupName, DateTime timestampUtc, bool isReady,
+        public readonly DateTime TimestampUtc;
+
+        public KafkaConsumerGroupSessionInfo([NotNull] string groupName, bool isReady,
             KafkaConsumerGroupStatus status,
             KafkaConsumerGroupErrorCode? error, DateTime errorTimestampUtc,
             [CanBeNull]KafkaConsumerGroupMemberInfo memberInfo,
             [CanBeNull] KafkaConsumerGroupProtocolInfo protocolInfo,
-            [CanBeNull]KafkaConsumerGroupOffsetsInfo offsetsInfo
+            [CanBeNull]KafkaConsumerGroupOffsetsInfo offsetsInfo,
+            DateTime timestampUtc
             )
         {
-            GroupName = groupName;
-            TimestampUtc = timestampUtc;
+            GroupName = groupName;            
             IsReady = isReady;
             Status = status;
             Error = error;
-            ErrorTimestampUtcUtc = errorTimestampUtc;
-            OffsetsInfo = offsetsInfo;
-            ProtocolInfo = protocolInfo;
+            ErrorTimestampUtcUtc = errorTimestampUtc;            
             MemberInfo = memberInfo;
+            ProtocolInfo = protocolInfo;
+            OffsetsInfo = offsetsInfo;
+            TimestampUtc = timestampUtc;
         }
     }
 }

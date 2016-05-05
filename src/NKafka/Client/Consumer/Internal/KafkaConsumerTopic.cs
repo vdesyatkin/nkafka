@@ -32,7 +32,7 @@ namespace NKafka.Client.Consumer.Internal
             Settings = settings;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
             _packages = new ConcurrentDictionary<long, PackageInfo>();
-            TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, DateTime.UtcNow, false, null, null);
+            TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, false, null, null, DateTime.UtcNow);
         }
 
         [CanBeNull]
@@ -68,15 +68,16 @@ namespace NKafka.Client.Consumer.Internal
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
+                var partitionBroker = partition.BrokerPartition;
 
-                var partitionConsumePendingCount = partition.ConsumePendingCount;                
+                var partitionConsumePendingCount = partitionBroker.ConsumePendingMessageCount;                
                 var partitionMessages = new List<KafkaMessage>(partitionConsumePendingCount);
 
                 long beginOffset = 0;
                 long endOffset = 0;
 
                 KafkaMessageAndOffset messageAndOffset;
-                while (partitionMessages.Count < partitionConsumePendingCount && partition.TryConsumeMessage(out messageAndOffset))
+                while (partitionMessages.Count < partitionConsumePendingCount && partitionBroker.TryConsumeMessage(out messageAndOffset))
                 {
                     if (messageAndOffset == null) continue;
                     
@@ -157,9 +158,13 @@ namespace NKafka.Client.Consumer.Internal
             long topicTotalServerCommitedMessageCount = 0;
             var topicServerCommitMessageTimestampUtc = (DateTime?)null;
 
-            bool? topicIsReady = null;
+            long topicTotalReceivedMessageSizeBytes = 0;
+            long topicTotalConsumedMessageSizeBytes = 0;
+            long topicConsumePendingMessageSizeBytes = 0;
+            long topicBufferedMessageSizeBytes = 0;
 
-            //todo (E008) size statistics
+            bool? topicIsReady = null;
+            
             foreach (var partitionPair in _topicPartitions)
             {
                 var partition = partitionPair.Value;
@@ -171,17 +176,17 @@ namespace NKafka.Client.Consumer.Internal
 
                 var partitionOffsetsInfo = partitionBroker.GetOffsetsInfo();
 
-                var partitionReceivePendingCount = partitionOffsetsInfo.MaxAvailableOffset - (partitionOffsetsInfo.ReceivedOffset ?? partitionOffsetsInfo.CommitedServerOffset);
+                var partitionReceivePendingCount = partitionOffsetsInfo.MaxAvailableServerOffset - (partitionOffsetsInfo.ReceivedClientOffset ?? partitionOffsetsInfo.CommitedServerOffset);
                 if (partitionReceivePendingCount < 0)
                 {
                     partitionReceivePendingCount = null;
                 }
-                var partitionTotalReceivedCount = partition.TotalReceivedCount;
-                var partitionReceivedTimestampUtc = partition.ReceiveTimestampUtc;
+                var partitionTotalReceivedCount = partitionBroker.TotalReceivedMessageCount;
+                var partitionReceivedTimestampUtc = partitionBroker.ReceiveTimestampUtc;
 
-                var partitionConsumePendingCount = partition.ConsumePendingCount;
-                var partitionConsumeMessageCount = partition.TotalConsumedCount;
-                var partitionConsumeMessageTimestampUtc = partition.ConsumeTimestampUtc;
+                var partitionConsumePendingCount = partitionBroker.ConsumePendingMessageCount;
+                var partitionConsumeMessageCount = partitionBroker.TotalConsumedMessageCount;
+                var partitionConsumeMessageTimestampUtc = partitionBroker.ConsumeTimestampUtc;
 
                 var partitionClientCommitMessageCount = partition.TotalClientCommitedCount;
                 var partitionClientCommitPendingCount = partitionConsumeMessageCount - partitionClientCommitMessageCount;
@@ -236,34 +241,56 @@ namespace NKafka.Client.Consumer.Internal
                     topicServerCommitPendingCount += partitionServerCommitPendingCount; //todo (E015) the main kafka problem =( some fallback on partition unassign?
                 }
 
-                var partitionMessagesInfo = new KafkaConsumerTopicMessagesInfo(
+                var partitionMessageCountInfo = new KafkaConsumerTopicMessageCountInfo(
                     partitionReceivePendingCount, partitionTotalReceivedCount, partitionReceivedTimestampUtc,
                     partitionConsumePendingCount, partitionConsumeMessageCount, partitionConsumeMessageTimestampUtc,
                     partitionClientCommitPendingCount, partitionClientCommitMessageCount, partitionClientCommitMessageTimestampUtc,
                     partitionServerCommitPendingCount, partitionServerCommitMessageCount, partitionServerCommitMessageTimestampUtc);
 
+                var partitionTotalReceivedMessageSizeBytes = partitionBroker.TotalReceivedMessageSizeBytes;
+                var partitionTotalConsumedMessageSizeBytes = partitionBroker.TotalConsumedMessageSizeBytes;
+                var partitionConsumePendingMessageSizeBytes = partitionBroker.ConsumePendingMessageSizeBytes;
+                var partitionBufferedMessageSizeBytes = partitionBroker.BufferedMessageSizeBytes;
+
+                topicTotalReceivedMessageSizeBytes += partitionBufferedMessageSizeBytes;
+                topicTotalConsumedMessageSizeBytes += partitionTotalConsumedMessageSizeBytes;
+                topicConsumePendingMessageSizeBytes += partitionConsumePendingMessageSizeBytes;
+                topicBufferedMessageSizeBytes += partitionBufferedMessageSizeBytes;
+
+                var partitionMessageSizeInfo = new KafkaConsumerTopicMessageSizeInfo(
+                    partitionTotalReceivedMessageSizeBytes, partitionTotalConsumedMessageSizeBytes, 
+                    partitionConsumePendingMessageSizeBytes, partitionBufferedMessageSizeBytes);
+
                 var partitionInfo = new KafkaConsumerTopicPartitionInfo(partition.PartitonId,
                     partitionIsAssigned, partitionBroker.IsReady,
                     partitionBroker.Error, partitionBroker.ErrorTimestampUtc,
-                    partitionMessagesInfo,
+                    partitionMessageCountInfo,
+                    partitionMessageSizeInfo,
                     partitionOffsetsInfo);
                 partitionInfos.Add(partitionInfo);
             }
 
             var metadataInfo = TopicMetadataInfo;
 
-            var topicMessagesInfo = new KafkaConsumerTopicMessagesInfo(
+            var topicMessageCountInfo = new KafkaConsumerTopicMessageCountInfo(
                 topicReceivePendingCount, topicTotalReceivedMessageCount, topicReceiveMessageTimestampUtc,
                 topicConsumePendingCount, topicTotalConsumedMessageCount, topicConsumeMessageTimestampUtc,
                 topicClientCommitPendingCount, topicTotalClientCommitedMessageCount, topicClientCommitMessageTimestampUtc,
                 topicServerCommitPendingCount, topicTotalServerCommitedMessageCount, topicServerCommitMessageTimestampUtc);
 
-            topicIsReady = topicIsReady == true && metadataInfo.IsReady;
+            var topicMessageSizeInfo = new KafkaConsumerTopicMessageSizeInfo(
+                topicTotalReceivedMessageSizeBytes, topicTotalConsumedMessageSizeBytes, topicConsumePendingMessageSizeBytes, topicBufferedMessageSizeBytes);
+
+            var consumerGroupInfo = _group.GroupCoordinator.GetDiagnosticsInfo();
+            var catchUpGroupInfo = _group.CatchUpGroupCoordinator?.GetDiagnosticsInfo();
+
+            topicIsReady = topicIsReady == true && metadataInfo.IsReady && consumerGroupInfo.IsReady && (catchUpGroupInfo?.IsReady != false);
 
             return new KafkaConsumerTopicInfo(TopicName, 
                 topicIsReady.Value,
-                metadataInfo,
-                topicMessagesInfo,
+                metadataInfo, consumerGroupInfo, catchUpGroupInfo,
+                topicMessageCountInfo,
+                topicMessageSizeInfo,
                 partitionInfos,
                 DateTime.UtcNow);
         }

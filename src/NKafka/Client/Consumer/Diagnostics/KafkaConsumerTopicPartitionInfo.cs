@@ -16,20 +16,25 @@ namespace NKafka.Client.Consumer.Diagnostics
 
         public readonly DateTime? ErrorTimestampUtc;
 
-        [NotNull] public readonly KafkaConsumerTopicMessagesInfo MessagesInfo;
+        [NotNull] public readonly KafkaConsumerTopicMessageCountInfo MessageCountInfo;
+
+        [NotNull] public readonly KafkaConsumerTopicMessageSizeInfo MessageSizeInfo;
 
         [NotNull] public readonly KafkaConsumerTopicPartitionOffsetsInfo OffsetsInfo;
 
         public KafkaConsumerTopicPartitionInfo(int partitionId, bool isAssigned, bool isReady, 
             KafkaConsumerTopicPartitionErrorCode? error, DateTime? errorTimestampUtc, 
-            [NotNull] KafkaConsumerTopicMessagesInfo messagesInfo, [NotNull] KafkaConsumerTopicPartitionOffsetsInfo offsetsInfo)
+            [NotNull] KafkaConsumerTopicMessageCountInfo messageCountInfo,
+            [NotNull] KafkaConsumerTopicMessageSizeInfo messageSizeInfo,
+            [NotNull] KafkaConsumerTopicPartitionOffsetsInfo offsetsInfo)
         {
             PartitionId = partitionId;
             IsAssigned = isAssigned;
             IsReady = isReady;
             Error = error;
             ErrorTimestampUtc = errorTimestampUtc;
-            MessagesInfo = messagesInfo;
+            MessageCountInfo = messageCountInfo;
+            MessageSizeInfo = messageSizeInfo;
             OffsetsInfo = offsetsInfo;
         }
     }

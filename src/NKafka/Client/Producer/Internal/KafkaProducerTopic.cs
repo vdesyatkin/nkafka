@@ -26,7 +26,7 @@ namespace NKafka.Client.Producer.Internal
             _buffer = buffer;
             _topicPartitions = new Dictionary<int, KafkaProducerTopicPartition>();
             _topicPartitionIds = new int[0];
-            TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, DateTime.UtcNow, false, null, null);
+            TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, false, null, null, DateTime.UtcNow);
         }
 
         [NotNull]
@@ -65,9 +65,13 @@ namespace NKafka.Client.Producer.Internal
             long topicTotalFallbackMessageCount = 0;            
             var topicSendMessageTimestampUtc = (DateTime?) null;
 
-            int topicSendPendingMessageCount = 0;
+            long topicSendPendingMessageCount = 0;
             long topicTotalSentMessageCount = 0;
             var topicFallbackMessageTimestampUtc = (DateTime?)null;
+
+            var topicTotalEnqueuedMessageSizeBytes = 0;
+            var topicTotalSentMessageSizeBytes = 0;
+            var topicSendPendingMessageSizeBytes = 0;
 
             var topicIsReady = true;
 
@@ -103,17 +107,29 @@ namespace NKafka.Client.Producer.Internal
                 if (topicSendMessageTimestampUtc == null || topicSendMessageTimestampUtc < partitionSendMessageTimestampUtc)
                 {
                     topicSendMessageTimestampUtc = partitionSendMessageTimestampUtc;
-                }
+                }                
 
-                var partitionMessagesInfo = new KafkaProducerTopicMessagesInfo(
+                var partitionMessageCountInfo = new KafkaProducerTopicMessageCountInfo(
                     partitionTotalEnqueuedCount, partitionEnqueueTimestampUtc,
                     partitionSendPendingCount, partitionSentMessageCount, partitionSendMessageTimestampUtc,
                     partitionFallbackMessageCount, partitionFallbackMessageTimestampUtc);
 
+                var partitionTotalEnqueuedMessageSizeBytes = 0; //todo (E008)
+                var partitionTotalSentMessageSizeBytes = 0;
+                var partitionSendPendingMessageSizeBytes = 0;
+
+                topicTotalEnqueuedMessageSizeBytes += partitionTotalEnqueuedMessageSizeBytes;
+                topicTotalSentMessageSizeBytes += partitionTotalSentMessageSizeBytes;
+                topicSendPendingMessageSizeBytes += partitionSendPendingMessageSizeBytes;
+
+                var partitionMessageSizeInfo = new KafkaProducerTopicMessageSizeInfo(
+                    partitionTotalEnqueuedMessageSizeBytes, partitionTotalSentMessageSizeBytes, partitionSendPendingMessageSizeBytes);
+
                 var partitionInfo = new KafkaProducerTopicPartitionInfo(partition.PartitonId,
                     partitionBroker.IsReady,
                     partitionBroker.Error, partitionBroker.ErrorTimestampUtc,
-                    partitionMessagesInfo,
+                    partitionMessageCountInfo,
+                    partitionMessageSizeInfo,
                     partitionBroker.LimitInfo); 
                 partitionInfos.Add(partitionInfo);
             }
@@ -124,10 +140,13 @@ namespace NKafka.Client.Producer.Internal
             topicSendPendingMessageCount += _buffer.EnqueuedCount;
             topicTotalEnqueuedMessageCount += bufferEnqueuedCount;
 
-            var topicMessagesInfo = new KafkaProducerTopicMessagesInfo(
+            var topicMessageCountInfo = new KafkaProducerTopicMessageCountInfo(
                 topicTotalEnqueuedMessageCount, _buffer.EnqueueTimestampUtc,
                 topicSendPendingMessageCount, topicTotalSentMessageCount, topicSendMessageTimestampUtc,
                 topicTotalFallbackMessageCount, topicFallbackMessageTimestampUtc);
+
+            var topicMessageSizeInfo = new KafkaProducerTopicMessageSizeInfo(
+                topicTotalEnqueuedMessageSizeBytes, topicTotalSentMessageSizeBytes, topicSendPendingMessageSizeBytes);
 
             topicIsReady = topicIsReady && metadataInfo.IsReady;
 
@@ -135,7 +154,8 @@ namespace NKafka.Client.Producer.Internal
                 TopicName,
                 topicIsReady,
                 metadataInfo,                                
-                topicMessagesInfo,
+                topicMessageCountInfo,
+                topicMessageSizeInfo,
                 partitionInfos,
                 DateTime.UtcNow);
         }

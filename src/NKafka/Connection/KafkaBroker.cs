@@ -309,7 +309,7 @@ namespace NKafka.Connection
 
             try
             {
-                stream.BeginRead(headerBuffer, 0, headerBuffer.Length, OnReceived, stream);
+                stream.BeginRead(headerBuffer, 0, headerBuffer.Length, OnReceived, null);
             }
             catch (Exception)
             {
@@ -323,7 +323,7 @@ namespace NKafka.Connection
 
             try
             {
-                var stream = result?.AsyncState as NetworkStream;
+                var stream = _connection.GetStream();
                 if (stream == null) return;
 
                 while (IsStreamDataAvailable(stream))

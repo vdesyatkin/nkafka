@@ -6,16 +6,16 @@ namespace NKafka.Client.Diagnostics
 {
     [PublicAPI]
     public sealed class KafkaClientInfo
-    {
-        public readonly DateTime TimestampUtc;
-
+    {        
         [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaClientWorkerInfo> Workers;
-        
-        public KafkaClientInfo(DateTime timestampUtc, [NotNull, ItemNotNull]IReadOnlyList<KafkaClientWorkerInfo> workers)
-        {
-            TimestampUtc = timestampUtc;
+
+        public readonly DateTime TimestampUtc;
+
+        public KafkaClientInfo([NotNull, ItemNotNull]IReadOnlyList<KafkaClientWorkerInfo> workers, DateTime timestampUtc)
+        {            
             Workers = workers;
+            TimestampUtc = timestampUtc;
         }
     }
 }

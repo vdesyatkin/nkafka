@@ -4,25 +4,27 @@ using JetBrains.Annotations;
 using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.ConsumerGroup.Diagnostics;
+using NKafka.Client.Diagnostics;
 using NKafka.Client.Internal;
 
 namespace NKafka.Client.ConsumerGroup.Internal
 {
-    internal sealed class KafkaCoordinatorGroup
+    internal sealed class KafkaCoordinatorGroup : IKafkaConsumerCoordinator
     {
         [NotNull] public readonly string GroupName;
         public readonly KafkaConsumerGroupType GroupType;
+        public KafkaClientGroupMetadataInfo GroupMetadataInfo;
 
         [NotNull]
         public readonly KafkaConsumerGroupSettings Settings;
         [NotNull, ItemNotNull] public readonly IReadOnlyDictionary<string, KafkaClientTopic> Topics;
-        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;        
+        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;       
 
         public KafkaCoordinatorGroupStatus Status;
         private KafkaConsumerGroupErrorCode? _error;
-        public DateTime ErrorTimestampUtc { get; private set; }
+        public DateTime ErrorTimestampUtc { get; private set; }        
 
-        [CanBeNull] public KafkaCoordinatorGroupSessionData SessionData { get; private set; }
+        [CanBeNull] public KafkaCoordinatorGroupMemberData MemberData { get; private set; }
         [CanBeNull] public KafkaCoordinatorGroupProtocolData ProtocolData { get; private set; }
         [CanBeNull] public KafkaCoordinatorGroupLeaderData LeaderData { get; private set; }
         [CanBeNull] public KafkaCoordinatorGroupAssignmentData AssignmentData { get; private set; }
@@ -93,7 +95,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             ResetSettings();
         }
 
-        [CanBeNull] public IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> GetPartitionOffsets([NotNull] string topicName)
+        public IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> GetPartitionOffsets(string topicName)
         {
             if (Status != KafkaCoordinatorGroupStatus.Ready) return null;
 
@@ -108,21 +110,20 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             return null;
         }
-
-        [NotNull]
-        public KafkaConsumerGroupSessionInfo GetSessionDiagnosticsInfo()
+        
+        public KafkaConsumerGroupInfo GetDiagnosticsInfo()
         {
-            var sessionData = SessionData;
+            var memberData = MemberData;
             var assignmentData = AssignmentData;
             var offsetsData = OffsetsData;
             var protocolData = ProtocolData;
             var leaderData = LeaderData;
 
             var memberInfo = new KafkaConsumerGroupMemberInfo(
-                sessionData?.GenerationId,
-                sessionData?.MemberId,
-                sessionData?.IsLeader ?? false,
-                sessionData?.TimestampUtc ?? DateTime.UtcNow);
+                memberData?.GenerationId,
+                memberData?.MemberId,
+                memberData?.IsLeader ?? false,
+                memberData?.TimestampUtc ?? DateTime.UtcNow);
 
             KafkaConsumerGroupProtocolInfo protcolInfo = null;
 
@@ -236,15 +237,23 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     break;
             }
 
-            return new KafkaConsumerGroupSessionInfo(GroupName, DateTime.UtcNow,
-                status == KafkaConsumerGroupStatus.Ready,
+            var isSessionReady = status == KafkaConsumerGroupStatus.Ready;
+
+            var sessionInfo = new KafkaConsumerGroupSessionInfo(GroupName,
+                isSessionReady,
                 status,
                 _error,
                 ErrorTimestampUtc,
                 memberInfo,
                 protcolInfo,
-                offsetsInfo
+                offsetsInfo,
+                DateTime.UtcNow
                 );
+
+            var metadataInfo = GroupMetadataInfo;
+            var isReady = isSessionReady && (metadataInfo?.IsReady == true);
+
+            return new KafkaConsumerGroupInfo(GroupName, isReady, metadataInfo, sessionInfo, DateTime.UtcNow);
         }
 
         public void SetError(KafkaConsumerGroupErrorCode errorCode)
@@ -258,9 +267,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
             _error = null;
         }
 
-        public void SetSessionData(int generationId, string memberId, bool isLeader)
+        public void SetMemberData(int generationId, string memberId, bool isLeader)
         {
-            SessionData = new KafkaCoordinatorGroupSessionData(generationId, memberId, isLeader, DateTime.UtcNow);
+            MemberData = new KafkaCoordinatorGroupMemberData(generationId, memberId, isLeader, DateTime.UtcNow);
         }        
 
         public void SetProtocolData(string protocolName, short? protocolVersion)
@@ -269,8 +278,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         public void SetLeaderData([CanBeNull] string assignmentStrategyName,
-            [NotNull] IReadOnlyList<KafkaCoordinatorGroupMemberData> groupMembers,
-            [NotNull] IReadOnlyDictionary<string, List<KafkaCoordinatorGroupMemberData>> topicMembers,
+            [NotNull] IReadOnlyList<KafkaCoordinatorGroupMemberAssignmentData> groupMembers,
+            [NotNull] IReadOnlyDictionary<string, List<KafkaCoordinatorGroupMemberAssignmentData>> topicMembers,
             [NotNull] IReadOnlyList<string> additionalTopicNames)
         {
             LeaderData = new KafkaCoordinatorGroupLeaderData(assignmentStrategyName, groupMembers, topicMembers, additionalTopicNames, DateTime.UtcNow);
@@ -320,7 +329,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public void ResetData()
         {
-            SessionData = null;
+            MemberData = null;
             ProtocolData = null;
             LeaderData = null;
             AssignmentData = null;

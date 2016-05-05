@@ -20,7 +20,7 @@ namespace NKafka.Client.Internal
                 workerInfos.Add(workerInfo);
             }
 
-            return new KafkaClientInfo(DateTime.UtcNow, workerInfos);
+            return new KafkaClientInfo(workerInfos, DateTime.UtcNow);
         }
 
         public KafkaClient([NotNull]KafkaClientSettings settings, 

@@ -8,9 +8,7 @@ namespace NKafka.Client.Diagnostics
     public sealed class KafkaClientBrokerInfo
     {
         [NotNull]
-        public readonly string BrokerName;
-
-        public readonly DateTime TimestampUtc;
+        public readonly string BrokerName;        
 
         public readonly KafkaBrokerMetadata Metadata;
 
@@ -20,19 +18,21 @@ namespace NKafka.Client.Diagnostics
 
         public readonly DateTime? ConnectionTimestampUtc;
 
-        public readonly DateTime? LastActivityTimestampUtc;        
+        public readonly DateTime? LastActivityTimestampUtc;
 
-        public KafkaClientBrokerInfo([NotNull] string brokerName, DateTime timestampUtc,
+        public readonly DateTime TimestampUtc;
+
+        public KafkaClientBrokerInfo([NotNull] string brokerName,
             KafkaBrokerMetadata metadata, bool isOpenned, KafkaClientBrokerErrorCode? error, 
-            DateTime? connectionTimestampUtc, DateTime? lastActivityTimestampUtc)
+            DateTime? connectionTimestampUtc, DateTime? lastActivityTimestampUtc, DateTime timestampUtc)
         {
-            BrokerName = brokerName;
-            TimestampUtc = timestampUtc;
+            BrokerName = brokerName;            
             Metadata = metadata;
             IsOpenned = isOpenned;
             Error = error;
             ConnectionTimestampUtc = connectionTimestampUtc;
             LastActivityTimestampUtc = lastActivityTimestampUtc;
+            TimestampUtc = timestampUtc;
         }
     }
 }
