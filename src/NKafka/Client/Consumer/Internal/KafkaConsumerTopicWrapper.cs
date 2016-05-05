@@ -57,9 +57,17 @@ namespace NKafka.Client.Consumer.Internal
             return _topic.TryEnqueueCommit(packageNumber);
         }
 
+        #region Diagnostics
+
+        public bool IsReady => _topic.IsReady;
+
+        public bool IsSynchronized => _topic.IsSynchronized;
+
         public KafkaConsumerTopicInfo GetDiagnosticsInfo()
         {
             return _topic.GetDiagnosticsInfo();
         }
+
+        #endregion Diagnostics
     }
 }

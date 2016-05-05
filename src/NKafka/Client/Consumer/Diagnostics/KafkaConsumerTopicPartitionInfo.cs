@@ -10,7 +10,9 @@ namespace NKafka.Client.Consumer.Diagnostics
 
         public readonly bool IsAssigned;
 
-        public readonly bool IsReady;        
+        public readonly bool IsReady;
+
+        public readonly bool IsSynchronized;
 
         public readonly KafkaConsumerTopicPartitionErrorCode? Error;
 
@@ -22,7 +24,8 @@ namespace NKafka.Client.Consumer.Diagnostics
 
         [NotNull] public readonly KafkaConsumerTopicPartitionOffsetsInfo OffsetsInfo;
 
-        public KafkaConsumerTopicPartitionInfo(int partitionId, bool isAssigned, bool isReady, 
+        public KafkaConsumerTopicPartitionInfo(int partitionId, 
+            bool isAssigned, bool isReady, bool isSynchronized,
             KafkaConsumerTopicPartitionErrorCode? error, DateTime? errorTimestampUtc, 
             [NotNull] KafkaConsumerTopicMessageCountInfo messageCountInfo,
             [NotNull] KafkaConsumerTopicMessageSizeInfo messageSizeInfo,
@@ -31,6 +34,7 @@ namespace NKafka.Client.Consumer.Diagnostics
             PartitionId = partitionId;
             IsAssigned = isAssigned;
             IsReady = isReady;
+            IsSynchronized = isSynchronized;
             Error = error;
             ErrorTimestampUtc = errorTimestampUtc;
             MessageCountInfo = messageCountInfo;

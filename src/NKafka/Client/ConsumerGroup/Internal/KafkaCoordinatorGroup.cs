@@ -21,8 +21,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;       
 
         public KafkaCoordinatorGroupStatus Status;
+        public bool IsReady => Status == KafkaCoordinatorGroupStatus.Ready;
         private KafkaConsumerGroupErrorCode? _error;
-        public DateTime ErrorTimestampUtc { get; private set; }        
+        public DateTime ErrorTimestampUtc { get; private set; }
 
         [CanBeNull] public KafkaCoordinatorGroupMemberData MemberData { get; private set; }
         [CanBeNull] public KafkaCoordinatorGroupProtocolData ProtocolData { get; private set; }
@@ -143,7 +144,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 }
 
                 protcolInfo = new KafkaConsumerGroupProtocolInfo(protocolName, protocolVersion, assignmentStrategyName, protocolTimestampUtc);
-            }
+            }            
 
             KafkaConsumerGroupOffsetsInfo offsetsInfo = null;
             if (offsetsData != null)
@@ -161,7 +162,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         var partition = partitionPair.Value;
                         if (partition == null) continue;
                         var partitionId = partitionPair.Key;
-
+                                                
                         var partitionInfo = new KafkaConsumerGroupOffsetsPartitionInfo(partitionId, 
                             partition.GroupClientOffset, partition.GroupServerOffset, partition.TimestampUtc);
                         partitionInfos.Add(partitionInfo);
@@ -185,7 +186,6 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         var partitionInfos = new List<KafkaConsumerGroupOffsetsPartitionInfo>(topicPartitions.Count);
                         foreach (var partitionId in topicPartitions)
                         {                            
-
                             var partitionInfo = new KafkaConsumerGroupOffsetsPartitionInfo(partitionId,
                                 null, null, assignmentData.TimestampUtc);
                             partitionInfos.Add(partitionInfo);
@@ -239,8 +239,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             var isSessionReady = status == KafkaConsumerGroupStatus.Ready;
 
-            var sessionInfo = new KafkaConsumerGroupSessionInfo(GroupName,
-                isSessionReady,
+            var sessionInfo = new KafkaConsumerGroupSessionInfo(GroupName,                
                 status,
                 _error,
                 ErrorTimestampUtc,

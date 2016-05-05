@@ -9,8 +9,6 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
         [NotNull]
         public readonly string GroupName;        
 
-        public readonly bool IsReady;
-
         public readonly KafkaConsumerGroupStatus Status;
 
         public readonly KafkaConsumerGroupErrorCode? Error;
@@ -25,7 +23,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaConsumerGroupSessionInfo([NotNull] string groupName, bool isReady,
+        public KafkaConsumerGroupSessionInfo([NotNull] string groupName,
             KafkaConsumerGroupStatus status,
             KafkaConsumerGroupErrorCode? error, DateTime errorTimestampUtc,
             [CanBeNull]KafkaConsumerGroupMemberInfo memberInfo,
@@ -35,7 +33,6 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
             )
         {
             GroupName = groupName;            
-            IsReady = isReady;
             Status = status;
             Error = error;
             ErrorTimestampUtcUtc = errorTimestampUtc;            

@@ -13,6 +13,8 @@ namespace NKafka.Client.Consumer.Diagnostics
 
         public readonly bool IsReady;
 
+        public readonly bool IsSynchronized;
+
         [NotNull] public readonly KafkaClientTopicMetadataInfo MetadataInfo;
 
         [NotNull] public readonly KafkaConsumerGroupInfo ConsumerGroupInfo;
@@ -27,7 +29,8 @@ namespace NKafka.Client.Consumer.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaConsumerTopicInfo([NotNull] string topicName, bool isReady, 
+        public KafkaConsumerTopicInfo([NotNull] string topicName, 
+            bool isReady, bool isSynchronized,
             [NotNull] KafkaClientTopicMetadataInfo metadataInfo,
             [NotNull] KafkaConsumerGroupInfo consumerGroupInfo, [CanBeNull] KafkaConsumerGroupInfo catchUpGroupInfo,
             [NotNull] KafkaConsumerTopicMessageCountInfo messageCountInfo,
@@ -37,6 +40,7 @@ namespace NKafka.Client.Consumer.Diagnostics
         {
             TopicName = topicName;
             IsReady = isReady;
+            IsSynchronized = isSynchronized;
             MetadataInfo = metadataInfo;
             ConsumerGroupInfo = consumerGroupInfo;
             CatchUpGroupInfo = catchUpGroupInfo;

@@ -7,14 +7,21 @@ namespace NKafka.Client.Consumer
     [PublicAPI]
     public interface IKafkaConsumerTopic
     {
-        [NotNull, ItemNotNull] IReadOnlyList<KafkaMessagePackage> Consume(int? maxMessageCount = null);        
+        bool IsReady { get; }
+        bool IsSynchronized { get; }
+
+        [NotNull, ItemNotNull] IReadOnlyList<KafkaMessagePackage> Consume(int? maxMessageCount = null);
         bool TryEnqueueCommit(long packageId);
+
         KafkaConsumerTopicInfo GetDiagnosticsInfo();
     }
 
     [PublicAPI]
     public interface IKafkaConsumerTopic<TKey, TData>
     {
+        bool IsReady { get; }
+        bool IsSynchronized { get; }
+
         [NotNull, ItemNotNull] IReadOnlyList<KafkaMessagePackage<TKey, TData>> Consume(int? maxMessageCount = null);
         bool TryEnqueueCommit(long packageNumber);
         KafkaConsumerTopicInfo GetDiagnosticsInfo();

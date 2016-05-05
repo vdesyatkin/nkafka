@@ -9,9 +9,10 @@ namespace NKafka.Client.ConsumerGroup
     {
         string IKafkaConsumerGroup.GroupName => GroupName;
         KafkaConsumerGroupType IKafkaConsumerGroup.GroupType => GroupType;
-
+               
         [NotNull] public readonly string GroupName;
         public readonly KafkaConsumerGroupType GroupType;
+        public bool IsReady => ClientGroup?.Coordinator.IsReady == true;
 
         [NotNull] public readonly KafkaConsumerGroupSettings Settings;
 

@@ -6,8 +6,7 @@ namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopicPartition
     {
-        public readonly int PartitonId;
-        public bool IsAssigned => BrokerPartition.IsAssigned;        
+        public readonly int PartitonId;        
         
         [NotNull] public readonly KafkaConsumerBrokerPartition BrokerPartition;        
 

@@ -8,6 +8,8 @@ namespace NKafka.Client.ConsumerGroup
     {
         string GroupName { get; }
         KafkaConsumerGroupType GroupType { get; }
+
+        bool IsReady { get; }
         KafkaConsumerGroupInfo GetDiagnosticsInfo();
     }
 }

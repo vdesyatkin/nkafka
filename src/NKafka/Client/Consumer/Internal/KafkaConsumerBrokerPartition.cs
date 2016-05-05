@@ -18,6 +18,8 @@ namespace NKafka.Client.Consumer.Internal
         public KafkaConsumerBrokerPartitionStatus Status;
         public bool IsAssigned;
         public bool IsReady => Status == KafkaConsumerBrokerPartitionStatus.Ready && Error == null;
+        public bool IsSynchronized => _currentCommitClientOffset <= _currentCommitServerOffset;
+
         public KafkaConsumerTopicPartitionErrorCode? Error { get; private set; }
         public DateTime? ErrorTimestampUtc { get; private set; }
 
