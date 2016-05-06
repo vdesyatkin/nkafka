@@ -35,7 +35,7 @@ namespace NKafka.Client.Producer.Internal
             _enqueueTimestampUtc = DateTime.UtcNow;
         }       
         
-        public void Flush(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions)
+        public void DistributeMessagesByPartitions(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions)
         {
             if (partitionIds == null || partitions == null) return;
             var enqueuedCount = _enqueuedCount;
@@ -110,7 +110,7 @@ namespace NKafka.Client.Producer.Internal
             _enqueueTimestampUtc = DateTime.UtcNow;
         }
         
-        public void Flush(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions)
+        public void DistributeMessagesByPartitions(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions)
         {
             if (partitionIds == null || partitions == null) return;
 

@@ -335,5 +335,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
             OffsetsData = null;
             TopicMetadataPartitionIds.Clear();
         }
+
+        public void Clear()
+        {
+            ResetSettings();
+            ResetData();
+            ResetError();            
+        }
     }
 }

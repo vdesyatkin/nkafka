@@ -20,7 +20,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
         [NotNull] private IReadOnlyDictionary<int, KafkaConsumerTopicPartition> _topicPartitions;
-        [NotNull] private readonly ConcurrentDictionary<long, PackageInfo> _packages;
+        [NotNull] private readonly ConcurrentDictionary<long, KafkaConsumerTopicPackageInfo> _packages;
         private long _currentPackageId;
 
         public KafkaConsumerTopic([NotNull] string topicName, 
@@ -31,7 +31,7 @@ namespace NKafka.Client.Consumer.Internal
             GroupName = groupName;
             Settings = settings;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
-            _packages = new ConcurrentDictionary<long, PackageInfo>();
+            _packages = new ConcurrentDictionary<long, KafkaConsumerTopicPackageInfo>();
             TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, false, null, null, DateTime.UtcNow);
         }
 
@@ -99,7 +99,7 @@ namespace NKafka.Client.Consumer.Internal
                 if (partitionMessages.Count > 0)
                 {
                     var packageId = Interlocked.Increment(ref _currentPackageId);                    
-                    _packages[packageId] = new PackageInfo(partition.PartitonId, beginOffset, endOffset);
+                    _packages[packageId] = new KafkaConsumerTopicPackageInfo(partition.PartitonId, beginOffset, endOffset);
                     resultPackages.Add(new KafkaMessagePackage(packageId, partitionMessages));
                 }
 
@@ -114,7 +114,7 @@ namespace NKafka.Client.Consumer.Internal
 
         public bool TryEnqueueCommit(long packageId)
         {
-            PackageInfo package;
+            KafkaConsumerTopicPackageInfo package;
             if (!_packages.TryGetValue(packageId, out package) || package == null)
             {
                 return true;
@@ -331,7 +331,7 @@ namespace NKafka.Client.Consumer.Internal
 
         #endregion Diagnostics
 
-        private class PackageInfo
+        private class KafkaConsumerTopicPackageInfo
         {
             public readonly int PartitionId;
 
@@ -339,7 +339,7 @@ namespace NKafka.Client.Consumer.Internal
 
             public readonly long EndOffset;            
 
-            public PackageInfo(int partitionId, long beginOffset, long endOffset)
+            public KafkaConsumerTopicPackageInfo(int partitionId, long beginOffset, long endOffset)
             {
                 PartitionId = partitionId;
                 BeginOffset = beginOffset;

@@ -162,6 +162,30 @@ namespace NKafka.Client.Producer.Internal
             Status = KafkaProducerBrokerPartitionStatus.NotInitialized;
         }
 
+        public void Clear()
+        {
+            ResetData();
+            ResetError();
+
+            KafkaMessage message;
+            while (_retryQueue.Count > 0)
+            {
+                message = _retryQueue.Dequeue();
+                if (message == null) continue;
+                FallbackMessage(message, DateTime.UtcNow, KafkaProdcuerFallbackErrorCode.ClientStopping);
+            }            
+            
+            while (_mainQueue.TryDequeue(out message))
+            {
+                Interlocked.Decrement(ref _sendPendingMessageCount);
+                if (message == null) continue;
+                FallbackMessage(message, DateTime.UtcNow, KafkaProdcuerFallbackErrorCode.ClientStopping);
+            }
+
+            _sendPendingMessageCount = 0;
+            RetrySendPendingMessageCount = 0;
+        }
+
         private static int GetMessageSize([CanBeNull] KafkaMessage message)
         {
             if (message == null) return 0;

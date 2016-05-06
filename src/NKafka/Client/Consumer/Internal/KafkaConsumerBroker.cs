@@ -16,6 +16,8 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentDictionary<string, KafkaConsumerBrokerTopic> _topics;
         [NotNull] private readonly Dictionary<string, FetchRequestInfo> _fetchRequests;
 
+        public bool IsConsumeEnabled;
+
         private readonly TimeSpan _consumeClientTimeout;
 
         public KafkaConsumerBroker([NotNull] KafkaBroker broker, TimeSpan consumePeriod)
@@ -23,7 +25,7 @@ namespace NKafka.Client.Consumer.Internal
             _broker = broker;
             _topics = new ConcurrentDictionary<string, KafkaConsumerBrokerTopic>();         
             _fetchRequests = new Dictionary<string, FetchRequestInfo>();   
-            _consumeClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;
+            _consumeClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;        
         }
 
         public void AddTopicPartition([NotNull] string topicName, [NotNull] KafkaConsumerBrokerPartition topicPartition)
@@ -57,20 +59,45 @@ namespace NKafka.Client.Consumer.Internal
             }
         }
 
-        public void Close()
+        public void Start()
         {
+            IsConsumeEnabled = true;
+        }
+
+        public void Stop()
+        {
+            IsConsumeEnabled = false;
+
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
                 if (topic == null) continue;
 
+                var coordinator = topic.Group.GroupCoordinator;
+                var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);
+
                 foreach (var partitionPair in topic.Partitions)
-                {
+                {                    
                     var partition = partitionPair.Value;
                     if (partition == null) continue;
 
+                    if (coordinatorPartitionOffsets == null)
+                    {
+                        partition.IsAssigned = false; // coordinator is not ready or topic is not allowed for this consumer node
+                        continue;
+                    }
+                    IKafkaConsumerCoordinatorOffsetsData coordinatorOffset;
+                    if (!coordinatorPartitionOffsets.TryGetValue(partition.PartitionId, out coordinatorOffset) || coordinatorOffset == null)
+                    {
+                        partition.IsAssigned = false; // partition is not allowed for this consumer node
+                        continue;
+                    }
+                    partition.IsAssigned = true;
+                    partition.SetCommitServerOffset(coordinatorOffset.GroupServerOffset, coordinatorOffset.TimestampUtc);
+
                     partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
-                }                
+                    partition.Clear();
+                }              
             }
 
             _fetchRequests.Clear();
@@ -103,10 +130,13 @@ namespace NKafka.Client.Consumer.Internal
                 }
                 else
                 {
-                    HandleFetchResponse(topic, currentRequest, response);
+                    if (IsConsumeEnabled)
+                    {
+                        HandleFetchResponse(topic, currentRequest, response);
+                    }
                     _fetchRequests.Remove(topic.TopicName);
                 }
-            }            
+            }
 
             var coordinator = topic.Group.GroupCoordinator;
             var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);
@@ -116,10 +146,10 @@ namespace NKafka.Client.Consumer.Internal
 
             // prepare new fetch batch
             foreach (var partitionPair in topic.Partitions)
-            {
-                var partitionId = partitionPair.Key;
+            {                
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
+                var partitionId = partition.PartitionId;
 
                 if (coordinatorPartitionOffsets == null)
                 {
@@ -152,6 +182,8 @@ namespace NKafka.Client.Consumer.Internal
                     }
                     partition.SetCatchUpGroupServerOffset(catchUpOffset.GroupServerOffset);
                 }
+
+                if (!IsConsumeEnabled) continue;
 
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(partition)) continue;
@@ -234,9 +266,7 @@ namespace NKafka.Client.Consumer.Internal
             }
 
             return false;
-        }
-
-        
+        }        
 
         #region Topic offsets
 

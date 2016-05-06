@@ -50,9 +50,9 @@ namespace NKafka.Client.Producer.Internal
             _topicPartitions = topicPartitions;
         }
         
-        public void Flush()
+        public void DistributeMessagesByPartitions()
         {
-            _buffer.Flush(_topicPartitionIds, _topicPartitions);
+            _buffer.DistributeMessagesByPartitions(_topicPartitionIds, _topicPartitions);
         }
 
         #region Diagnostics

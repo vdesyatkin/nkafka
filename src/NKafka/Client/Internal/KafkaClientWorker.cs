@@ -149,13 +149,39 @@ namespace NKafka.Client.Internal
             broker.AddGroupCoordinator(groupName, groupCoordinator);
         }
 
+        public void DisableConsume()
+        {
+            foreach (var broker in _brokers)
+            {
+                broker.Value?.DisableConsume();
+            }
+        }
+
+        public void EnableConsume()
+        {
+            foreach (var broker in _brokers)
+            {
+                broker.Value?.EnableConsume();
+            }
+        }
+
+        public bool IsAllTopicsSynchronized()
+        {            
+            foreach (var topic in _topics)
+            {
+                if (topic.Value?.Producer?.IsSynchronized == false) return false;
+                if (topic.Value?.Consumer?.IsSynchronized == false) return false;
+            }
+            return true;
+        }
+
         public void Start()
         {
             _workerCancellation = new CancellationTokenSource();
             var produceTimer = new Timer(Work);
             _workerTimer = produceTimer;
             produceTimer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
-        }
+        }        
 
         public void Stop()
         {
@@ -170,11 +196,7 @@ namespace NKafka.Client.Internal
 
             try
             {
-                var workerTimer = _workerTimer;
-                lock (workerTimer)
-                {
-                    workerTimer.Dispose();
-                }
+                _workerTimer.Dispose();                
             }
             catch (Exception)
             {
@@ -183,11 +205,11 @@ namespace NKafka.Client.Internal
 
             foreach (var broker in _brokers)
             {
-                broker.Value?.Close();                
+                broker.Value?.Stop();
             }
             foreach (var broker in _metadataBrokers)
             {
-                broker.Close();                
+                broker.Stop();                
             }
 
             foreach (var topicPair in _topics)
@@ -214,62 +236,60 @@ namespace NKafka.Client.Internal
         {
             if (_workerCancellation.IsCancellationRequested) return;
             var workerTimer = _workerTimer;
-            lock (workerTimer)
-            {
-                var hasGroups = false;
-                foreach (var groupPair in _groups)
-                {
-                    var group = groupPair.Value;
-                    if (group == null) continue;
-                    if (_workerCancellation.IsCancellationRequested) return;
-
-                    ProcessGroup(group);
-                    hasGroups = true;
-                }
-
-                var hasTopics = false;
-                foreach (var topicPair in _topics)
-                {
-                    var topic = topicPair.Value;
-                    if (topic == null) continue;
-                    if (_workerCancellation.IsCancellationRequested) return;
-
-                    ProcessTopic(topic);
-                    hasTopics = true;
-                }
-
-                var isBrokersRequired = hasTopics;
-                bool isRegularBrokerAvailable = false;
-                foreach (var brokerPair in _brokers)
-                {
-                    var broker = brokerPair.Value;
-                    if (broker == null) continue;
-                    if (_workerCancellation.IsCancellationRequested) return;
-
-                    ProcessBroker(broker, isBrokersRequired);
-                    if (broker.IsEnabled)
-                    {
-                        isRegularBrokerAvailable = true;
-                    }
-                }
-
-                var isMetadataBrokerRequired = (hasTopics || hasGroups) && !isRegularBrokerAvailable;
-                foreach (var metadataBroker in _metadataBrokers)
-                {
-                    if (_workerCancellation.IsCancellationRequested) return;
-                    ProcessMetadataBroker(metadataBroker, isMetadataBrokerRequired);
-                }                       
             
+            var hasGroups = false;
+            foreach (var groupPair in _groups)
+            {
+                var group = groupPair.Value;
+                if (group == null) continue;
                 if (_workerCancellation.IsCancellationRequested) return;
 
-                try
+                ProcessGroup(group);
+                hasGroups = true;
+            }
+
+            var hasTopics = false;
+            foreach (var topicPair in _topics)
+            {
+                var topic = topicPair.Value;
+                if (topic == null) continue;
+                if (_workerCancellation.IsCancellationRequested) return;
+
+                ProcessTopic(topic);
+                hasTopics = true;
+            }
+
+            var isBrokersRequired = hasTopics;
+            bool isRegularBrokerAvailable = false;
+            foreach (var brokerPair in _brokers)
+            {
+                var broker = brokerPair.Value;
+                if (broker == null) continue;
+                if (_workerCancellation.IsCancellationRequested) return;
+
+                ProcessBroker(broker, isBrokersRequired);
+                if (broker.IsEnabled)
                 {
-                    workerTimer.Change(_workerPeriod, Timeout.InfiniteTimeSpan);
+                    isRegularBrokerAvailable = true;
                 }
-                catch (Exception)
-                {
-                    //ignored
-                }
+            }
+
+            var isMetadataBrokerRequired = (hasTopics || hasGroups) && !isRegularBrokerAvailable;
+            foreach (var metadataBroker in _metadataBrokers)
+            {
+                if (_workerCancellation.IsCancellationRequested) return;
+                ProcessMetadataBroker(metadataBroker, isMetadataBrokerRequired);
+            }                       
+            
+            if (_workerCancellation.IsCancellationRequested) return;
+
+            try
+            {
+                workerTimer.Change(_workerPeriod, Timeout.InfiniteTimeSpan);
+            }
+            catch (Exception)
+            {
+                //ignored
             }
         }
 
@@ -370,7 +390,7 @@ namespace NKafka.Client.Internal
 
             if (topic.Status == KafkaClientTopicStatus.Ready)
             {
-                topic.Producer?.Flush();
+                topic.Producer?.DistributeMessagesByPartitions();
 
                 foreach (var paritition in topic.Partitions)
                 {
@@ -525,16 +545,16 @@ namespace NKafka.Client.Internal
         {
             if (!isBrokerRequired)
             {
-                if (broker.IsOpenned)
+                if (broker.IsStarted)
                 {
-                    broker.Close();
+                    broker.Stop();
                 }
                 return;
             }
 
-            if (!broker.IsOpenned)
+            if (!broker.IsStarted)
             {
-                broker.Open();
+                broker.Start();
             }
 
             broker.Work();            
@@ -544,16 +564,16 @@ namespace NKafka.Client.Internal
         {
             if (!isMetadataBrokerRequired)
             {
-                if (metadataBroker.IsOpenned)
+                if (metadataBroker.IsStarted)
                 {
-                    metadataBroker.Close();
+                    metadataBroker.Stop();
                 }
                 return;
             }            
 
-            if (!metadataBroker.IsOpenned)
+            if (!metadataBroker.IsStarted)
             {
-                metadataBroker.Open();
+                metadataBroker.Start();
             }
 
             metadataBroker.Work();

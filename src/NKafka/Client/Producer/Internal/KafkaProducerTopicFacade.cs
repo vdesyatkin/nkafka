@@ -34,21 +34,9 @@ namespace NKafka.Client.Producer.Internal
 
         #region Diagnostics
 
-        public bool IsReady
-        {
-            get
-            {
-                return _topic.IsReady;
-            }
-        }
+        public bool IsReady => _topic.IsReady;
 
-        public bool IsSynchronized
-        {
-            get
-            {
-                return _topic.IsSynchronized;
-            }
-        }
+        public bool IsSynchronized => _topic.IsSynchronized;
 
         [NotNull]
         public KafkaProducerTopicInfo GetDiagnosticsInfo()
@@ -91,21 +79,9 @@ namespace NKafka.Client.Producer.Internal
 
         #region Diagnostics
 
-        public bool IsReady
-        {
-            get
-            {
-                return _topic.IsReady;
-            }
-        }
+        public bool IsReady => _topic.IsReady;
 
-        public bool IsSynchronized
-        {
-            get
-            {
-                return _topic.IsSynchronized;
-            }
-        }
+        public bool IsSynchronized => _topic.IsSynchronized;
 
         [NotNull]
         public KafkaProducerTopicInfo GetDiagnosticsInfo()

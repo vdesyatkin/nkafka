@@ -6,6 +6,7 @@ namespace NKafka.Client.Producer
     public enum KafkaProdcuerFallbackErrorCode
     {
         UnknownError = 0,
-        TooLargeSize = 1
+        TooLargeSize = 1,
+        ClientStopping = 2
     }
 }

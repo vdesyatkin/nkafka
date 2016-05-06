@@ -14,7 +14,7 @@ namespace NKafka.Client.Internal.Broker
     internal sealed class KafkaClientBroker
     {
         public bool IsEnabled => _broker.IsEnabled;
-        public bool IsOpenned => _broker.IsOpenned;
+        public bool IsStarted => _broker.IsOpenned;
 
         [NotNull] private readonly KafkaBroker _broker;
         [NotNull] private readonly KafkaBrokerMetadata _metadata;
@@ -96,21 +96,35 @@ namespace NKafka.Client.Internal.Broker
                 ProcessGroup(group);
             }
 
-            _coordinator.Process();
             _producer.Produce();
+            _coordinator.Process();            
             _consumer.Consume();
         }
 
-        public void Open()
+        public void EnableConsume()
         {
-            _broker.Open();
+            _consumer.IsConsumeEnabled = true;
         }
 
-        public void Close()
-        {            
-            _consumer.Close();
-            _producer.Close();
-            _coordinator.Close();
+        public void DisableConsume()
+        {
+            _consumer.IsConsumeEnabled = false;
+        }
+        
+        public void Start()
+        {
+            _broker.Open();
+
+            _producer.Start();
+            _coordinator.Start();
+            _consumer.Start();
+        }
+
+        public void Stop()
+        {
+            _producer.Stop();                        
+            _coordinator.Stop();
+            _consumer.Stop();
 
             foreach (var groupPair in _groups)
             {

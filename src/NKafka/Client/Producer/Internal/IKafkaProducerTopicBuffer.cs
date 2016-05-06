@@ -9,6 +9,6 @@ namespace NKafka.Client.Producer.Internal
         DateTime? EnqueueTimestampUtc { get; }
         IKafkaProducerFallbackHandler FallbackHandler { get; }
 
-        void Flush(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions);
+        void DistributeMessagesByPartitions(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions);
     }
 }

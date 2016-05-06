@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
+using JetBrains.Annotations;
 using NKafka.Client;
 using NKafka.Client.Consumer;
 using NKafka.Client.ConsumerGroup;
@@ -123,12 +125,22 @@ namespace NKafka.DevConsole
 
             Console.WriteLine("stopping...");
 
-            client.Stop();
+            var flushTask = client.TryFlushAndStop(TimeSpan.FromSeconds(10));
+            flushTask.Wait();
+            if (!flushTask.Result)
+            {
+                Console.WriteLine("not flushed!");
+                client.Stop();
+            }
+            else
+            {
+                Console.WriteLine("flushed");
+            }
 
             Console.WriteLine("stopped");
 
             Console.ReadLine();            
-        }
+        }       
 
         private class TestSerializer : IKafkaProducerSerializer<string, string>, IKafkaConsumerSerializer<string, string>
         {

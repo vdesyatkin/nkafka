@@ -295,6 +295,19 @@ namespace NKafka.Client.Consumer.Internal
             Status = KafkaConsumerBrokerPartitionStatus.NotInitialized;
         }
 
+        public void Clear()
+        {
+            ResetData();
+            ResetError();
+            _catchUpMesagesQueue.Clear();
+            KafkaMessageAndOffset message;
+            while (_consumeMessagesQueue.TryDequeue(out message))
+            {
+            }
+            _consumePendingMessageCount = 0;
+            _catchUpPendingMessageCount = 0;
+        }
+
         private static int GetMessageSize([CanBeNull] KafkaMessageAndOffset message)
         {
             if (message == null) return 0;

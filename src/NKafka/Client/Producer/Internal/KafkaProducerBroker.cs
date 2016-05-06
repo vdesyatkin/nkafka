@@ -52,7 +52,11 @@ namespace NKafka.Client.Producer.Internal
             topic.Partitions.TryRemove(partitionId, out partition);
         }
 
-        public void Close()
+        public void Start()
+        {            
+        }
+
+        public void Stop()
         {
             foreach (var topicPair in _topics)
             {
@@ -72,6 +76,7 @@ namespace NKafka.Client.Producer.Internal
                     if (partition == null) continue;
 
                     partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
+                    partition.Clear();
                 }
             }
 

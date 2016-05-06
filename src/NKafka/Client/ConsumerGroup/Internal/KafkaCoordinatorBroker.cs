@@ -71,7 +71,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
             }
         }
 
-        public void Close()
+        public void Start()
+        {            
+        }
+
+        public void Stop()
         {
             foreach (var groupPair in _groups)
             {
@@ -87,7 +91,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     }
                 }
 
-                if (group.Status >= KafkaCoordinatorGroupStatus.JoinGroupRequested)
+                if (group.GroupType == KafkaConsumerGroupType.BalancedConsumers && group.Status >= KafkaCoordinatorGroupStatus.JoinGroupRequested)
                 {
                     var leaveGroupRequest = CreateLeaveGroupRequest(group);
                     if (leaveGroupRequest != null)
@@ -95,10 +99,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         _broker.SendWithoutResponse(leaveGroupRequest);
                     }
                 }
-
-                group.ResetData();
-                group.ResetSettings();
+                                
                 group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
+                group.Clear();
             }
 
             _joinGroupRequests.Clear();
