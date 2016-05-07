@@ -826,7 +826,7 @@ namespace NKafka.Client.Internal
                 }
             }
             
-            var groupCoordinator = new KafkaBrokerMetadata(responseData.BrokerId, responseData.Host, responseData.Port, null); //todo (v10) rack?
+            var groupCoordinator = new KafkaBrokerMetadata(responseData.BrokerId, responseData.Host, responseData.Port, null);
 
             return new KafkaGroupMetadata(groupName, groupError, groupCoordinator);
         }

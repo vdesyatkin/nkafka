@@ -29,15 +29,12 @@ namespace NKafka.Connection
                 {
                     return false;
                 }
-                if (asyncConnectResult.IsCompleted)
+                if (!asyncConnectResult.IsCompleted)
                 {
-                    tcpClient.EndConnect(asyncConnectResult);
-                }
-                else
-                {
-                    return false;
+                    return false;                    
                 }
 
+                tcpClient.EndConnect(asyncConnectResult);
                 _tcpClient = tcpClient;
                 return true;
             }

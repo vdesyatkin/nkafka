@@ -243,7 +243,7 @@ namespace NKafka.Connection
                 return KafkaBrokerErrorCode.ProtocolError;
             }
 
-            var stream = _connection.GetStream(); //todo (E011) async? cancellation?
+            var stream = _connection.GetStream();
             if (stream == null)
             {
                 _sendError = KafkaBrokerStateErrorCode.ConnectionError;
@@ -258,8 +258,8 @@ namespace NKafka.Connection
             }
 
             try
-            {
-                stream.Write(data, 0, data.Length); //todo (E011) async? cancellation?
+            {                
+                stream.Write(data, 0, data.Length);
                 requestState.SentTimestampUtc = DateTime.UtcNow;
                 _sendError = null;
                 return requestId;

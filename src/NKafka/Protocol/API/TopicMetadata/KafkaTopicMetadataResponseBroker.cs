@@ -24,7 +24,7 @@ namespace NKafka.Protocol.API.TopicMetadata
         public readonly int Port;
 
         /// <summary>
-        /// Rack in data-center.
+        /// Rack of the broker in data-center.
         /// </summary>
         public readonly string Rack;
 
@@ -37,6 +37,7 @@ namespace NKafka.Protocol.API.TopicMetadata
             BrokerId = brokerId;
             Host = host;
             Port = port;
+            Rack = rack;
         }
     }
 }

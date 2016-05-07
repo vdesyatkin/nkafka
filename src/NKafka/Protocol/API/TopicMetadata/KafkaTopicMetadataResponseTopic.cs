@@ -20,20 +20,28 @@ namespace NKafka.Protocol.API.TopicMetadata
         public readonly string TopicName;
 
         /// <summary>
+        /// Indicates if the topic is considered a Kafka internal topic.
+        /// </summary>
+        public readonly bool? IsInternalTopic;
+
+        /// <summary>
         /// Topic partitions metadata.
         /// </summary>
         public readonly IReadOnlyList<KafkaTopicMetadataResponseTopicPartition> Partitions;
-        
+
         /// <param name="errorCode">Error code.</param>
-        /// <param name="topicName">Topic name.</param>        
+        /// <param name="topicName">Topic name.</param>
+        /// <param name="isInternalTopic">Indicates if the topic is considered a Kafka internal topic.</param>
         /// <param name="partitions">Topic partitions metadata.</param>
         public KafkaTopicMetadataResponseTopic(
             KafkaResponseErrorCode errorCode,
-            string topicName, 
+            string topicName,
+            bool? isInternalTopic,
             IReadOnlyList<KafkaTopicMetadataResponseTopicPartition> partitions)
         {
-            TopicName = topicName;
             ErrorCode = errorCode;
+            TopicName = topicName;
+            IsInternalTopic = isInternalTopic;            
             Partitions = partitions;
         }
     }

@@ -46,8 +46,9 @@ namespace NKafka.Protocol.API.TopicMetadata
         private KafkaTopicMetadataResponse ReadTopicMetadataResponse([NotNull] KafkaBinaryReader reader)
         {
             var brokers = reader.ReadCollection(ReadResponseBroker);
+            var controllerBrokerId = _requestVersion >= KafkaRequestVersion.V1 ? reader.ReadInt32() : (int?)null;
             var topics = reader.ReadCollection(ReadResponseTopic);
-            return new KafkaTopicMetadataResponse(brokers, topics);
+            return new KafkaTopicMetadataResponse(controllerBrokerId, brokers, topics);
         }
 
         private KafkaTopicMetadataResponseBroker ReadResponseBroker([NotNull] KafkaBinaryReader reader)
@@ -60,16 +61,17 @@ namespace NKafka.Protocol.API.TopicMetadata
             return new KafkaTopicMetadataResponseBroker(brokerId, host, port, rack);
         }
 
-        private static KafkaTopicMetadataResponseTopic ReadResponseTopic([NotNull] KafkaBinaryReader reader)
+        private KafkaTopicMetadataResponseTopic ReadResponseTopic([NotNull] KafkaBinaryReader reader)
         {
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();
             var topicName = reader.ReadString();
-            var partitions = reader.ReadCollection(ReadResponseTopicPartition);            
+            var isInternalTopic = _requestVersion >= KafkaRequestVersion.V1 ? reader.ReadBool() : (bool?)null;
+            var partitions = reader.ReadCollection(ReadResponseTopicPartition);           
 
-            return new KafkaTopicMetadataResponseTopic(errorCode, topicName, partitions);
+            return new KafkaTopicMetadataResponseTopic(errorCode, topicName, isInternalTopic, partitions);
         }
 
-        private static KafkaTopicMetadataResponseTopicPartition ReadResponseTopicPartition([NotNull] KafkaBinaryReader reader)
+        private KafkaTopicMetadataResponseTopicPartition ReadResponseTopicPartition([NotNull] KafkaBinaryReader reader)
         {
             var errorCode = (KafkaResponseErrorCode) reader.ReadInt16();
             var partitionId = reader.ReadInt32();

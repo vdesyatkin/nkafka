@@ -148,7 +148,12 @@ namespace NKafka.Protocol.Serialization
             {
                 _stream.SetLength(_stream.Position);
             }
-        } 
+        }
+
+        public void WriteBool(bool data)
+        {
+            _stream.WriteByte(data ? (byte)1 : (byte)0);
+        }
 
         public void WriteInt8(byte data)
         {            

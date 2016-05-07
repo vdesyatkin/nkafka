@@ -165,6 +165,11 @@ namespace NKafka.Protocol.Serialization
             return true;
         }
 
+        public bool ReadBool()
+        {
+            return ReadInt8() == 1;
+        }
+
         public byte ReadInt8()
         {
             return (byte)_stream.ReadByte();
