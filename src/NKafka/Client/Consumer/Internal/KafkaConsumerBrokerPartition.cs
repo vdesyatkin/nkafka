@@ -73,8 +73,10 @@ namespace NKafka.Client.Consumer.Internal
 
             _currentReceivedClientOffset = UnknownOffset;
             _currentMinAvailableServerOffset = UnknownOffset;
+            _currentMaxAvailableServerOffset = UnknownOffset;
             _currentCommitClientOffset = UnknownOffset;
             _currentCommitServerOffset = UnknownOffset;
+            _currentCatchUpGroupServerOffset = UnknownOffset;
         }
 
         public bool CanEnqueueForConsume()
@@ -109,7 +111,7 @@ namespace NKafka.Client.Consumer.Internal
                 Interlocked.Add(ref _totalReceivedMessageSizeBytes, messageSize);
                 Interlocked.Increment(ref _totalReceivedMessageCount);
 
-                if (message.Offset > catchUpOffset)
+                if (catchUpOffset != UnknownOffset && message.Offset > catchUpOffset)
                 {                    
                     Interlocked.Add(ref _catchUpPendingMessageSizeBytes, messageSize);
                     Interlocked.Increment(ref _catchUpPendingMessageCount);

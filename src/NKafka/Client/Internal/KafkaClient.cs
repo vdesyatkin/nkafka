@@ -208,6 +208,7 @@ namespace NKafka.Client.Internal
         private KafkaClientWorker GetWorker(int key)
         {
             var index = Math.Abs(key) % _workers.Count;
+            // ReSharper disable once InconsistentlySynchronizedField
             var worker = _workers[index];
             return worker;
         }

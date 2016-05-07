@@ -177,6 +177,7 @@ namespace NKafka.Client.Internal
 
         public void Start()
         {
+            EnableConsume();
             _workerCancellation = new CancellationTokenSource();
             var produceTimer = new Timer(Work);
             // ReSharper disable once InconsistentlySynchronizedField
