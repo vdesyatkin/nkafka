@@ -47,6 +47,10 @@ namespace NKafka.Protocol.API.TopicMetadata
         {
             var brokers = reader.ReadCollection(ReadResponseBroker);
             var controllerBrokerId = _requestVersion >= KafkaRequestVersion.V1 ? reader.ReadInt32() : (int?)null;
+            if (controllerBrokerId < 0)
+            {
+                controllerBrokerId = null;
+            }
             var topics = reader.ReadCollection(ReadResponseTopic);
             return new KafkaTopicMetadataResponse(controllerBrokerId, brokers, topics);
         }
