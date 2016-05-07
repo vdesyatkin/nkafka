@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup.Internal;
@@ -76,8 +77,9 @@ namespace NKafka.Client.Internal.Broker
             _clientTimeout = workerPeriod + TimeSpan.FromSeconds(1) + workerPeriod;
         }
 
-        public void Work()
+        public void Work(CancellationToken cancellation)
         {
+            if (cancellation.IsCancellationRequested) return;
             _broker.Maintenance();
 
             foreach (var topicPair in _topics)
@@ -85,7 +87,8 @@ namespace NKafka.Client.Internal.Broker
                 var topic = topicPair.Value;
                 if (topic == null) continue;
 
-                ProcessTopic(topic);                
+                if (cancellation.IsCancellationRequested) return;
+                ProcessTopic(topic, cancellation);                
             }
 
             foreach (var groupPair in _groups)
@@ -93,12 +96,18 @@ namespace NKafka.Client.Internal.Broker
                 var group = groupPair.Value;
                 if (group == null) continue;
 
-                ProcessGroup(group);
+                if (cancellation.IsCancellationRequested) return;
+                ProcessGroup(group, cancellation);
             }
 
-            _producer.Produce();
-            _coordinator.Process();            
-            _consumer.Consume();
+            if (cancellation.IsCancellationRequested) return;
+            _producer.Produce(cancellation);
+
+            if (cancellation.IsCancellationRequested) return;
+            _coordinator.Process(cancellation);
+
+            if (cancellation.IsCancellationRequested) return;
+            _consumer.Consume(cancellation);
         }
 
         public void EnableConsume()
@@ -111,9 +120,10 @@ namespace NKafka.Client.Internal.Broker
             _consumer.IsConsumeEnabled = false;
         }
         
-        public void Start()
+        public void Start(CancellationToken cancellation)
         {
-            _broker.Open();
+            if (cancellation.IsCancellationRequested) return;
+            _broker.Open(); //todo (E011) open async
 
             _producer.Start();
             _coordinator.Start();
@@ -169,12 +179,15 @@ namespace NKafka.Client.Internal.Broker
             _groups[groupName] = group;
         }
 
-        private void ProcessTopic([NotNull] KafkaClientBrokerTopic topic)
+        private void ProcessTopic([NotNull] KafkaClientBrokerTopic topic, CancellationToken cancellation)
         {
+            if (cancellation.IsCancellationRequested) return;
+
             foreach (var partitionPair in topic.Partitions)
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
+                if (cancellation.IsCancellationRequested) return;
 
                 if (partition.IsUnplugRequired)
                 {
@@ -214,8 +227,10 @@ namespace NKafka.Client.Internal.Broker
             }
         }
 
-        private void ProcessGroup([NotNull] KafkaClientBrokerGroup group)
-        {                       
+        private void ProcessGroup([NotNull] KafkaClientBrokerGroup group, CancellationToken cancellation)
+        {
+            if (cancellation.IsCancellationRequested) return;
+
             if (group.IsUnplugRequired)
             {
                 group.Status = KafkaClientBrokerGroupStatus.Unplugged;

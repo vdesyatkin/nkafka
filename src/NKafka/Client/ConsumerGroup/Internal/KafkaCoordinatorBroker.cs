@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.ConsumerGroup.Diagnostics;
@@ -60,14 +61,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
             _groups[groupName] = groupCoordinator;
         }
 
-        public void Process()
+        public void Process(CancellationToken cancellation)
         {
             foreach (var groupPair in _groups)
             {
                 var group = groupPair.Value;
                 if (group == null) continue;
 
-                ProcessGroup(group);
+                if (cancellation.IsCancellationRequested) return;
+                ProcessGroup(group, cancellation);
             }
         }
 
@@ -112,8 +114,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
             _offsetCommitRequests.Clear();
         }
 
-        private void ProcessGroup([NotNull] KafkaCoordinatorGroup group)
+        private void ProcessGroup([NotNull] KafkaCoordinatorGroup group, CancellationToken cancellation)
         {
+            if (cancellation.IsCancellationRequested) return;
+
             if (group.Status == KafkaCoordinatorGroupStatus.RearrangeRequired)
             {
                 return;

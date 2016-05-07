@@ -112,5 +112,10 @@ namespace NKafka.Client.Internal
             Producer?.ApplyPartitions(producerPartitions);
             Consumer?.ApplyPartitions(consumerPartitions);
         }
+
+        public void Flush()
+        {
+            Producer?.DistributeMessagesByPartitions();
+        }
     }
 }

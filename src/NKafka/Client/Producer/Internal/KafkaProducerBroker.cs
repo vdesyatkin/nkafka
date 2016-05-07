@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.Producer.Diagnostics;
 using NKafka.Connection;
@@ -83,19 +84,22 @@ namespace NKafka.Client.Producer.Internal
             _produceRequests.Clear();
         }
 
-        public void Produce()
-        {
+        public void Produce(CancellationToken cancellation)
+        {            
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
                 if (topic == null) continue;
 
-                ProduceTopic(topic);
+                if (cancellation.IsCancellationRequested) return;
+                ProduceTopic(topic, cancellation);
             }            
         }
 
-        private void ProduceTopic([NotNull]KafkaProducerBrokerTopic topic)
+        private void ProduceTopic([NotNull]KafkaProducerBrokerTopic topic, CancellationToken cancellation)
         {
+            if (cancellation.IsCancellationRequested) return;
+
             ProduceBatchSet batchSet;
             if (!_produceRequests.TryGetValue(topic.TopicName, out batchSet) || batchSet == null)
             {
@@ -111,7 +115,7 @@ namespace NKafka.Client.Producer.Internal
                 if (request.Value == null) continue;
 
                 var response = _broker.Receive<KafkaProduceResponse>(requestId);
-                if (!response.HasData && !response.HasError) continue; // has not received
+                if (!response.HasData && !response.HasError) continue; // has not received                
 
                 HandleProduceResponse(topic, request.Value, response);
                 processedRequests.Add(requestId);

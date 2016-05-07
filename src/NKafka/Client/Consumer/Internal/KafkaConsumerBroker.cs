@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Diagnostics;
 using NKafka.Connection;
@@ -103,19 +104,22 @@ namespace NKafka.Client.Consumer.Internal
             _fetchRequests.Clear();
         }
 
-        public void Consume()
+        public void Consume(CancellationToken cancellation)
         {            
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
                 if (topic == null) continue;
 
-                ConsumeTopic(topic);
+                if (cancellation.IsCancellationRequested) return;
+                ConsumeTopic(topic, cancellation);
             }
         }
 
-        private void ConsumeTopic([NotNull] KafkaConsumerBrokerTopic topic)
+        private void ConsumeTopic([NotNull] KafkaConsumerBrokerTopic topic, CancellationToken cancellation)
         {
+            if (cancellation.IsCancellationRequested) return;
+
             var oldFetchBatch = new Dictionary<int, long>();
             var newFetchBatch = new Dictionary<int, long>();
 

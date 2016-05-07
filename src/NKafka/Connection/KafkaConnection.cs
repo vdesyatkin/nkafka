@@ -22,7 +22,7 @@ namespace NKafka.Connection
             try
             {
                 var tcpClient = new TcpClient();
-                tcpClient.Connect(_host, _port);
+                tcpClient.Connect(_host, _port); //todo (E011) connect async
                 _tcpClient = tcpClient;
                 return true;
             }

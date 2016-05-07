@@ -179,9 +179,10 @@ namespace NKafka.Client.Internal
         {
             _workerCancellation = new CancellationTokenSource();
             var produceTimer = new Timer(Work);
+            // ReSharper disable once InconsistentlySynchronizedField
             _workerTimer = produceTimer;
             produceTimer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
-        }        
+        }
 
         public void Stop()
         {
@@ -196,20 +197,27 @@ namespace NKafka.Client.Internal
 
             try
             {
-                _workerTimer.Dispose();                
+                var workerTimer = _workerTimer;
+                lock (workerTimer)
+                {
+                    _workerTimer.Dispose();
+                }
             }
             catch (Exception)
             {
                 //ignored
-            }            
-
+            }
+            foreach (var topic in _topics)
+            {
+                topic.Value?.Flush();
+            }
             foreach (var broker in _brokers)
             {
                 broker.Value?.Stop();
             }
             foreach (var broker in _metadataBrokers)
             {
-                broker.Stop();                
+                broker.Stop();
             }
 
             foreach (var topicPair in _topics)
@@ -234,62 +242,66 @@ namespace NKafka.Client.Internal
 
         private void Work(object state)
         {
-            if (_workerCancellation.IsCancellationRequested) return;
+            var cancellation = _workerCancellation.Token;
+            if (cancellation.IsCancellationRequested) return;
             var workerTimer = _workerTimer;
-            
-            var hasGroups = false;
-            foreach (var groupPair in _groups)
+            lock (workerTimer)
             {
-                var group = groupPair.Value;
-                if (group == null) continue;
-                if (_workerCancellation.IsCancellationRequested) return;
 
-                ProcessGroup(group);
-                hasGroups = true;
-            }
-
-            var hasTopics = false;
-            foreach (var topicPair in _topics)
-            {
-                var topic = topicPair.Value;
-                if (topic == null) continue;
-                if (_workerCancellation.IsCancellationRequested) return;
-
-                ProcessTopic(topic);
-                hasTopics = true;
-            }
-
-            var isBrokersRequired = hasTopics;
-            bool isRegularBrokerAvailable = false;
-            foreach (var brokerPair in _brokers)
-            {
-                var broker = brokerPair.Value;
-                if (broker == null) continue;
-                if (_workerCancellation.IsCancellationRequested) return;
-
-                ProcessBroker(broker, isBrokersRequired);
-                if (broker.IsEnabled)
+                var hasGroups = false;
+                foreach (var groupPair in _groups)
                 {
-                    isRegularBrokerAvailable = true;
+                    var group = groupPair.Value;
+                    if (group == null) continue;
+                    if (cancellation.IsCancellationRequested) return;
+
+                    ProcessGroup(group, cancellation);
+                    hasGroups = true;
                 }
-            }
 
-            var isMetadataBrokerRequired = (hasTopics || hasGroups) && !isRegularBrokerAvailable;
-            foreach (var metadataBroker in _metadataBrokers)
-            {
-                if (_workerCancellation.IsCancellationRequested) return;
-                ProcessMetadataBroker(metadataBroker, isMetadataBrokerRequired);
-            }                       
-            
-            if (_workerCancellation.IsCancellationRequested) return;
+                var hasTopics = false;
+                foreach (var topicPair in _topics)
+                {
+                    var topic = topicPair.Value;
+                    if (topic == null) continue;
+                    if (cancellation.IsCancellationRequested) return;
 
-            try
-            {
-                workerTimer.Change(_workerPeriod, Timeout.InfiniteTimeSpan);
-            }
-            catch (Exception)
-            {
-                //ignored
+                    ProcessTopic(topic);
+                    hasTopics = true;
+                }
+
+                var isBrokersRequired = hasTopics;
+                bool isRegularBrokerAvailable = false;
+                foreach (var brokerPair in _brokers)
+                {
+                    var broker = brokerPair.Value;
+                    if (broker == null) continue;
+                    if (cancellation.IsCancellationRequested) return;
+
+                    ProcessBroker(broker, isBrokersRequired, cancellation);
+                    if (broker.IsEnabled)
+                    {
+                        isRegularBrokerAvailable = true;
+                    }
+                }
+
+                var isMetadataBrokerRequired = (hasTopics || hasGroups) && !isRegularBrokerAvailable;
+                foreach (var metadataBroker in _metadataBrokers)
+                {
+                    if (cancellation.IsCancellationRequested) return;
+                    ProcessMetadataBroker(metadataBroker, isMetadataBrokerRequired, cancellation);
+                }
+
+                if (cancellation.IsCancellationRequested) return;
+
+                try
+                {
+                    workerTimer.Change(_workerPeriod, Timeout.InfiniteTimeSpan);
+                }
+                catch (Exception)
+                {
+                    //ignored
+                }
             }
         }
 
@@ -390,7 +402,7 @@ namespace NKafka.Client.Internal
 
             if (topic.Status == KafkaClientTopicStatus.Ready)
             {
-                topic.Producer?.DistributeMessagesByPartitions();
+                topic.Flush();
 
                 foreach (var paritition in topic.Partitions)
                 {
@@ -421,12 +433,14 @@ namespace NKafka.Client.Internal
             }
         }
 
-        private void ProcessGroup([NotNull] KafkaClientGroup group)
+        private void ProcessGroup([NotNull] KafkaClientGroup group, CancellationToken cancellation)
         {
             if (group.Status == KafkaClientGroupStatus.MetadataError)
             {
                 if (DateTime.UtcNow - group.MetadataInfo.TimestampUtc < _settings.MetadataErrorRetryPeriod) return;
             }
+
+            if (cancellation.IsCancellationRequested) return;
 
             if (group.Status == KafkaClientGroupStatus.NotInitialized || 
                 group.Status == KafkaClientGroupStatus.MetadataError ||
@@ -452,6 +466,8 @@ namespace NKafka.Client.Internal
                     }
                 }
             }
+
+            if (cancellation.IsCancellationRequested) return;
 
             if (group.Status == KafkaClientGroupStatus.MetadataRequested)
             {
@@ -541,7 +557,7 @@ namespace NKafka.Client.Internal
             }
         }
 
-        private void ProcessBroker([NotNull]KafkaClientBroker broker, bool isBrokerRequired)
+        private void ProcessBroker([NotNull]KafkaClientBroker broker, bool isBrokerRequired, CancellationToken cancellation)
         {
             if (!isBrokerRequired)
             {
@@ -554,13 +570,13 @@ namespace NKafka.Client.Internal
 
             if (!broker.IsStarted)
             {
-                broker.Start();
+                broker.Start(cancellation);
             }
 
-            broker.Work();            
+            broker.Work(cancellation);            
         }
 
-        private void ProcessMetadataBroker([NotNull] KafkaClientBroker metadataBroker, bool isMetadataBrokerRequired)
+        private void ProcessMetadataBroker([NotNull] KafkaClientBroker metadataBroker, bool isMetadataBrokerRequired, CancellationToken cancellation)
         {
             if (!isMetadataBrokerRequired)
             {
@@ -573,10 +589,10 @@ namespace NKafka.Client.Internal
 
             if (!metadataBroker.IsStarted)
             {
-                metadataBroker.Start();
+                metadataBroker.Start(cancellation);
             }
 
-            metadataBroker.Work();
+            metadataBroker.Work(cancellation);
         }
 
         [CanBeNull]
