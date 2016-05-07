@@ -30,7 +30,7 @@ namespace NKafka.DevConsole
             var clientConfigBuilder = new KafkaClientSettingsBuilder(metadataBroker)
                 .SetClientId("nkafka")
                 .SetKafkaVersion(KafkaVersion.V0_10)
-                .SetWorkerThreadCount(1)
+                .SetWorkerThreadCount(20)
                 .SetWorkerPeriod(TimeSpan.FromMilliseconds(500));
             var producerConfigBuilder = new KafkaProducerSettingsBuilder()
                 .SetConsistencyLevel(KafkaConsistencyLevel.OneReplica)
@@ -123,20 +123,20 @@ namespace NKafka.DevConsole
 
             } while (userText != "exit" && userText != "q" && userText != "quit");            
 
-            Console.WriteLine("stopping...");
+            Console.WriteLine("flushing...");
 
-            var flushTask = client.TryFlushAndStop(TimeSpan.FromSeconds(10));
-            flushTask.Wait();
-            if (!flushTask.Result)
+            var isFlushed = client.TryPauseAndFlush(TimeSpan.FromSeconds(10));
+            if (!isFlushed)
             {
-                Console.WriteLine("not flushed!");
-                client.Stop();
+                Console.WriteLine("not flushed!");                
             }
             else
             {
                 Console.WriteLine("flushed");
             }
 
+            Console.WriteLine("stopping...");
+            client.Stop();
             Console.WriteLine("stopped");
 
             Console.ReadLine();            

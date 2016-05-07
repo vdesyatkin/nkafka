@@ -13,9 +13,14 @@ namespace NKafka.Client.Internal
         [NotNull, ItemNotNull]
         private readonly IReadOnlyList<KafkaClientWorker> _workers;
 
+        public KafkaClientStatus Status { get; private set; }
+
+        [NotNull] private readonly object _stateLocker = new object();
+
         public KafkaClientInfo GetDiagnosticsInfo()
         {
             var workerInfos = new List<KafkaClientWorkerInfo>(_workers.Count);
+            // ReSharper disable once InconsistentlySynchronizedField
             foreach (var worker in _workers)
             {
                 var workerInfo = worker.GetDiagnosticsInfo();
@@ -65,9 +70,24 @@ namespace NKafka.Client.Internal
         /// </summary>
         public void Start()
         {
-            foreach (var worker in _workers)
+            if (Status == KafkaClientStatus.Started) return;            
+
+            lock (_stateLocker)
             {
-                worker.Start();
+                if (Status == KafkaClientStatus.Started) return;
+                    
+                if (Status == KafkaClientStatus.Paused)
+                {
+                    Resume();
+                    return;
+                }                
+
+                foreach (var worker in _workers)
+                {
+                    worker.Start();
+                }
+
+                Status = KafkaClientStatus.Started;
             }
         }
 
@@ -76,55 +96,54 @@ namespace NKafka.Client.Internal
         /// </summary>
         public void Stop()
         {
-            foreach (var worker in _workers)
+            if (Status == KafkaClientStatus.Stopped) return;
+
+            lock (_stateLocker)
             {
-                worker.Stop();
+                if (Status == KafkaClientStatus.Stopped) return;
+
+                if (Status != KafkaClientStatus.Paused)
+                {
+                    Pause();
+                    Status = KafkaClientStatus.Paused;
+                }
+
+                foreach (var worker in _workers)
+                {
+                    worker.BeginStop();
+                }
+
+                var tasks = new List<Task>(_workers.Count);
+                foreach (var worker in _workers)
+                {
+                    var localWorker = worker;
+                    var task = Task.Run(() => localWorker.EndStop());
+                    tasks.Add(task);
+                }
+                Task.WhenAll(tasks.ToArray());
+
+                Status = KafkaClientStatus.Stopped;
             }
         }
-        
+
         /// <summary>
         /// Non thread-safe.
-        /// </summary>        
-        async public Task<bool> TryFlushAndStop(TimeSpan flushTimeout)
+        /// </summary>
+        public bool TryPauseAndFlush(TimeSpan flushTimeout)
         {
-            DisableConsume();            
-            var isFlushed = await TryFlushInternal(flushTimeout);
-            if (!isFlushed)
+            if (Status == KafkaClientStatus.Stopped) return true;
+
+            lock (_stateLocker)
             {
-                EnableConsume(); //todo (E011) ???
-                return false;
-            }
+                if (Status == KafkaClientStatus.Stopped) return true;
 
-            Stop();
-            return true;
-        }        
+                if (Status != KafkaClientStatus.Paused)
+                {
+                    Pause();
+                    Status = KafkaClientStatus.Paused;
+                }
 
-        #region Flush
-
-        private void DisableConsume()
-        {
-            foreach (var worker in _workers)
-            {
-                worker.DisableConsume();
-            }
-        }
-
-        private void EnableConsume()
-        {
-            foreach (var worker in _workers)
-            {
-                worker.EnableConsume();
-            }
-        }
-
-        [NotNull]
-        async public Task<bool> TryFlushInternal(TimeSpan timeout)
-        {
-            var cancellation = new CancellationTokenSource(timeout);
-
-            // ReSharper disable once MethodSupportsCancellation
-            var flushTask = Task.Run(() =>
-            {
+                var cancellation = new CancellationTokenSource(flushTimeout);
                 var spinWait = new SpinWait();
 
                 while (!cancellation.IsCancellationRequested)
@@ -135,18 +154,33 @@ namespace NKafka.Client.Internal
                         isSynchronized = isSynchronized && worker.IsAllTopicsSynchronized();
                     }
                     if (isSynchronized)
-                    {
+                    {                        
                         return true;
                     }
                     spinWait.SpinOnce();
                 }
 
                 return false;
-            });
-
-            var isFlushed = flushTask != null && await flushTask;
-            return isFlushed;
+            }
         }
+              
+        #region Flush
+
+        private void Pause()
+        {
+            foreach (var worker in _workers)
+            {
+                worker.DisableConsume();
+            }
+        }
+
+        private void Resume()
+        {
+            foreach (var worker in _workers)
+            {
+                worker.EnableConsume();
+            }
+        }      
 
         #endregion Flush
 
@@ -173,7 +207,7 @@ namespace NKafka.Client.Internal
 
         private KafkaClientWorker GetWorker(int key)
         {
-            var index = key % _workers.Count;
+            var index = Math.Abs(key) % _workers.Count;
             var worker = _workers[index];
             return worker;
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using System.Threading;
 using JetBrains.Annotations;
 
 namespace NKafka.Connection
@@ -17,12 +18,26 @@ namespace NKafka.Connection
             _port = port;            
         }
 
-        public bool TryOpen() //todo (E002) socket errors
+        public bool TryOpen(CancellationToken cancellation) //todo (E002) socket errors
         {                       
             try
             {
                 var tcpClient = new TcpClient();
-                tcpClient.Connect(_host, _port); //todo (E011) connect async
+                var asyncConnectResult = tcpClient.BeginConnect(_host, _port, null, null);
+                WaitHandle.WaitAny(new[] {asyncConnectResult.AsyncWaitHandle, cancellation.WaitHandle});
+                if (cancellation.IsCancellationRequested)
+                {
+                    return false;
+                }
+                if (asyncConnectResult.IsCompleted)
+                {
+                    tcpClient.EndConnect(asyncConnectResult);
+                }
+                else
+                {
+                    return false;
+                }
+
                 _tcpClient = tcpClient;
                 return true;
             }
@@ -30,7 +45,7 @@ namespace NKafka.Connection
             {
                 //todo (E002) socket errors
                 return false;
-            }                        
+            }
         }
 
         public void Close()

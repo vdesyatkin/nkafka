@@ -73,10 +73,10 @@ namespace NKafka.Connection
             _isConnectionMaintenance = false;
         }
 
-        public void Open()
+        public void Open(CancellationToken cancellation)
         {
             _isConnectionMaintenance = true;
-            TryOpenConnection();
+            TryOpenConnection(cancellation);
             _isConnectionMaintenance = false;
             _isOpenned = true;
         }
@@ -92,8 +92,9 @@ namespace NKafka.Connection
             _requests.Clear();
         }
 
-        public void Maintenance()
+        public void Maintenance(CancellationToken cancellation)
         {
+            if (cancellation.IsCancellationRequested) return;
             if (!_isOpenned) return;
 
             //set timeout error if needed
@@ -132,9 +133,10 @@ namespace NKafka.Connection
                     _isConnectionMaintenance = true;
                     return;
                 }
+                if (cancellation.IsCancellationRequested) return;
 
                 CloseConnection();
-                TryOpenConnection();
+                TryOpenConnection(cancellation);
                 _isConnectionMaintenance = false;
                 return;
             }
@@ -163,13 +165,13 @@ namespace NKafka.Connection
             }
         }
 
-        private void TryOpenConnection()
+        private void TryOpenConnection(CancellationToken cancellation)
         {
             _connectionTimestampUtc = DateTime.UtcNow;
             _lastActivityTimestampUtc = DateTime.UtcNow;
             try
             {
-                if (_connection.TryOpen() != true) //todo (E011) connect async
+                if (_connection.TryOpen(cancellation) != true)
                 {
                     _sendError = KafkaBrokerStateErrorCode.ConnectionError;
                     return;

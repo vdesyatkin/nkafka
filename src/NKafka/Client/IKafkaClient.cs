@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace NKafka.Client
@@ -7,9 +6,10 @@ namespace NKafka.Client
     [PublicAPI]
     public interface IKafkaClient
     {
-        void Start();
-        void Stop();
+        KafkaClientStatus Status { get; }
 
-        [NotNull] Task<bool> TryFlushAndStop(TimeSpan flushTimeout);        
+        void Start();
+        bool TryPauseAndFlush(TimeSpan flushTimeout);
+        void Stop();        
     }
 }

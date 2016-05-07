@@ -190,7 +190,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.JoinGroupRequested)
-            {                
+            {
+                if (cancellation.IsCancellationRequested) return;
+
                 if (!TryHandleResponse<KafkaJoinGroupResponse>(group, _joinGroupRequests, TryHandleJoinGroupResponse))
                 {
                     return;
@@ -216,6 +218,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.AdditionalTopicsRequired)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 var addtionalTopicNames = group.LeaderData?.AdditionalTopicNames;
                 if (addtionalTopicNames == null || addtionalTopicNames.Count == 0)
                 {
@@ -235,6 +239,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.AdditionalTopicsMetadataRequested)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 if (!TryHandleResponse<KafkaTopicMetadataResponse>(group, _additionalTopicsRequests, TryHandleAdditionalTopics))
                 {
                     return;
@@ -245,6 +251,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.JoinedAsLeader)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 if (!TryAssignTopics(group))                
                 {                    
                     return;
@@ -261,6 +269,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.JoinedAsMember)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 var syncRequest = CreateSyncGroupRequest(group);
                 if (!TrySendRequest(group, syncRequest, _syncGroupRequests, _coordinatorClientTimeout + group.Settings.SyncGroupServerTimeout))
                 {
@@ -272,6 +282,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.SyncGroupRequested)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 if (!TryHandleResponse<KafkaSyncGroupResponse>(group, _syncGroupRequests, TryHandleSyncGroupResponse))
                 {
                     return;
@@ -282,6 +294,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.FirstHeartbeatRequired)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 var heartbeatRequest = CreateHeartbeatRequest(group);
                 if (!TrySendRequest(group, heartbeatRequest, _heartbeatRequests, _coordinatorClientTimeout + group.Settings.HeartbeatServerTimeout))
                 {
@@ -294,6 +308,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.FirstHeatbeatRequested)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 if (!TryHandleResponse<KafkaHeartbeatResponse>(group, _heartbeatRequests, TryHandleHeartbeatResponse))
                 {
                     return;
@@ -307,9 +323,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
                  group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequired || 
                  group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequested))
             {
+
+                if (cancellation.IsCancellationRequested) return;
                 //regular heartbeat
 
-                
+
                 if (_heartbeatRequests.ContainsKey(group.GroupName))
                 {
                     if (!TryHandleResponse<KafkaHeartbeatResponse>(group, _heartbeatRequests, TryHandleHeartbeatResponse))
@@ -333,6 +351,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequired)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 var offsetFetchRequest = CreateOffsetFetchRequest(group);
                 if (!TrySendRequest(group, offsetFetchRequest, _offsetFetchRequests, _coordinatorClientTimeout + group.Settings.OffsetFetchServerTimeout))
                 {
@@ -344,6 +364,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequested)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 if (!TryHandleResponse<KafkaOffsetFetchResponse>(group, _offsetFetchRequests, TryHandleOffsetFetchResponse))
                 {
                     return;
@@ -355,6 +377,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.Ready)
             {
+                if (cancellation.IsCancellationRequested) return;
+
                 if (group.GroupType == KafkaConsumerGroupType.SingleConsumer ||
                     group.GroupType == KafkaConsumerGroupType.BalancedConsumers)
                 {

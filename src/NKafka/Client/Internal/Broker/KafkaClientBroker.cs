@@ -80,7 +80,7 @@ namespace NKafka.Client.Internal.Broker
         public void Work(CancellationToken cancellation)
         {
             if (cancellation.IsCancellationRequested) return;
-            _broker.Maintenance();
+            _broker.Maintenance(cancellation);
 
             foreach (var topicPair in _topics)
             {
@@ -123,7 +123,7 @@ namespace NKafka.Client.Internal.Broker
         public void Start(CancellationToken cancellation)
         {
             if (cancellation.IsCancellationRequested) return;
-            _broker.Open(); //todo (E011) open async
+            _broker.Open(cancellation);
 
             _producer.Start();
             _coordinator.Start();

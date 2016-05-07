@@ -184,7 +184,7 @@ namespace NKafka.Client.Internal
             produceTimer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
         }
 
-        public void Stop()
+        public void BeginStop()
         {
             try
             {
@@ -194,7 +194,10 @@ namespace NKafka.Client.Internal
             {
                 //ignored
             }
+        }
 
+        public void EndStop()
+        {            
             try
             {
                 var workerTimer = _workerTimer;

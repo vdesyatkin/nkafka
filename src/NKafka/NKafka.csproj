@@ -114,6 +114,7 @@
     <Compile Include="Client\KafkaClientSettingsBuilder.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettings.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerSettingsBuilder.cs" />
+    <Compile Include="Client\KafkaClientStatus.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicMessageSizeInfo.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicPartitionErrorCode.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicInfo.cs" />
