@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.IO;
-using System.Net.Sockets;
 using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Protocol;
@@ -16,7 +14,7 @@ namespace NKafka.Connection
         public bool IsEnabled => _isOpenned && !_isConnectionMaintenance;
 
         public KafkaBrokerStateErrorCode? Error => _sendError ?? _receiveError;
-        
+
         [NotNull]
         public string Name { get; }
 
@@ -36,15 +34,20 @@ namespace NKafka.Connection
                 var lastActivityTimestampUtc = _lastActivityTimestampUtc;
                 return lastActivityTimestampUtc > DateTime.MinValue ? lastActivityTimestampUtc : (DateTime?)null;
             }
-        }        
-        
+        }
 
-        [NotNull] private readonly KafkaConnection _connection;
-        [NotNull] private readonly KafkaProtocol _kafkaProtocol;
-        [NotNull] private readonly KafkaConnectionSettings _settings;
 
-        [NotNull] private readonly ConcurrentDictionary<int, RequestState> _requests;
-        [NotNull] private readonly ResponseState _responseState;
+        [NotNull]
+        private readonly KafkaConnection _connection;
+        [NotNull]
+        private readonly KafkaProtocol _kafkaProtocol;
+        [NotNull]
+        private readonly KafkaConnectionSettings _settings;
+
+        [NotNull]
+        private readonly ConcurrentDictionary<int, RequestState> _requests;
+        [NotNull]
+        private readonly ResponseState _responseState;
 
         private KafkaBrokerStateErrorCode? _sendError;
         private KafkaBrokerStateErrorCode? _receiveError;
@@ -56,7 +59,7 @@ namespace NKafka.Connection
         private DateTime _lastActivityTimestampUtc;
         private int? _heartbeatRequestId;
 
-        private int _currentRequestId;        
+        private int _currentRequestId;
 
         public KafkaBroker([NotNull] KafkaConnection connection, [NotNull] KafkaProtocol kafkaProtocol,
             [NotNull] string name, [CanBeNull] KafkaConnectionSettings settings)
@@ -169,16 +172,9 @@ namespace NKafka.Connection
         {
             _connectionTimestampUtc = DateTime.UtcNow;
             _lastActivityTimestampUtc = DateTime.UtcNow;
-            try
+            if (_connection.TryOpen(cancellation) != true)
             {
-                if (_connection.TryOpen(cancellation) != true)
-                {
-                    _sendError = KafkaBrokerStateErrorCode.ConnectionError;
-                    return;
-                }
-            }
-            catch (Exception)
-            {
+                //todo (E002) Error handling
                 _sendError = KafkaBrokerStateErrorCode.ConnectionError;
                 return;
             }
@@ -188,14 +184,7 @@ namespace NKafka.Connection
 
         private void CloseConnection()
         {
-            try
-            {
-                _connection.Close();
-            }
-            catch (Exception)
-            {
-                //ignored
-            }
+            _connection.Close();
         }
 
         public KafkaBrokerResult<int?> Send<TRequest>(TRequest request, TimeSpan timeout, int? dataCapacity = null)
@@ -243,13 +232,6 @@ namespace NKafka.Connection
                 return KafkaBrokerErrorCode.ProtocolError;
             }
 
-            var stream = _connection.GetStream();
-            if (stream == null)
-            {
-                _sendError = KafkaBrokerStateErrorCode.ConnectionError;
-                return KafkaBrokerErrorCode.TransportError;
-            }
-
             var requestState = new RequestState(request, DateTime.UtcNow, timeout);
             if (processResponse)
             {
@@ -257,18 +239,15 @@ namespace NKafka.Connection
                 _lastActivityTimestampUtc = DateTime.UtcNow;
             }
 
-            try
-            {                
-                stream.Write(data, 0, data.Length);
-                requestState.SentTimestampUtc = DateTime.UtcNow;
-                _sendError = null;
-                return requestId;
-            }
-            catch (Exception)
+            if (!_connection.TryWrite(data, 0, data.Length))
             {
+                //todo (E002) Error handling
                 _sendError = KafkaBrokerStateErrorCode.TransportError;
                 return KafkaBrokerErrorCode.TransportError;
             }
+            requestState.SentTimestampUtc = DateTime.UtcNow;
+            _sendError = null;
+            return requestId;
         }
 
         public KafkaBrokerResult<TResponse> Receive<TResponse>(int requestId) where TResponse : class, IKafkaResponse
@@ -300,21 +279,11 @@ namespace NKafka.Connection
 
         private void BeginRead()
         {
-            var stream = _connection.GetStream();
-            if (stream == null)
-            {
-                _receiveError = KafkaBrokerStateErrorCode.ConnectionError;
-                return;
-            }
-
             var headerBuffer = _responseState.ResponseHeaderBuffer;
 
-            try
+            if (_connection.TryBeginRead(headerBuffer, 0, headerBuffer.Length, OnReceived) == null)
             {
-                stream.BeginRead(headerBuffer, 0, headerBuffer.Length, OnReceived, null);
-            }
-            catch (Exception)
-            {
+                //todo (E002) Error handling
                 _receiveError = KafkaBrokerStateErrorCode.TransportError;
             }
         }
@@ -325,12 +294,9 @@ namespace NKafka.Connection
 
             try
             {
-                var stream = _connection.GetStream();
-                if (stream == null) return;
-
-                while (IsStreamDataAvailable(stream))
+                while (_connection.IsDataAvailable())
                 {
-                    var responseHeader = ReadResponseHeader(stream, result);
+                    var responseHeader = ReadResponseHeader(result);
                     if (responseHeader == null)
                     {
                         return;
@@ -342,22 +308,20 @@ namespace NKafka.Connection
                     RequestState requestState;
                     if (!_requests.TryGetValue(requestId, out requestState) || requestState == null)
                     {
+                        // unexpected response?
                         if (responseHeader.DataSize > 0)
                         {
-                            try
+                            var tempBuffer = new byte[responseHeader.DataSize];
+                            if (_connection.TryRead(tempBuffer, 0, tempBuffer.Length) == null)
                             {
-                                var tempBuffer = new byte[responseHeader.DataSize];
-                                stream.Read(tempBuffer, 0, tempBuffer.Length);
-                            }
-                            catch (Exception)
-                            {
+                                //todo (E002) Error handling
                                 _receiveError = KafkaBrokerStateErrorCode.TransportError;
                             }
                         }
                         return;
                     }
 
-                    var response = ReadResponse(stream, requestState, responseHeader);
+                    var response = ReadResponse(requestState, responseHeader);
                     if (response == null)
                     {
                         return;
@@ -374,20 +338,8 @@ namespace NKafka.Connection
             }
         }
 
-        private bool IsStreamDataAvailable([NotNull] NetworkStream stream)
-        {
-            try
-            {
-                return stream.DataAvailable;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
         [CanBeNull]
-        private KafkaResponseHeader ReadResponseHeader([NotNull] Stream stream, IAsyncResult result)
+        private KafkaResponseHeader ReadResponseHeader(IAsyncResult result)
         {
             if (result == null)
             {
@@ -395,13 +347,10 @@ namespace NKafka.Connection
                 return null;
             }
 
-            int responseHeaderSize;
-            try
+            var responseHeaderSize = _connection.TryEndRead(result);
+            if (responseHeaderSize == null)
             {
-                responseHeaderSize = stream.EndRead(result);
-            }
-            catch (Exception)
-            {
+                //todo (E002) Error handling
                 _receiveError = KafkaBrokerStateErrorCode.TransportError;
                 return null;
             }
@@ -419,7 +368,7 @@ namespace NKafka.Connection
 
             try
             {
-                var responseHeader = _kafkaProtocol.ReadResponseHeader(_responseState.ResponseHeaderBuffer, 0, responseHeaderSize);
+                var responseHeader = _kafkaProtocol.ReadResponseHeader(_responseState.ResponseHeaderBuffer, 0, responseHeaderSize.Value);
                 if (responseHeader == null)
                 {
                     _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
@@ -435,23 +384,22 @@ namespace NKafka.Connection
         }
 
         [CanBeNull]
-        private IKafkaResponse ReadResponse([NotNull] NetworkStream stream, [NotNull] RequestState state, [NotNull]KafkaResponseHeader responseHeader)
+        private IKafkaResponse ReadResponse([NotNull] RequestState state, [NotNull]KafkaResponseHeader responseHeader)
         {
             var responseBuffer = new byte[responseHeader.DataSize];
             int responseSize = 0;
-            try
+            do
             {
-                do
+                var readSize = _connection.TryRead(responseBuffer, responseSize, responseBuffer.Length - responseSize);
+                if (readSize == null)
                 {
-                    responseSize += stream.Read(responseBuffer, responseSize, responseBuffer.Length - responseSize);
-                } while (responseSize < responseBuffer.Length);
-            }
-            catch (Exception)
-            {
-                _receiveError = KafkaBrokerStateErrorCode.TransportError;
-                state.Error = KafkaBrokerErrorCode.TransportError;
-                return null;
-            }
+                    //todo (E002) Error handling
+                    _receiveError = KafkaBrokerStateErrorCode.TransportError;
+                    state.Error = KafkaBrokerErrorCode.TransportError;
+                    return null;
+                }
+                responseSize += readSize.Value;
+            } while (responseSize < responseBuffer.Length);
 
             if (responseSize != responseBuffer.Length)
             {
