@@ -12,6 +12,10 @@ namespace NKafka.Client.Diagnostics
         ProtocolError = 4,
         ClientTimeout = 5,
         ClientError = 6,
-        MetadataError = 7
+        MetadataError = 7,
+
+        HostUnreachable = -7,
+        HostNotAvailable = -8,
+        NotAuthorized = -9,
     }
 }

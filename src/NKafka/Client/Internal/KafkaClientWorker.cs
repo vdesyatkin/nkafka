@@ -659,7 +659,7 @@ namespace NKafka.Client.Internal
         {           
             KafkaClientTopicMetadataErrorCode? topicErrorCode = null;
             if (errorCode.HasValue)
-            {
+            {                
                 switch (errorCode.Value)
                 {
                     case KafkaBrokerErrorCode.ConnectionClosed:
@@ -679,6 +679,31 @@ namespace NKafka.Client.Internal
                         break;                                        
                     case KafkaBrokerErrorCode.ClientTimeout:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.ClientTimeout;
+                        break;
+                    case KafkaBrokerErrorCode.Cancelled:
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ConnectionClosed;
+                        break;
+                    case KafkaBrokerErrorCode.ConnectionRefused:
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.HostNotAvailable;
+                        break;
+                    case KafkaBrokerErrorCode.HostUnreachable:
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.HostUnreachable;
+                        break;
+                    case KafkaBrokerErrorCode.HostNotAvailable:
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.HostNotAvailable;
+                        break;
+                    case KafkaBrokerErrorCode.NotAuthorized:
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.NotAuthorized;
+                        break;
+                    case KafkaBrokerErrorCode.UnsupportedOperation:
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ProtocolError;
+                        break;
+                    case KafkaBrokerErrorCode.OperationRefused:
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ProtocolError;
+                        break;
+                    case KafkaBrokerErrorCode.TooBigMessage:
+                        // there are only command requests w/o data - network problem.
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.TransportError;
                         break;
                     case KafkaBrokerErrorCode.UnknownError:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.UnknownError;
@@ -797,6 +822,31 @@ namespace NKafka.Client.Internal
                         break;                    
                     case KafkaBrokerErrorCode.ClientTimeout:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.ClientTimeout;
+                        break;                    
+                    case KafkaBrokerErrorCode.Cancelled:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ConnectionClosed;
+                        break;
+                    case KafkaBrokerErrorCode.ConnectionRefused:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.HostNotAvailable;
+                        break;
+                    case KafkaBrokerErrorCode.HostUnreachable:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.HostUnreachable;
+                        break;
+                    case KafkaBrokerErrorCode.HostNotAvailable:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.HostNotAvailable;
+                        break;
+                    case KafkaBrokerErrorCode.NotAuthorized:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.NotAuthorized;
+                        break;
+                    case KafkaBrokerErrorCode.UnsupportedOperation:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ProtocolError;
+                        break;
+                    case KafkaBrokerErrorCode.OperationRefused:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ProtocolError;
+                        break;
+                    case KafkaBrokerErrorCode.TooBigMessage:
+                        // there are only command requests w/o data - network problem.
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.TransportError;
                         break;
                     case KafkaBrokerErrorCode.UnknownError:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.UnknownError;

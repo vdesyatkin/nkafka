@@ -34,29 +34,58 @@ namespace NKafka.Client.Internal.Broker
             if (brokerErrorCode.HasValue)
             {
                 switch (brokerErrorCode.Value)
-                {
-                    case KafkaBrokerStateErrorCode.ConnectionError:
-                        errorCode = KafkaClientBrokerErrorCode.ConnectionError;
+                {                    
+                    case KafkaBrokerStateErrorCode.ConnectionClosed:
+                        errorCode = KafkaClientBrokerErrorCode.ConnectionClosed;
                         break;
-                    case KafkaBrokerStateErrorCode.TransportError:
-                        errorCode = KafkaClientBrokerErrorCode.TransportError;
+                    case KafkaBrokerStateErrorCode.ConnectionMaintenance:
+                        errorCode = KafkaClientBrokerErrorCode.ConnectionMaintenance;
                         break;
                     case KafkaBrokerStateErrorCode.ProtocolError:
                         errorCode = KafkaClientBrokerErrorCode.ProtocolError;
                         break;
+                    case KafkaBrokerStateErrorCode.TransportError:
+                        errorCode = KafkaClientBrokerErrorCode.TransportError;
+                        break;
                     case KafkaBrokerStateErrorCode.ClientTimeout:
-                        errorCode = KafkaClientBrokerErrorCode.Timeout;
+                        errorCode = KafkaClientBrokerErrorCode.ClientTimeout;
+                        break;
+                    case KafkaBrokerStateErrorCode.Cancelled:
+                        errorCode = KafkaClientBrokerErrorCode.Cancelled;                        
+                        break;
+                    case KafkaBrokerStateErrorCode.InvalidHost:
+                        errorCode = KafkaClientBrokerErrorCode.InvalidHost;
+                        break;
+                    case KafkaBrokerStateErrorCode.UnsupportedHost:
+                        errorCode = KafkaClientBrokerErrorCode.UnsupportedHost;
+                        break;                        
+                    case KafkaBrokerStateErrorCode.NetworkNotAvailable:
+                        errorCode = KafkaClientBrokerErrorCode.NetworkNotAvailable;
+                        break;
+                    case KafkaBrokerStateErrorCode.ConnectionNotAllowed:
+                        errorCode = KafkaClientBrokerErrorCode.ConnectionNotAllowed;
+                        break;
+                    case KafkaBrokerStateErrorCode.ConnectionRefused:
+                        errorCode = KafkaClientBrokerErrorCode.ConnectionRefused;
+                        break;
+                    case KafkaBrokerStateErrorCode.HostUnreachable:
+                        errorCode = KafkaClientBrokerErrorCode.HostUnreachable;
+                        break;
+                    case KafkaBrokerStateErrorCode.HostNotAvailable:
+                        errorCode = KafkaClientBrokerErrorCode.HostNotAvailable;                        
+                        break;
+                    case KafkaBrokerStateErrorCode.NotAuthorized:
+                        errorCode = KafkaClientBrokerErrorCode.NotAuthorized;
+                        break;
+                    case KafkaBrokerStateErrorCode.UnknownError:
+                        errorCode = KafkaClientBrokerErrorCode.UnknownError;
                         break;
                     default:
                         errorCode = KafkaClientBrokerErrorCode.UnknownError;
                         break;
                 }
             }
-            return new KafkaClientBrokerInfo(_broker.Name,
-                _metadata, _broker.IsOpenned, errorCode,
-                _broker.ConnectionTimestampUtc, 
-                _broker.LastActivityTimestampUtc,
-                DateTime.UtcNow);
+            return new KafkaClientBrokerInfo(_broker.Name, _metadata, _broker.IsOpenned, errorCode, _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc, DateTime.UtcNow);
         }
 
         public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaBrokerMetadata metadata, [NotNull] KafkaClientSettings settings)
@@ -68,7 +97,7 @@ namespace NKafka.Client.Internal.Broker
             _producer = new KafkaProducerBroker(broker, settings.WorkerPeriod);
             _consumer = new KafkaConsumerBroker(broker, settings.WorkerPeriod);
             _coordinator = new KafkaCoordinatorBroker(broker, settings.WorkerPeriod);
-            
+
             var workerPeriod = settings.WorkerPeriod;
             if (workerPeriod < TimeSpan.FromMilliseconds(100)) //todo (E006) settings rage validation?
             {
@@ -88,7 +117,7 @@ namespace NKafka.Client.Internal.Broker
                 if (topic == null) continue;
 
                 if (cancellation.IsCancellationRequested) return;
-                ProcessTopic(topic, cancellation);                
+                ProcessTopic(topic, cancellation);
             }
 
             foreach (var groupPair in _groups)
@@ -119,7 +148,7 @@ namespace NKafka.Client.Internal.Broker
         {
             _consumer.IsConsumeEnabled = false;
         }
-        
+
         public void Start(CancellationToken cancellation)
         {
             if (cancellation.IsCancellationRequested) return;
@@ -132,7 +161,7 @@ namespace NKafka.Client.Internal.Broker
 
         public void Stop()
         {
-            _producer.Stop();                        
+            _producer.Stop();
             _coordinator.Stop();
             _consumer.Stop();
 
@@ -218,8 +247,7 @@ namespace NKafka.Client.Internal.Broker
 
                 if (partition.Status == KafkaClientBrokerPartitionStatus.Plugged)
                 {
-                    if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrangeRequired ||
-                        partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired)
+                    if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrangeRequired || partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired)
                     {
                         partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
                     }
@@ -250,19 +278,19 @@ namespace NKafka.Client.Internal.Broker
             {
                 if (group.Coordinator.Status == KafkaCoordinatorGroupStatus.RearrangeRequired)
                 {
-                    group.Status = KafkaClientBrokerGroupStatus.RearrangeRequired;                    
+                    group.Status = KafkaClientBrokerGroupStatus.RearrangeRequired;
                 }
             }
         }
 
-        public KafkaBrokerResult<int?> SendRequest<TRequest>([NotNull] TRequest request) where TRequest: class, IKafkaRequest
+        public KafkaBrokerResult<int?> SendRequest<TRequest>([NotNull] TRequest request) where TRequest : class, IKafkaRequest
         {
-            return _broker.Send(request, _clientTimeout);                
+            return _broker.Send(request, _clientTimeout);
         }
 
-        public KafkaBrokerResult<TResponse> GetResponse<TResponse>(int requestId) where TResponse: class, IKafkaResponse
+        public KafkaBrokerResult<TResponse> GetResponse<TResponse>(int requestId) where TResponse : class, IKafkaResponse
         {
-            return _broker.Receive<TResponse>(requestId);            
+            return _broker.Receive<TResponse>(requestId);
         }
     }
 }

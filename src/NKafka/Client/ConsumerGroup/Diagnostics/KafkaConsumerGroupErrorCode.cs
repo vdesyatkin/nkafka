@@ -15,6 +15,10 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
         ClientError = -6,
         AssignmentError = -7,
 
+        HostUnreachable = -8,
+        HostNotAvailable = -9,
+        NotAuthorized = -10,        
+
         /// <summary>
         /// If you specify a string larger than configured maximum for offset metadata.
         /// </summary>

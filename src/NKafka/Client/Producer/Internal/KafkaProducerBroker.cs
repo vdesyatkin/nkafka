@@ -452,7 +452,7 @@ namespace NKafka.Client.Producer.Internal
            KafkaBrokerErrorCode brokerError)
         {            
             KafkaProducerTopicPartitionErrorCode partitionErrorCode;
-
+            
             switch (brokerError)
             {
                 case KafkaBrokerErrorCode.ConnectionClosed:
@@ -472,6 +472,31 @@ namespace NKafka.Client.Producer.Internal
                     break;
                 case KafkaBrokerErrorCode.ClientTimeout:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ClientTimeout;
+                    break;
+                case KafkaBrokerErrorCode.Cancelled:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ConnectionClosed;
+                    break;
+                case KafkaBrokerErrorCode.ConnectionRefused:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.HostNotAvailable;
+                    break;
+                case KafkaBrokerErrorCode.HostUnreachable:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.HostUnreachable;
+                    break;
+                case KafkaBrokerErrorCode.HostNotAvailable:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.HostNotAvailable;
+                    break;
+                case KafkaBrokerErrorCode.NotAuthorized:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.NotAuthorized;
+                    break;
+                case KafkaBrokerErrorCode.UnsupportedOperation:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.OperationRefused:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.HostNotAvailable;
+                    break;
+                case KafkaBrokerErrorCode.TooBigMessage:
+                    //todo (E002) change limits
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportError;
                     break;
                 case KafkaBrokerErrorCode.UnknownError:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.UnknownError;

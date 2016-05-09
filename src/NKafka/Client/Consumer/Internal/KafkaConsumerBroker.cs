@@ -560,6 +560,30 @@ namespace NKafka.Client.Consumer.Internal
                 case KafkaBrokerErrorCode.ClientTimeout:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ClientTimeout;
                     break;
+                case KafkaBrokerErrorCode.Cancelled:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ConnectionClosed;
+                    break;
+                case KafkaBrokerErrorCode.ConnectionRefused:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.HostNotAvailable;
+                    break;
+                case KafkaBrokerErrorCode.HostUnreachable:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.HostUnreachable;
+                    break;
+                case KafkaBrokerErrorCode.HostNotAvailable:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.HostNotAvailable;
+                    break;
+                case KafkaBrokerErrorCode.NotAuthorized:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.NotAuthorized;
+                    break;
+                case KafkaBrokerErrorCode.UnsupportedOperation:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.OperationRefused:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.TooBigMessage: // there are only command requests w/o data - network problem.
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.TransportError;
+                    break;
                 case KafkaBrokerErrorCode.UnknownError:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.UnknownError;
                     break;

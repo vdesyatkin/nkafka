@@ -9,6 +9,14 @@
         TransportError = 4,
         ProtocolError = 5,
         ClientTimeout = 6,
-        Cancelled = 7
+        Cancelled = 7,     
+
+        ConnectionRefused = 8,
+        HostUnreachable = 9,
+        HostNotAvailable = 10,
+        NotAuthorized = 11,
+        UnsupportedOperation = 12,
+        OperationRefused = 13,
+        TooBigMessage = 14
     }
 }

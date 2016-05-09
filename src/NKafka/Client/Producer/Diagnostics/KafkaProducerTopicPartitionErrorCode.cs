@@ -14,6 +14,10 @@ namespace NKafka.Client.Producer.Diagnostics
         ClientTimeout = -5,
         ClientError = -6,
 
+        HostUnreachable = -7,
+        HostNotAvailable = -8,
+        NotAuthorized = -9,
+
         /// <summary>
         /// This request is for a topic or partition that does not exist on this broker.
         /// </summary>

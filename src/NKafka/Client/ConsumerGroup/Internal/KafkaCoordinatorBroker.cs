@@ -1316,7 +1316,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         private void HandleBrokerError([NotNull] KafkaCoordinatorGroup group, KafkaBrokerErrorCode errorCode)
         {
             KafkaConsumerGroupErrorCode sessionErrorCode;
-
+            
             switch (errorCode)
             {
                 case KafkaBrokerErrorCode.ConnectionClosed:
@@ -1336,6 +1336,31 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     break;
                 case KafkaBrokerErrorCode.ClientTimeout:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.ClientTimeout;
+                    break;
+                case KafkaBrokerErrorCode.Cancelled:
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.ConnectionClosed;
+                    break;
+                case KafkaBrokerErrorCode.ConnectionRefused:
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.HostNotAvailable;
+                    break;
+                case KafkaBrokerErrorCode.HostUnreachable:
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.HostUnreachable;
+                    break;
+                case KafkaBrokerErrorCode.HostNotAvailable:
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.HostNotAvailable;
+                    break;
+                case KafkaBrokerErrorCode.NotAuthorized:
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.NotAuthorized;
+                    break;
+                case KafkaBrokerErrorCode.UnsupportedOperation:
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.OperationRefused:
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.ProtocolError;
+                    break;
+                case KafkaBrokerErrorCode.TooBigMessage:
+                    // there are only command requests w/o data - network problem.
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.TransportError;
                     break;
                 case KafkaBrokerErrorCode.UnknownError:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.UnknownError;

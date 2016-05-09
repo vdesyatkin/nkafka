@@ -180,7 +180,7 @@ namespace NKafka.Connection
             }            
             if (!openResult.Result)
             {                
-                _sendError = KafkaBrokerStateErrorCode.ConnectionError; //todo (E002)
+                _sendError = KafkaBrokerStateErrorCode.ConnectionNotAllowed;
                 return;
             }
 
@@ -246,10 +246,9 @@ namespace NKafka.Connection
 
             var writeResult = _connection.TryWrite(data, 0, data.Length);
             if (writeResult.Error != null)
-            {
-                var error = ConvertError(writeResult.Error.Value);
-                _sendError = ConvertStateError(error);
-                return error;
+            {                
+                _sendError = ConvertStateError(writeResult.Error.Value);
+                return ConvertError(writeResult.Error.Value);
             }
             requestState.SentTimestampUtc = DateTime.UtcNow;
             _sendError = null;
@@ -296,7 +295,7 @@ namespace NKafka.Connection
 
             if (beginReadResult.Result == null)
             {
-                _receiveError = KafkaBrokerStateErrorCode.TransportError; //todo (E002)
+                _receiveError = KafkaBrokerStateErrorCode.TransportError;
             }
         }
 
@@ -404,10 +403,9 @@ namespace NKafka.Connection
             {
                 var readSizeResult = _connection.TryRead(responseBuffer, responseSize, responseBuffer.Length - responseSize);
                 if (readSizeResult.Error != null)
-                {
-                    var error = ConvertError(readSizeResult.Error.Value);
-                    _receiveError = ConvertStateError(error);
-                    state.Error = error;
+                {                    
+                    _receiveError = ConvertStateError(readSizeResult.Error.Value);
+                    state.Error = ConvertError(readSizeResult.Error.Value);
                     return null;
                 }
                 var readSize = readSizeResult.Result;
@@ -481,41 +479,56 @@ namespace NKafka.Connection
         }
 
         #endregion State classes
-
+        
         private static KafkaBrokerStateErrorCode ConvertStateError(KafkaConnectionErrorCode connectionError)
-        {
-            return ConvertStateError(ConvertError(connectionError));
-        }
-
-        private static KafkaBrokerStateErrorCode ConvertStateError(KafkaBrokerErrorCode error)
         {            
-            switch (error)
-            {
-                case KafkaBrokerErrorCode.UnknownError:
-                    return KafkaBrokerStateErrorCode.UnknownError;
-                case KafkaBrokerErrorCode.ConnectionClosed:
-                    return KafkaBrokerStateErrorCode.ConnectionError;
-                case KafkaBrokerErrorCode.ConnectionMaintenance:
-                    return KafkaBrokerStateErrorCode.ConnectionError; //todo (E002)
-                case KafkaBrokerErrorCode.BadRequest:
+            switch (connectionError)
+            {                
+                case KafkaConnectionErrorCode.ConnectionClosed:
+                    return KafkaBrokerStateErrorCode.ConnectionClosed;
+                case KafkaConnectionErrorCode.ConnectionMaintenance:
+                    return KafkaBrokerStateErrorCode.ConnectionMaintenance;
+                case KafkaConnectionErrorCode.BadRequest:
                     return KafkaBrokerStateErrorCode.ProtocolError;
-                case KafkaBrokerErrorCode.TransportError:
+                case KafkaConnectionErrorCode.TransportError:
                     return KafkaBrokerStateErrorCode.TransportError;
-                case KafkaBrokerErrorCode.ProtocolError:
+                case KafkaConnectionErrorCode.ClientTimeout:
+                    return KafkaBrokerStateErrorCode.ClientTimeout;                    
+                case KafkaConnectionErrorCode.Cancelled:
+                    return KafkaBrokerStateErrorCode.Cancelled;
+                case KafkaConnectionErrorCode.InvalidHost:
+                    return KafkaBrokerStateErrorCode.InvalidHost;
+                case KafkaConnectionErrorCode.UnsupportedHost:
+                    return KafkaBrokerStateErrorCode.UnsupportedHost;
+                case KafkaConnectionErrorCode.NetworkNotAvailable:
+                    return KafkaBrokerStateErrorCode.NetworkNotAvailable;
+                case KafkaConnectionErrorCode.ConnectionNotAllowed:
+                    return KafkaBrokerStateErrorCode.ConnectionNotAllowed;
+                case KafkaConnectionErrorCode.ConnectionRefused:
+                    return KafkaBrokerStateErrorCode.ConnectionRefused;
+                case KafkaConnectionErrorCode.HostUnreachable:
+                    return KafkaBrokerStateErrorCode.HostUnreachable;
+                case KafkaConnectionErrorCode.HostNotAvailable:
+                    return KafkaBrokerStateErrorCode.HostNotAvailable;                    
+                case KafkaConnectionErrorCode.NotAuthorized:
+                    return KafkaBrokerStateErrorCode.NotAuthorized;
+                case KafkaConnectionErrorCode.UnsupportedOperation:
                     return KafkaBrokerStateErrorCode.ProtocolError;
-                case KafkaBrokerErrorCode.ClientTimeout:
-                    return KafkaBrokerStateErrorCode.ClientTimeout;
-                case KafkaBrokerErrorCode.Cancelled:
-                    return KafkaBrokerStateErrorCode.ConnectionError; //todo (E002)
+                case KafkaConnectionErrorCode.OperationRefused:
+                    return KafkaBrokerStateErrorCode.ProtocolError;
+                case KafkaConnectionErrorCode.TooBigMessage:
+                    return KafkaBrokerStateErrorCode.TransportError;
+                case KafkaConnectionErrorCode.UnknownError:
+                    return KafkaBrokerStateErrorCode.UnknownError;
                 default:
                     return KafkaBrokerStateErrorCode.UnknownError;
-            }            
+            }
         }
 
         private static KafkaBrokerErrorCode ConvertError(KafkaConnectionErrorCode connectionError)
         {
             switch (connectionError)
-            {                
+            {
                 case KafkaConnectionErrorCode.ConnectionClosed:
                     return KafkaBrokerErrorCode.ConnectionClosed;
                 case KafkaConnectionErrorCode.ConnectionMaintenance:
@@ -529,34 +542,32 @@ namespace NKafka.Connection
                 case KafkaConnectionErrorCode.Cancelled:
                     return KafkaBrokerErrorCode.Cancelled;
                 case KafkaConnectionErrorCode.InvalidHost:
-                    break; //todo (E002)
+                    return KafkaBrokerErrorCode.HostUnreachable;
                 case KafkaConnectionErrorCode.UnsupportedHost:
-                    break; //todo (E002)
+                    return KafkaBrokerErrorCode.HostUnreachable;
                 case KafkaConnectionErrorCode.NetworkNotAvailable:
-                    break; //todo (E002)
+                    return KafkaBrokerErrorCode.ConnectionClosed;
                 case KafkaConnectionErrorCode.ConnectionNotAllowed:
-                    break; //todo (E002)
+                    return KafkaBrokerErrorCode.ConnectionClosed;
                 case KafkaConnectionErrorCode.ConnectionRefused:
-                    break; //todo (E002)
+                    return KafkaBrokerErrorCode.ConnectionRefused;
                 case KafkaConnectionErrorCode.HostUnreachable:
-                    break; //todo (E002)
+                    return KafkaBrokerErrorCode.HostUnreachable;
                 case KafkaConnectionErrorCode.HostNotAvailable:
-                    break; //todo (E002)
+                    return KafkaBrokerErrorCode.HostNotAvailable;
                 case KafkaConnectionErrorCode.NotAuthorized:
-                    break; //todo (E002)  
+                    return KafkaBrokerErrorCode.NotAuthorized;
                 case KafkaConnectionErrorCode.UnsupportedOperation:
-                    break; //todo (E002)  
+                    return KafkaBrokerErrorCode.UnsupportedOperation;
                 case KafkaConnectionErrorCode.OperationRefused:
-                    break; //todo (E002)  
+                    return KafkaBrokerErrorCode.OperationRefused;
                 case KafkaConnectionErrorCode.TooBigMessage:
-                    break; //todo (E002)  
+                    return KafkaBrokerErrorCode.TooBigMessage;
                 case KafkaConnectionErrorCode.UnknownError:
                     return KafkaBrokerErrorCode.UnknownError;
                 default:
                     return KafkaBrokerErrorCode.UnknownError;
-            }
-
-            return KafkaBrokerErrorCode.UnknownError;
+            }            
         }
     }
 }
