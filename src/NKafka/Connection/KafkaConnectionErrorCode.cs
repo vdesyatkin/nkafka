@@ -7,20 +7,20 @@
         ConnectionMaintenance = 2,
         BadRequest = 3,
         TransportError = 4,        
-        ClientTimeout = 6,
-        Cancelled = 7,
+        ClientTimeout = 5,
+        Cancelled = 6,
 
-        InvalidHost = 8,
-        UnsupportedHost = 9,
-        NetworkNotAvailable = 10,
-        ConnectionNotAllowed = 11,
-        ConnectionRefused = 12,
-        HostUnreachable = 13,
-        HostNotAvailable = 14,
-        NotAuthorized = 15,
+        InvalidHost = 7,
+        UnsupportedHost = 8,
+        NetworkNotAvailable = 9,
+        ConnectionNotAllowed = 10,
+        ConnectionRefused = 11,
+        HostUnreachable = 12,
+        HostNotAvailable = 13,
+        NotAuthorized = 14,
 
-        UnsupportedOperation = 16,
-        OperationRefused = 17,
-        TooBigMessage = 18
+        UnsupportedOperation = 15,
+        OperationRefused = 16,
+        TooBigMessage = 17
     }
 }

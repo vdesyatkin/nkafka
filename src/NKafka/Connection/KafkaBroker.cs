@@ -509,17 +509,13 @@ namespace NKafka.Connection
                     return KafkaBrokerStateErrorCode.ConnectionError; //todo (E002)
                 default:
                     return KafkaBrokerStateErrorCode.UnknownError;
-            }
-
-            return KafkaBrokerStateErrorCode.UnknownError;
+            }            
         }
 
         private static KafkaBrokerErrorCode ConvertError(KafkaConnectionErrorCode connectionError)
         {
             switch (connectionError)
-            {
-                case KafkaConnectionErrorCode.UnknownError:
-                    return KafkaBrokerErrorCode.UnknownError;
+            {                
                 case KafkaConnectionErrorCode.ConnectionClosed:
                     return KafkaBrokerErrorCode.ConnectionClosed;
                 case KafkaConnectionErrorCode.ConnectionMaintenance:
@@ -538,10 +534,24 @@ namespace NKafka.Connection
                     break; //todo (E002)
                 case KafkaConnectionErrorCode.NetworkNotAvailable:
                     break; //todo (E002)
+                case KafkaConnectionErrorCode.ConnectionNotAllowed:
+                    break; //todo (E002)
+                case KafkaConnectionErrorCode.ConnectionRefused:
+                    break; //todo (E002)
+                case KafkaConnectionErrorCode.HostUnreachable:
+                    break; //todo (E002)
                 case KafkaConnectionErrorCode.HostNotAvailable:
                     break; //todo (E002)
                 case KafkaConnectionErrorCode.NotAuthorized:
-                    break; //todo (E002)
+                    break; //todo (E002)  
+                case KafkaConnectionErrorCode.UnsupportedOperation:
+                    break; //todo (E002)  
+                case KafkaConnectionErrorCode.OperationRefused:
+                    break; //todo (E002)  
+                case KafkaConnectionErrorCode.TooBigMessage:
+                    break; //todo (E002)  
+                case KafkaConnectionErrorCode.UnknownError:
+                    return KafkaBrokerErrorCode.UnknownError;
                 default:
                     return KafkaBrokerErrorCode.UnknownError;
             }

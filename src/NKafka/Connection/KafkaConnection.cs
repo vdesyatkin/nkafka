@@ -244,7 +244,7 @@ namespace NKafka.Connection
                 case SocketError.Fault:
                     return KafkaConnectionErrorCode.TransportError;
                 case SocketError.InvalidArgument:
-                    return KafkaConnectionErrorCode.InvalidHost;                    
+                    return KafkaConnectionErrorCode.InvalidHost;
                 case SocketError.TooManyOpenSockets:
                     return KafkaConnectionErrorCode.ConnectionNotAllowed;
                 case SocketError.WouldBlock:
@@ -318,7 +318,7 @@ namespace NKafka.Connection
                 case SocketError.HostNotFound:
                     return KafkaConnectionErrorCode.HostUnreachable;
                 case SocketError.TryAgain:
-                    return KafkaConnectionErrorCode.ClientTimeout;                    
+                    return KafkaConnectionErrorCode.ClientTimeout;
                 case SocketError.NoRecovery:
                     return KafkaConnectionErrorCode.HostUnreachable;
                 case SocketError.NoData:
@@ -328,7 +328,7 @@ namespace NKafka.Connection
                 case SocketError.OperationAborted:
                     return KafkaConnectionErrorCode.OperationRefused;
                 default:
-                    return KafkaConnectionErrorCode.UnknownError;                    
+                    return KafkaConnectionErrorCode.UnknownError;
             }            
         }
     }
