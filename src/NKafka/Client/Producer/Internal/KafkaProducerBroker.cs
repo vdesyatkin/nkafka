@@ -178,7 +178,7 @@ namespace NKafka.Client.Producer.Internal
             var batchMessageCount = 0;
             var isBatchFilled = false;
 
-            var batchMaxByteCount = topic.Settings.BatchSizeByteCount;
+            var batchMaxByteCount = topic.BatchSizeByteCount;
             var batchMaxMessageCount = topic.Settings.BatchMaxMessageCount;
 
             for (var i = 0; i < partitionList.Count; i++)
@@ -448,11 +448,14 @@ namespace NKafka.Client.Producer.Internal
         #region Error handling
 
         private void HandleBrokerError(
+           [NotNull] KafkaProducerBrokerTopic topic,
            [NotNull] KafkaProducerBrokerPartition partition,
            KafkaBrokerErrorCode brokerError)
         {            
             KafkaProducerTopicPartitionErrorCode partitionErrorCode;
-            
+
+            var errorType = ProducerErrorType.Rearrange;
+
             switch (brokerError)
             {
                 case KafkaBrokerErrorCode.ConnectionClosed:
@@ -495,8 +498,17 @@ namespace NKafka.Client.Producer.Internal
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.HostNotAvailable;
                     break;
                 case KafkaBrokerErrorCode.TooBigMessage:
-                    //todo (E002) change limits
-                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportError;
+                    if (topic.BatchSizeByteCount > 100) //empiric small size
+                    {
+                        partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportError;
+                        errorType = ProducerErrorType.Rearrange;
+                    }
+                    else
+                    {
+                        partitionErrorCode = KafkaProducerTopicPartitionErrorCode.MessageBatchSizeTooLarge;
+                        topic.BatchSizeByteCount = (int)Math.Round(topic.BatchSizeByteCount * 0.66);
+                        errorType = ProducerErrorType.Warning;
+                    }                    
                     break;
                 case KafkaBrokerErrorCode.UnknownError:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.UnknownError;
@@ -506,7 +518,7 @@ namespace NKafka.Client.Producer.Internal
                     break;
             }
 
-            SetPartitionError(partition, partitionErrorCode, ProducerErrorType.Rearrange);
+            SetPartitionError(partition, partitionErrorCode, errorType);
         }
 
         private void SetPartitionError([NotNull] KafkaProducerBrokerPartition partition,
@@ -557,7 +569,7 @@ namespace NKafka.Client.Producer.Internal
                         partition.RollbackMessags(requestPartition.Messages);
                     }
 
-                    HandleBrokerError(partition, brokerError);
+                    HandleBrokerError(topic, partition, brokerError);
                 }
             }
         }
@@ -580,7 +592,7 @@ namespace NKafka.Client.Producer.Internal
                     partition.RollbackMessags(batchMessags);
                 }
 
-                HandleBrokerError(partition, brokerError);
+                HandleBrokerError(topic, partition, brokerError);
             }
         }
 

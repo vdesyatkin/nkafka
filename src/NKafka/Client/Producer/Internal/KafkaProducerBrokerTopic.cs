@@ -15,11 +15,14 @@ namespace NKafka.Client.Producer.Internal
 
         public KafkaConsistencyLevel ConsistencyLevel;
 
+        public int BatchSizeByteCount;
+
         public KafkaProducerBrokerTopic([NotNull]string topicName, [NotNull] KafkaProducerSettings settings)
         {
             TopicName = topicName;
             Settings = settings;
             ConsistencyLevel = settings.ConsistencyLevel;
+            BatchSizeByteCount = settings.BatchSizeByteCount;
             Partitions = new ConcurrentDictionary<int, KafkaProducerBrokerPartition>();
         }
     }
