@@ -1,16 +1,14 @@
-﻿using JetBrains.Annotations;
-
-namespace NKafka.Connection
-{
-    [PublicAPI]
+﻿namespace NKafka.Connection
+{    
     internal enum KafkaBrokerErrorCode
     {
         UnknownError = 0,
-        Closed = 1,
-        Maintenance = 2,
+        ConnectionClosed = 1,
+        ConnectionMaintenance = 2,
         BadRequest = 3,                
         TransportError = 4,
         ProtocolError = 5,
-        Timeout = 6
+        ClientTimeout = 6,
+        Cancelled = 7
     }
 }

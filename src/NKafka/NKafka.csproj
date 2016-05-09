@@ -142,6 +142,8 @@
     <Compile Include="Connection\KafkaBroker.cs" />
     <Compile Include="Connection\KafkaBrokerErrorCode.cs" />
     <Compile Include="Connection\KafkaBrokerResult.cs" />
+    <Compile Include="Connection\KafkaConnectionErrorCode.cs" />
+    <Compile Include="Connection\KafkaConnectionResult.cs" />
     <Compile Include="Connection\KafkaConnectionSettings.cs" />
     <Compile Include="Connection\KafkaBrokerStateErrorCode.cs" />
     <Compile Include="Connection\KafkaConnection.cs" />

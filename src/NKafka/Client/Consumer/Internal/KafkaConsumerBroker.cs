@@ -542,10 +542,10 @@ namespace NKafka.Client.Consumer.Internal
 
             switch (errorCode)
             {
-                case KafkaBrokerErrorCode.Closed:
+                case KafkaBrokerErrorCode.ConnectionClosed:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ConnectionClosed;
                     break;
-                case KafkaBrokerErrorCode.Maintenance:
+                case KafkaBrokerErrorCode.ConnectionMaintenance:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ClientMaintenance;
                     break;
                 case KafkaBrokerErrorCode.BadRequest:
@@ -557,8 +557,11 @@ namespace NKafka.Client.Consumer.Internal
                 case KafkaBrokerErrorCode.TransportError:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.TransportError;
                     break;
-                case KafkaBrokerErrorCode.Timeout:
+                case KafkaBrokerErrorCode.ClientTimeout:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ClientTimeout;
+                    break;
+                case KafkaBrokerErrorCode.UnknownError:
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.UnknownError;
                     break;
                 default:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.UnknownError;

@@ -44,7 +44,7 @@ namespace NKafka.Client.Internal.Broker
                     case KafkaBrokerStateErrorCode.ProtocolError:
                         errorCode = KafkaClientBrokerErrorCode.ProtocolError;
                         break;
-                    case KafkaBrokerStateErrorCode.Timeout:
+                    case KafkaBrokerStateErrorCode.ClientTimeout:
                         errorCode = KafkaClientBrokerErrorCode.Timeout;
                         break;
                     default:

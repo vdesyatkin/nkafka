@@ -455,10 +455,10 @@ namespace NKafka.Client.Producer.Internal
 
             switch (brokerError)
             {
-                case KafkaBrokerErrorCode.Closed:
+                case KafkaBrokerErrorCode.ConnectionClosed:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ConnectionClosed;
                     break;
-                case KafkaBrokerErrorCode.Maintenance:
+                case KafkaBrokerErrorCode.ConnectionMaintenance:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
                     break;
                 case KafkaBrokerErrorCode.BadRequest:
@@ -470,8 +470,11 @@ namespace NKafka.Client.Producer.Internal
                 case KafkaBrokerErrorCode.TransportError:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportError;
                     break;
-                case KafkaBrokerErrorCode.Timeout:
+                case KafkaBrokerErrorCode.ClientTimeout:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ClientTimeout;
+                    break;
+                case KafkaBrokerErrorCode.UnknownError:
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.UnknownError;
                     break;
                 default:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.UnknownError;

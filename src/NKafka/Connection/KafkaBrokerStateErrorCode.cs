@@ -9,6 +9,6 @@ namespace NKafka.Connection
         ConnectionError = 1,        
         TransportError = 2,
         ProtocolError = 3,
-        Timeout = 4    
+        ClientTimeout = 4    
     }
 }

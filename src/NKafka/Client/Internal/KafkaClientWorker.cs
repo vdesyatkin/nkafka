@@ -662,10 +662,10 @@ namespace NKafka.Client.Internal
             {
                 switch (errorCode.Value)
                 {
-                    case KafkaBrokerErrorCode.Closed:
+                    case KafkaBrokerErrorCode.ConnectionClosed:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.ConnectionClosed;
                         break;
-                    case KafkaBrokerErrorCode.Maintenance:
+                    case KafkaBrokerErrorCode.ConnectionMaintenance:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.ClientMaintenance;
                         break;
                     case KafkaBrokerErrorCode.BadRequest:
@@ -677,8 +677,11 @@ namespace NKafka.Client.Internal
                     case KafkaBrokerErrorCode.TransportError:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.TransportError;
                         break;                                        
-                    case KafkaBrokerErrorCode.Timeout:
+                    case KafkaBrokerErrorCode.ClientTimeout:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.ClientTimeout;
+                        break;
+                    case KafkaBrokerErrorCode.UnknownError:
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.UnknownError;
                         break;
                     default:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.UnknownError;
@@ -777,10 +780,10 @@ namespace NKafka.Client.Internal
             {
                 switch (errorCode.Value)
                 {                    
-                    case KafkaBrokerErrorCode.Closed:
+                    case KafkaBrokerErrorCode.ConnectionClosed:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.ConnectionClosed;
                         break;
-                    case KafkaBrokerErrorCode.Maintenance:
+                    case KafkaBrokerErrorCode.ConnectionMaintenance:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.ClientMaintenance;
                         break;
                     case KafkaBrokerErrorCode.BadRequest:
@@ -792,8 +795,11 @@ namespace NKafka.Client.Internal
                     case KafkaBrokerErrorCode.TransportError:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.TransportError;
                         break;                    
-                    case KafkaBrokerErrorCode.Timeout:
+                    case KafkaBrokerErrorCode.ClientTimeout:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.ClientTimeout;
+                        break;
+                    case KafkaBrokerErrorCode.UnknownError:
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.UnknownError;
                         break;
                     default:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.UnknownError;

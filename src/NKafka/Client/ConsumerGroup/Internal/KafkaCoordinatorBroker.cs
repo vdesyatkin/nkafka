@@ -1319,10 +1319,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             switch (errorCode)
             {
-                case KafkaBrokerErrorCode.Closed:
+                case KafkaBrokerErrorCode.ConnectionClosed:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.ConnectionClosed;
                     break;
-                case KafkaBrokerErrorCode.Maintenance:
+                case KafkaBrokerErrorCode.ConnectionMaintenance:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.ClientMaintenance;
                     break;
                 case KafkaBrokerErrorCode.BadRequest:
@@ -1334,8 +1334,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 case KafkaBrokerErrorCode.TransportError:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.TransportError;
                     break;
-                case KafkaBrokerErrorCode.Timeout:
+                case KafkaBrokerErrorCode.ClientTimeout:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.ClientTimeout;
+                    break;
+                case KafkaBrokerErrorCode.UnknownError:
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.UnknownError;
                     break;
                 default:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.UnknownError;
