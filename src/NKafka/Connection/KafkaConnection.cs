@@ -234,7 +234,7 @@ namespace NKafka.Connection
             switch (socketError)
             {
                 case SocketError.Success:
-                    return KafkaConnectionErrorCode.UnknownError; //wtf?
+                    return KafkaConnectionErrorCode.ConnectionMaintenance;
                 case SocketError.SocketError:
                     return KafkaConnectionErrorCode.TransportError;
                 case SocketError.Interrupted:
@@ -242,11 +242,11 @@ namespace NKafka.Connection
                 case SocketError.AccessDenied:
                     return KafkaConnectionErrorCode.NotAuthorized;
                 case SocketError.Fault:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.TransportError;
                 case SocketError.InvalidArgument:
                     return KafkaConnectionErrorCode.InvalidHost;                    
                 case SocketError.TooManyOpenSockets:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.ConnectionNotAllowed;
                 case SocketError.WouldBlock:
                     return KafkaConnectionErrorCode.ConnectionMaintenance;
                 case SocketError.InProgress:
@@ -274,21 +274,21 @@ namespace NKafka.Connection
                 case SocketError.AddressFamilyNotSupported:
                     return KafkaConnectionErrorCode.UnsupportedHost;
                 case SocketError.AddressAlreadyInUse:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.ConnectionNotAllowed;
                 case SocketError.AddressNotAvailable:
                     return KafkaConnectionErrorCode.HostNotAvailable;
                 case SocketError.NetworkDown:
                     return KafkaConnectionErrorCode.NetworkNotAvailable;
                 case SocketError.NetworkUnreachable:
-                    return KafkaConnectionErrorCode.NetworkNotAvailable;
+                    return KafkaConnectionErrorCode.HostUnreachable;
                 case SocketError.NetworkReset:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.NetworkNotAvailable;
                 case SocketError.ConnectionAborted:
-                    return KafkaConnectionErrorCode.ConnectionClosed;
+                    return KafkaConnectionErrorCode.ConnectionRefused;
                 case SocketError.ConnectionReset:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.ConnectionMaintenance;
                 case SocketError.NoBufferSpaceAvailable:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.ConnectionNotAllowed;
                 case SocketError.IsConnected:
                     return KafkaConnectionErrorCode.ConnectionMaintenance;
                 case SocketError.NotConnected:
@@ -298,40 +298,38 @@ namespace NKafka.Connection
                 case SocketError.TimedOut:
                     return KafkaConnectionErrorCode.ClientTimeout;
                 case SocketError.ConnectionRefused:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.ConnectionRefused;
                 case SocketError.HostDown:
                     return KafkaConnectionErrorCode.HostNotAvailable;
                 case SocketError.HostUnreachable:
-                    return KafkaConnectionErrorCode.HostNotAvailable;
+                    return KafkaConnectionErrorCode.HostUnreachable;
                 case SocketError.ProcessLimit:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.ConnectionNotAllowed;
                 case SocketError.SystemNotReady:
                     return KafkaConnectionErrorCode.NetworkNotAvailable;
                 case SocketError.VersionNotSupported:
                     return KafkaConnectionErrorCode.UnsupportedHost;
                 case SocketError.NotInitialized:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.ConnectionNotAllowed;
                 case SocketError.Disconnecting:
-                    return KafkaConnectionErrorCode.ConnectionMaintenance;
+                    return KafkaConnectionErrorCode.ConnectionClosed;
                 case SocketError.TypeNotFound:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.UnsupportedHost;
                 case SocketError.HostNotFound:
-                    break; //todo (E002)
+                    return KafkaConnectionErrorCode.HostUnreachable;
                 case SocketError.TryAgain:
                     return KafkaConnectionErrorCode.ClientTimeout;                    
                 case SocketError.NoRecovery:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.HostUnreachable;
                 case SocketError.NoData:
-                    break; //todo
+                    return KafkaConnectionErrorCode.HostUnreachable;
                 case SocketError.IOPending:
                     return KafkaConnectionErrorCode.TransportError;
                 case SocketError.OperationAborted:
-                    break;  //todo (E002)
+                    return KafkaConnectionErrorCode.OperationRefused;
                 default:
                     return KafkaConnectionErrorCode.UnknownError;                    
-            }
-
-            return KafkaConnectionErrorCode.UnknownError;
+            }            
         }
     }
 }

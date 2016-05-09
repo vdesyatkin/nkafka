@@ -13,9 +13,14 @@
         InvalidHost = 8,
         UnsupportedHost = 9,
         NetworkNotAvailable = 10,
-        HostNotAvailable,
-        NotAuthorized,
-        UnsupportedOperation = 9,
-        TooBigMessage
+        ConnectionNotAllowed = 11,
+        ConnectionRefused = 12,
+        HostUnreachable = 13,
+        HostNotAvailable = 14,
+        NotAuthorized = 15,
+
+        UnsupportedOperation = 16,
+        OperationRefused = 17,
+        TooBigMessage = 18
     }
 }
