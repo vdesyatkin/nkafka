@@ -54,15 +54,19 @@ namespace NKafka.Protocol.API.SyncGroup
         {
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();
 
-            if (reader.BeginReadSize() <= 0) return new KafkaSyncGroupResponse(errorCode, 0, new KafkaSyncGroupResponseTopic[0], null);
+            var requiredSize = reader.BeginReadSize();
+            if (requiredSize <= 0) return new KafkaSyncGroupResponse(errorCode, 0, new KafkaSyncGroupResponseTopic[0], null);
 
             var protocolVersion = reader.ReadInt16();
             var topics = reader.ReadCollection(ReadSyncGroupResponseAssignmentTopic);
-            var customData = reader.ReadByteArray();            
+            var customData = reader.ReadByteArray();
 
-            // ReSharper disable once UnusedVariable
-            var isSizeValid = reader.EndReadSize(); //todo (E005) invalid size
-                        
+            var actualSize = reader.EndReadSize();
+            if (actualSize != requiredSize)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+            }
+
             return new KafkaSyncGroupResponse(errorCode, protocolVersion, topics, customData);
         }
 

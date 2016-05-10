@@ -227,6 +227,8 @@
     <Compile Include="Protocol\IKafkaRequestApi.cs" />
     <Compile Include="Protocol\IKafkaResponse.cs" />
     <Compile Include="Protocol\KafkaProtocol.cs" />
+    <Compile Include="Protocol\KafkaProtocolErrorCode.cs" />
+    <Compile Include="Protocol\KafkaProtocolException.cs" />
     <Compile Include="Protocol\KafkaRequestType.cs" />
     <Compile Include="Protocol\KafkaRequestVersion.cs" />
     <Compile Include="Protocol\KafkaResponseErrorCode.cs" />

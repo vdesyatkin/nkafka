@@ -64,13 +64,19 @@ namespace NKafka.Protocol.API.JoinGroup
         {
             var memberId = reader.ReadString();
 
-            reader.BeginReadSize();
+            var requiredSize = reader.BeginReadSize();
+            if (requiredSize <= 0) return null;
+
             var protocolVersion = reader.ReadInt16();
             var topicNames = reader.ReadCollection(reader.ReadString);
             var customData = reader.ReadByteArray();
             var assignmentStrategies = reader.ReadCollection(reader.ReadString);
-            // ReSharper disable once UnusedVariable
-            var isSizeValid = reader.EndReadSize(); //todo (E005) invalid size
+
+            var actualSize = reader.EndReadSize();
+            if (actualSize != requiredSize)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+            }
                         
             return new KafkaJoinGroupResponseMember(memberId, protocolVersion, topicNames, assignmentStrategies, customData);
         }        

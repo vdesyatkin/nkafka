@@ -73,12 +73,13 @@ namespace NKafka.Protocol.Serialization
             var size = ReadInt32();
             _beginPositions.Push(_stream.Position);
             _sizeValues.Push(size);
+            
             return size;
         }
-
-        public bool EndReadSize()
+        
+        public int EndReadSize()
         {
-            if (_sizeValues.Count == 0) return true;
+            if (_sizeValues.Count == 0) return 0;
 
             var requiredSize = _sizeValues.Peek();
             var beginPosition = _beginPositions.Peek();
@@ -88,10 +89,9 @@ namespace NKafka.Protocol.Serialization
             if (actualSize >= requiredSize)
             {
                 _sizeValues.Pop();
-                _beginPositions.Pop();
-                return true;
+                _beginPositions.Pop();                
             }
-            return false;
+            return (int)actualSize;
         }
 
         public uint BeginReadCrc32()
@@ -102,17 +102,17 @@ namespace NKafka.Protocol.Serialization
             return crc32;
         }
 
-        public bool EndReadCrc32()
+        public uint EndReadCrc32()
         {
-            if (_crc32Values.Count == 0) return true;
+            if (_crc32Values.Count == 0) return 0;
 
-            var crc32 = _crc32Values.Pop();
+            _crc32Values.Pop();
             var beginPosition = _beginPositions.Pop();
             var endPosition = _stream.Position;
 
             var actualCrc32 = KafkaCrc32.Compute(_stream.GetBuffer(), beginPosition, endPosition - beginPosition);
 
-            return crc32 == actualCrc32;
+            return actualCrc32;
         }
 
         public int BeginReadCollection()
@@ -146,23 +146,24 @@ namespace NKafka.Protocol.Serialization
             return size;
         }
 
-        public bool EndReadGZipData()
+        public int EndReadGZipData()
         {
-            if (_gzipStoredStreams.Count == 0) return true;
-            if (_beginPositions.Count == 0) return true;
+            if (_gzipStoredStreams.Count == 0) return 0;
+            if (_beginPositions.Count == 0) return 0;
 
             if (_stream.Position < _stream.Length)
             {
-                return false;
+                return (int)_stream.Position;
             }
 
+            var result = _stream.Position;
             _stream.Dispose();
             // ReSharper disable once AssignNullToNotNullAttribute
             _stream = _gzipStoredStreams.Pop();
             // ReSharper disable once PossibleNullReferenceException
             _stream.Position = _beginPositions.Pop();
 
-            return true;
+            return (int)result;
         }
 
         public bool ReadBool()
@@ -172,7 +173,8 @@ namespace NKafka.Protocol.Serialization
 
         public byte ReadInt8()
         {
-            return (byte)_stream.ReadByte();
+            var data = _stream.ReadByte();
+            return data >= 0 ? (byte)data : (byte)0;
         }
 
         public short ReadInt16()
@@ -242,12 +244,18 @@ namespace NKafka.Protocol.Serialization
         public string ReadString()
         {
             var size = ReadInt16();
-            if (size == NullValue) return null;
+            if (size == NullValue || size < 0) return null; //todo (E007) huge collections
 
             var bytes = new byte[size];
             _stream.Read(bytes, 0, size);
 
             return Encoding.UTF8.GetString(bytes);
+        }
+
+        public void SkipData(int length)
+        {
+            if (length <= 0) return;
+            _stream.Position = Math.Max(_stream.Position + length, _stream.Length);
         }
 
         public byte[] ReadByteArray()

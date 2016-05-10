@@ -92,47 +92,81 @@ namespace NKafka.Protocol.API.Fetch
             var highwaterMarkOffset = reader.ReadInt64();
 
             var messages = new List<KafkaMessageAndOffset>();
-            reader.BeginReadSize();
+
+            var requiredMessageSetSize = reader.BeginReadSize();
+            var actualMessageSetSize = 0;
             
-            while (reader.CanRead() && !reader.EndReadSize())
+            while (reader.CanRead() && (actualMessageSetSize = reader.EndReadSize()) < requiredMessageSetSize)
             {
                 var offset = reader.ReadInt64();
 
-                if (reader.BeginReadSize() == 0) break;
-                reader.BeginReadCrc32();
+                var messageRequiredSize = reader.BeginReadSize();                
+                if ((messageRequiredSize <= 0 ||
+                    (requiredMessageSetSize - actualMessageSetSize) < messageRequiredSize))
+                {
+                    reader.SkipData(requiredMessageSetSize - actualMessageSetSize);
+                    actualMessageSetSize = reader.EndReadSize();
+                    break;
+                }
+
+                var messageRequiredCrc = reader.BeginReadCrc32();
                 
-                var magicByte = reader.ReadInt8();
-                var attribute = reader.ReadInt8();
-                var timestampUtc = magicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
-                var key = reader.ReadByteArray();
+                var messageMagicByte = reader.ReadInt8();
+                var messageAttribute = reader.ReadInt8();
+                var messageTimestampUtc = messageMagicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
+                var messageKey = reader.ReadByteArray();
 
-                var codecAttribute = attribute & MessageAttributeCodecMask;
-                var timestampAttribute = attribute & MessageAttributeTimestampMask; //todo (v10) use timestamp?
+                var messageCodecAttribute = messageAttribute & MessageAttributeCodecMask;
+                var messageTimestampAttribute = messageAttribute & MessageAttributeTimestampMask; //todo (v10) use timestamp?
 
-                if (codecAttribute == MessageCodecGZipAttribute)
+                if (messageCodecAttribute == MessageCodecGZipAttribute)
                 {
                     // gzip message
-                    reader.BeginReadGZipData();
-                    while (!reader.EndReadGZipData())
+                    var nestedRequiredMessageSetSize = reader.BeginReadGZipData();
+                    int nestedActualMessageSetSize;
+                    while ((nestedActualMessageSetSize = reader.EndReadGZipData()) < nestedRequiredMessageSetSize)
                     {
                         // nested message set
                         var nestedOffset = reader.ReadInt64();                        
 
-                        reader.BeginReadSize();
-                        reader.BeginReadCrc32();
+                        var nestedRequiredSize = reader.BeginReadSize();
+                        if (messageRequiredSize <= 0 ||
+                            (nestedRequiredMessageSetSize - nestedActualMessageSetSize) < messageRequiredSize)
+                        {
+                            reader.SkipData(nestedRequiredMessageSetSize - nestedActualMessageSetSize);
+                            nestedActualMessageSetSize = reader.EndReadGZipData();
+                            break;
+                        }
+                        
+                        var nestedRequiredCrc = reader.BeginReadCrc32();
 
                         var nestedMagicByte = reader.ReadInt8();
                         var nestedAttribute = reader.ReadInt8();
-                        var nestedTimestampUtc = magicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
+                        var nestedTimestampUtc = messageMagicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
                         var nestedKey = reader.ReadByteArray();
                         var nestedValue = reader.ReadByteArray();
 
-                        var nestedIsCrcValid = reader.EndReadCrc32(); //todo (E005) invalid CRC
-                        var nestedIsSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
+                        var nestedActualCrc = reader.EndReadCrc32();
+                        var nestedActualSize = reader.EndReadSize();
 
-                        if (!nestedIsCrcValid || !nestedIsSizeValid) continue;
+                        if (nestedActualSize != nestedRequiredSize)
+                        {                            
+                            throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageSize);
+                        }
+
+                        if (nestedActualCrc != nestedRequiredCrc)
+                        {
+                            //todo (E013) invalid CRC
+                            continue;
+                        }                        
+                        
                         var nestedMessage = new KafkaMessageAndOffset(nestedOffset, nestedKey, nestedValue);
                         messages.Add(nestedMessage);
+                    }
+
+                    if (nestedActualMessageSetSize != nestedRequiredMessageSetSize)
+                    {
+                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
                     }
                 }
                 else
@@ -140,14 +174,27 @@ namespace NKafka.Protocol.API.Fetch
                     //ordinary message
                     var value = reader.ReadByteArray();
 
-                    var isCrcValid = reader.EndReadCrc32();
-                    var isSizeValid = reader.EndReadSize(); //todo (E005) invalid Size
+                    var messageActualCrc = reader.EndReadCrc32();
+                    var messageActualSize = reader.EndReadSize();
 
-                    if (!isCrcValid) continue; //todo (E005) invalid CRC
-                    if (!isSizeValid) break; //todo (E005) invalid Size                    
-                    var message = new KafkaMessageAndOffset(offset, key, value);
+                    if (messageActualSize != messageRequiredSize)
+                    {
+                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+                    }
+
+                    if (messageActualCrc != messageRequiredCrc)
+                    {
+                        //todo (E013) invalid CRC
+                        continue;
+                    }                    
+                    var message = new KafkaMessageAndOffset(offset, messageKey, value);
                     messages.Add(message);
                 }
+            }
+
+            if (actualMessageSetSize != requiredMessageSetSize)
+            {
+                //todo
             }
             
             return new KafkaFetchResponseTopicPartition(partitionId, errorCode, highwaterMarkOffset, messages);
