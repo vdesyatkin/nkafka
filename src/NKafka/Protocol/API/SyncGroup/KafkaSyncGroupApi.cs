@@ -61,7 +61,7 @@ namespace NKafka.Protocol.API.SyncGroup
             var customData = reader.ReadByteArray();            
 
             // ReSharper disable once UnusedVariable
-            var isSizeValid = reader.EndReadSize(); //todo (E007)
+            var isSizeValid = reader.EndReadSize(); //todo (E005) invalid size
                         
             return new KafkaSyncGroupResponse(errorCode, protocolVersion, topics, customData);
         }

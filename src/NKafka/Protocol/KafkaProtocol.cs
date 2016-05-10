@@ -18,7 +18,7 @@ namespace NKafka.Protocol
 {
     internal sealed class KafkaProtocol
     {
-        public readonly int ResponseHeaderSize;
+        public readonly int ResponseHeaderSize = 8;
 
         [NotNull] private readonly KafkaProtocolConfiguration _configuration;                
         [CanBeNull] private readonly string _clientId;
@@ -28,8 +28,7 @@ namespace NKafka.Protocol
         public KafkaProtocol(KafkaVersion kafkaVersion, [CanBeNull] string clientId)
         {            
             _clientId = clientId;
-            _configuration = CreateConfiguration(kafkaVersion);
-            ResponseHeaderSize = 8;          
+            _configuration = CreateConfiguration(kafkaVersion);            
         }
 
         [CanBeNull]

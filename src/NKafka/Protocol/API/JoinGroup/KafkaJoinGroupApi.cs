@@ -70,7 +70,7 @@ namespace NKafka.Protocol.API.JoinGroup
             var customData = reader.ReadByteArray();
             var assignmentStrategies = reader.ReadCollection(reader.ReadString);
             // ReSharper disable once UnusedVariable
-            var isSizeValid = reader.EndReadSize(); //todo (E007)
+            var isSizeValid = reader.EndReadSize(); //todo (E005) invalid size
                         
             return new KafkaJoinGroupResponseMember(memberId, protocolVersion, topicNames, assignmentStrategies, customData);
         }        
