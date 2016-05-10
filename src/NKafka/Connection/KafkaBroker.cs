@@ -295,13 +295,13 @@ namespace NKafka.Connection
         private void BeginRead()
         {
             var responseState = _responseState;            
-            if (responseState.Offset >= responseState.ResponseHeaderBuffer.Length)
+            if (responseState.ResponseHeaderOffset >= responseState.ResponseHeaderBuffer.Length)
             {
-                responseState.Offset = 0;                
+                responseState.ResponseHeaderOffset = 0;                
             }
 
             var beginReadResult = _connection.TryBeginRead(responseState.ResponseHeaderBuffer, 
-                responseState.Offset, responseState.ResponseHeaderBuffer.Length - responseState.Offset, OnReceived);
+                responseState.ResponseHeaderOffset, responseState.ResponseHeaderBuffer.Length - responseState.ResponseHeaderOffset, OnReceived);
 
             if (beginReadResult.Error != null)
             {
@@ -341,24 +341,26 @@ namespace NKafka.Connection
                 }
 
                 var responseState = _responseState;
-                responseState.Offset = responseState.Offset + dataSizeResult.Result;
+                responseState.ResponseHeaderOffset = responseState.ResponseHeaderOffset + dataSizeResult.Result;
 
-                while (_connection.IsDataAvailable())
+                do
                 {
-                    if (responseState.Offset < responseState.ResponseHeaderBuffer.Length)
+                    // read responseHeader (if it has not read)
+                    if (responseState.ResponseHeaderOffset < responseState.ResponseHeaderBuffer.Length)
                     {
-                        var readHeaderResult = _connection.TryRead(responseState.ResponseHeaderBuffer, 
-                            responseState.Offset, responseState.ResponseHeaderBuffer.Length - responseState.Offset);
+                        var readHeaderResult = _connection.TryRead(responseState.ResponseHeaderBuffer,
+                            responseState.ResponseHeaderOffset,
+                            responseState.ResponseHeaderBuffer.Length - responseState.ResponseHeaderOffset);
                         if (readHeaderResult.Error != null)
                         {
                             //todo (E013) broker: response header sync read data error
-                            responseState.Offset = 0;
+                            responseState.ResponseHeaderOffset = 0;
                             _receiveError = ConvertStateError(readHeaderResult.Error.Value);
                             return;
                         }
 
-                        responseState.Offset = responseState.Offset + readHeaderResult.Result;
-                        if (responseState.Offset < responseState.ResponseHeaderBuffer.Length)
+                        responseState.ResponseHeaderOffset = responseState.ResponseHeaderOffset + readHeaderResult.Result;
+                        if (responseState.ResponseHeaderOffset < responseState.ResponseHeaderBuffer.Length)
                         {
                             continue;
                         }
@@ -367,13 +369,15 @@ namespace NKafka.Connection
                     var responseHeader = ReadResponseHeader(responseState.ResponseHeaderBuffer);
                     if (responseHeader == null)
                     {
+                        //todo (E013) broker: package is corrupted
                         continue;
                     }
 
-                    responseState.Offset = 0;
+                    responseState.ResponseHeaderOffset = 0;
 
                     _lastActivityTimestampUtc = DateTime.UtcNow;
 
+                    // find request by correlation id
                     var requestId = responseHeader.CorrelationId;
                     RequestState requestState;
                     if (!_requests.TryGetValue(requestId, out requestState) || requestState == null)
@@ -393,11 +397,13 @@ namespace NKafka.Connection
                         return;
                     }
 
+                    // read response data
                     var responseBuffer = new byte[responseHeader.DataSize];
                     int responseSize = 0;
                     do
                     {
-                        var readSizeResult = _connection.TryRead(responseBuffer, responseSize, responseBuffer.Length - responseSize);
+                        var readSizeResult = _connection.TryRead(responseBuffer, responseSize,
+                            responseBuffer.Length - responseSize);
                         if (readSizeResult.Error != null)
                         {
                             // //todo (E013) broker: read response data error
@@ -421,6 +427,7 @@ namespace NKafka.Connection
                         continue;
                     }
 
+                    // parse response
                     var response = ReadResponse(requestState, responseBuffer);
                     if (response == null)
                     {
@@ -430,7 +437,8 @@ namespace NKafka.Connection
                     _lastActivityTimestampUtc = DateTime.UtcNow;
                     requestState.Response = response;
                     _receiveError = null;
-                }
+
+                } while (_connection.IsDataAvailable());
             }
             finally
             {
@@ -514,7 +522,7 @@ namespace NKafka.Connection
             [NotNull]
             public readonly byte[] ResponseHeaderBuffer;
 
-            public int Offset;
+            public int ResponseHeaderOffset;
 
             public ResponseState([NotNull] KafkaProtocol kafkaProtocol)
             {
