@@ -112,6 +112,7 @@ namespace NKafka.Connection
                     var requestTimestampUtc = request.SentTimestampUtc ?? request.CreateTimestampUtc;
                     if (DateTime.UtcNow >= requestTimestampUtc + request.Timeout)
                     {
+                        //todo (E013) broker: client timeout
                         request.Error = KafkaBrokerErrorCode.ClientTimeout;
                         _sendError = KafkaBrokerStateErrorCode.ClientTimeout;
                     }
@@ -131,12 +132,13 @@ namespace NKafka.Connection
 
             if (DateTime.UtcNow - _connectionTimestampUtc >= reconnectionPeriod)
             {
+                if (cancellation.IsCancellationRequested) return;
+                _isConnectionMaintenance = true;
+
                 if (hasAcitveRequests)
-                {
-                    _isConnectionMaintenance = true;
+                {                    
                     return;
                 }
-                if (cancellation.IsCancellationRequested) return;
 
                 CloseConnection();
                 TryOpenConnection(cancellation);
@@ -174,12 +176,14 @@ namespace NKafka.Connection
             _lastActivityTimestampUtc = DateTime.UtcNow;
             var openResult = _connection.TryOpen(cancellation);
             if (openResult.Error != null)
-            {                
+            {
+                //todo (E013) broker: connection error  
                 _sendError = ConvertStateError(openResult.Error.Value);
                 return;
             }            
             if (!openResult.Result)
-            {                
+            {
+                //todo (E013) broker: connection error
                 _sendError = KafkaBrokerStateErrorCode.ConnectionNotAllowed;
                 return;
             }
@@ -230,10 +234,15 @@ namespace NKafka.Connection
             try
             {
                 data = _kafkaProtocol.WriteRequest(request, requestId, dataCapacity);
-                if (data == null) return KafkaBrokerErrorCode.ProtocolError;
+                if (data == null)
+                {
+                    //todo (E013) broker: protocol error
+                    return KafkaBrokerErrorCode.ProtocolError;
+                }
             }
             catch (Exception)
             {
+                //todo (E013) broker: protocol error
                 return KafkaBrokerErrorCode.ProtocolError;
             }
 
@@ -246,7 +255,8 @@ namespace NKafka.Connection
 
             var writeResult = _connection.TryWrite(data, 0, data.Length);
             if (writeResult.Error != null)
-            {                
+            {
+                //todo (E013) broker: send request error  
                 _sendError = ConvertStateError(writeResult.Error.Value);
                 return ConvertError(writeResult.Error.Value);
             }
@@ -290,6 +300,7 @@ namespace NKafka.Connection
 
             if (beginReadResult.Error != null)
             {
+                //todo (E013) broker: begin read error (begin read again?)
                 _receiveError = ConvertStateError(beginReadResult.Error.Value);
             }
 
@@ -328,6 +339,8 @@ namespace NKafka.Connection
                             {
                                 _receiveError = ConvertStateError(readResult.Error.Value);
                             }
+
+                            //todo (E013) broker: received unexpected response
                         }
                         return;
                     }
@@ -354,6 +367,7 @@ namespace NKafka.Connection
         {
             if (result == null)
             {
+                //todo (E013) broker: empty async result
                 _receiveError = KafkaBrokerStateErrorCode.TransportError;
                 return null;
             }
@@ -361,6 +375,7 @@ namespace NKafka.Connection
             var responseHeaderSizeResult = _connection.TryEndRead(result);
             if (responseHeaderSizeResult.Error != null)
             {
+                //todo (E013) broker: read response header size data error
                 _receiveError = ConvertStateError(responseHeaderSizeResult.Error.Value);
                 return null;
             }
@@ -373,6 +388,7 @@ namespace NKafka.Connection
 
             if (responseHeaderSize != _responseState.ResponseHeaderBuffer.Length)
             {
+                //todo (E013) broker: response header size error
                 _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                 return null;
             }
@@ -382,6 +398,7 @@ namespace NKafka.Connection
                 var responseHeader = _kafkaProtocol.ReadResponseHeader(_responseState.ResponseHeaderBuffer, 0, responseHeaderSize);
                 if (responseHeader == null)
                 {
+                    //todo (E013) broker: response header protocol error
                     _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                     return null;
                 }
@@ -389,6 +406,7 @@ namespace NKafka.Connection
             }
             catch (Exception)
             {
+                //todo (E013) broker: response header protocol exception
                 _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                 return null;
             }
@@ -403,7 +421,8 @@ namespace NKafka.Connection
             {
                 var readSizeResult = _connection.TryRead(responseBuffer, responseSize, responseBuffer.Length - responseSize);
                 if (readSizeResult.Error != null)
-                {                    
+                {
+                    // //todo (E013) broker: read response data error
                     _receiveError = ConvertStateError(readSizeResult.Error.Value);
                     state.Error = ConvertError(readSizeResult.Error.Value);
                     return null;
@@ -418,6 +437,7 @@ namespace NKafka.Connection
 
             if (responseSize != responseBuffer.Length)
             {
+                //todo (E013) broker: response size error
                 _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                 state.Error = KafkaBrokerErrorCode.ProtocolError;
                 return null;
@@ -428,6 +448,7 @@ namespace NKafka.Connection
                 var response = _kafkaProtocol.ReadResponse(state.Request, responseBuffer, 0, responseBuffer.Length);
                 if (response == null)
                 {
+                    //todo (E013) broker: response protocol error
                     _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                     state.Error = KafkaBrokerErrorCode.ProtocolError;
                     return null;
@@ -436,6 +457,7 @@ namespace NKafka.Connection
             }
             catch (Exception)
             {
+                //todo (E013) broker: response protocol exception
                 _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                 state.Error = KafkaBrokerErrorCode.ProtocolError;
                 return null;

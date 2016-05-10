@@ -67,7 +67,7 @@ namespace NKafka.Connection
             }
             catch (Exception)
             {
-                //todo (E013) connection close
+                //todo (E013) connection: connection close
                 //ignored
             }
             _tcpClient = null;
@@ -164,8 +164,13 @@ namespace NKafka.Connection
 
                 return stream.DataAvailable;
             }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
             catch (Exception)
             {
+                //todo (E013) connection: IsDataAvailable exception
                 return false;
             }
         }
@@ -183,23 +188,23 @@ namespace NKafka.Connection
             return true;
         }
 
-        private KafkaConnectionErrorCode ConvertException(Exception exception) //todo (E013) connection log context
+        private KafkaConnectionErrorCode ConvertException(Exception exception) //todo (E013) connection:  connection log context
         {
             var socketException = exception as SocketException;
             if (socketException != null)
             {
-                //todo (E013) connection socket error
+                //todo (E013) connection: socket error
                 return ConvertError(socketException.SocketErrorCode);
             }
 
             var securityException = exception as SecurityException;            
             if (securityException != null)
             {
-                //todo (E013) connection security error
+                //todo (E013) connection: security error
                 return KafkaConnectionErrorCode.NotAuthorized;
             }
 
-            //todo (E013) connection custom error
+            //todo (E013) connection: custom error
 
             if (exception is IOException)
             {                
