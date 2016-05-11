@@ -34,7 +34,7 @@ namespace NKafka.DevConsole
                 .SetWorkerPeriod(TimeSpan.FromMilliseconds(500));
             var producerConfigBuilder = new KafkaProducerSettingsBuilder()
                 .SetConsistencyLevel(KafkaConsistencyLevel.OneReplica)
-                .SetCodecType(KafkaCodecType.CodecGzip)
+                .SetCodecType(KafkaCodecType.CodecNone)
                 .SetBatchServerTimeout(TimeSpan.FromSeconds(5))
                 .SetBatchSizeByteCount(10000);
             var consumerConfigBuilder = new KafkaConsumerSettingsBuilder()

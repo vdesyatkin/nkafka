@@ -142,8 +142,8 @@ namespace NKafka.Protocol.Serialization
             _beginPositions.Push(beginPosition + size);
             _gzipStoredStreams.Push(_stream);
             gzipStream.Position = 0;            
-            _stream = gzipStream;         
-            return size;
+            _stream = gzipStream;      
+            return (int)gzipStream.Length;
         }
 
         public int EndReadGZipData()

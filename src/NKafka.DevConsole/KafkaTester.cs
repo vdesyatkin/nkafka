@@ -642,7 +642,7 @@ namespace NKafka.DevConsole
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    WriteHeader(writer, ApiKeyRequestType.Produce);
+                    WriteHeader(writer, ApiKeyRequestType.Produce, ApiVersion.V2);
                     writer.Write(PackInt16((short)produceRequest.AckMode));
                     writer.Write(PackInt32(produceRequest.Timeout.TimeoutMs));
                     writer.Write(PackInt32(produceRequest.Topics.Count));
@@ -708,9 +708,10 @@ namespace NKafka.DevConsole
         private static byte[] PackMessages(IReadOnlyList<MessageAndOffset> messages, byte messageAttribute)
         {
             var data = new List<byte>(100 * messages.Count);
+            var offset = 0;
             foreach (var message in messages)
             {
-                data.AddRange(PackInt64(message.Offset));
+                data.AddRange(PackInt64(offset++));
                 var messageData = PackMessageWithCrc(message.Message, messageAttribute);
                 data.AddRange(PackByteArray32(messageData));
             }
@@ -1078,7 +1079,7 @@ namespace NKafka.DevConsole
                 var messageAndOffset = new MessageAndOffset { Message = message, Offset = DefaultMessageOffset };
                 messageAndOffsets.Add(messageAndOffset);
             }
-            return new MessageSet { Messages = messageAndOffsets };
+            return new MessageSet { Messages = messageAndOffsets, Codec = codec };
         }
 
         public void Test(string host, int port, string testTopicName)
@@ -1100,18 +1101,18 @@ namespace NKafka.DevConsole
                     partitionIds.Add(partition.PartitionId);
                 }
 
-                //var messageText = DateTime.Now.ToString();
-                //var message0 = new Message { Key = Encoding.UTF8.GetBytes("key"), Value = Encoding.UTF8.GetBytes(messageText) };
-                //var message1 = new Message {Key = Encoding.UTF8.GetBytes("1"), Value = Encoding.UTF8.GetBytes("12345")};
-                //var message2 = new Message { Key = Encoding.UTF8.GetBytes("2"), Value = Encoding.UTF8.GetBytes("Вышел зайчик погулять") };
-                //var messageSet0 = CreateMessageSet(new[] { message0 }, MessageCodec.CodecNone);
-                //var messageSet1 = CreateMessageSet(new[] { message1, message2 }, MessageCodec.CodecNone);
-                //var partitionPackage0 = new ProduceRequestTopicPartition { PartitionId = partitionIds[0], MessageSet = messageSet0 };
-                //var partitionPackage1 = new ProduceRequestTopicPartition { PartitionId = partitionIds[1], MessageSet = messageSet1 };
-                //var topicPackage = new ProduceRequestTopic { TopicName = testTopicName, Partitions = new[] { partitionPackage0, partitionPackage1 } };
-                //var produceRequest = new ProduceRequest { AckMode = AckMode.WrittenToLeader, Timeout = new KafkaTimeout(TimeSpan.FromSeconds(5)), Topics = new[] { topicPackage } };
-                //Send(stream, PackProduceRequest(produceRequest));
-                //var produceResponse = UnpackProduceResponse(Receive(stream));                   
+                var messageText = DateTime.Now.ToString();
+                var message0 = new Message { Key = Encoding.UTF8.GetBytes("key"), Value = Encoding.UTF8.GetBytes(messageText) };
+                var message1 = new Message { Key = Encoding.UTF8.GetBytes("1"), Value = Encoding.UTF8.GetBytes("12345") };
+                var message2 = new Message { Key = Encoding.UTF8.GetBytes("2"), Value = Encoding.UTF8.GetBytes("54331") };
+                var messageSet0 = CreateMessageSet(new[] { message0 }, MessageCodec.CodecGzip);
+                var messageSet1 = CreateMessageSet(new[] { message1, message2 }, MessageCodec.CodecGzip);
+                var partitionPackage0 = new ProduceRequestTopicPartition { PartitionId = partitionIds[0], MessageSet = messageSet1 };
+                var partitionPackage1 = new ProduceRequestTopicPartition { PartitionId = partitionIds[1], MessageSet = messageSet1 };
+                var topicPackage = new ProduceRequestTopic { TopicName = testTopicName, Partitions = new[] { partitionPackage0 } };
+                var produceRequest = new ProduceRequest { AckMode = AckMode.WrittenToLeader, Timeout = new KafkaTimeout(TimeSpan.FromSeconds(5)), Topics = new[] { topicPackage } };
+                Send(stream, PackProduceRequest(produceRequest));
+                var produceResponse = UnpackProduceResponse(Receive(stream));
 
                 var groupCoordinatorRequest = new GroupCoordinatorRequest { GroupId = groupId };
                 Send(stream, PackGroupCoordinatorRequest(groupCoordinatorRequest));

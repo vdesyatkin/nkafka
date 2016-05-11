@@ -69,7 +69,7 @@ namespace NKafka.DevConsole.DevProtocol
         /// <summary>
         ///  The lowest 2 bits contain the compression codec used for the message. The other bits should be set to 0.
         /// </summary>
-        public static byte AttributeCodeMask = 0x03;
+        public static byte AttributeCodeMask = 0x07;
     }
 
     /// <summary>
