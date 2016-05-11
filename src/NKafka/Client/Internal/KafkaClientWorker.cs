@@ -42,7 +42,7 @@ namespace NKafka.Client.Internal
         {
             _workerId = workerId;
             _settings = settings;
-            _protocol = new KafkaProtocol(_settings.KafkaVersion, _settings.ClientId);
+            _protocol = new KafkaProtocol(settings.KafkaVersion, settings.ProtocolSettings ?? KafkaProtocolSettingsBuilder.Default, settings.ClientId);
             _workerPeriod = settings.WorkerPeriod;
             if (_workerPeriod < TimeSpan.FromMilliseconds(100))
             {

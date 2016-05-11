@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Connection;
+using NKafka.Protocol;
 
 namespace NKafka.Client
 {
@@ -17,7 +18,9 @@ namespace NKafka.Client
 
         [NotNull] private readonly List<KafkaBrokerInfo> _metadataBrokers;
         
-        [CanBeNull] private KafkaConnectionSettings _connectionSettings;        
+        [CanBeNull] private KafkaConnectionSettings _connectionSettings;
+
+        [CanBeNull] private KafkaProtocolSettings _protocolSettings;
 
         public KafkaClientSettingsBuilder([NotNull] KafkaBrokerInfo metadataBroker)
         {
@@ -74,6 +77,13 @@ namespace NKafka.Client
         }
 
         [PublicAPI, NotNull]
+        public KafkaClientSettingsBuilder SetProtocolSettings([NotNull]KafkaProtocolSettings protocolSettings)
+        {
+            _protocolSettings = protocolSettings;
+            return this;
+        }
+
+        [PublicAPI, NotNull]
         public KafkaClientSettings Build()
         {
             var kafkaVersion = _kafkaVersion ?? KafkaVersion.V0_9;
@@ -85,10 +95,11 @@ namespace NKafka.Client
             var metadataErrorRetryPeriod = _metadataErrorRetryPeriod ?? TimeSpan.FromSeconds(10);
 
             var connectionSettings = _connectionSettings ?? KafkaConnectionSettingsBuilder.Default;
+            var protocolSettings = _protocolSettings ?? KafkaProtocolSettingsBuilder.Default;
 
             return new KafkaClientSettings(kafkaVersion, clientId, metadataBrokers, 
                 workerThreadCount, workerPeriod, metadataErrorRetryPeriod,
-                connectionSettings);
+                connectionSettings, protocolSettings);
         }        
     }
 }

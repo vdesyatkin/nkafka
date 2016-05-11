@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Connection;
+using NKafka.Protocol;
 
 namespace NKafka.Client
 {
@@ -17,6 +18,7 @@ namespace NKafka.Client
         public readonly TimeSpan MetadataErrorRetryPeriod;
 
         public readonly KafkaConnectionSettings ConnectionSettings;
+        public readonly KafkaProtocolSettings ProtocolSettings;
 
         public KafkaClientSettings(
             KafkaVersion kafkaVersion,
@@ -27,7 +29,8 @@ namespace NKafka.Client
             TimeSpan workerPeriod,
             TimeSpan metadataErrorRetryPeriod,
 
-            [CanBeNull] KafkaConnectionSettings connectionSettings            
+            [CanBeNull] KafkaConnectionSettings connectionSettings,
+            [CanBeNull] KafkaProtocolSettings protocolSettings
             )
         {
             KafkaVersion = kafkaVersion;
@@ -36,7 +39,8 @@ namespace NKafka.Client
             WorkerThreadCount = workerThreadCount;
             WorkerPeriod = workerPeriod;
             MetadataErrorRetryPeriod = metadataErrorRetryPeriod;
-            ConnectionSettings = connectionSettings;            
+            ConnectionSettings = connectionSettings;
+            ProtocolSettings = protocolSettings;
         }
     }
 }

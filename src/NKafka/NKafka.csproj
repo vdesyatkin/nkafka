@@ -181,6 +181,7 @@
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupRequestProtocol.cs" />
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupResponse.cs" />
     <Compile Include="Protocol\API\JoinGroup\KafkaJoinGroupResponseMember.cs" />
+    <Compile Include="Protocol\KafkaProtocolSettings.cs" />
     <Compile Include="Protocol\API\LeaveGroup\KafkaLeaveGroupApi.cs" />
     <Compile Include="Protocol\API\LeaveGroup\KafkaLeaveGroupRequest.cs" />
     <Compile Include="Protocol\API\LeaveGroup\KafkaLeaveGroupResponse.cs" />
@@ -229,6 +230,7 @@
     <Compile Include="Protocol\KafkaProtocol.cs" />
     <Compile Include="Protocol\KafkaProtocolErrorCode.cs" />
     <Compile Include="Protocol\KafkaProtocolException.cs" />
+    <Compile Include="Protocol\KafkaProtocolSettingsBuilder.cs" />
     <Compile Include="Protocol\KafkaRequestType.cs" />
     <Compile Include="Protocol\KafkaRequestVersion.cs" />
     <Compile Include="Protocol\KafkaResponseErrorCode.cs" />

@@ -12,6 +12,8 @@ namespace NKafka.Protocol.Serialization
     {
         private const int NullValue = -1;
 
+        [NotNull] private readonly KafkaProtocolSettings _settings;
+
         [NotNull] private MemoryStream _stream;
         [NotNull] private readonly Stack<long> _beginPositions = new Stack<long>();
         [NotNull] private readonly Stack<int> _sizeValues = new Stack<int>();
@@ -20,8 +22,9 @@ namespace NKafka.Protocol.Serialization
 
         private readonly DateTime _unixTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        public KafkaBinaryReader(byte[] data, int offset, int count)
+        public KafkaBinaryReader(byte[] data, int offset, int count, [NotNull] KafkaProtocolSettings settings)
         {
+            _settings = settings;
             _stream = new MemoryStream(data ?? new byte[0], offset, count, false, true);
         }
 
@@ -29,11 +32,16 @@ namespace NKafka.Protocol.Serialization
         {
             return _stream.Position < _stream.Length;
         }
-
+        
+        /// <exception cref="KafkaProtocolException"/>
         public IReadOnlyList<T> ReadCollection<T>(Func<KafkaBinaryReader, T> itemReadMethod)
         {
             var size = ReadInt32();
-            if (size == NullValue || size < 0) return null; //todo (E007) huge collections
+            if (size == NullValue) return null;
+            if (size < 0 || size > _settings.CollectionItemCountLimit)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidItemCount);
+            }
 
             var items = new List<T>(size);
             if (itemReadMethod != null)
@@ -52,7 +60,11 @@ namespace NKafka.Protocol.Serialization
         public IReadOnlyList<T> ReadCollection<T>(Func<T> itemReadMethod)
         {
             var size = ReadInt32();
-            if (size == NullValue || size < 0) return null; //todo (E007) huge collections
+            if (size == NullValue) return null;
+            if (size < 0 || size > _settings.CollectionItemCountLimit)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidItemCount);
+            }
 
             var items = new List<T>(size);
             if (itemReadMethod != null)
@@ -244,7 +256,11 @@ namespace NKafka.Protocol.Serialization
         public string ReadString()
         {
             var size = ReadInt16();
-            if (size == NullValue || size < 0) return null; //todo (E007) huge collections
+            if (size == NullValue) return null;
+            if (size < 0 || size > _settings.StringSizeByteCountLimit)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidStringSize);
+            }
 
             var bytes = new byte[size];
             _stream.Read(bytes, 0, size);
@@ -261,7 +277,11 @@ namespace NKafka.Protocol.Serialization
         public byte[] ReadByteArray()
         {
             var size = ReadInt32();
-            if (size == NullValue || size < 0) return null; //todo (E007) huge collections
+            if (size == NullValue) return null;
+            if (size < 0 || size > _settings.StringSizeByteCountLimit)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+            }
 
             var bytes = new byte[size];
             _stream.Read(bytes, 0, size);

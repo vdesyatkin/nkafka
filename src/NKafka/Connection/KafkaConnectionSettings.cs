@@ -17,6 +17,6 @@ namespace NKafka.Connection
             RegularReconnectPeriod = regularReconnectPeriod;
             ErrorStateReconnectPeriod = errorStateReconnectPeriod;
             HeartbeatPeriod = heartbeatPeriod;
-        }        
+        }
     }
 }

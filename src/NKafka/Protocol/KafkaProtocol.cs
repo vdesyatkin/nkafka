@@ -20,15 +20,17 @@ namespace NKafka.Protocol
     {
         public readonly int ResponseHeaderSize = 8;
 
-        [NotNull] private readonly KafkaProtocolConfiguration _configuration;                
+        [NotNull] private readonly KafkaProtocolConfiguration _configuration;
+        [NotNull] private readonly KafkaProtocolSettings _settings;
         [CanBeNull] private readonly string _clientId;
         
         private const int DefaultDataCapacity = 100;        
 
-        public KafkaProtocol(KafkaVersion kafkaVersion, [CanBeNull] string clientId)
+        public KafkaProtocol(KafkaVersion kafkaVersion, [NotNull] KafkaProtocolSettings settings, [CanBeNull] string clientId)
         {            
             _clientId = clientId;
-            _configuration = CreateConfiguration(kafkaVersion);            
+            _settings = settings;
+            _configuration = CreateConfiguration(kafkaVersion);
         }
 
         [CanBeNull]
@@ -79,7 +81,7 @@ namespace NKafka.Protocol
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
             }           
 
-            using (var reader = new KafkaBinaryReader(data, offset, count))
+            using (var reader = new KafkaBinaryReader(data, offset, count, _settings))
             {
                 var dataSize = reader.ReadInt32();
                 if (dataSize < 4)
@@ -115,7 +117,7 @@ namespace NKafka.Protocol
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidRequestType);
             }
 
-            using (var reader = new KafkaBinaryReader(data, offset, count))
+            using (var reader = new KafkaBinaryReader(data, offset, count, _settings))
             {
                 return requestConfiguration.RequestApi.ReadResponse(reader);
             }

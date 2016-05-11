@@ -8,8 +8,9 @@ namespace NKafka.Protocol
         UnknownError = 0,
         InvalidRequestType = 1,
         InvalidDataSize = 2,
-        InvalidItemCount = 3,
-        InvalidMessageSize = 4,
-        InvalidMessageCrc = 5        
+        InvalidStringSize = 3,
+        InvalidItemCount = 4,
+        InvalidMessageSize = 5,
+        InvalidMessageCrc = 6        
     }
 }
