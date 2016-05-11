@@ -58,8 +58,9 @@ namespace NKafka.Protocol
 
                 writer.EndWriteSize();
 
-                return writer.ToByteArray();                                
-            }            
+                var data = writer.ToByteArray();
+                return data;
+            }
         }
         
         /// <exception cref="KafkaProtocolException"/>

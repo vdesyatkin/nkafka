@@ -20,7 +20,7 @@ namespace NKafka.DevConsole
     public class KafkaTester
     {
         private const string ClientId = "kafka-proto";
-        private const byte MagicNumber = 0;
+        private const byte MagicNumber = 1;
         private const long DefaultMessageOffset = 0; // wtf?
         private const byte DefaultMessageAttribute = 0;
         private static readonly byte GZipMessageAttribute = (byte)(0x00 | (ProtocolConstants.AttributeCodeMask & (byte)MessageCodec.CodecGzip));
@@ -660,7 +660,8 @@ namespace NKafka.DevConsole
                     }
                 }
 
-                return stream.ToArray();
+                var data = stream.ToArray();
+                return data;
             }
         }
 
@@ -722,17 +723,24 @@ namespace NKafka.DevConsole
         {
             var messageData = PackMessage(message, messageAttribute);            
             var crcData = PackUInt32(Crc32.Compute(messageData));
-            var data = new List<byte>(messageData.Length + 4);
+            var data = new List<byte>(messageData.Length + 4);            
             data.AddRange(crcData);
             data.AddRange(messageData);
             return data.ToArray();
         }
 
+        private static byte[] PackageDateTime(DateTime dateTime)
+        {
+            return PackInt64((long)Math.Round((dateTime - _unixTimeUtc).TotalMilliseconds));
+        }
+        private static readonly DateTime _unixTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         private static byte[] PackMessage(Message message, byte attribute)
         {
             var data = new List<byte>(100);
-            data.AddRange(PackInt8(MagicNumber));            
+            data.AddRange(PackInt8(MagicNumber));
             data.AddRange(PackInt8(attribute));
+            data.AddRange(PackageDateTime(DateTime.UtcNow.Date)); ;
             data.AddRange(PackByteArray32(message.Key));
             data.AddRange(PackByteArray32(message.Value));
             return data.ToArray();
@@ -1103,13 +1111,13 @@ namespace NKafka.DevConsole
 
                 var messageText = DateTime.Now.ToString();
                 var message0 = new Message { Key = Encoding.UTF8.GetBytes("key"), Value = Encoding.UTF8.GetBytes(messageText) };
-                var message1 = new Message { Key = Encoding.UTF8.GetBytes("1"), Value = Encoding.UTF8.GetBytes("12345") };
+                var message1 = new Message { Key = Encoding.UTF8.GetBytes("1"), Value = Encoding.UTF8.GetBytes("1") };
                 var message2 = new Message { Key = Encoding.UTF8.GetBytes("2"), Value = Encoding.UTF8.GetBytes("54331") };
                 var messageSet0 = CreateMessageSet(new[] { message0 }, MessageCodec.CodecGzip);
                 var messageSet1 = CreateMessageSet(new[] { message1, message2 }, MessageCodec.CodecGzip);
                 var partitionPackage0 = new ProduceRequestTopicPartition { PartitionId = partitionIds[0], MessageSet = messageSet1 };
                 var partitionPackage1 = new ProduceRequestTopicPartition { PartitionId = partitionIds[1], MessageSet = messageSet1 };
-                var topicPackage = new ProduceRequestTopic { TopicName = testTopicName, Partitions = new[] { partitionPackage0 } };
+                var topicPackage = new ProduceRequestTopic { TopicName = testTopicName, Partitions = new[] { partitionPackage1 } };
                 var produceRequest = new ProduceRequest { AckMode = AckMode.WrittenToLeader, Timeout = new KafkaTimeout(TimeSpan.FromSeconds(5)), Topics = new[] { topicPackage } };
                 Send(stream, PackProduceRequest(produceRequest));
                 var produceResponse = UnpackProduceResponse(Receive(stream));

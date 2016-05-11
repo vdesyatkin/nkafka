@@ -49,6 +49,7 @@ namespace NKafka.Protocol.API.Produce
         {            
             var magicByte = _requestVersion >= KafkaRequestVersion.V2 ? MessageMagicByteV010 : MessageMagicByteV09;
             var useTimestamp = _requestVersion >= KafkaRequestVersion.V2;
+
             var timestampUtc = DateTime.UtcNow;
 
             writer.WriteInt32(partition.PartitionId);
@@ -59,20 +60,26 @@ namespace NKafka.Protocol.API.Produce
             {                
                 // single gzip message
                 writer.WriteInt64(0); //offset
+
                 writer.BeginWriteSize();
                 writer.BeginWriteCrc2();
+
                 writer.WriteInt8(magicByte);
                 writer.WriteInt8(MessageGZipAttribute);
+                if (useTimestamp)
+                {
+                    writer.WriteTimestampUtc(timestampUtc);
+                }
                 writer.WriteByteArray(null); // key
 
                 writer.BeginWriteGZipData(); //value
                 if (partition.Messages != null)
-                {
+                {                    
                     var nestedOffset = 0;
                     foreach (var message in partition.Messages)
                     {
                         if (message == null) continue;
-                        writer.WriteInt64(nestedOffset); //offset
+                        writer.WriteInt64(nestedOffset);
                         nestedOffset++;
 
                         writer.BeginWriteSize();
@@ -89,7 +96,7 @@ namespace NKafka.Protocol.API.Produce
 
                         writer.EndWriteCrc2();
                         writer.EndWriteSize();
-                    }
+                    }                    
                 }
                 writer.EndWriteGZipData();
 

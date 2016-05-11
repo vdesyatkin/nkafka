@@ -77,14 +77,11 @@ namespace NKafka.Protocol.API.Fetch
         }
 
         private KafkaFetchResponseTopic ReadFetchResponseTopic([NotNull] KafkaBinaryReader reader)
-        {
-            lock (this)
-            {
-                var topicName = reader.ReadString();
-                var partitions = reader.ReadCollection(ReadFetchResponseTopicPartition);
+        {            
+            var topicName = reader.ReadString();
+            var partitions = reader.ReadCollection(ReadFetchResponseTopicPartition);
 
-                return new KafkaFetchResponseTopic(topicName, partitions);
-            }
+            return new KafkaFetchResponseTopic(topicName, partitions);            
         }
 
         private KafkaFetchResponseTopicPartition ReadFetchResponseTopicPartition([NotNull] KafkaBinaryReader reader)

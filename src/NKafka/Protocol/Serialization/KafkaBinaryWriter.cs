@@ -116,7 +116,7 @@ namespace NKafka.Protocol.Serialization
         
         public void BeginWriteGZipData()
         {
-            WriteUInt32(0);
+            WriteInt32(0);
             _beginPositions.Push(_stream.Position);            
         } 
         
@@ -140,9 +140,7 @@ namespace NKafka.Protocol.Serialization
             }
 
             _stream.Position = beginPosition - 4;
-            WriteInt32(gzipData.Length);
-
-            _stream.Position = beginPosition;
+            
             WriteByteArray(gzipData);
             if (_stream.Position < _stream.Length)
             {
