@@ -22,8 +22,9 @@ namespace NKafka.Connection
             _host = host;
             _port = port;
         }
-
-        public KafkaConnectionResult<bool> TryOpen(CancellationToken cancellation)
+        
+        /// <exception cref="KafkaConnectionException"/>
+        public void Open(CancellationToken cancellation)
         {
             try
             {
@@ -32,129 +33,146 @@ namespace NKafka.Connection
                 WaitHandle.WaitAny(new[] {asyncConnectResult.AsyncWaitHandle, cancellation.WaitHandle});
                 if (cancellation.IsCancellationRequested)
                 {
-                    return KafkaConnectionErrorCode.Cancelled;
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.Cancelled);
                 }
                 if (!asyncConnectResult.IsCompleted)
                 {
-                    return KafkaConnectionErrorCode.ClientTimeout;
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ClientTimeout);                    
                 }
 
                 tcpClient.EndConnect(asyncConnectResult);
-                _tcpClient = tcpClient;
-                return true;
+                _tcpClient = tcpClient;                
             }
             catch (SocketException socketException)
             {
-                if (socketException.SocketErrorCode == SocketError.Success ||
-                    socketException.SocketErrorCode == SocketError.IsConnected)
+                if (socketException.SocketErrorCode == SocketError.IsConnected)
                 {
-                    return true;
+                    return;
                 }
 
-                return ConvertException(socketException);
+                throw ConvertException(socketException);
             }
             catch (Exception exception)
             {
-                return ConvertException(exception);
+                throw ConvertException(exception);
             }
         }
 
+        /// <exception cref="KafkaConnectionException"/>
         public void Close()
         {
             try
             {
                 _tcpClient?.Close();
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                //todo (E013) connection: connection close
-                //ignored
+                throw ConvertException(exception);
             }
-            _tcpClient = null;
+            finally
+            {
+                _tcpClient = null;
+            }
         }
 
-        public KafkaConnectionResult<bool> TryWrite([NotNull] byte[] data, int offset, int length)
+        /// <exception cref="KafkaConnectionException"/>
+        public void Write([NotNull] byte[] data, int offset, int length)
         {
             if (!CheckBufferData(data, offset, length))
             {
-                return KafkaConnectionErrorCode.BadRequest;
+                throw new KafkaConnectionException(KafkaConnectionErrorCode.BadRequest);
             }
             
             try
             {
                 var stream = _tcpClient?.GetStream();
-                if (stream == null) return KafkaConnectionErrorCode.ConnectionClosed;
+                if (stream == null)
+                {
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
+                }
 
-                stream.Write(data, offset, length);
-                return true;
+                stream.Write(data, offset, length);                
             }
             catch (Exception exception)
             {
-                return ConvertException(exception);
+                throw ConvertException(exception);
             }
         }
-        
-        public KafkaConnectionResult<int> TryRead([NotNull] byte[] data, int offset, int length)
+
+        /// <exception cref="KafkaConnectionException"/>
+        public int Read([NotNull] byte[] data, int offset, int length)
         {
             if (!CheckBufferData(data, offset, length))
             {
-                return KafkaConnectionErrorCode.BadRequest;
+                throw new KafkaConnectionException(KafkaConnectionErrorCode.BadRequest);
             }
             
             try
             {
                 var stream = _tcpClient?.GetStream();
-                if (stream == null) return KafkaConnectionErrorCode.ConnectionClosed;
+                if (stream == null)
+                {
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
+                }
 
                 return stream.Read(data, offset, length);
             }
             catch (Exception exception)
             {
-                return ConvertException(exception);
+                throw ConvertException(exception);
             }
         }
-        
-        public KafkaConnectionResult<IAsyncResult> TryBeginRead([NotNull] byte[] data, int offset, int length, AsyncCallback callback, object state = null)
+
+        /// <exception cref="KafkaConnectionException"/>
+        public void BeginRead([NotNull] byte[] data, int offset, int length, 
+            [CanBeNull] AsyncCallback callback, [CanBeNull] object state = null)
         {
             if (!CheckBufferData(data, offset, length))
             {
-                return KafkaConnectionErrorCode.BadRequest;
+                throw new KafkaConnectionException(KafkaConnectionErrorCode.BadRequest);
             }
 
             try
             {
                 var stream = _tcpClient?.GetStream();
-                if (stream == null) return KafkaConnectionErrorCode.ConnectionClosed;
+                if (stream == null)
+                {
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
+                }
 
-                var asyncResult = stream.BeginRead(data, offset, length, callback, state);
-                return new KafkaConnectionResult<IAsyncResult>(asyncResult, null);
+                stream.BeginRead(data, offset, length, callback, state);                
             }
             catch (Exception exception)
             {
-                return ConvertException(exception);
+                throw ConvertException(exception);
             }
         }
-        
-        public KafkaConnectionResult<int> TryEndRead(IAsyncResult asyncResult)
+
+        /// <exception cref="KafkaConnectionException"/>
+        public int EndRead([NotNull] IAsyncResult asyncResult)
         {
             if (asyncResult == null)
             {
-                return KafkaConnectionErrorCode.BadRequest;
+                throw new KafkaConnectionException(KafkaConnectionErrorCode.BadRequest);
             }
             
             try
             {
                 var stream = _tcpClient?.GetStream();
-                if (stream == null) return KafkaConnectionErrorCode.ConnectionClosed;
+                if (stream == null)
+                {
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
+                }
 
                 return stream.EndRead(asyncResult);
             }
             catch (Exception exception)
             {
-                return ConvertException(exception);
+                throw ConvertException(exception);
             }
         }
 
+        /// <exception cref="KafkaConnectionException"/>
         public bool IsDataAvailable()
         {
             try
@@ -168,10 +186,9 @@ namespace NKafka.Connection
             {
                 return false;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                //todo (E013) connection: IsDataAvailable exception
-                return false;
+                throw ConvertException(exception);
             }
         }
 
@@ -188,50 +205,47 @@ namespace NKafka.Connection
             return true;
         }
 
-        private KafkaConnectionErrorCode ConvertException(Exception exception) //todo (E013) connection:  connection log context
+        [NotNull]
+        private KafkaConnectionException ConvertException([NotNull] Exception exception)
         {
             var socketException = exception as SocketException;
             if (socketException != null)
             {
-                //todo (E013) connection: socket error
-                return ConvertError(socketException.SocketErrorCode);
+                var socketErrorInfo = new KafkaConnectionSocketErrorInfo(socketException.SocketErrorCode, socketException.ErrorCode, socketException.NativeErrorCode);                
+                return new KafkaConnectionException(ConvertError(socketException.SocketErrorCode), socketException, socketErrorInfo);
             }
-
-            var securityException = exception as SecurityException;            
-            if (securityException != null)
+            
+            if (exception is SecurityException)
             {
-                //todo (E013) connection: security error
-                return KafkaConnectionErrorCode.NotAuthorized;
+                return new KafkaConnectionException(KafkaConnectionErrorCode.NotAuthorized, exception);
             }
-
-            //todo (E013) connection: custom error
 
             if (exception is IOException)
-            {                
-                return KafkaConnectionErrorCode.TransportError;
+            {
+                return new KafkaConnectionException(KafkaConnectionErrorCode.TransportError, exception);
             }
 
             if (exception is ObjectDisposedException)
             {
-                return KafkaConnectionErrorCode.ConnectionMaintenance;
+                return new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionMaintenance, exception);
             }
 
             if (exception is InvalidOperationException)
             {
-                return KafkaConnectionErrorCode.UnsupportedOperation;
-            }                       
+                return new KafkaConnectionException(KafkaConnectionErrorCode.UnsupportedOperation, exception);
+            }
 
             if (exception is ArgumentException)
             {
-                return KafkaConnectionErrorCode.UnsupportedOperation;
+                return new KafkaConnectionException(KafkaConnectionErrorCode.UnsupportedOperation, exception);
             }
 
             if (exception is NotSupportedException)
             {
-                return KafkaConnectionErrorCode.UnsupportedOperation;
+                return new KafkaConnectionException(KafkaConnectionErrorCode.UnsupportedOperation, exception);
             }
-            
-            return KafkaConnectionErrorCode.UnknownError;
+
+            return new KafkaConnectionException(KafkaConnectionErrorCode.UnknownError, exception);
         }
 
         private static KafkaConnectionErrorCode ConvertError(SocketError socketError)

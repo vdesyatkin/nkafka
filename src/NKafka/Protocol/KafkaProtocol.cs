@@ -33,18 +33,18 @@ namespace NKafka.Protocol
             _configuration = CreateConfiguration(kafkaVersion);
         }
 
-        [CanBeNull]
-        public byte[] WriteRequest([NotNull] IKafkaRequest request, int correlationId, int? dataCapacity = null)
+        /// <exception cref="KafkaProtocolException"/>
+        [NotNull] public byte[] WriteRequest([NotNull] IKafkaRequest request, int correlationId, int? dataCapacity = null)
         {
-            // ReSharper disable HeuristicUnreachableCode
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse            
-            if (request == null) return null;            
-            // ReSharper enable HeuristicUnreachableCode
+            if (request == null)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidRequestType);
+            }         
 
             KafkaRequestConfiguration requestConfiguration;
             if (!_configuration.Requests.TryGetValue(request.GetType(), out requestConfiguration) || requestConfiguration == null)
             {
-                return null;
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidRequestType);
             }
 
             using (var writer = new KafkaBinaryWriter(dataCapacity ?? DefaultDataCapacity))
@@ -60,8 +60,7 @@ namespace NKafka.Protocol
 
                 writer.EndWriteSize();
 
-                var data = writer.ToByteArray();
-                return data;
+                return writer.ToByteArray() ?? new byte[0];                
             }
         }
         

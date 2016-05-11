@@ -32,8 +32,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignment.cs" />
@@ -143,11 +141,12 @@
     <Compile Include="Connection\KafkaBrokerErrorCode.cs" />
     <Compile Include="Connection\KafkaBrokerResult.cs" />
     <Compile Include="Connection\KafkaConnectionErrorCode.cs" />
-    <Compile Include="Connection\KafkaConnectionResult.cs" />
+    <Compile Include="Connection\KafkaConnectionException.cs" />
     <Compile Include="Connection\KafkaConnectionSettings.cs" />
     <Compile Include="Connection\KafkaBrokerStateErrorCode.cs" />
     <Compile Include="Connection\KafkaConnection.cs" />
     <Compile Include="Connection\KafkaConnectionSettingsBuilder.cs" />
+    <Compile Include="Connection\KafkaConnectionSocketErrorInfo.cs" />
     <Compile Include="KafkaBrokerInfo.cs" />
     <Compile Include="KafkaCodecType.cs" />
     <Compile Include="KafkaConsistencyLevel.cs" />
