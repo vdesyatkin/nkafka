@@ -49,6 +49,7 @@ namespace NKafka.Protocol.API.JoinGroup
             return ReadJoinGroupResponse(reader);
         }
 
+        [NotNull]
         private static KafkaJoinGroupResponse ReadJoinGroupResponse([NotNull] KafkaBinaryReader reader)
         {
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();

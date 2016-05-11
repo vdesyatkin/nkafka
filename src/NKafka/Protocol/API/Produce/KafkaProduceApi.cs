@@ -68,12 +68,12 @@ namespace NKafka.Protocol.API.Produce
                 writer.BeginWriteGZipData(); //value
                 if (partition.Messages != null)
                 {
-                    var innerOffset = 0;
+                    var nestedOffset = 0;
                     foreach (var message in partition.Messages)
                     {
                         if (message == null) continue;
-                        writer.WriteInt64(innerOffset); //offset
-                        innerOffset++;
+                        writer.WriteInt64(nestedOffset); //offset
+                        nestedOffset++;
 
                         writer.BeginWriteSize();
                         writer.BeginWriteCrc2();
@@ -138,6 +138,7 @@ namespace NKafka.Protocol.API.Produce
             return ReadProduceResponse(reader);
         }
 
+        [NotNull]
         private KafkaProduceResponse ReadProduceResponse([NotNull] KafkaBinaryReader reader)
         {
             var topics = reader.ReadCollection(ReadProduceResponseTopic);

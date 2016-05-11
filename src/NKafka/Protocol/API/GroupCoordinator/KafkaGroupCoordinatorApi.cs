@@ -30,6 +30,7 @@ namespace NKafka.Protocol.API.GroupCoordinator
             return ReadGroupCoordinatorResponse(reader);
         }
 
+        [NotNull]
         private static KafkaGroupCoordinatorResponse ReadGroupCoordinatorResponse([NotNull] KafkaBinaryReader reader)
         {
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();

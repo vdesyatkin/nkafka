@@ -8,6 +8,6 @@ namespace NKafka.Protocol
     {
         [NotNull] Type RequestType { get; }
         void WriteRequest([NotNull] KafkaBinaryWriter writer, [NotNull] IKafkaRequest request);
-        IKafkaResponse ReadResponse([NotNull] KafkaBinaryReader reader);
+        [NotNull] IKafkaResponse ReadResponse([NotNull] KafkaBinaryReader reader);
     }
 }

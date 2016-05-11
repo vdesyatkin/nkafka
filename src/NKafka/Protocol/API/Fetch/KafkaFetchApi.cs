@@ -68,6 +68,7 @@ namespace NKafka.Protocol.API.Fetch
             return ReadFetchResponse(reader);
         }
 
+        [NotNull]
         private KafkaFetchResponse ReadFetchResponse([NotNull] KafkaBinaryReader reader)
         {
             var throttleTime = _requestVersion >= KafkaRequestVersion.V1 ? TimeSpan.FromMilliseconds(reader.ReadInt32()) : TimeSpan.Zero;
@@ -93,19 +94,20 @@ namespace NKafka.Protocol.API.Fetch
 
             var messages = new List<KafkaMessageAndOffset>();
 
-            var requiredMessageSetSize = reader.BeginReadSize();
-            var actualMessageSetSize = 0;
+            var messageSetRequiredSize = reader.BeginReadSize();
+            var messageSetActualSize = 0;
             
-            while (reader.CanRead() && (actualMessageSetSize = reader.EndReadSize()) < requiredMessageSetSize)
+            while (reader.CanRead() && 
+                  (messageSetActualSize = reader.EndReadSize()) < messageSetRequiredSize)
             {
                 var offset = reader.ReadInt64();
 
                 var messageRequiredSize = reader.BeginReadSize();                
                 if ((messageRequiredSize <= 0 ||
-                    (requiredMessageSetSize - actualMessageSetSize) < messageRequiredSize))
+                    messageRequiredSize > (messageSetRequiredSize - messageSetActualSize)))
                 {
-                    reader.SkipData(requiredMessageSetSize - actualMessageSetSize);
-                    actualMessageSetSize = reader.EndReadSize();
+                    reader.SkipData(messageSetRequiredSize - messageSetActualSize);
+                    messageSetActualSize = reader.EndReadSize();
                     break;
                 }
 
@@ -122,49 +124,49 @@ namespace NKafka.Protocol.API.Fetch
                 if (messageCodecAttribute == MessageCodecGZipAttribute)
                 {
                     // gzip message
-                    var nestedRequiredMessageSetSize = reader.BeginReadGZipData();
-                    int nestedActualMessageSetSize;
-                    while ((nestedActualMessageSetSize = reader.EndReadGZipData()) < nestedRequiredMessageSetSize)
+                    var nestedMessageSetRequiredSize = reader.BeginReadGZipData();
+                    var nestedMessageSetActualSize = 0;
+                    while (reader.CanRead() && 
+                          (nestedMessageSetActualSize = reader.EndReadGZipData()) < nestedMessageSetRequiredSize)
                     {
                         // nested message set
                         var nestedOffset = reader.ReadInt64();                        
 
-                        var nestedRequiredSize = reader.BeginReadSize();
-                        if (messageRequiredSize <= 0 ||
-                            (nestedRequiredMessageSetSize - nestedActualMessageSetSize) < messageRequiredSize)
+                        var nestedMessageRequiredSize = reader.BeginReadSize();
+                        if (nestedMessageRequiredSize <= 0 ||
+                            nestedMessageRequiredSize > (nestedMessageSetRequiredSize - nestedMessageSetActualSize))
                         {
-                            reader.SkipData(nestedRequiredMessageSetSize - nestedActualMessageSetSize);
-                            nestedActualMessageSetSize = reader.EndReadGZipData();
+                            reader.SkipData(nestedMessageSetRequiredSize - nestedMessageSetActualSize);
+                            nestedMessageSetActualSize = reader.EndReadGZipData();
                             break;
                         }
                         
-                        var nestedRequiredCrc = reader.BeginReadCrc32();
+                        var nestedMessageRequiredCrc = reader.BeginReadCrc32();
 
-                        var nestedMagicByte = reader.ReadInt8();
-                        var nestedAttribute = reader.ReadInt8();
-                        var nestedTimestampUtc = messageMagicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
-                        var nestedKey = reader.ReadByteArray();
-                        var nestedValue = reader.ReadByteArray();
+                        var nestedMessageMagicByte = reader.ReadInt8();
+                        var nestedMessageAttribute = reader.ReadInt8();
+                        var nestedMessageTimestampUtc = messageMagicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
+                        var nestedMessageKey = reader.ReadByteArray();
+                        var nestedMessageValue = reader.ReadByteArray();
 
-                        var nestedActualCrc = reader.EndReadCrc32();
-                        var nestedActualSize = reader.EndReadSize();
+                        var nestedMessageActualCrc = reader.EndReadCrc32();
+                        var nestedMessageActualSize = reader.EndReadSize();
 
-                        if (nestedActualSize != nestedRequiredSize)
+                        if (nestedMessageActualSize != nestedMessageRequiredSize)
                         {                            
                             throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageSize);
                         }
 
-                        if (nestedActualCrc != nestedRequiredCrc)
+                        if (nestedMessageActualCrc != nestedMessageRequiredCrc)
                         {
-                            //todo (E013) invalid CRC
-                            continue;
+                            throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageCrc);
                         }                        
                         
-                        var nestedMessage = new KafkaMessageAndOffset(nestedOffset, nestedKey, nestedValue);
+                        var nestedMessage = new KafkaMessageAndOffset(nestedOffset, nestedMessageKey, nestedMessageValue);
                         messages.Add(nestedMessage);
                     }
 
-                    if (nestedActualMessageSetSize != nestedRequiredMessageSetSize)
+                    if (nestedMessageSetActualSize != nestedMessageSetRequiredSize)
                     {
                         throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
                     }
@@ -179,22 +181,21 @@ namespace NKafka.Protocol.API.Fetch
 
                     if (messageActualSize != messageRequiredSize)
                     {
-                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageSize);
                     }
 
                     if (messageActualCrc != messageRequiredCrc)
                     {
-                        //todo (E013) invalid CRC
-                        continue;
+                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageCrc);                        
                     }                    
                     var message = new KafkaMessageAndOffset(offset, messageKey, value);
                     messages.Add(message);
                 }
             }
 
-            if (actualMessageSetSize != requiredMessageSetSize)
+            if (messageSetActualSize != messageSetRequiredSize)
             {
-                //todo
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
             }
             
             return new KafkaFetchResponseTopicPartition(partitionId, errorCode, highwaterMarkOffset, messages);

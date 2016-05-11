@@ -50,6 +50,7 @@ namespace NKafka.Protocol.API.SyncGroup
             return ReadSyncGroupResponse(reader);
         }
 
+        [NotNull]
         private static KafkaSyncGroupResponse ReadSyncGroupResponse([NotNull] KafkaBinaryReader reader)
         {
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();

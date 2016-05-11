@@ -451,18 +451,17 @@ namespace NKafka.Connection
         {            
             try
             {
-                var responseHeader = _kafkaProtocol.ReadResponseHeader(responseHeaderData, 0, responseHeaderData.Length);
-                if (responseHeader == null)
-                {
-                    //todo (E013) broker: response header protocol error
-                    _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
-                    return null;
-                }
-                return responseHeader;
+                return _kafkaProtocol.ReadResponseHeader(responseHeaderData, 0, responseHeaderData.Length);                
+            }
+            catch (KafkaProtocolException)
+            {
+                //todo (E013) broker: response header protocol exception
+                _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
+                return null;
             }
             catch (Exception)
             {
-                //todo (E013) broker: response header protocol exception
+                //todo (E013) broker: response header protocol unknown exception
                 _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                 return null;
             }
@@ -470,22 +469,21 @@ namespace NKafka.Connection
 
         [CanBeNull]
         private IKafkaResponse ReadResponse([NotNull] RequestState requestState, [NotNull] byte[] responseData)
-        {            
+        {
             try
             {
-                var response = _kafkaProtocol.ReadResponse(requestState.Request, responseData, 0, responseData.Length);
-                if (response == null)
-                {
-                    //todo (E013) broker: response protocol error
-                    _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
-                    requestState.Error = KafkaBrokerErrorCode.ProtocolError;
-                    return null;
-                }
-                return response;
+                return _kafkaProtocol.ReadResponse(requestState.Request, responseData, 0, responseData.Length);                
+            }
+            catch (KafkaProtocolException)
+            {
+                //todo (E013) broker: response protocol exception
+                _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
+                requestState.Error = KafkaBrokerErrorCode.ProtocolError;
+                return null;
             }
             catch (Exception)
             {
-                //todo (E013) broker: response protocol exception
+                //todo (E013) broker: response protocol unknown exception
                 _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                 requestState.Error = KafkaBrokerErrorCode.ProtocolError;
                 return null;

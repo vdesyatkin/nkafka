@@ -43,6 +43,7 @@ namespace NKafka.Protocol.API.TopicMetadata
             return ReadTopicMetadataResponse(reader);
         }
 
+        [NotNull]
         private KafkaTopicMetadataResponse ReadTopicMetadataResponse([NotNull] KafkaBinaryReader reader)
         {
             var brokers = reader.ReadCollection(ReadResponseBroker);

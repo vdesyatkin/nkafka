@@ -61,29 +61,29 @@ namespace NKafka.Protocol
                 return writer.ToByteArray();                                
             }            
         }
-
-        [CanBeNull]
-        public KafkaResponseHeader ReadResponseHeader(byte[] data, int offset, int count)
+        
+        /// <exception cref="KafkaProtocolException"/>
+        [NotNull] public KafkaResponseHeader ReadResponseHeader(byte[] data, int offset, int count)
         {            
             if (data == null)                
             {                       
-                return null;
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
             }
             if (offset < 0 || offset >= data.Length)
             {
-                return null;
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
             }
             if (count < 1 || count > (data.Length - offset))
             {
-                return null;
-            }         
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+            }           
 
             using (var reader = new KafkaBinaryReader(data, offset, count))
             {
                 var dataSize = reader.ReadInt32();
                 if (dataSize < 4)
                 {
-                    return null; //todo (E007) protocol error
+                    throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
                 }
                 var correlationId = reader.ReadInt32();
 
@@ -91,27 +91,27 @@ namespace NKafka.Protocol
             }
         }
 
-        [CanBeNull]
-        public IKafkaResponse ReadResponse([NotNull] IKafkaRequest request, byte[] data, int offset, int count)
+        /// <exception cref="KafkaProtocolException"/>
+        [NotNull] public IKafkaResponse ReadResponse([NotNull] IKafkaRequest request, byte[] data, int offset, int count)
         {            
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse            
             if (request == null || data == null)
             {
-                return null;
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
             }
             if (offset < 0 || offset >= data.Length)
             {
-                return null;
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
             }
             if (count < 1 || count > (data.Length - offset))
             {
-                return null;
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
             }            
 
             KafkaRequestConfiguration requestConfiguration;
             if (!_configuration.Requests.TryGetValue(request.GetType(), out requestConfiguration) || requestConfiguration == null)
             {
-                return null;
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidRequestType);
             }
 
             using (var reader = new KafkaBinaryReader(data, offset, count))

@@ -37,6 +37,7 @@ namespace NKafka.Protocol.API.OffsetFetch
             return ReadOffsetFetchResponse(reader);
         }
 
+        [NotNull]
         private static KafkaOffsetFetchResponse ReadOffsetFetchResponse([NotNull] KafkaBinaryReader reader)
         {            
             var topics = reader.ReadCollection(ReadOffsetFetchResponseTopic);

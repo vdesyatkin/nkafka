@@ -25,12 +25,13 @@ namespace NKafka.Protocol.API.LeaveGroup
         #endregion LeaveGroupRequest
 
         #region LeaveGroupResponse
-
+        
         public IKafkaResponse ReadResponse(KafkaBinaryReader reader)
         {
             return ReadLeaveGroupResponse(reader);
         }
 
+        [NotNull]
         private static KafkaLeaveGroupResponse ReadLeaveGroupResponse([NotNull] KafkaBinaryReader reader)
         {
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();

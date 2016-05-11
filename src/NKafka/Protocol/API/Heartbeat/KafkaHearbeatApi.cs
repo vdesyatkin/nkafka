@@ -32,6 +32,7 @@ namespace NKafka.Protocol.API.Heartbeat
             return ReadHeartbeatResponse(reader);
         }
 
+        [NotNull]
         private static KafkaHeartbeatResponse ReadHeartbeatResponse([NotNull] KafkaBinaryReader reader)
         {
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();            

@@ -48,6 +48,7 @@ namespace NKafka.Protocol.API.OffsetCommit
             return ReadOffsetCommitResponse(reader);
         }
 
+        [NotNull]
         private static KafkaOffsetCommitResponse ReadOffsetCommitResponse([NotNull] KafkaBinaryReader reader)
         {
             var topics = reader.ReadCollection(ReadOffsetCommitResponseTopic);
