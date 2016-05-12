@@ -40,11 +40,11 @@ namespace NKafka.Client.Broker.Internal
             }
         }
 
-        public void OnInternalError(KafkaBrokerInternalErrorInfo error)
+        public void OnError(KafkaBrokerErrorInfo error)
         {
             try
             {
-                _logger.OnBrokerInternalError(_broker, error);
+                _logger.OnBrokerError(_broker, error);
             }
             catch (Exception)
             {

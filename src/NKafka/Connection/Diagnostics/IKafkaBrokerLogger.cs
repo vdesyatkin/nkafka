@@ -8,7 +8,7 @@ namespace NKafka.Connection.Diagnostics
 
         void OnDisconnected();
 
-        void OnInternalError([NotNull] KafkaBrokerInternalErrorInfo error);
+        void OnError([NotNull] KafkaBrokerErrorInfo error);
 
         void OnConnectionError([NotNull] KafkaBrokerConnectionErrorInfo error);
 
