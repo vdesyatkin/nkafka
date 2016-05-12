@@ -7,7 +7,7 @@ namespace NKafka.Client.Producer.Internal
     {
         int EnqueuedCount { get; }
         DateTime? EnqueueTimestampUtc { get; }
-        IKafkaProducerFallbackHandler FallbackHandler { get; }
+        IKafkaProducerFallbackHandler FallbackHandler { get; }        
 
         void DistributeMessagesByPartitions(IReadOnlyList<int> partitionIds, IReadOnlyDictionary<int, KafkaProducerTopicPartition> partitions);
     }

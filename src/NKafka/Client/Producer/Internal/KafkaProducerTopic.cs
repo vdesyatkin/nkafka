@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Diagnostics;
 using NKafka.Client.Producer.Diagnostics;
+using NKafka.Client.Producer.Logging;
 
 namespace NKafka.Client.Producer.Internal
 {
@@ -12,6 +13,7 @@ namespace NKafka.Client.Producer.Internal
         [NotNull] public KafkaClientTopicMetadataInfo TopicMetadataInfo;
 
         [NotNull] private readonly KafkaProducerSettings _settings;
+        [CanBeNull] private readonly IKafkaProducerTopicLogger _logger;
 
         [NotNull] private readonly IKafkaProducerTopicBuffer _buffer;
         [NotNull] private IReadOnlyList<int> _topicPartitionIds;
@@ -19,11 +21,13 @@ namespace NKafka.Client.Producer.Internal
 
         public KafkaProducerTopic([NotNull] string topicName,
             [NotNull] KafkaProducerSettings settings,
-            [NotNull] IKafkaProducerTopicBuffer buffer)
+            [NotNull] IKafkaProducerTopicBuffer buffer,
+            [CanBeNull] IKafkaProducerTopicLogger logger)
         {
             TopicName = topicName;
-            _settings = settings;
+            _settings = settings;            
             _buffer = buffer;
+            _logger = logger;
             _topicPartitions = new Dictionary<int, KafkaProducerTopicPartition>();
             _topicPartitionIds = new int[0];
             TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, false, null, null, DateTime.UtcNow);
@@ -32,7 +36,7 @@ namespace NKafka.Client.Producer.Internal
         [NotNull]
         public KafkaProducerTopicPartition CreatePartition(int partitionId)
         {
-            return new KafkaProducerTopicPartition(TopicName, partitionId, _settings, _buffer.FallbackHandler);
+            return new KafkaProducerTopicPartition(TopicName, partitionId, _settings, _buffer.FallbackHandler, _logger);
         }
         
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartition> partitions)

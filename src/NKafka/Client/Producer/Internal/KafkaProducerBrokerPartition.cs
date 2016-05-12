@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.Producer.Diagnostics;
+using NKafka.Client.Producer.Logging;
 
 namespace NKafka.Client.Producer.Internal
 {
@@ -11,9 +12,9 @@ namespace NKafka.Client.Producer.Internal
     {
         public readonly int PartitionId;        
         [NotNull] public readonly KafkaProducerSettings Settings;
-        [NotNull]
-        private readonly string _topicName;
+        [NotNull] private readonly string _topicName;
         [CanBeNull] private readonly IKafkaProducerFallbackHandler _fallbackHandler;
+        [CanBeNull] private readonly IKafkaProducerTopicLogger _logger;
 
         public KafkaProducerBrokerPartitionStatus Status;
         public bool IsReady => Status == KafkaProducerBrokerPartitionStatus.Ready && Error == null;
@@ -46,12 +47,14 @@ namespace NKafka.Client.Producer.Internal
 
         public KafkaProducerBrokerPartition([NotNull] string topicName, int partitionId, 
             [NotNull] KafkaProducerSettings settings,
-            [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler)
+            [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler,
+            [CanBeNull] IKafkaProducerTopicLogger logger)
         {     
             PartitionId = partitionId;
             _topicName = topicName;
             Settings = settings;            
             _fallbackHandler = fallbackHandler;
+            _logger = logger;
             _mainQueue = new ConcurrentQueue<KafkaMessage>();
             _retryQueue = new Queue<KafkaMessage>();
             LimitInfo = new KafkaProducerTopicPartitionLimitInfo(settings.MaxMessageSizeByteCount, settings.BatchMaxMessageCount, DateTime.UtcNow);

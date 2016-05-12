@@ -7,6 +7,7 @@ using NKafka.Client.ConsumerGroup;
 using NKafka.Client.Internal;
 using NKafka.Client.Producer;
 using NKafka.Client.Producer.Internal;
+using NKafka.Client.Producer.Logging;
 
 namespace NKafka.Client
 {
@@ -46,29 +47,43 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topicBuffer = new KafkaProducerTopicBuffer(partitioner, fallbackHandler);
-            var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer);
+            var bufferLogger = logger != null ? new KafkaProducerTopicBufferLogger(logger) : null;
+            var topicBuffer = new KafkaProducerTopicBuffer(partitioner, fallbackHandler, bufferLogger);
+
+            var topicLogger = logger != null ? new KafkaProducerTopicLogger(logger) : null;
+            var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer, topicLogger);
+
             _topicProducers.Add(topic);
-            return new KafkaProducerTopicFacade(topicName, topicBuffer, topic);
+            var facade  = new KafkaProducerTopicFacade(topicName, topicBuffer, topic);
+            bufferLogger?.SetTopic(facade);
+            topicLogger?.SetTopic(facade);
+            return facade;
         }
         
         public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,           
            [NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
-           [NotNull] IKafkaSerializer<TKey, TData> serializer,
-           [CanBeNull] IKafkaProducerLogger<TKey, TData> logger = null,
+           [NotNull] IKafkaSerializer<TKey, TData> serializer,           
            [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler = null,
+           [CanBeNull] IKafkaProducerLogger<TKey, TData> logger = null,
            [CanBeNull] KafkaProducerSettings settings = null)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             // ReSharper disable ConstantNullCoalescingCondition
-            if (string.IsNullOrEmpty(topicName) || (partitioner == null) || (serializer == null)) return null;            
+            if (string.IsNullOrEmpty(topicName) || (partitioner == null) || (serializer == null)) return null;
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var topicBuffer = new KafkaProducerTopicBuffer<TKey, TData>(partitioner, serializer, fallbackHandler);
-            var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer);
+            var bufferLogger = logger != null ? new KafkaProducerTopicBufferLogger<TKey, TData>(logger) : null;
+            var topicBuffer = new KafkaProducerTopicBuffer<TKey, TData>(partitioner, serializer, fallbackHandler, bufferLogger);
+
+            var topicLogger = logger != null ? new KafkaProducerTopicLogger<TKey, TData>(logger) : null;
+            var topic = new KafkaProducerTopic(topicName, settings ?? KafkaProducerSettingsBuilder.Default, topicBuffer, topicLogger);
+
             _topicProducers.Add(topic);
-            return new KafkaProducerTopicFacade<TKey, TData>(topicName, topicBuffer, topic);
+            var facade = new KafkaProducerTopicFacade<TKey, TData>(topicName, topicBuffer, topic);
+            bufferLogger?.SetTopic(facade);
+            topicLogger?.SetTopic(facade);
+            return facade;
         }
         
         public IKafkaConsumerTopic CreateTopicConsumer([NotNull] string topicName, [NotNull] IKafkaConsumerGroup group,

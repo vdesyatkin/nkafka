@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Client.Producer.Logging;
 
 namespace NKafka.Client.Producer.Internal
 {
@@ -11,19 +12,23 @@ namespace NKafka.Client.Producer.Internal
         public int EnqueuedCount => _enqueuedCount;
         public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
 
-        [CanBeNull] public IKafkaProducerFallbackHandler FallbackHandler { get; }
+        [CanBeNull] public IKafkaProducerFallbackHandler FallbackHandler { get; }        
 
         [NotNull] private readonly IKafkaProducerPartitioner _partitioner;
+        [CanBeNull] private readonly IKafkaProducerTopicBufferLogger _logger;
         [NotNull] private readonly ConcurrentQueue<KafkaMessage> _messageQueue;
 
         private int _enqueuedCount;
         private DateTime? _enqueueTimestampUtc;
 
-        public KafkaProducerTopicBuffer([NotNull] IKafkaProducerPartitioner partitioner, [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler)
+        public KafkaProducerTopicBuffer([NotNull] IKafkaProducerPartitioner partitioner, 
+            [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler,
+            [CanBeNull] IKafkaProducerTopicBufferLogger logger)
         {
             _partitioner = partitioner;
+            _logger = logger;
             _messageQueue = new ConcurrentQueue<KafkaMessage>();
-            FallbackHandler = fallbackHandler;
+            FallbackHandler = fallbackHandler;            
         }
 
         public void EnqueueMessage([CanBeNull] KafkaMessage message)
@@ -58,6 +63,7 @@ namespace NKafka.Client.Producer.Internal
                 }
                 catch (Exception)
                 {
+                    _logger?.OnPartitioningError(message);
                     partitionId = partitionIds[0];
                 }
 
@@ -83,22 +89,25 @@ namespace NKafka.Client.Producer.Internal
     {
         public int EnqueuedCount => _enqueuedCount;
         public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
-        [CanBeNull] public IKafkaProducerFallbackHandler FallbackHandler { get; }
+        [CanBeNull] public IKafkaProducerFallbackHandler FallbackHandler { get; }        
 
         [NotNull] private readonly IKafkaProducerPartitioner<TKey, TData> _partitioner;
         [NotNull] private readonly IKafkaSerializer<TKey, TData> _serializer;
+        [CanBeNull] private readonly IKafkaProducerTopicBufferLogger<TKey, TData> _logger;
         [NotNull] private readonly ConcurrentQueue<KafkaMessage<TKey, TData>> _messageQueue;
 
         private int _enqueuedCount;
         private DateTime? _enqueueTimestampUtc;
 
         public KafkaProducerTopicBuffer([NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
-            [NotNull] IKafkaSerializer<TKey, TData> serializer, 
-            [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler)
+            [NotNull] IKafkaSerializer<TKey, TData> serializer,
+            [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler,
+            [CanBeNull] IKafkaProducerTopicBufferLogger<TKey, TData> logger)
         {
             _partitioner = partitioner;
             _serializer = serializer;
-            FallbackHandler = fallbackHandler != null ? new FallbackAdapter(fallbackHandler, serializer) : null;
+            _logger = logger;
+            FallbackHandler = fallbackHandler != null ? new FallbackAdapter(fallbackHandler, serializer) : null;            
             _messageQueue = new ConcurrentQueue<KafkaMessage<TKey, TData>>();
         }
 
@@ -132,6 +141,7 @@ namespace NKafka.Client.Producer.Internal
                 }
                 catch (Exception)
                 {
+                    _logger?.OnSerializationError(message);
                     continue;
                 }
 
@@ -143,6 +153,7 @@ namespace NKafka.Client.Producer.Internal
                 catch (Exception)
                 {
                     partitionId = partitionIds[0];
+                    _logger?.OnPartitioningError(message);
                 }
 
                 if (!partitions.ContainsKey(partitionId))
