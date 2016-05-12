@@ -165,7 +165,7 @@ namespace NKafka.Protocol.API.Fetch
                             throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageCrc);
                         }
                         
-                        var nestedMessage = new KafkaMessageAndOffset(nestedMessageOffset, nestedMessageKey, nestedMessageValue);
+                        var nestedMessage = new KafkaMessageAndOffset(nestedMessageOffset, nestedMessageKey, nestedMessageValue, nestedMessageTimestampUtc);
                         messages.Add(nestedMessage);
                         nestedMessageSetActualSize = reader.EndReadGZipData();
                     }
@@ -205,7 +205,7 @@ namespace NKafka.Protocol.API.Fetch
                     {
                         throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageCrc);
                     }                    
-                    var message = new KafkaMessageAndOffset(messageOffset, messageKey, value);
+                    var message = new KafkaMessageAndOffset(messageOffset, messageKey, value, messageTimestampUtc);
                     messages.Add(message);
                 }
                 messageSetActualSize = reader.EndReadSize();

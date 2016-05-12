@@ -50,7 +50,7 @@ namespace NKafka.Protocol.API.Produce
             var magicByte = _requestVersion >= KafkaRequestVersion.V2 ? MessageMagicByteV010 : MessageMagicByteV09;
             var useTimestamp = _requestVersion >= KafkaRequestVersion.V2;
 
-            var timestampUtc = DateTime.UtcNow;
+            var defaultTimestampUtc = DateTime.UtcNow;
 
             writer.WriteInt32(partition.PartitionId);
 
@@ -68,7 +68,7 @@ namespace NKafka.Protocol.API.Produce
                 writer.WriteInt8(MessageGZipAttribute);
                 if (useTimestamp)
                 {
-                    writer.WriteTimestampUtc(timestampUtc);
+                    writer.WriteTimestampUtc(defaultTimestampUtc); // (V010) todo??
                 }
                 writer.WriteByteArray(null); // key
 
@@ -89,7 +89,7 @@ namespace NKafka.Protocol.API.Produce
                         writer.WriteInt8(MessageEmptyAttribute);
                         if (useTimestamp)
                         {
-                            writer.WriteTimestampUtc(timestampUtc);
+                            writer.WriteTimestampUtc(message.TiemestampUtc ?? defaultTimestampUtc);
                         }
                         writer.WriteByteArray(message.Key);
                         writer.WriteByteArray(message.Data);
@@ -121,7 +121,7 @@ namespace NKafka.Protocol.API.Produce
                         writer.WriteInt8(MessageEmptyAttribute);
                         if (useTimestamp)
                         {
-                            writer.WriteTimestampUtc(timestampUtc);
+                            writer.WriteTimestampUtc(defaultTimestampUtc);
                         }
                         writer.WriteByteArray(message.Key);
                         writer.WriteByteArray(message.Data);

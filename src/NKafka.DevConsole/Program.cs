@@ -72,7 +72,7 @@ namespace NKafka.DevConsole
                         Console.WriteLine("Key and data required");
                         continue;
                     }
-                    topicProducer.EnqueueMessage(data[1].Trim(), data[2].Trim());
+                    topicProducer.EnqueueMessage(data[1].Trim(), data[2].Trim(), DateTime.UtcNow);
                 }                
 
                 if (command == "consume" || command == "c")
@@ -149,15 +149,15 @@ namespace NKafka.DevConsole
             {
                 var key = message.Key != null ? Encoding.UTF8.GetBytes(message.Key) : null;
                 var data = message.Data != null ? Encoding.UTF8.GetBytes(message.Data) : null;
-                return new KafkaMessage(key, data);
+                return new KafkaMessage(key, data, message.TiemestampUtc);
             }
 
             public KafkaMessage<string, string> DeserializeMessage(KafkaMessage message)
             {
                 var key = message.Key != null ? Encoding.UTF8.GetString(message.Key) : null;
                 var data = message.Data != null ? Encoding.UTF8.GetString(message.Data) : null;
-                return new KafkaMessage<string, string>(key, data);
-            }            
+                return new KafkaMessage<string, string>(key, data, message.TiemestampUtc);
+            }
         }
 
         private class TestPartitioner : IKafkaProducerPartitioner<string, string>

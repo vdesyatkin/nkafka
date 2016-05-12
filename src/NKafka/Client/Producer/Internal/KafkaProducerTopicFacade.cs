@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using NKafka.Client.Producer.Diagnostics;
 
 namespace NKafka.Client.Producer.Internal
@@ -17,14 +18,14 @@ namespace NKafka.Client.Producer.Internal
             _topic = topic;
         }
 
-        public void EnqueueMessage([CanBeNull] byte[] key, [CanBeNull]  byte[] data)
+        public void EnqueueMessage([CanBeNull] byte[] key, [CanBeNull] byte[] data, DateTime? timestampUtc = null)
         {
-            _buffer.EnqueueMessage(new KafkaMessage(key, data));
+            _buffer.EnqueueMessage(new KafkaMessage(key, data, timestampUtc));
         }
 
-        public void EnqueueMessage([CanBeNull]  byte[] data)
+        public void EnqueueMessage([CanBeNull]  byte[] data, DateTime? timestampUtc = null)
         {
-            _buffer.EnqueueMessage(new KafkaMessage(null, data));
+            _buffer.EnqueueMessage(new KafkaMessage(null, data, timestampUtc));
         }
 
         public void EnqueueMessage([CanBeNull] KafkaMessage message)
@@ -60,21 +61,20 @@ namespace NKafka.Client.Producer.Internal
             _topic = topic;
         }
 
-        public void EnqueueMessage([CanBeNull] TKey key, [CanBeNull]  TData data)
+        public void EnqueueMessage([CanBeNull] TKey key, [CanBeNull] TData data, DateTime? timestampUtc = null)
         {
-            _buffer.EnqueueMessage(new KafkaMessage<TKey, TData>(key, data));
+            _buffer.EnqueueMessage(new KafkaMessage<TKey, TData>(key, data, timestampUtc));
         }
 
-        public void EnqueueMessage([CanBeNull]  TData data)
+        public void EnqueueMessage([CanBeNull]  TData data, DateTime? timestampUtc = null)
         {
-            _buffer.EnqueueMessage(new KafkaMessage<TKey, TData>(default(TKey), data));
+            _buffer.EnqueueMessage(new KafkaMessage<TKey, TData>(default(TKey), data, timestampUtc));
         }
 
         public void EnqueueMessage([CanBeNull] KafkaMessage<TKey, TData> message)
         {
             _buffer.EnqueueMessage(message);
         }
-
 
         #region Diagnostics
 

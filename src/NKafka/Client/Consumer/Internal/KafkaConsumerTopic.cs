@@ -81,7 +81,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     if (messageAndOffset == null) continue;
                     
-                    var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data);
+                    var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data, messageAndOffset.TiemestampUtc);
 
                     if (partitionMessages.Count == 0)
                     {

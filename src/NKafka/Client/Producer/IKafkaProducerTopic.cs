@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using NKafka.Client.Producer.Diagnostics;
 
 namespace NKafka.Client.Producer
@@ -8,8 +9,8 @@ namespace NKafka.Client.Producer
     {
         [NotNull] string TopicName { get; }
         void EnqueueMessage([NotNull] KafkaMessage message);
-        void EnqueueMessage([NotNull] byte[] key, [NotNull] byte[] data);
-        void EnqueueMessage([NotNull] byte[] data);
+        void EnqueueMessage([NotNull] byte[] key, [NotNull] byte[] data, DateTime? timestampUtc = null);
+        void EnqueueMessage([NotNull] byte[] data, DateTime? timestampUtc = null);
 
         bool IsReady { get; }
         bool IsSynchronized { get; }
@@ -22,8 +23,8 @@ namespace NKafka.Client.Producer
         [NotNull]
         string TopicName { get; }
         void EnqueueMessage([NotNull] KafkaMessage<TKey, TData> message);
-        void EnqueueMessage([NotNull] TKey key, [NotNull] TData data);
-        void EnqueueMessage([NotNull] TData data);
+        void EnqueueMessage([NotNull] TKey key, [NotNull] TData data, DateTime? timestampUtc = null);
+        void EnqueueMessage([NotNull] TData data, DateTime? timestampUtc = null);
 
         bool IsReady { get; }
         bool IsSynchronized { get; }
