@@ -6,12 +6,12 @@ namespace NKafka.Client.Producer
     [PublicAPI]
     public interface IKafkaProducerPartitioner
     {
-        int GetPartition(byte[] key, byte[] data, IReadOnlyList<int> partitions);
+        int GetPartition([NotNull] KafkaMessage message, [NotNull] IReadOnlyList<int> partitions);
     }
 
     [PublicAPI]
-    public interface IKafkaProducerPartitioner<in TKey, in TData>
+    public interface IKafkaProducerPartitioner<TKey, TData>
     {
-        int GetPartition(TKey key, TData data, IReadOnlyList<int> partitions);
+        int GetPartition([NotNull] KafkaMessage<TKey, TData> message, [NotNull] IReadOnlyList<int> partitions);
     }
 }

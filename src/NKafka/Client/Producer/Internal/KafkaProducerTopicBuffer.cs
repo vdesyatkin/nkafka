@@ -54,7 +54,7 @@ namespace NKafka.Client.Producer.Internal
                 int partitionId;
                 try
                 {
-                    partitionId = _partitioner.GetPartition(message.Key, message.Data, partitionIds);
+                    partitionId = _partitioner.GetPartition(message, partitionIds);
                 }
                 catch (Exception)
                 {
@@ -138,7 +138,7 @@ namespace NKafka.Client.Producer.Internal
                 int partitionId;
                 try
                 {
-                    partitionId = _partitioner.GetPartition(message.Key, message.Data, partitionIds);
+                    partitionId = _partitioner.GetPartition(message, partitionIds);
                 }
                 catch (Exception)
                 {

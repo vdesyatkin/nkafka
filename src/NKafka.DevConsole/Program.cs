@@ -162,16 +162,14 @@ namespace NKafka.DevConsole
 
         private class TestPartitioner : IKafkaProducerPartitioner<string, string>
         {            
-            private readonly Random _rand = new Random();
+            [NotNull] private readonly Random _rand = new Random();
 
-            public int GetPartition(string key, string data, IReadOnlyList<int> partitions)
-            {
-                if (key == null) return 0;
-                if (partitions == null) return 0;
+            public int GetPartition(KafkaMessage<string, string> message, IReadOnlyList<int> partitions)
+            {                
                 if (partitions.Count == 0) return 0;
 
                 int intKey;
-                if (int.TryParse(key, out intKey))
+                if (message.Key != null && int.TryParse(message.Key, out intKey))
                 {
                     return partitions[intKey%partitions.Count];
                 }
