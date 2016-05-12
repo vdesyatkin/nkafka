@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
 using NKafka.Metadata;
 
 namespace NKafka.Client.Diagnostics
@@ -7,10 +8,11 @@ namespace NKafka.Client.Diagnostics
     [PublicAPI]
     public sealed class KafkaClientBrokerInfo
     {
-        [NotNull]
-        public readonly string BrokerName;        
+        [NotNull] public readonly string Name;
+        
+        public readonly KafkaClientBrokerType BrokerType;
 
-        public readonly KafkaBrokerMetadata Metadata;
+        [NotNull] public readonly KafkaBrokerMetadata BrokerMetadata;
 
         public readonly bool IsOpenned;
 
@@ -22,12 +24,12 @@ namespace NKafka.Client.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaClientBrokerInfo([NotNull] string brokerName,
-            KafkaBrokerMetadata metadata, bool isOpenned, KafkaClientBrokerErrorCode? error, 
+        public KafkaClientBrokerInfo([NotNull] string name, KafkaClientBrokerType brokerType,
+            [NotNull] KafkaBrokerMetadata brokerMetadata, bool isOpenned, KafkaClientBrokerErrorCode? error, 
             DateTime? connectionTimestampUtc, DateTime? lastActivityTimestampUtc, DateTime timestampUtc)
         {
-            BrokerName = brokerName;            
-            Metadata = metadata;
+            Name = name;            
+            BrokerMetadata = brokerMetadata;
             IsOpenned = isOpenned;
             Error = error;
             ConnectionTimestampUtc = connectionTimestampUtc;

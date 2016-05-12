@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using JetBrains.Annotations;
 
-namespace NKafka.Client.Internal.Broker
+namespace NKafka.Client.Broker
 {
     internal sealed class KafkaClientBrokerTopic
     {

@@ -3,7 +3,7 @@ using NKafka.Client.Consumer.Internal;
 using NKafka.Client.Producer.Internal;
 using NKafka.Metadata;
 
-namespace NKafka.Client.Internal.Broker
+namespace NKafka.Client.Broker
 {
     internal sealed class KafkaClientBrokerPartition
     {

@@ -16,10 +16,7 @@ namespace NKafka.Client.Diagnostics
         public readonly IReadOnlyList<KafkaClientGroupMetadataInfo> Groups;
 
         [NotNull, ItemNotNull]
-        public readonly IReadOnlyList<KafkaClientBrokerInfo> Brokers;
-
-        [NotNull, ItemNotNull]
-        public readonly IReadOnlyList<KafkaClientBrokerInfo> MetadataBrokers;
+        public readonly IReadOnlyList<KafkaClientBrokerInfo> Brokers;        
 
         public readonly DateTime TimestampUtc;
 
@@ -27,14 +24,12 @@ namespace NKafka.Client.Diagnostics
             [NotNull, ItemNotNull]IReadOnlyList<KafkaClientTopicMetadataInfo> topics, 
             [NotNull, ItemNotNull]IReadOnlyList<KafkaClientGroupMetadataInfo> groups,
             [NotNull, ItemNotNull]IReadOnlyList<KafkaClientBrokerInfo> brokers,
-            [NotNull, ItemNotNull]IReadOnlyList<KafkaClientBrokerInfo> metadataBrokers,
             DateTime timestampUtc)
         {
             WorkerId = workerId;            
             Topics = topics;
             Groups = groups;
-            Brokers = brokers;
-            MetadataBrokers = metadataBrokers;
+            Brokers = brokers;            
             TimestampUtc = timestampUtc;
         }
     }

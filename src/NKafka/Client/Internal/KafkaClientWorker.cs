@@ -3,8 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
 using NKafka.Client.Diagnostics;
-using NKafka.Client.Internal.Broker;
 using NKafka.Connection;
 using NKafka.Metadata;
 using NKafka.Protocol;
@@ -102,15 +102,14 @@ namespace NKafka.Client.Internal
                 var brokerInfo = broker.GetDiagnosticsInfo();
                 brokerInfos.Add(brokerInfo);
             }
-
-            var metadataBrokerInfos = new List<KafkaClientBrokerInfo>();
+            
             foreach (var metadataBroker in _metadataBrokers)
             {                                
                 var metadataBrokerInfo = metadataBroker.GetDiagnosticsInfo();
-                metadataBrokerInfos.Add(metadataBrokerInfo);
+                brokerInfos.Add(metadataBrokerInfo);
             }
 
-            return new KafkaClientWorkerInfo(_workerId, topicInfos, groupInfos, brokerInfos, metadataBrokerInfos, DateTime.UtcNow);
+            return new KafkaClientWorkerInfo(_workerId, topicInfos, groupInfos, brokerInfos, DateTime.UtcNow);
         }
 
         public void AssignTopic([NotNull] KafkaClientTopic topic)
@@ -632,8 +631,8 @@ namespace NKafka.Client.Internal
             var port = brokerMetadata.Port;
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{brokerId} ({host}:{port})";
-            var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker,  brokerMetadata, _settings);
+            var broker = new KafkaBroker(connection, _protocol, _settings.ConnectionSettings);
+            return new KafkaClientBroker(broker, brokerName, KafkaClientBrokerType.MessageBroker, brokerMetadata, _settings);
         }
 
         [NotNull]
@@ -643,8 +642,8 @@ namespace NKafka.Client.Internal
             var port = brokerInfo.Port;
             var connection = new KafkaConnection(host, port);
             var brokerName = $"{host}:{port})";
-            var broker = new KafkaBroker(connection, _protocol, brokerName, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker, new KafkaBrokerMetadata(0, host, port, null), _settings);
+            var broker = new KafkaBroker(connection, _protocol, _settings.ConnectionSettings);
+            return new KafkaClientBroker(broker, brokerName, KafkaClientBrokerType.MetadataBroker, new KafkaBrokerMetadata(0, host, port, null), _settings);
         }
 
         #region Topic metadata

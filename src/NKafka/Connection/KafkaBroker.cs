@@ -13,10 +13,7 @@ namespace NKafka.Connection
 
         public bool IsEnabled => _isOpenned && !_isConnectionMaintenance;
 
-        public KafkaBrokerStateErrorCode? Error => _sendError ?? _receiveError;
-
-        [NotNull]
-        public string Name { get; }
+        public KafkaBrokerStateErrorCode? Error => _sendError ?? _receiveError;        
 
         public DateTime? ConnectionTimestampUtc
         {
@@ -62,12 +59,11 @@ namespace NKafka.Connection
         private int _currentRequestId;
 
         public KafkaBroker([NotNull] KafkaConnection connection, [NotNull] KafkaProtocol kafkaProtocol,
-            [NotNull] string name, [CanBeNull] KafkaConnectionSettings settings)
+            [CanBeNull] KafkaConnectionSettings settings)
         {
             _connection = connection;
             _kafkaProtocol = kafkaProtocol;
-            _settings = settings ?? KafkaConnectionSettingsBuilder.Default;
-            Name = name;
+            _settings = settings ?? KafkaConnectionSettingsBuilder.Default;            
 
             _requests = new ConcurrentDictionary<int, RequestState>();
             _responseState = new ResponseState(kafkaProtocol);

@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
+using NKafka.Client.Broker;
 using NKafka.Client.Consumer.Internal;
-using NKafka.Client.Internal.Broker;
 using NKafka.Client.Producer.Internal;
 using NKafka.Metadata;
 

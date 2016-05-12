@@ -10,6 +10,6 @@ namespace NKafka.Client.ConsumerGroup
         KafkaConsumerGroupType GroupType { get; }
 
         bool IsReady { get; }
-        KafkaConsumerGroupInfo GetDiagnosticsInfo();
+        [NotNull] KafkaConsumerGroupInfo GetDiagnosticsInfo();
     }
 }

@@ -13,7 +13,7 @@ namespace NKafka.Client.Producer
 
         bool IsReady { get; }
         bool IsSynchronized { get; }
-        KafkaProducerTopicInfo GetDiagnosticsInfo();        
+        [NotNull] KafkaProducerTopicInfo GetDiagnosticsInfo();        
     }
 
     [PublicAPI]
@@ -27,6 +27,6 @@ namespace NKafka.Client.Producer
 
         bool IsReady { get; }
         bool IsSynchronized { get; }
-        KafkaProducerTopicInfo GetDiagnosticsInfo();
+        [NotNull] KafkaProducerTopicInfo GetDiagnosticsInfo();
     }
 }

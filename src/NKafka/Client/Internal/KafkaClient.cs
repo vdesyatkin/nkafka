@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
 using NKafka.Client.Diagnostics;
-using NKafka.Client.Internal.Broker;
 
 namespace NKafka.Client.Internal
 {

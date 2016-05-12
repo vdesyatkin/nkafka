@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
 using NKafka.Client.ConsumerGroup;
 using NKafka.Client.ConsumerGroup.Internal;
 using NKafka.Client.Diagnostics;
-using NKafka.Client.Internal.Broker;
 using NKafka.Metadata;
 
 namespace NKafka.Client.Internal

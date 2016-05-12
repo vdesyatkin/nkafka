@@ -10,15 +10,18 @@ using NKafka.Connection;
 using NKafka.Metadata;
 using NKafka.Protocol;
 
-namespace NKafka.Client.Internal.Broker
+namespace NKafka.Client.Broker
 {
-    internal sealed class KafkaClientBroker
+    internal sealed class KafkaClientBroker : IKafkaClientBroker
     {
+        public string Name { get; }
+        public KafkaClientBrokerType BrokerType { get; }        
+        public KafkaBrokerMetadata BrokerMetadata { get; }
+
         public bool IsEnabled => _broker.IsEnabled;
-        public bool IsStarted => _broker.IsOpenned;
+        public bool IsStarted => _broker.IsOpenned;        
 
         [NotNull] private readonly KafkaBroker _broker;
-        [NotNull] private readonly KafkaBrokerMetadata _metadata;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerGroup> _groups;
         [NotNull] private readonly KafkaProducerBroker _producer;
@@ -85,13 +88,17 @@ namespace NKafka.Client.Internal.Broker
                         break;
                 }
             }
-            return new KafkaClientBrokerInfo(_broker.Name, _metadata, _broker.IsOpenned, errorCode, _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc, DateTime.UtcNow);
+            return new KafkaClientBrokerInfo(Name, BrokerType, BrokerMetadata, _broker.IsOpenned, errorCode, _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc, DateTime.UtcNow);
         }
 
-        public KafkaClientBroker([NotNull] KafkaBroker broker, [NotNull] KafkaBrokerMetadata metadata, [NotNull] KafkaClientSettings settings)
+        public KafkaClientBroker([NotNull] KafkaBroker broker, 
+            [NotNull] string name, KafkaClientBrokerType brokerType, [NotNull] KafkaBrokerMetadata metadata, 
+            [NotNull] KafkaClientSettings settings)
         {
             _broker = broker;
-            _metadata = metadata;
+            Name = name;
+            BrokerType = brokerType;
+            BrokerMetadata = metadata;
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
             _groups = new ConcurrentDictionary<string, KafkaClientBrokerGroup>();
             _producer = new KafkaProducerBroker(broker, settings.WorkerPeriod);

@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using NKafka.Client.Diagnostics;
 
 namespace NKafka.Client
 {
@@ -10,6 +11,8 @@ namespace NKafka.Client
 
         void Start();
         bool TryPauseAndFlush(TimeSpan flushTimeout);
-        void Stop();        
+        void Stop();
+
+        [NotNull] KafkaClientInfo GetDiagnosticsInfo();
     }
 }

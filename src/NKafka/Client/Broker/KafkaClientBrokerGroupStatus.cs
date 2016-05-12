@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace NKafka.Client.Internal.Broker
+namespace NKafka.Client.Broker
 {    
     [PublicAPI]
     internal enum KafkaClientBrokerGroupStatus

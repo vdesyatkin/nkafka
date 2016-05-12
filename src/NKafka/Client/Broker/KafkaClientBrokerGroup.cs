@@ -2,7 +2,7 @@
 using NKafka.Client.ConsumerGroup.Internal;
 using NKafka.Metadata;
 
-namespace NKafka.Client.Internal.Broker
+namespace NKafka.Client.Broker
 {
     internal sealed class KafkaClientBrokerGroup
     {
