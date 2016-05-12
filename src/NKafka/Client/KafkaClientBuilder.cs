@@ -37,6 +37,7 @@ namespace NKafka.Client
         public IKafkaProducerTopic CreateTopicProducer([NotNull] string topicName,             
             [NotNull] IKafkaProducerPartitioner partitioner,
             [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler = null,
+            [CanBeNull] IKafkaProducerLogger logger = null,
             [CanBeNull] KafkaProducerSettings settings = null)
         {            
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
@@ -54,6 +55,7 @@ namespace NKafka.Client
         public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,           
            [NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
            [NotNull] IKafkaSerializer<TKey, TData> serializer,
+           [CanBeNull] IKafkaProducerLogger<TKey, TData> logger = null,
            [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler = null,
            [CanBeNull] KafkaProducerSettings settings = null)
         {

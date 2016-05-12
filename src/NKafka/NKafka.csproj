@@ -35,8 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client\Broker\Internal\KafkaClientBrokerLoggerWrapper.cs" />
-    <Compile Include="Connection\Diagnostics\KafkaBrokerConnectionErrorDescription.cs" />
-    <Compile Include="Connection\Diagnostics\KafkaBrokerProtocolErrorDescription.cs" />
+    <Compile Include="Client\Producer\IKafkaProducerLogger.cs" />
     <Compile Include="Connection\Diagnostics\KafkaBrokerProtocolErrorInfo.cs" />
     <Compile Include="Connection\Diagnostics\KafkaBrokerRequestInfo.cs" />
     <Compile Include="Client\Broker\Diagnostics\IKafkaClientBrokerLogger.cs" />
