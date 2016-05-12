@@ -143,27 +143,21 @@ namespace NKafka.DevConsole
             Console.ReadLine();            
         }       
 
-        private class TestSerializer : IKafkaProducerSerializer<string, string>, IKafkaConsumerSerializer<string, string>
+        private class TestSerializer : IKafkaSerializer<string, string>
         {
-            public byte[] SerializeKey(string key)
+            public KafkaMessage SerializeMessage(KafkaMessage<string, string> message)
             {
-                return Encoding.UTF8.GetBytes(key);
+                var key = message.Key != null ? Encoding.UTF8.GetBytes(message.Key) : null;
+                var data = message.Data != null ? Encoding.UTF8.GetBytes(message.Data) : null;
+                return new KafkaMessage(key, data);
             }
 
-            public byte[] SerializeData(string value)
+            public KafkaMessage<string, string> DeserializeMessage(KafkaMessage message)
             {
-                return Encoding.UTF8.GetBytes(value);
-            }
-
-            public string DeserializeKey(byte[] keyBytes)
-            {
-                return Encoding.UTF8.GetString(keyBytes);
-            }
-
-            public string DeserializeData(byte[] dataBytes)
-            {
-                return Encoding.UTF8.GetString(dataBytes);
-            }
+                var key = message.Key != null ? Encoding.UTF8.GetString(message.Key) : null;
+                var data = message.Data != null ? Encoding.UTF8.GetString(message.Data) : null;
+                return new KafkaMessage<string, string>(key, data);
+            }            
         }
 
         private class TestPartitioner : IKafkaProducerPartitioner<string, string>

@@ -86,14 +86,14 @@ namespace NKafka.Client.Producer.Internal
         [CanBeNull] public IKafkaProducerFallbackHandler FallbackHandler { get; }
 
         [NotNull] private readonly IKafkaProducerPartitioner<TKey, TData> _partitioner;
-        [NotNull] private readonly IKafkaProducerSerializer<TKey, TData> _serializer;
+        [NotNull] private readonly IKafkaSerializer<TKey, TData> _serializer;
         [NotNull] private readonly ConcurrentQueue<KafkaMessage<TKey, TData>> _messageQueue;
 
         private int _enqueuedCount;
         private DateTime? _enqueueTimestampUtc;
 
         public KafkaProducerTopicBuffer([NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
-            [NotNull] IKafkaProducerSerializer<TKey, TData> serializer, 
+            [NotNull] IKafkaSerializer<TKey, TData> serializer, 
             [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler)
         {
             _partitioner = partitioner;
@@ -124,12 +124,11 @@ namespace NKafka.Client.Producer.Internal
                 processedCount++;
                 if (message == null) continue;
 
-                byte[] key;
-                byte[] data;
+                KafkaMessage serializedMessage;
                 try
                 {
-                    key = _serializer.SerializeKey(message.Key);
-                    data = _serializer.SerializeData(message.Data);
+                    serializedMessage = _serializer.SerializeMessage(message);
+                    if (serializedMessage == null) continue;
                 }
                 catch (Exception)
                 {
@@ -157,7 +156,7 @@ namespace NKafka.Client.Producer.Internal
                     continue;
                 }
 
-                partition.BrokerPartition.EnqueueMessage(new KafkaMessage(key, data));
+                partition.BrokerPartition.EnqueueMessage(serializedMessage);
             }
 
             Interlocked.Add(ref _enqueuedCount, -processedCount);
@@ -166,10 +165,10 @@ namespace NKafka.Client.Producer.Internal
         private class FallbackAdapter : IKafkaProducerFallbackHandler
         {
             [NotNull] private readonly IKafkaProducerFallbackHandler<TKey, TData> _fallbackHandler;
-            [NotNull] private readonly IKafkaProducerSerializer<TKey, TData> _serializer;            
+            [NotNull] private readonly IKafkaSerializer<TKey, TData> _serializer;            
 
             public FallbackAdapter([NotNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler,
-                [NotNull] IKafkaProducerSerializer<TKey, TData> serializer)
+                [NotNull] IKafkaSerializer<TKey, TData> serializer)
             {
                 _fallbackHandler = fallbackHandler;
                 _serializer = serializer;
@@ -182,12 +181,11 @@ namespace NKafka.Client.Producer.Internal
                 try
                 {
                     var message = fallbackInfo.Message;
-                    var key = message.Key != null ? _serializer.DeserializeKey(message.Key) : default(TKey);
-                    var data = message.Data != null ? _serializer.DeserializeData(message.Data) : default(TData);
-                    var genericMessage = new KafkaMessage<TKey, TData>(key, data);
+                    var deserializedMessage = _serializer.DeserializeMessage(message); 
+                    if (deserializedMessage == null) return;
 
                     var genericFallbackInfo = new KafkaProducerFallbackInfo<TKey, TData>(fallbackInfo.TopicName,
-                        fallbackInfo.PartitionId, fallbackInfo.TimestampUtc, genericMessage, fallbackInfo.Reason);
+                        fallbackInfo.PartitionId, fallbackInfo.TimestampUtc, deserializedMessage, fallbackInfo.Reason);
                     _fallbackHandler.HandleMessageFallback(genericFallbackInfo);
                 }
                 catch (Exception)

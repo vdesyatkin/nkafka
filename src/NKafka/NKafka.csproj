@@ -75,7 +75,6 @@
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionOffsetsInfo.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionErrorCode.cs" />
     <Compile Include="Client\Consumer\Diagnostics\KafkaConsumerTopicPartitionInfo.cs" />
-    <Compile Include="Client\Consumer\IKafkaConsumerSerializer.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerTopic.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerCoordinator.cs" />
     <Compile Include="Client\Consumer\Internal\IKafkaConsumerCoordinatorOffsetsData.cs" />
@@ -126,7 +125,7 @@
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicMessageCountInfo.cs" />
     <Compile Include="Client\Producer\Diagnostics\KafkaProducerTopicPartitionInfo.cs" />
     <Compile Include="Client\Producer\IKafkaProducerPartitioner.cs" />
-    <Compile Include="Client\Producer\IKafkaProducerSerializer.cs" />
+    <Compile Include="IKafkaSerializer.cs" />
     <Compile Include="Client\Producer\IKafkaProducerTopic.cs" />
     <Compile Include="Client\Broker\Internal\KafkaClientBroker.cs" />
     <Compile Include="Client\Producer\Internal\IKafkaProducerTopicBuffer.cs" />

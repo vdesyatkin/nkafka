@@ -53,7 +53,7 @@ namespace NKafka.Client
         
         public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,           
            [NotNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
-           [NotNull] IKafkaProducerSerializer<TKey, TData> serializer,
+           [NotNull] IKafkaSerializer<TKey, TData> serializer,
            [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler = null,
            [CanBeNull] KafkaProducerSettings settings = null)
         {
@@ -89,7 +89,7 @@ namespace NKafka.Client
         }
         
         public IKafkaConsumerTopic<TKey,TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName, [NotNull] IKafkaConsumerGroup group,
-            [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer,
+            [NotNull] IKafkaSerializer<TKey, TData> serializer,
             [CanBeNull] KafkaConsumerSettings settings = null
            )
         {
@@ -135,7 +135,7 @@ namespace NKafka.Client
         public IKafkaConsumerTopic<TKey, TData> CreateTopicCatchUpConsumer<TKey, TData>([NotNull] string topicName, 
             [NotNull] IKafkaConsumerGroup consumerGroup,
             [NotNull] IKafkaConsumerGroup catchUpGroup,
-            [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer,
+            [NotNull] IKafkaSerializer<TKey, TData> serializer,
             [CanBeNull] KafkaConsumerSettings settings = null
            )
         {

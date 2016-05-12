@@ -11,11 +11,11 @@ namespace NKafka.Client.Consumer.Internal
         private readonly KafkaConsumerTopic _topic;
 
         [NotNull]
-        private readonly IKafkaConsumerSerializer<TKey, TData> _serializer;
+        private readonly IKafkaSerializer<TKey, TData> _serializer;
 
         public KafkaConsumerTopicWrapper(
             [NotNull] KafkaConsumerTopic topic,
-            [NotNull] IKafkaConsumerSerializer<TKey, TData> serializer)
+            [NotNull] IKafkaSerializer<TKey, TData> serializer)
         {
             _topic = topic;
             _serializer = serializer;
@@ -35,9 +35,8 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     try
                     {
-                        var key = _serializer.DeserializeKey(message.Key);
-                        var data = _serializer.DeserializeData(message.Data);
-                        var genericMessage = new KafkaMessage<TKey, TData>(key, data);
+                        var genericMessage = _serializer.DeserializeMessage(message);
+                        if (genericMessage == null) continue;
                         genericMessages.Add(genericMessage);
                     }
                     catch (Exception)
