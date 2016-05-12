@@ -40,18 +40,6 @@ namespace NKafka.Client.Broker.Internal
             }
         }
 
-        public void OnError(KafkaBrokerErrorInfo error)
-        {
-            try
-            {
-                _logger.OnBrokerError(_broker, error);
-            }
-            catch (Exception)
-            {
-                //ignored
-            }
-        }
-
         public void OnConnectionError(KafkaBrokerConnectionErrorInfo error)
         {
             try

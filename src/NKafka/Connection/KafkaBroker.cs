@@ -112,7 +112,7 @@ namespace NKafka.Connection
                     {                        
                         request.Error = KafkaBrokerErrorCode.ClientTimeout;
                         _sendError = KafkaBrokerStateErrorCode.ClientTimeout;
-                        LogError(KafkaBrokerErrorCode.ClientTimeout, request.RequestInfo, null);
+                        LogConnectionError(KafkaBrokerErrorCode.ClientTimeout, KafkaConnectionErrorCode.ClientTimeout, request.RequestInfo);
                     }
                     continue;
                 }
@@ -567,17 +567,7 @@ namespace NKafka.Connection
             }
         }
 
-        #endregion State classes
-
-        private void LogError(KafkaBrokerErrorCode errorCode,
-           [CanBeNull] KafkaBrokerRequestInfo requestInfo,
-           [CanBeNull] Exception customException)
-        {
-            var logger = _logger;
-            if (logger == null) return;
-            var errorInfo = new KafkaBrokerErrorInfo(errorCode, requestInfo, customException);
-            logger.OnError(errorInfo);
-        }
+        #endregion State classes        
 
         private void LogProtocolError(KafkaBrokerErrorCode errorCode, [NotNull] KafkaProtocolException protocolException,
             [CanBeNull] KafkaBrokerRequestInfo requestInfo)
@@ -603,6 +593,16 @@ namespace NKafka.Connection
             var logger = _logger;
             if (logger == null) return;            
             var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, connectionException.ErrorInfo, requestInfo, connectionException.InnerException);
+            logger.OnConnectionError(errorInfo);
+        }
+
+        private void LogConnectionError(KafkaBrokerErrorCode errorCode, KafkaConnectionErrorCode connectionErrorCode,
+            [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
+        {
+            var logger = _logger;
+            if (logger == null) return;
+            var connectionErrorInfo = new KafkaConnectionErrorInfo(connectionErrorCode, null);
+            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, connectionErrorInfo, requestInfo, null);
             logger.OnConnectionError(errorInfo);
         }
 

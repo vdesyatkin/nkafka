@@ -8,9 +8,7 @@ namespace NKafka.Client.Broker.Diagnostics
     {
         void OnBrokerConnected([NotNull] IKafkaClientBroker broker);
 
-        void OnBrokerDisconnected([NotNull] IKafkaClientBroker broker);
-
-        void OnBrokerError([NotNull] IKafkaClientBroker broker, [NotNull] KafkaBrokerErrorInfo error);
+        void OnBrokerDisconnected([NotNull] IKafkaClientBroker broker);        
 
         void OnBrokerConnectionError([NotNull] IKafkaClientBroker broker, [NotNull] KafkaBrokerConnectionErrorInfo error);
 
