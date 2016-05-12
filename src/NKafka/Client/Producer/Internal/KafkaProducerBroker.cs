@@ -32,7 +32,9 @@ namespace NKafka.Client.Producer.Internal
             KafkaProducerBrokerTopic topic;
             if (!_topics.TryGetValue(topicName, out topic) || topic == null)
             {
-                topic = _topics.AddOrUpdate(topicName, new KafkaProducerBrokerTopic(topicName, topicPartition.Settings), (oldKey, oldValue) => oldValue);
+                var topicProducerName = $"topic(producer)[{topicName}]";
+                var brokerTopic = new KafkaProducerBrokerTopic(topicName, topicProducerName, topicPartition.Settings);
+                topic = _topics.AddOrUpdate(topicName, brokerTopic, (oldKey, oldValue) => oldValue);
             }
 
             if (topic != null)
@@ -68,7 +70,7 @@ namespace NKafka.Client.Producer.Internal
                 foreach (var batch in batches)
                 {
                     var batchRequest = CreateBatchRequest(topic, batch);
-                    _broker.SendWithoutResponse(batchRequest, batch.ByteCount*2);
+                    _broker.SendWithoutResponse(batchRequest, topic.TopicProducerName, batch.ByteCount*2);
                 }
 
                 foreach (var partitionPair in topic.Partitions)
@@ -130,10 +132,11 @@ namespace NKafka.Client.Producer.Internal
             foreach (var batch in newBatches)
             {
                 var batchRequest = CreateBatchRequest(topic, batch);
+                var batchTimeout = _produceClientTimeout + topic.Settings.BatchServerTimeout;
 
                 var batchRequestResult = topic.Settings.ConsistencyLevel == KafkaConsistencyLevel.None
-                    ? _broker.SendWithoutResponse(batchRequest, batch.ByteCount * 2)
-                    : _broker.Send(batchRequest, _produceClientTimeout + topic.Settings.BatchServerTimeout, batch.ByteCount * 2);
+                    ? _broker.SendWithoutResponse(batchRequest, topic.TopicProducerName, batch.ByteCount * 2)
+                    : _broker.Send(batchRequest, topic.TopicProducerName, batchTimeout, batch.ByteCount * 2);
                 
                 var batchRequestId = batchRequestResult.Data;
                 if (batchRequestId == null)

@@ -89,7 +89,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     var commitRequest = CreateOffsetCommitRequest(group);
                     if (commitRequest != null)
                     {
-                        _broker.SendWithoutResponse(commitRequest);
+                        _broker.SendWithoutResponse(commitRequest, group.GroupCoordinatorName);
                     }
                 }
 
@@ -98,7 +98,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     var leaveGroupRequest = CreateLeaveGroupRequest(group);
                     if (leaveGroupRequest != null)
                     {
-                        _broker.SendWithoutResponse(leaveGroupRequest);
+                        _broker.SendWithoutResponse(leaveGroupRequest, group.GroupCoordinatorName);
                     }
                 }
                                 
@@ -1276,7 +1276,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         private bool TrySendRequest<TRequest>([NotNull] KafkaCoordinatorGroup group, [NotNull] TRequest request, [NotNull] Dictionary<string, int> requests, TimeSpan timeout)
             where TRequest : class, IKafkaRequest
         {
-            var requestResult = _broker.Send(request, timeout);
+            var requestResult = _broker.Send(request, group.GroupCoordinatorName, timeout);
             if (requestResult.HasError || requestResult.Data == null)
             {
                 HandleBrokerError(group, requestResult.Error ?? KafkaBrokerErrorCode.TransportError);

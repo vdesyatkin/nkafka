@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.Broker;
+using NKafka.Client.Broker.Diagnostics;
+using NKafka.Client.Broker.Internal;
 using NKafka.Client.Diagnostics;
 using NKafka.Connection;
 using NKafka.Metadata;
@@ -16,6 +18,7 @@ namespace NKafka.Client.Internal
     internal sealed class KafkaClientWorker
     {
         private readonly int _workerId;
+        [NotNull] private readonly string _wokerName;
         [NotNull] private readonly KafkaProtocol _protocol;
         [NotNull] private readonly KafkaClientSettings _settings;
 
@@ -41,6 +44,8 @@ namespace NKafka.Client.Internal
         public KafkaClientWorker(int workerId, [NotNull] KafkaClientSettings settings)
         {
             _workerId = workerId;
+            _wokerName = $"worker(id={workerId})";
+
             _settings = settings;
             _protocol = new KafkaProtocol(settings.KafkaVersion, settings.ProtocolSettings ?? KafkaProtocolSettingsBuilder.Default, settings.ClientId);
             _workerPeriod = settings.WorkerPeriod;
@@ -323,7 +328,7 @@ namespace NKafka.Client.Internal
                 if (metadataBroker != null)
                 {
                     var metadataRequest = CreateTopicMetadataRequest(topic.TopicName);
-                    var metadataRequestResult =  metadataBroker.SendRequest(metadataRequest);
+                    var metadataRequestResult =  metadataBroker.SendRequest(metadataRequest, _wokerName);
                     if (metadataRequestResult.HasError)
                     {
                         topic.Status = KafkaClientTopicStatus.MetadataError;
@@ -453,7 +458,7 @@ namespace NKafka.Client.Internal
                 if (metadataBroker != null)
                 {
                     var metadataRequest = CreateGroupMetadataRequest(group.GroupName);
-                    var metadataRequestResult = metadataBroker.SendRequest(metadataRequest);
+                    var metadataRequestResult = metadataBroker.SendRequest(metadataRequest, _wokerName);
                     if (metadataRequestResult.HasError)
                     {
                         group.Status = KafkaClientGroupStatus.MetadataError;
@@ -630,9 +635,10 @@ namespace NKafka.Client.Internal
             var host = brokerMetadata.Host ?? string.Empty;
             var port = brokerMetadata.Port;
             var connection = new KafkaConnection(host, port);
-            var brokerName = $"{brokerId} ({host}:{port})";
-            var broker = new KafkaBroker(connection, _protocol, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker, brokerName, KafkaClientBrokerType.MessageBroker, brokerMetadata, _settings);
+            var brokerName = $"broker(id={brokerId})[{host}:{port}]";
+            var broker = new KafkaBroker(brokerName, connection, _protocol, _settings.ConnectionSettings);
+            return new KafkaClientBroker(broker, brokerName, _workerId,
+                KafkaClientBrokerType.MessageBroker, brokerMetadata, _settings);
         }
 
         [NotNull]
@@ -641,9 +647,10 @@ namespace NKafka.Client.Internal
             var host = brokerInfo.Host ?? string.Empty;
             var port = brokerInfo.Port;
             var connection = new KafkaConnection(host, port);
-            var brokerName = $"{host}:{port})";
-            var broker = new KafkaBroker(connection, _protocol, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker, brokerName, KafkaClientBrokerType.MetadataBroker, new KafkaBrokerMetadata(0, host, port, null), _settings);
+            var brokerName = $"broker(metadata)[{host}:{port}]";
+            var broker = new KafkaBroker(brokerName, connection, _protocol, _settings.ConnectionSettings);
+            return new KafkaClientBroker(broker, brokerName, _workerId, 
+                KafkaClientBrokerType.MetadataBroker, new KafkaBrokerMetadata(0, host, port, null), _settings);
         }
 
         #region Topic metadata

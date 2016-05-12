@@ -34,17 +34,13 @@ namespace NKafka.Connection
         }
 
 
-        [NotNull]
-        private readonly KafkaConnection _connection;
-        [NotNull]
-        private readonly KafkaProtocol _kafkaProtocol;
-        [NotNull]
-        private readonly KafkaConnectionSettings _settings;
+        [NotNull] private readonly string _name;
+        [NotNull] private readonly KafkaConnection _connection;
+        [NotNull] private readonly KafkaProtocol _kafkaProtocol;
+        [NotNull] private readonly KafkaConnectionSettings _settings;
 
-        [NotNull]
-        private readonly ConcurrentDictionary<int, RequestState> _requests;
-        [NotNull]
-        private readonly ResponseState _responseState;
+        [NotNull] private readonly ConcurrentDictionary<int, RequestState> _requests;
+        [NotNull] private readonly ResponseState _responseState;
 
         private KafkaBrokerStateErrorCode? _sendError;
         private KafkaBrokerStateErrorCode? _receiveError;
@@ -58,9 +54,12 @@ namespace NKafka.Connection
 
         private int _currentRequestId;
 
-        public KafkaBroker([NotNull] KafkaConnection connection, [NotNull] KafkaProtocol kafkaProtocol,
+        public KafkaBroker([NotNull] string name,
+            [NotNull] KafkaConnection connection, 
+            [NotNull] KafkaProtocol kafkaProtocol,
             [CanBeNull] KafkaConnectionSettings settings)
         {
+            _name = name;
             _connection = connection;
             _kafkaProtocol = kafkaProtocol;
             _settings = settings ?? KafkaConnectionSettingsBuilder.Default;            
@@ -162,7 +161,7 @@ namespace NKafka.Connection
             if (heartbeatPeriod != null && DateTime.UtcNow - _lastActivityTimestampUtc >= heartbeatPeriod.Value)
             {
                 var heartbeatReqeust = new KafkaTopicMetadataRequest(new[] { "_hearbeat" });
-                _heartbeatRequestId = Send(heartbeatReqeust, heartbeatPeriod.Value).Data;
+                _heartbeatRequestId = Send(heartbeatReqeust, _name, heartbeatPeriod.Value).Data;
             }
         }
 
@@ -197,22 +196,24 @@ namespace NKafka.Connection
             }
         }
 
-        public KafkaBrokerResult<int?> Send<TRequest>(TRequest request, TimeSpan timeout, int? dataCapacity = null)
+        public KafkaBrokerResult<int?> Send<TRequest>([NotNull] TRequest request, [NotNull] string sender,
+            TimeSpan timeout, int? dataCapacity = null)
             where TRequest : class, IKafkaRequest
         {
-            return SendInternal(request, timeout, dataCapacity, true);
+            return SendInternal(request, sender, timeout, dataCapacity, true);
         }
 
-        public KafkaBrokerResult<int?> SendWithoutResponse<TRequest>(TRequest request, int? dataCapacity = null)
+        public KafkaBrokerResult<int?> SendWithoutResponse<TRequest>([NotNull] TRequest request, [NotNull] string sender, 
+            int? dataCapacity = null)
             where TRequest : class, IKafkaRequest
         {
-            return SendInternal(request, TimeSpan.Zero, dataCapacity, false);
+            return SendInternal(request, sender, TimeSpan.Zero, dataCapacity, false);
         }
 
-        private KafkaBrokerResult<int?> SendInternal<TRequest>(TRequest request, TimeSpan timeout, int? dataCapacity, bool processResponse)
+        private KafkaBrokerResult<int?> SendInternal<TRequest>([NotNull] TRequest request, [NotNull] string sender,
+            TimeSpan timeout, int? dataCapacity, bool processResponse)
             where TRequest : class, IKafkaRequest
-        {
-            if (request == null) return KafkaBrokerErrorCode.BadRequest;
+        {            
             if (!_isOpenned)
             {
                 return KafkaBrokerErrorCode.ConnectionClosed;
@@ -247,7 +248,7 @@ namespace NKafka.Connection
                 return KafkaBrokerErrorCode.ProtocolError;
             }
 
-            var requestState = new RequestState(request, DateTime.UtcNow, timeout);
+            var requestState = new RequestState(request, sender, DateTime.UtcNow, timeout);
             if (processResponse)
             {
                 _requests[requestId] = requestState;
@@ -516,8 +517,8 @@ namespace NKafka.Connection
 
         private sealed class RequestState
         {
-            [NotNull]
-            public readonly IKafkaRequest Request;
+            [NotNull] public readonly IKafkaRequest Request;
+            [NotNull] public readonly string Sender;
             public readonly TimeSpan? Timeout;
 
             public readonly DateTime CreateTimestampUtc;
@@ -527,9 +528,11 @@ namespace NKafka.Connection
             public IKafkaResponse Response;
             public KafkaBrokerErrorCode? Error;
 
-            public RequestState([NotNull] IKafkaRequest request, DateTime createTimestampUtc, TimeSpan? timeout)
+            public RequestState([NotNull] IKafkaRequest request, [NotNull] string sender,
+                DateTime createTimestampUtc, TimeSpan? timeout)
             {
                 Request = request;
+                Sender = sender;
                 CreateTimestampUtc = createTimestampUtc;
                 Timeout = timeout;
             }

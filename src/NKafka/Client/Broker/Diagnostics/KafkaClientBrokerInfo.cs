@@ -1,14 +1,13 @@
 ﻿using System;
 using JetBrains.Annotations;
-using NKafka.Client.Broker;
 using NKafka.Metadata;
 
-namespace NKafka.Client.Diagnostics
+namespace NKafka.Client.Broker.Diagnostics
 {
     [PublicAPI]
     public sealed class KafkaClientBrokerInfo
     {
-        [NotNull] public readonly string Name;
+        [NotNull] public readonly string Name;        
         
         public readonly KafkaClientBrokerType BrokerType;
 

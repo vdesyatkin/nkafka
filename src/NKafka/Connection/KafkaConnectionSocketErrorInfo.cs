@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Connection
 {
     [PublicAPI]
-    internal sealed class KafkaConnectionSocketErrorInfo
+    public sealed class KafkaConnectionSocketErrorInfo
     {
         public readonly SocketError? SocketErrorCode;
 

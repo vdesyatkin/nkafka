@@ -34,9 +34,10 @@ namespace NKafka.Client.Consumer.Internal
             KafkaConsumerBrokerTopic topic;
             if (!_topics.TryGetValue(topicName, out topic) || topic == null)
             {
-                topic = _topics.AddOrUpdate(topicName,
-                    new KafkaConsumerBrokerTopic(topicName, topicPartition.Group, topicPartition.Settings),
-                    (oldKey, oldValue) => oldValue);
+                var groupName = topicPartition.Group.GroupCoordinator.GroupName;
+                var topicConsumerName = $"topic(consumer)[{topicName}][{groupName}]";
+                var brokerTopic = new KafkaConsumerBrokerTopic(topicName, topicConsumerName, topicPartition.Group, topicPartition.Settings);
+                topic = _topics.AddOrUpdate(topicName, brokerTopic, (oldKey, oldValue) => oldValue);
             }            
 
             if (topic != null)
@@ -190,7 +191,7 @@ namespace NKafka.Client.Consumer.Internal
                 if (!IsConsumeEnabled) continue;
 
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
-                if (!TryPreparePartition(partition)) continue;
+                if (!TryPreparePartition(topic, partition)) continue;
 
                 var currentReceivedOffset = partition.GetReceivedClientOffset();
                 var minAvailableOffset = partition.GetMinAvailableServerOffset();
@@ -222,7 +223,7 @@ namespace NKafka.Client.Consumer.Internal
             SendFetchRequest(topic, newFetchBatch);
         }
 
-        private bool TryPreparePartition([NotNull] KafkaConsumerBrokerPartition partition)
+        private bool TryPreparePartition([NotNull] KafkaConsumerBrokerTopic topic, [NotNull] KafkaConsumerBrokerPartition partition)
         {
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired) return false;
                         
@@ -230,7 +231,7 @@ namespace NKafka.Client.Consumer.Internal
             {
                 partition.ResetData();
 
-                if (!TrySendRequestOffsets(partition))
+                if (!TrySendRequestOffsets(topic, partition))
                 {
                     return false;
                 }
@@ -246,7 +247,7 @@ namespace NKafka.Client.Consumer.Internal
                     return false;
                 }
 
-                if (!TrySendRequestOffsets(partition))
+                if (!TrySendRequestOffsets(topic, partition))
                 {
                     return false;
                 }
@@ -274,11 +275,12 @@ namespace NKafka.Client.Consumer.Internal
 
         #region Topic offsets
 
-        private bool TrySendRequestOffsets([NotNull] KafkaConsumerBrokerPartition partition)
+        private bool TrySendRequestOffsets([NotNull] KafkaConsumerBrokerTopic topic, [NotNull] KafkaConsumerBrokerPartition partition)
         {
             var partitionRequest = new KafkaOffsetRequestTopicPartition(partition.PartitionId, null, 2);
             var topicRequest = new KafkaOffsetRequestTopic(partition.TopicName, new [] { partitionRequest });
-            var requestResult = _broker.Send(new KafkaOffsetRequest(new[] { topicRequest }), _consumeClientTimeout);
+            var request = new KafkaOffsetRequest(new[] {topicRequest});
+            var requestResult = _broker.Send(request, topic.TopicConsumerName, _consumeClientTimeout);
             
             if (requestResult.HasError || requestResult.Data == null)
             {
@@ -400,7 +402,8 @@ namespace NKafka.Client.Consumer.Internal
             [NotNull] Dictionary<int, long> fetchBatch)
         {
             var fetchRequest = CreateFetchRequest(topic, fetchBatch);
-            var fetchResult = _broker.Send(fetchRequest, _consumeClientTimeout + topic.Settings.ConsumeServerWaitTime);
+            var fetchTimeout = _consumeClientTimeout + topic.Settings.ConsumeServerWaitTime;
+            var fetchResult = _broker.Send(fetchRequest, topic.TopicConsumerName, fetchTimeout);
             if (fetchResult.HasError || fetchResult.Data == null)
             {
                 foreach (var partitionPair in fetchBatch)

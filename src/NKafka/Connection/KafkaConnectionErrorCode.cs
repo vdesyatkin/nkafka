@@ -1,6 +1,9 @@
-﻿namespace NKafka.Connection
+﻿using JetBrains.Annotations;
+
+namespace NKafka.Connection
 {    
-    internal enum KafkaConnectionErrorCode
+    [PublicAPI]
+    public enum KafkaConnectionErrorCode
     {
         UnknownError = 0,
         ConnectionClosed = 1,

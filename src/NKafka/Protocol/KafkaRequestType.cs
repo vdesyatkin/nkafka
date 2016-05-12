@@ -3,7 +3,7 @@
 namespace NKafka.Protocol
 {
     [PublicAPI]
-    internal enum KafkaRequestType : short
+    public enum KafkaRequestType : short
     {
         Produce = 0,
         Fetch = 1,

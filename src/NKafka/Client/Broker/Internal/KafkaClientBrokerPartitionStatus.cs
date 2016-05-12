@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace NKafka.Client.Broker
+namespace NKafka.Client.Broker.Internal
 {
     [PublicAPI]
     internal enum KafkaClientBrokerPartitionStatus

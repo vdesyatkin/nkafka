@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using NKafka.Client.Broker;
+using NKafka.Client.Broker.Internal;
 using NKafka.Client.ConsumerGroup;
 using NKafka.Client.ConsumerGroup.Internal;
 using NKafka.Client.Diagnostics;
@@ -25,8 +25,9 @@ namespace NKafka.Client.Internal
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
             [NotNull] KafkaConsumerGroupSettings settings)
         {
-            GroupName = groupName;            
-            Coordinator = new KafkaCoordinatorGroup(GroupName, groupType, topics, settings);
+            GroupName = groupName;
+            var groupCoordinatorName = $"group[{groupName}]";
+            Coordinator = new KafkaCoordinatorGroup(groupName, groupCoordinatorName, groupType, topics, settings);
             MetadataInfo = new KafkaClientGroupMetadataInfo(groupName, false, null, null, DateTime.UtcNow);
         }
 

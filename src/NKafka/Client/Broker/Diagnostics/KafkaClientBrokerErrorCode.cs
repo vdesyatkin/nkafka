@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace NKafka.Client.Diagnostics
+namespace NKafka.Client.Broker.Diagnostics
 {
     [PublicAPI]
     public enum KafkaClientBrokerErrorCode

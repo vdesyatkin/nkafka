@@ -34,6 +34,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\Broker\Diagnostics\KafkaClientBrokerErrorInfo.cs" />
+    <Compile Include="Client\Broker\Diagnostics\KafkaClientBrokerRequestInfo.cs" />
+    <Compile Include="Client\Broker\IKafkaClientBrokerLogger.cs" />
     <Compile Include="Client\Broker\KafkaClientBrokerType.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignment.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentMember.cs" />
@@ -87,8 +90,8 @@
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorBroker.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroup.cs" />
     <Compile Include="Client\ConsumerGroup\Internal\KafkaCoordinatorGroupStatus.cs" />
-    <Compile Include="Client\Diagnostics\KafkaClientBrokerErrorCode.cs" />
-    <Compile Include="Client\Diagnostics\KafkaClientBrokerInfo.cs" />
+    <Compile Include="Client\Broker\Diagnostics\KafkaClientBrokerErrorCode.cs" />
+    <Compile Include="Client\Broker\Diagnostics\KafkaClientBrokerInfo.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientGroupMetadataErrorCode.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientGroupMetadataInfo.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientInfo.cs" />
@@ -96,12 +99,12 @@
     <Compile Include="Client\Diagnostics\KafkaClientTopicMetadataInfo.cs" />
     <Compile Include="Client\Diagnostics\KafkaClientWorkerInfo.cs" />
     <Compile Include="Client\IKafkaClient.cs" />
-    <Compile Include="Client\Broker\KafkaClientBrokerGroup.cs" />
-    <Compile Include="Client\Broker\KafkaClientBrokerGroupStatus.cs" />
+    <Compile Include="Client\Broker\Internal\KafkaClientBrokerGroup.cs" />
+    <Compile Include="Client\Broker\Internal\KafkaClientBrokerGroupStatus.cs" />
     <Compile Include="Client\Internal\KafkaClient.cs" />
-    <Compile Include="Client\Broker\KafkaClientBrokerPartition.cs" />
-    <Compile Include="Client\Broker\KafkaClientBrokerPartitionStatus.cs" />
-    <Compile Include="Client\Broker\KafkaClientBrokerTopic.cs" />
+    <Compile Include="Client\Broker\Internal\KafkaClientBrokerPartition.cs" />
+    <Compile Include="Client\Broker\Internal\KafkaClientBrokerPartitionStatus.cs" />
+    <Compile Include="Client\Broker\Internal\KafkaClientBrokerTopic.cs" />
     <Compile Include="Client\Internal\KafkaClientGroup.cs" />
     <Compile Include="Client\Internal\KafkaClientGroupStatus.cs" />
     <Compile Include="Client\Internal\KafkaClientTopic.cs" />
@@ -123,7 +126,7 @@
     <Compile Include="Client\Producer\IKafkaProducerPartitioner.cs" />
     <Compile Include="Client\Producer\IKafkaProducerSerializer.cs" />
     <Compile Include="Client\Producer\IKafkaProducerTopic.cs" />
-    <Compile Include="Client\Broker\KafkaClientBroker.cs" />
+    <Compile Include="Client\Broker\Internal\KafkaClientBroker.cs" />
     <Compile Include="Client\Producer\Internal\IKafkaProducerTopicBuffer.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerBroker.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerBrokerPartition.cs" />
@@ -143,6 +146,7 @@
     <Compile Include="Connection\KafkaBrokerErrorCode.cs" />
     <Compile Include="Connection\KafkaBrokerResult.cs" />
     <Compile Include="Connection\KafkaConnectionErrorCode.cs" />
+    <Compile Include="Connection\KafkaConnectionErrorInfo.cs" />
     <Compile Include="Connection\KafkaConnectionException.cs" />
     <Compile Include="Connection\KafkaConnectionSettings.cs" />
     <Compile Include="Connection\KafkaBrokerStateErrorCode.cs" />

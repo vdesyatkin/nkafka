@@ -37,8 +37,7 @@ namespace NKafka.Client.Producer.Internal
         public bool IsReady => _topic.IsReady;
 
         public bool IsSynchronized => _topic.IsSynchronized;
-
-        [NotNull]
+        
         public KafkaProducerTopicInfo GetDiagnosticsInfo()
         {
             return _topic.GetDiagnosticsInfo();
@@ -83,7 +82,6 @@ namespace NKafka.Client.Producer.Internal
 
         public bool IsSynchronized => _topic.IsSynchronized;
 
-        [NotNull]
         public KafkaProducerTopicInfo GetDiagnosticsInfo()
         {
             return _topic.GetDiagnosticsInfo();

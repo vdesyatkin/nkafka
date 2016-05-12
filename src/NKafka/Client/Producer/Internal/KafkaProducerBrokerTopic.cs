@@ -6,6 +6,7 @@ namespace NKafka.Client.Producer.Internal
     internal sealed class KafkaProducerBrokerTopic
     {
         [NotNull] public readonly string TopicName;
+        [NotNull] public readonly string TopicProducerName;
 
         [NotNull] public readonly KafkaProducerSettings Settings;
 
@@ -17,9 +18,10 @@ namespace NKafka.Client.Producer.Internal
 
         public int BatchSizeByteCount;
 
-        public KafkaProducerBrokerTopic([NotNull]string topicName, [NotNull] KafkaProducerSettings settings)
+        public KafkaProducerBrokerTopic([NotNull]string topicName, [NotNull]string topicProducerName, [NotNull] KafkaProducerSettings settings)
         {
             TopicName = topicName;
+            TopicProducerName = topicProducerName;
             Settings = settings;
             ConsistencyLevel = settings.ConsistencyLevel;
             BatchSizeByteCount = settings.BatchSizeByteCount;
