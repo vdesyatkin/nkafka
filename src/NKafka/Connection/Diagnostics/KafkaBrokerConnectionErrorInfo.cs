@@ -8,13 +8,16 @@ namespace NKafka.Connection.Diagnostics
     {        
         public readonly KafkaBrokerErrorCode ErrorCode;
 
+        public readonly KafkaBrokerConnectionErrorDescription ErrorDescription;
+
         [NotNull] public readonly KafkaConnectionErrorInfo ConnectionError;
 
         [CanBeNull] public readonly KafkaBrokerRequestInfo RequestInfo;
 
         [CanBeNull] public readonly Exception Exception;
 
-        public KafkaBrokerConnectionErrorInfo(KafkaBrokerErrorCode errorCode,            
+        public KafkaBrokerConnectionErrorInfo(KafkaBrokerErrorCode errorCode,
+            KafkaBrokerConnectionErrorDescription errorDescription,
             [NotNull] KafkaConnectionErrorInfo connectionError,
             [CanBeNull] KafkaBrokerRequestInfo requestInfo,
             [CanBeNull] Exception exception)

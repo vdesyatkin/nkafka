@@ -76,7 +76,7 @@ namespace NKafka.Protocol.API.JoinGroup
             var actualSize = reader.EndReadSize();
             if (actualSize != requiredSize)
             {
-                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.UnexpectedDataSize);
             }
                         
             return new KafkaJoinGroupResponseMember(memberId, protocolVersion, topicNames, assignmentStrategies, customData);

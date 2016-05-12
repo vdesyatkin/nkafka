@@ -157,13 +157,13 @@ namespace NKafka.Protocol.API.Fetch
 
                         if (nestedMessageActualSize != nestedMessageRequiredSize)
                         {                            
-                            throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageSize);
+                            throw new KafkaProtocolException(KafkaProtocolErrorCode.UnexpectedMessageSize);
                         }
 
                         if (nestedMessageActualCrc != nestedMessageRequiredCrc)
                         {
                             throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageCrc);
-                        }                        
+                        }
                         
                         var nestedMessage = new KafkaMessageAndOffset(nestedMessageOffset, nestedMessageKey, nestedMessageValue);
                         messages.Add(nestedMessage);
@@ -172,7 +172,7 @@ namespace NKafka.Protocol.API.Fetch
 
                     if (nestedMessageSetActualSize != nestedMessageSetRequiredSize)
                     {
-                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+                        throw new KafkaProtocolException(KafkaProtocolErrorCode.UnexpectedDataSize);
                     }
 
                     var messageActualCrc = reader.EndReadCrc32();
@@ -180,7 +180,7 @@ namespace NKafka.Protocol.API.Fetch
 
                     if (messageActualSize != messageRequiredSize)
                     {
-                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageSize);
+                        throw new KafkaProtocolException(KafkaProtocolErrorCode.UnexpectedMessageSize);
                     }
 
                     if (messageActualCrc != messageRequiredCrc)
@@ -198,7 +198,7 @@ namespace NKafka.Protocol.API.Fetch
 
                     if (messageActualSize != messageRequiredSize)
                     {
-                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageSize);
+                        throw new KafkaProtocolException(KafkaProtocolErrorCode.UnexpectedMessageSize);
                     }
 
                     if (messageActualCrc != messageRequiredCrc)
@@ -213,7 +213,7 @@ namespace NKafka.Protocol.API.Fetch
 
             if (messageSetActualSize != messageSetRequiredSize)
             {
-                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.UnexpectedDataSize);
             }
             
             return new KafkaFetchResponseTopicPartition(partitionId, errorCode, highwaterMarkOffset, messages);

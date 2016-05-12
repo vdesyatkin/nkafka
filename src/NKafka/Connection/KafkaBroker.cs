@@ -112,7 +112,8 @@ namespace NKafka.Connection
                     {                        
                         request.Error = KafkaBrokerErrorCode.ClientTimeout;
                         _sendError = KafkaBrokerStateErrorCode.ClientTimeout;
-                        LogConnectionError(KafkaBrokerErrorCode.ClientTimeout, KafkaConnectionErrorCode.ClientTimeout, request.RequestInfo);
+                        LogConnectionError(KafkaBrokerErrorCode.ClientTimeout, KafkaBrokerConnectionErrorDescription.Maintenance, 
+                            KafkaConnectionErrorCode.ClientTimeout, request.RequestInfo);
                     }
                     continue;
                 }
@@ -181,7 +182,7 @@ namespace NKafka.Connection
             catch (KafkaConnectionException connectionException)
             {                
                 _sendError = ConvertStateError(connectionException);
-                LogConnectionError(connectionException);
+                LogConnectionError(KafkaBrokerConnectionErrorDescription.OpenConnection, connectionException);
                 return;
             }
 
@@ -197,7 +198,7 @@ namespace NKafka.Connection
             }
             catch (KafkaConnectionException connectionException)
             {                
-                LogConnectionError(connectionException);
+                LogConnectionError(KafkaBrokerConnectionErrorDescription.CloseConnection, connectionException);
                 LogDisconnected();                
             }
         }
@@ -253,7 +254,7 @@ namespace NKafka.Connection
             }
             catch (KafkaProtocolException protocolException)
             {
-                LogProtocolError(KafkaBrokerErrorCode.ProtocolError, protocolException, requestInfo);
+                LogProtocolError(KafkaBrokerErrorCode.ProtocolError, KafkaBrokerProtocolErrorDescription.WriteRequest, protocolException, requestInfo);
                 return KafkaBrokerErrorCode.ProtocolError;
             }            
             
@@ -273,7 +274,7 @@ namespace NKafka.Connection
                 var error = ConvertError(connectionException);
                 _sendError = ConvertStateError(connectionException);
                 requestState.Error = error;
-                LogConnectionError(error, connectionException, requestInfo);
+                LogConnectionError(error, KafkaBrokerConnectionErrorDescription.SendRequest, connectionException, requestInfo);
                 return error;
             }
             
@@ -325,7 +326,7 @@ namespace NKafka.Connection
             catch (KafkaConnectionException connectionException)
             {                
                 _receiveError = ConvertStateError(connectionException);
-                LogConnectionError(connectionException);
+                LogConnectionError(KafkaBrokerConnectionErrorDescription.ReceiveResponseHeader, connectionException);
             }
         }
 
@@ -350,7 +351,7 @@ namespace NKafka.Connection
                 {                    
                     responseState.ResponseHeaderOffset = 0;
                     _receiveError = ConvertStateError(connectionException);
-                    LogConnectionError(connectionException);
+                    LogConnectionError(KafkaBrokerConnectionErrorDescription.ReceiveResponseHeader, connectionException);
                     return;
                 }
                 
@@ -376,7 +377,7 @@ namespace NKafka.Connection
                         {                            
                             responseState.ResponseHeaderOffset = 0;
                             _receiveError = ConvertStateError(connectionException);
-                            LogConnectionError(connectionException);
+                            LogConnectionError(KafkaBrokerConnectionErrorDescription.ReceiveResponseHeader, connectionException);
                             return;
                         }                        
 
@@ -395,7 +396,7 @@ namespace NKafka.Connection
                     catch (KafkaProtocolException protocolException)
                     {
                         responseState.ResponseHeaderOffset = 0;
-                        LogProtocolError(KafkaBrokerErrorCode.ProtocolError, protocolException);
+                        LogProtocolError(KafkaBrokerErrorCode.ProtocolError, KafkaBrokerProtocolErrorDescription.ReadResponseHeader, protocolException);
                         _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                         continue;
                     }
@@ -421,9 +422,9 @@ namespace NKafka.Connection
                             catch (KafkaConnectionException connectionException)
                             {                                
                                 _receiveError = ConvertStateError(connectionException);
-                                LogConnectionError(connectionException);
+                                LogConnectionError(KafkaBrokerConnectionErrorDescription.ReceiveUnexpectedResponse, connectionException);
                                 return;
-                            }                   
+                            }
                         }
                         return;
                     }
@@ -443,7 +444,7 @@ namespace NKafka.Connection
                             var error = ConvertError(connectionException);
                             _receiveError = ConvertStateError(connectionException);
                             requestState.Error = error;
-                            LogConnectionError(error, connectionException, requestState.RequestInfo);
+                            LogConnectionError(error, KafkaBrokerConnectionErrorDescription.ReceiveResponse,  connectionException, requestState.RequestInfo);
                             return;
                         }
                         
@@ -458,7 +459,8 @@ namespace NKafka.Connection
                     {                        
                         _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                         requestState.Error = KafkaBrokerErrorCode.ProtocolError;
-                        LogProtocolError(KafkaBrokerErrorCode.ProtocolError, KafkaProtocolErrorCode.InvalidDataSize, requestState.RequestInfo);
+                        LogProtocolError(KafkaBrokerErrorCode.ProtocolError, KafkaBrokerProtocolErrorDescription.ReadResponse, 
+                            KafkaProtocolErrorCode.UnexpectedResponseSize, requestState.RequestInfo);
                         continue;
                     }
 
@@ -471,7 +473,8 @@ namespace NKafka.Connection
                     {                        
                         _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
                         requestState.Error = KafkaBrokerErrorCode.ProtocolError;
-                        LogProtocolError(KafkaBrokerErrorCode.ProtocolError, protocolException, requestState.RequestInfo);
+                        LogProtocolError(KafkaBrokerErrorCode.ProtocolError, KafkaBrokerProtocolErrorDescription.ReadResponse,  
+                            protocolException, requestState.RequestInfo);
                         continue;
                     }
 
@@ -486,7 +489,7 @@ namespace NKafka.Connection
                     catch (KafkaConnectionException connectionException)
                     {
                         _receiveError = ConvertStateError(connectionException);
-                        LogConnectionError(connectionException);
+                        LogConnectionError(KafkaBrokerConnectionErrorDescription.CheckDataAvailability, connectionException);
                     }
 
                 } while (isDataAvailable);
@@ -537,50 +540,54 @@ namespace NKafka.Connection
 
         #endregion State classes        
 
-        private void LogProtocolError(KafkaBrokerErrorCode errorCode, [NotNull] KafkaProtocolException protocolException,
-            [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
+        private void LogProtocolError(KafkaBrokerErrorCode errorCode, KafkaBrokerProtocolErrorDescription errorDescription, 
+            [NotNull] KafkaProtocolException protocolException, [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
         {
             var logger = _logger;
             if (logger == null) return;
-            var errorInfo = new KafkaBrokerProtocolErrorInfo(errorCode, protocolException.ErrorCode, requestInfo, protocolException.InnerException);
+            var errorInfo = new KafkaBrokerProtocolErrorInfo(errorCode, errorDescription, protocolException.ErrorCode, requestInfo, protocolException.InnerException);
+            
             logger.OnProtocolError(errorInfo);
         }
 
-        private void LogProtocolError(KafkaBrokerErrorCode errorCode, KafkaProtocolErrorCode protocolErrorCode,
+        private void LogProtocolError(KafkaBrokerErrorCode errorCode, KafkaBrokerProtocolErrorDescription errorDescription, 
+            KafkaProtocolErrorCode protocolErrorCode, [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
+        {
+            var logger = _logger;
+            if (logger == null) return;            
+            var errorInfo = new KafkaBrokerProtocolErrorInfo(errorCode, errorDescription, protocolErrorCode, requestInfo, null);
+            logger.OnProtocolError(errorInfo);
+        }
+
+        private void LogConnectionError(KafkaBrokerErrorCode errorCode, KafkaBrokerConnectionErrorDescription errorDescription, [NotNull] KafkaConnectionException connectionException,
             [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
         {
             var logger = _logger;
             if (logger == null) return;            
-            var errorInfo = new KafkaBrokerProtocolErrorInfo(errorCode, protocolErrorCode, requestInfo, null);
-            logger.OnProtocolError(errorInfo);
-        }
-
-        private void LogConnectionError(KafkaBrokerErrorCode errorCode, [NotNull] KafkaConnectionException connectionException,
-            [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
-        {
-            var logger = _logger;
-            if (logger == null) return;            
-            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, connectionException.ErrorInfo, requestInfo, connectionException.InnerException);
+            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, errorDescription,
+                connectionException.ErrorInfo, requestInfo, connectionException.InnerException);
             logger.OnConnectionError(errorInfo);
         }
 
-        private void LogConnectionError(KafkaBrokerErrorCode errorCode, KafkaConnectionErrorCode connectionErrorCode,
+        private void LogConnectionError(KafkaBrokerErrorCode errorCode, KafkaBrokerConnectionErrorDescription errorDescription, KafkaConnectionErrorCode connectionErrorCode,
             [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
         {
             var logger = _logger;
             if (logger == null) return;
             var connectionErrorInfo = new KafkaConnectionErrorInfo(connectionErrorCode, null);
-            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, connectionErrorInfo, requestInfo, null);
+            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, errorDescription,
+                connectionErrorInfo, requestInfo, null);
             logger.OnConnectionError(errorInfo);
         }
 
-        private void LogConnectionError([NotNull] KafkaConnectionException connectionException,
+        private void LogConnectionError(KafkaBrokerConnectionErrorDescription errorDescription, [NotNull] KafkaConnectionException connectionException,
             [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
         {
             var logger = _logger;
             if (logger == null) return;
             var errorCode = ConvertError(connectionException);
-            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, connectionException.ErrorInfo, requestInfo, connectionException.InnerException);
+            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, errorDescription,
+                connectionException.ErrorInfo, requestInfo, connectionException.InnerException);
             logger.OnConnectionError(errorInfo);
         }
 

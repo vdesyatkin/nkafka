@@ -65,7 +65,7 @@ namespace NKafka.Protocol.API.SyncGroup
             var actualSize = reader.EndReadSize();
             if (actualSize != requiredSize)
             {
-                throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.UnexpectedDataSize);
             }
 
             return new KafkaSyncGroupResponse(errorCode, protocolVersion, topics, customData);

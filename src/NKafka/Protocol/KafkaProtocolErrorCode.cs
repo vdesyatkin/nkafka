@@ -9,10 +9,13 @@ namespace NKafka.Protocol
         // ReSharper disable once InconsistentNaming
         IOError = 1,
         InvalidRequestType = 2,
-        InvalidDataSize = 3,
-        InvalidStringSize = 4,
-        InvalidItemCount = 5,
-        InvalidMessageSize = 6,
-        InvalidMessageCrc = 7        
+        UnexpectedResponseSize = 3,
+        InvalidDataSize = 4,
+        UnexpectedDataSize = 5,
+        InvalidStringSize = 6,
+        InvalidItemCount = 7,
+        InvalidMessageSize = 8,
+        UnexpectedMessageSize = 9,
+        InvalidMessageCrc = 10        
     }
 }
