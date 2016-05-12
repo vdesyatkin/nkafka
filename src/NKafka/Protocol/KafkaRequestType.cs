@@ -8,12 +8,7 @@ namespace NKafka.Protocol
         Produce = 0,
         Fetch = 1,
         Offset = 2,
-        TopicMetadata = 3,
-
-        LeaderAndIsrs = 4,
-        StopReplica = 5,
-        UpdateMetadata = 6,
-        ControledShutdown = 7,
+        TopicMetadata = 3,        
 
         OffsetCommit = 8,
         OffsetFetch = 9,
@@ -22,9 +17,6 @@ namespace NKafka.Protocol
         JoinGroup = 11,
         Heartbeat = 12,
         LeaveGroup = 13,
-        SyncGroup = 14,
-
-        DescribeGroups = 15,
-        ListGroups = 16
+        SyncGroup = 14        
     }
 }

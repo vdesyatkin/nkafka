@@ -10,9 +10,10 @@ namespace NKafka.Client.Broker.Diagnostics
 
         void OnBrokerDisconnected([NotNull] IKafkaClientBroker broker);
 
-        void OnBrokerError([NotNull] IKafkaClientBroker broker, [NotNull] KafkaBrokerErrorInfo error);
+        void OnBrokerInternalError([NotNull] IKafkaClientBroker broker, [NotNull] KafkaBrokerInternalErrorInfo error);
 
-        void OnBrokerRequestError([NotNull] IKafkaClientBroker broker, [NotNull] KafkaBrokerErrorInfo error, 
-            [NotNull] KafkaBrokerRequestInfo requestInfo);
+        void OnBrokerConnectionError([NotNull] IKafkaClientBroker broker, [NotNull] KafkaBrokerConnectionErrorInfo error);
+
+        void OnBrokerProtocolError([NotNull] IKafkaClientBroker broker, [NotNull] KafkaBrokerProtocolErrorInfo error);        
     }
 }

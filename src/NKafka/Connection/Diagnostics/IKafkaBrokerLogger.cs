@@ -4,12 +4,14 @@ namespace NKafka.Connection.Diagnostics
 {
     internal interface IKafkaBrokerLogger
     {
-        void OnBrokerConnected();
+        void OnConnected();
 
-        void OnBrokerDisconnected();
+        void OnDisconnected();
 
-        void OnBrokerError([NotNull] KafkaBrokerErrorInfo error);
+        void OnInternalError([NotNull] KafkaBrokerInternalErrorInfo error);
 
-        void OnBrokerRequestError([NotNull] KafkaBrokerErrorInfo error, [NotNull] KafkaBrokerRequestInfo requestInfo);
+        void OnConnectionError([NotNull] KafkaBrokerConnectionErrorInfo error);
+
+        void OnProtocolError([NotNull] KafkaBrokerProtocolErrorInfo error);        
     }
 }

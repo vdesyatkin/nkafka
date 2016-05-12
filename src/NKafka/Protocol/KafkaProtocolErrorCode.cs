@@ -3,7 +3,7 @@
 namespace NKafka.Protocol
 {
     [PublicAPI]
-    internal enum KafkaProtocolErrorCode
+    public enum KafkaProtocolErrorCode
     {
         UnknownError = 0,
         InvalidRequestType = 1,

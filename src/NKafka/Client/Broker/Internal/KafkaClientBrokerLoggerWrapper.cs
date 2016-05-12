@@ -16,7 +16,7 @@ namespace NKafka.Client.Broker.Internal
             _logger = logger;
         }
 
-        public void OnBrokerConnected()
+        public void OnConnected()
         {
             try
             {
@@ -28,7 +28,7 @@ namespace NKafka.Client.Broker.Internal
             }
         }
 
-        public void OnBrokerDisconnected()
+        public void OnDisconnected()
         {
             try
             {
@@ -40,11 +40,11 @@ namespace NKafka.Client.Broker.Internal
             }
         }
 
-        public void OnBrokerError(KafkaBrokerErrorInfo error)
+        public void OnInternalError(KafkaBrokerInternalErrorInfo error)
         {
             try
             {
-                _logger.OnBrokerError(_broker, error);
+                _logger.OnBrokerInternalError(_broker, error);
             }
             catch (Exception)
             {
@@ -52,11 +52,23 @@ namespace NKafka.Client.Broker.Internal
             }
         }
 
-        public void OnBrokerRequestError(KafkaBrokerErrorInfo error, KafkaBrokerRequestInfo requestInfo)
+        public void OnConnectionError(KafkaBrokerConnectionErrorInfo error)
         {
             try
             {
-                _logger.OnBrokerRequestError(_broker, error, requestInfo);
+                _logger.OnBrokerConnectionError(_broker, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
+
+        public void OnProtocolError(KafkaBrokerProtocolErrorInfo error)
+        {
+            try
+            {
+                _logger.OnBrokerProtocolError(_broker, error);
             }
             catch (Exception)
             {
