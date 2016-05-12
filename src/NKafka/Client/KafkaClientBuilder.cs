@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
-using NKafka.Client.Broker;
 using NKafka.Client.Broker.Diagnostics;
 using NKafka.Client.Consumer;
 using NKafka.Client.Consumer.Internal;

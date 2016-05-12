@@ -6,11 +6,18 @@ namespace NKafka.Protocol
     internal sealed class KafkaProtocolException : Exception
     {
         [PublicAPI]
-        public readonly KafkaProtocolErrorCode Error;
+        public readonly KafkaProtocolErrorCode ErrorCode;
 
-        public KafkaProtocolException(KafkaProtocolErrorCode error)
+        public KafkaProtocolException(KafkaProtocolErrorCode errorCode) : base(errorCode.ToString())
         {
-            Error = error;
+            ErrorCode = errorCode;            
+        }
+
+        public KafkaProtocolException(KafkaProtocolErrorCode errorCode, [CanBeNull] Exception innerException) : base(
+                innerException != null ? $"[{errorCode}] {innerException.Message})" : errorCode.ToString(), 
+                innerException)            
+        {
+            ErrorCode = errorCode;
         }
     }
 }

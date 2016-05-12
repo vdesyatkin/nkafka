@@ -6,11 +6,13 @@ namespace NKafka.Protocol
     public enum KafkaProtocolErrorCode
     {
         UnknownError = 0,
-        InvalidRequestType = 1,
-        InvalidDataSize = 2,
-        InvalidStringSize = 3,
-        InvalidItemCount = 4,
-        InvalidMessageSize = 5,
-        InvalidMessageCrc = 6        
+        // ReSharper disable once InconsistentNaming
+        IOError = 1,
+        InvalidRequestType = 2,
+        InvalidDataSize = 3,
+        InvalidStringSize = 4,
+        InvalidItemCount = 5,
+        InvalidMessageSize = 6,
+        InvalidMessageCrc = 7        
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using NKafka.Client.Broker;
 using NKafka.Client.Broker.Diagnostics;
 using NKafka.Client.Broker.Internal;
 using NKafka.Client.Diagnostics;

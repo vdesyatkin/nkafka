@@ -53,20 +53,31 @@ namespace NKafka.Protocol
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidRequestType);
             }
 
-            using (var writer = new KafkaBinaryWriter(dataCapacity ?? DefaultDataCapacity))
+            try
             {
-                writer.BeginWriteSize();
+                using (var writer = new KafkaBinaryWriter(dataCapacity ?? DefaultDataCapacity))
+                {
+                    writer.BeginWriteSize();
 
-                writer.WriteInt16((short)requestConfiguration.RequestType);
-                writer.WriteInt16((short)requestConfiguration.RequestVersion);
-                writer.WriteInt32(correlationId);
-                writer.WriteString(_clientId);
+                    writer.WriteInt16((short) requestConfiguration.RequestType);
+                    writer.WriteInt16((short) requestConfiguration.RequestVersion);
+                    writer.WriteInt32(correlationId);
+                    writer.WriteString(_clientId);
 
-                requestConfiguration.RequestApi.WriteRequest(writer, request);
+                    requestConfiguration.RequestApi.WriteRequest(writer, request);
 
-                writer.EndWriteSize();
+                    writer.EndWriteSize();
 
-                return writer.ToByteArray() ?? new byte[0];                
+                    return writer.ToByteArray() ?? new byte[0];
+                }
+            }
+            catch (KafkaProtocolException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.IOError, exception);
             }
         }
         
@@ -84,19 +95,30 @@ namespace NKafka.Protocol
             if (count < 1 || count > (data.Length - offset))
             {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
-            }           
-
-            using (var reader = new KafkaBinaryReader(data, offset, count, _settings))
-            {
-                var dataSize = reader.ReadInt32();
-                if (dataSize < 4)
-                {
-                    throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
-                }
-                var correlationId = reader.ReadInt32();
-
-                return new KafkaResponseHeader(dataSize - 4, correlationId);
             }
+
+            try
+            {
+                using (var reader = new KafkaBinaryReader(data, offset, count, _settings))
+                {
+                    var dataSize = reader.ReadInt32();
+                    if (dataSize < 4)
+                    {
+                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+                    }
+                    var correlationId = reader.ReadInt32();
+
+                    return new KafkaResponseHeader(dataSize - 4, correlationId);
+                }
+            }
+            catch (KafkaProtocolException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.IOError, exception);
+            }           
         }
 
         /// <exception cref="KafkaProtocolException"/>
@@ -114,7 +136,7 @@ namespace NKafka.Protocol
             if (count < 1 || count > (data.Length - offset))
             {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
-            }            
+            }
 
             KafkaRequestConfiguration requestConfiguration;
             if (!_configuration.Requests.TryGetValue(requestType, out requestConfiguration) || requestConfiguration == null)
@@ -122,10 +144,21 @@ namespace NKafka.Protocol
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidRequestType);
             }
 
-            using (var reader = new KafkaBinaryReader(data, offset, count, _settings))
+            try
             {
-                return requestConfiguration.RequestApi.ReadResponse(reader);
+                using (var reader = new KafkaBinaryReader(data, offset, count, _settings))
+                {
+                    return requestConfiguration.RequestApi.ReadResponse(reader);
+                }
             }
+            catch (KafkaProtocolException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new KafkaProtocolException(KafkaProtocolErrorCode.IOError, exception);
+            }            
         }
 
         #region Configuration

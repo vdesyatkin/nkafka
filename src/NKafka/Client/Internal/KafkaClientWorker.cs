@@ -7,7 +7,6 @@ using NKafka.Client.Broker;
 using NKafka.Client.Broker.Diagnostics;
 using NKafka.Client.Broker.Internal;
 using NKafka.Client.Diagnostics;
-using NKafka.Connection;
 using NKafka.Connection.Diagnostics;
 using NKafka.Metadata;
 using NKafka.Protocol;
