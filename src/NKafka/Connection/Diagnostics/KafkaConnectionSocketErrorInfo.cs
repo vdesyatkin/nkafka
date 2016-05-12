@@ -1,7 +1,7 @@
 ﻿using System.Net.Sockets;
 using JetBrains.Annotations;
 
-namespace NKafka.Connection
+namespace NKafka.Connection.Diagnostics
 {
     [PublicAPI]
     public sealed class KafkaConnectionSocketErrorInfo

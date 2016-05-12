@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using NKafka.Connection.Diagnostics;
 
 namespace NKafka.Connection
 {

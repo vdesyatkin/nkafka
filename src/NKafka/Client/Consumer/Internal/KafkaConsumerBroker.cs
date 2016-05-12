@@ -5,6 +5,7 @@ using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Diagnostics;
 using NKafka.Connection;
+using NKafka.Connection.Diagnostics;
 using NKafka.Protocol;
 using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.Offset;

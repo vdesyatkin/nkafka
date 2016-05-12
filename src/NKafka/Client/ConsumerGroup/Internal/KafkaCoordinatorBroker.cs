@@ -7,6 +7,7 @@ using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.ConsumerGroup.Diagnostics;
 using NKafka.Client.Internal;
 using NKafka.Connection;
+using NKafka.Connection.Diagnostics;
 using NKafka.Protocol;
 using NKafka.Protocol.API.Heartbeat;
 using NKafka.Protocol.API.JoinGroup;

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Connection.Diagnostics;
 using NKafka.Protocol;
 using NKafka.Protocol.API.TopicMetadata;
 
@@ -38,6 +39,7 @@ namespace NKafka.Connection
         [NotNull] private readonly KafkaConnection _connection;
         [NotNull] private readonly KafkaProtocol _kafkaProtocol;
         [NotNull] private readonly KafkaConnectionSettings _settings;
+        [CanBeNull] private readonly IKafkaBrokerLogger _logger;
 
         [NotNull] private readonly ConcurrentDictionary<int, RequestState> _requests;
         [NotNull] private readonly ResponseState _responseState;
@@ -57,12 +59,14 @@ namespace NKafka.Connection
         public KafkaBroker([NotNull] string name,
             [NotNull] KafkaConnection connection, 
             [NotNull] KafkaProtocol kafkaProtocol,
-            [CanBeNull] KafkaConnectionSettings settings)
+            [CanBeNull] KafkaConnectionSettings settings,
+            [CanBeNull] IKafkaBrokerLogger logger)
         {
             _name = name;
             _connection = connection;
             _kafkaProtocol = kafkaProtocol;
-            _settings = settings ?? KafkaConnectionSettingsBuilder.Default;            
+            _settings = settings ?? KafkaConnectionSettingsBuilder.Default;
+            _logger = logger;
 
             _requests = new ConcurrentDictionary<int, RequestState>();
             _responseState = new ResponseState(kafkaProtocol);

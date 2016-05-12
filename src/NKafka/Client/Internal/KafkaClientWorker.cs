@@ -8,6 +8,7 @@ using NKafka.Client.Broker.Diagnostics;
 using NKafka.Client.Broker.Internal;
 using NKafka.Client.Diagnostics;
 using NKafka.Connection;
+using NKafka.Connection.Diagnostics;
 using NKafka.Metadata;
 using NKafka.Protocol;
 using NKafka.Protocol.API.GroupCoordinator;
@@ -21,6 +22,7 @@ namespace NKafka.Client.Internal
         [NotNull] private readonly string _wokerName;
         [NotNull] private readonly KafkaProtocol _protocol;
         [NotNull] private readonly KafkaClientSettings _settings;
+        [CanBeNull] private readonly IKafkaClientBrokerLogger _brokerLogger;
 
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientTopic> _topics;
         [NotNull] private readonly ConcurrentDictionary<string, MetadataRequestInfo> _topicMetadataRequests;        
@@ -41,12 +43,14 @@ namespace NKafka.Client.Internal
         public delegate void ArrangeGroupDelegate([NotNull] string groupName, [NotNull] KafkaClientBrokerGroup groupCoordinator);
         public event ArrangeGroupDelegate ArrangeGroup;        
         
-        public KafkaClientWorker(int workerId, [NotNull] KafkaClientSettings settings)
+        public KafkaClientWorker(int workerId, [NotNull] KafkaClientSettings settings, 
+            [CanBeNull] IKafkaClientBrokerLogger brokerLogger)
         {
             _workerId = workerId;
             _wokerName = $"worker(id={workerId})";
 
             _settings = settings;
+            _brokerLogger = brokerLogger;
             _protocol = new KafkaProtocol(settings.KafkaVersion, settings.ProtocolSettings ?? KafkaProtocolSettingsBuilder.Default, settings.ClientId);
             _workerPeriod = settings.WorkerPeriod;
             if (_workerPeriod < TimeSpan.FromMilliseconds(100))
@@ -630,27 +634,17 @@ namespace NKafka.Client.Internal
 
         [NotNull]
         private KafkaClientBroker CreateBroker([NotNull]KafkaBrokerMetadata brokerMetadata)
-        {
-            var brokerId = brokerMetadata.BrokerId;
-            var host = brokerMetadata.Host ?? string.Empty;
-            var port = brokerMetadata.Port;
-            var connection = new KafkaConnection(host, port);
-            var brokerName = $"broker(id={brokerId})[{host}:{port}]";
-            var broker = new KafkaBroker(brokerName, connection, _protocol, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker, brokerName, _workerId,
-                KafkaClientBrokerType.MessageBroker, brokerMetadata, _settings);
+        {                        
+            return new KafkaClientBroker(_protocol, _workerId, KafkaClientBrokerType.MessageBroker,
+                brokerMetadata, _settings, _brokerLogger);
         }
 
         [NotNull]
         private KafkaClientBroker CreateMetadataBroker([NotNull]KafkaBrokerInfo brokerInfo)
-        {
-            var host = brokerInfo.Host ?? string.Empty;
-            var port = brokerInfo.Port;
-            var connection = new KafkaConnection(host, port);
-            var brokerName = $"broker(metadata)[{host}:{port}]";
-            var broker = new KafkaBroker(brokerName, connection, _protocol, _settings.ConnectionSettings);
-            return new KafkaClientBroker(broker, brokerName, _workerId, 
-                KafkaClientBrokerType.MetadataBroker, new KafkaBrokerMetadata(0, host, port, null), _settings);
+        {            
+            var brokerMetadata = new KafkaBrokerMetadata(0, brokerInfo.Host, brokerInfo.Port, null);
+            return new KafkaClientBroker(_protocol, _workerId, KafkaClientBrokerType.MetadataBroker,
+                brokerMetadata, _settings, _brokerLogger);
         }
 
         #region Topic metadata

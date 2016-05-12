@@ -20,7 +20,7 @@ namespace NKafka.Client.Broker.Internal
         public KafkaBrokerMetadata BrokerMetadata { get; }        
 
         public bool IsEnabled => _broker.IsEnabled;
-        public bool IsStarted => _broker.IsOpenned;        
+        public bool IsStarted => _broker.IsOpenned;
 
         [NotNull] private readonly KafkaBroker _broker;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;
@@ -29,22 +29,37 @@ namespace NKafka.Client.Broker.Internal
         [NotNull] private readonly KafkaConsumerBroker _consumer;
         [NotNull] private readonly KafkaCoordinatorBroker _coordinator;
 
+        [CanBeNull] private readonly IKafkaClientBrokerLogger _logger;
+
         private readonly TimeSpan _clientTimeout;        
 
-        public KafkaClientBroker([NotNull] KafkaBroker broker, 
-            [NotNull] string name, int workerId,
+        public KafkaClientBroker([NotNull] KafkaProtocol protocol, int workerId,
             KafkaClientBrokerType brokerType, [NotNull] KafkaBrokerMetadata metadata, 
-            [NotNull] KafkaClientSettings settings)
-        {
-            _broker = broker;
-            Name = name;
+            [NotNull] KafkaClientSettings settings,
+            [CanBeNull] IKafkaClientBrokerLogger logger)
+        {                       
             BrokerType = brokerType;
             BrokerMetadata = metadata;
+            _logger = logger;
+
+            var brokerId = metadata.BrokerId;
+            var host = metadata.Host ?? string.Empty;
+            var port = metadata.Port;
+            var brokerName = brokerType == KafkaClientBrokerType.MetadataBroker
+                ? $"broker(id={brokerId})[{host}:{port}]"
+                : $"broker(metdata)[{host}:{port}]";
+            Name = brokerName;
+
+            var connection = new KafkaConnection(host, port);
+            var loggerWrapper = logger != null ? new KafkaClientBrokerLoggerWrapper(this, logger) : null;
+            var broker = new KafkaBroker(brokerName, connection, protocol, settings.ConnectionSettings, loggerWrapper);
+            _broker = broker;
+
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
             _groups = new ConcurrentDictionary<string, KafkaClientBrokerGroup>();
             _producer = new KafkaProducerBroker(broker, settings.WorkerPeriod);
             _consumer = new KafkaConsumerBroker(broker, settings.WorkerPeriod);
-            _coordinator = new KafkaCoordinatorBroker(broker, settings.WorkerPeriod);
+            _coordinator = new KafkaCoordinatorBroker(broker, settings.WorkerPeriod);            
 
             var workerPeriod = settings.WorkerPeriod;
             if (workerPeriod < TimeSpan.FromMilliseconds(100)) //todo (E006) settings rage validation?
@@ -245,63 +260,9 @@ namespace NKafka.Client.Broker.Internal
 
         public KafkaClientBrokerInfo GetDiagnosticsInfo()
         {
-            KafkaClientBrokerErrorCode? errorCode = null;
-            var brokerErrorCode = _broker.Error;
-            if (brokerErrorCode.HasValue)
-            {
-                switch (brokerErrorCode.Value)
-                {
-                    case KafkaBrokerStateErrorCode.ConnectionClosed:
-                        errorCode = KafkaClientBrokerErrorCode.ConnectionClosed;
-                        break;
-                    case KafkaBrokerStateErrorCode.ConnectionMaintenance:
-                        errorCode = KafkaClientBrokerErrorCode.ConnectionMaintenance;
-                        break;
-                    case KafkaBrokerStateErrorCode.ProtocolError:
-                        errorCode = KafkaClientBrokerErrorCode.ProtocolError;
-                        break;
-                    case KafkaBrokerStateErrorCode.TransportError:
-                        errorCode = KafkaClientBrokerErrorCode.TransportError;
-                        break;
-                    case KafkaBrokerStateErrorCode.ClientTimeout:
-                        errorCode = KafkaClientBrokerErrorCode.ClientTimeout;
-                        break;
-                    case KafkaBrokerStateErrorCode.Cancelled:
-                        errorCode = KafkaClientBrokerErrorCode.Cancelled;
-                        break;
-                    case KafkaBrokerStateErrorCode.InvalidHost:
-                        errorCode = KafkaClientBrokerErrorCode.InvalidHost;
-                        break;
-                    case KafkaBrokerStateErrorCode.UnsupportedHost:
-                        errorCode = KafkaClientBrokerErrorCode.UnsupportedHost;
-                        break;
-                    case KafkaBrokerStateErrorCode.NetworkNotAvailable:
-                        errorCode = KafkaClientBrokerErrorCode.NetworkNotAvailable;
-                        break;
-                    case KafkaBrokerStateErrorCode.ConnectionNotAllowed:
-                        errorCode = KafkaClientBrokerErrorCode.ConnectionNotAllowed;
-                        break;
-                    case KafkaBrokerStateErrorCode.ConnectionRefused:
-                        errorCode = KafkaClientBrokerErrorCode.ConnectionRefused;
-                        break;
-                    case KafkaBrokerStateErrorCode.HostUnreachable:
-                        errorCode = KafkaClientBrokerErrorCode.HostUnreachable;
-                        break;
-                    case KafkaBrokerStateErrorCode.HostNotAvailable:
-                        errorCode = KafkaClientBrokerErrorCode.HostNotAvailable;
-                        break;
-                    case KafkaBrokerStateErrorCode.NotAuthorized:
-                        errorCode = KafkaClientBrokerErrorCode.NotAuthorized;
-                        break;
-                    case KafkaBrokerStateErrorCode.UnknownError:
-                        errorCode = KafkaClientBrokerErrorCode.UnknownError;
-                        break;
-                    default:
-                        errorCode = KafkaClientBrokerErrorCode.UnknownError;
-                        break;
-                }
-            }
-            return new KafkaClientBrokerInfo(Name, BrokerType, BrokerMetadata, _broker.IsOpenned, errorCode, _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc, DateTime.UtcNow);
+            
+            return new KafkaClientBrokerInfo(Name, BrokerType, BrokerMetadata, _broker.IsOpenned, _broker.Error, 
+                _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc, DateTime.UtcNow);
         }
     }
 }

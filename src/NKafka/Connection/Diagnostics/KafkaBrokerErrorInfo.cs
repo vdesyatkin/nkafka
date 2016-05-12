@@ -1,27 +1,25 @@
 ﻿using System;
 using JetBrains.Annotations;
-using NKafka.Connection;
 
-namespace NKafka.Client.Broker.Diagnostics
+namespace NKafka.Connection.Diagnostics
 {
     [PublicAPI]
-    public class KafkaClientBrokerErrorInfo
-    {
-        [NotNull] public readonly IKafkaClientBroker Broker;
-
-        public readonly KafkaClientBrokerErrorCode ErrorCode;
+    public sealed class KafkaBrokerErrorInfo
+    {        
+        public readonly KafkaBrokerErrorCode ErrorCode;
 
         [CanBeNull] public readonly KafkaConnectionErrorInfo ConnectionError;
 
         [CanBeNull] public readonly Exception Exception;
-        
-        public KafkaClientBrokerErrorInfo([NotNull] IKafkaClientBroker broker, KafkaClientBrokerErrorCode errorCode, 
+
+        public KafkaBrokerErrorInfo(KafkaBrokerErrorCode errorCode,
             [CanBeNull] KafkaConnectionErrorInfo connectionError, [CanBeNull] Exception exception)
-        {
-            Broker = broker;
+        {            
             ErrorCode = errorCode;
             ConnectionError = connectionError;
             Exception = exception;
         }
     }
+
+
 }

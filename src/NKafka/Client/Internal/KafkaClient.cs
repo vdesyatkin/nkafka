@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
+using NKafka.Client.Broker.Diagnostics;
 using NKafka.Client.Broker.Internal;
 using NKafka.Client.Diagnostics;
 
@@ -10,8 +12,7 @@ namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClient : IKafkaClient
     {
-        [NotNull, ItemNotNull]
-        private readonly IReadOnlyList<KafkaClientWorker> _workers;
+        [NotNull, ItemNotNull] private readonly IReadOnlyList<KafkaClientWorker> _workers;        
 
         public KafkaClientStatus Status { get; private set; }
 
@@ -32,8 +33,9 @@ namespace NKafka.Client.Internal
 
         public KafkaClient([NotNull]KafkaClientSettings settings, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics,
-            [NotNull, ItemNotNull] IReadOnlyList<KafkaClientGroup> groups)
-        {
+            [NotNull, ItemNotNull] IReadOnlyList<KafkaClientGroup> groups,
+            [CanBeNull] IKafkaClientBrokerLogger brokerLogger)
+        {            
             var workerCount = settings.WorkerThreadCount;
             if (workerCount < 1)
             {
@@ -43,7 +45,7 @@ namespace NKafka.Client.Internal
             var workers = new List<KafkaClientWorker>(workerCount);
             for (var i = 0; i < workerCount; i++)
             {
-                var worker = new KafkaClientWorker(i + 1, settings);
+                var worker = new KafkaClientWorker(i + 1, settings, brokerLogger);
                 worker.ArrangeTopic += OnArrangeTopic;
                 worker.ArrangeGroup += OnArrangeGroupCoordinator;
                 workers.Add(worker);

@@ -1,9 +1,9 @@
 ﻿using JetBrains.Annotations;
 
-namespace NKafka.Client.Broker.Diagnostics
+namespace NKafka.Connection.Diagnostics
 {
     [PublicAPI]
-    public enum KafkaClientBrokerErrorCode
+    public enum KafkaBrokerStateErrorCode
     {
         UnknownError = 0,
         ConnectionClosed = 1,
@@ -20,6 +20,6 @@ namespace NKafka.Client.Broker.Diagnostics
         ConnectionRefused = 11,
         HostUnreachable = 12,
         HostNotAvailable = 13,
-        NotAuthorized = 14        
+        NotAuthorized = 14
     }
 }

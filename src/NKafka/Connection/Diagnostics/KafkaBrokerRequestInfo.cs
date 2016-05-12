@@ -1,10 +1,10 @@
 ﻿using JetBrains.Annotations;
 using NKafka.Protocol;
 
-namespace NKafka.Client.Broker.Diagnostics
+namespace NKafka.Connection.Diagnostics
 {
     [PublicAPI]
-    public sealed class KafkaClientBrokerRequestInfo
+    public sealed class KafkaBrokerRequestInfo
     {
         public readonly KafkaRequestType RequestType;
 
@@ -12,7 +12,7 @@ namespace NKafka.Client.Broker.Diagnostics
 
         [NotNull] public readonly string Sender;
 
-        public KafkaClientBrokerRequestInfo(KafkaRequestType requestType, int requestId, [NotNull] string sender)
+        public KafkaBrokerRequestInfo(KafkaRequestType requestType, int requestId, [NotNull] string sender)
         {
             RequestType = requestType;
             RequestId = requestId;

@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Connection.Diagnostics;
 
 namespace NKafka.Connection
 {

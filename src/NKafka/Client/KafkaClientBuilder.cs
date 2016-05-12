@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
+using NKafka.Client.Broker.Diagnostics;
 using NKafka.Client.Consumer;
 using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup;
@@ -16,6 +18,8 @@ namespace NKafka.Client
         [NotNull, ItemNotNull] private readonly List<KafkaConsumerTopic> _topicConsumers;
         [NotNull] private readonly Dictionary<string, KafkaConsumerGroup> _consumerGroups;        
         [NotNull] private readonly KafkaClientSettings _settings;
+
+        [CanBeNull] private IKafkaClientBrokerLogger _brokerLogger;
 
         public KafkaClientBuilder([NotNull] KafkaBrokerInfo metadataBroker)
             : this(new KafkaClientSettingsBuilder(metadataBroker).Build())
@@ -169,6 +173,11 @@ namespace NKafka.Client
             return group;
         }
 
+        public void SetBrokerLogger([NotNull] IKafkaClientBrokerLogger logger)
+        {
+            _brokerLogger = logger;
+        }
+
         [NotNull]
         public IKafkaClient Build()
         {            
@@ -282,7 +291,7 @@ namespace NKafka.Client
                 topic.Consumer?.ApplyCoordinator(consumerGroup.Coordinator, catchUpGroup?.Coordinator);
             }
 
-            return new KafkaClient(_settings, topics, groups);
+            return new KafkaClient(_settings, topics, groups, _brokerLogger);
         }
     }
 }
