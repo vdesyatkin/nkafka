@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using NKafka.Protocol;
 
-namespace NKafka.Connection.Diagnostics
+namespace NKafka.Connection.Logging
 {
     [PublicAPI]
     public sealed class KafkaBrokerRequestInfo

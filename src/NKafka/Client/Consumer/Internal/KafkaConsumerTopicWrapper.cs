@@ -2,23 +2,26 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Diagnostics;
+using NKafka.Client.Consumer.Logging;
 
 namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopicWrapper<TKey, TData> : IKafkaConsumerTopic<TKey, TData>
     {
-        [NotNull]
-        private readonly KafkaConsumerTopic _topic;
+        [NotNull] private readonly KafkaConsumerTopic _topic;
 
-        [NotNull]
-        private readonly IKafkaSerializer<TKey, TData> _serializer;
+        [NotNull] private readonly IKafkaSerializer<TKey, TData> _serializer;
+
+        [CanBeNull] private readonly IKafkaConsumerTopicBufferLogger _logger;
 
         public KafkaConsumerTopicWrapper(
             [NotNull] KafkaConsumerTopic topic,
-            [NotNull] IKafkaSerializer<TKey, TData> serializer)
+            [NotNull] IKafkaSerializer<TKey, TData> serializer,
+            [CanBeNull] IKafkaConsumerTopicBufferLogger logger)
         {
             _topic = topic;
             _serializer = serializer;
+            _logger = logger;
         }
 
         public IReadOnlyList<KafkaMessagePackage<TKey, TData>> Consume(int? maxMessageCount = null)
@@ -39,9 +42,14 @@ namespace NKafka.Client.Consumer.Internal
                         if (genericMessage == null) continue;
                         genericMessages.Add(genericMessage);
                     }
-                    catch (Exception)
+                    catch (Exception exception)
                     {
-                        //ignored
+                        var logger = _logger;
+                        if (logger != null)
+                        {
+                            var errorInfo = new KafkaConsumerTopicSerializationErrorInfo(message, exception);
+                            logger.OnSerializationError(errorInfo);
+                        }
                     }
                 }
 

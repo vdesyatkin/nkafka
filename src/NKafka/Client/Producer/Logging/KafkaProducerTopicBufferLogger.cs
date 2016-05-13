@@ -35,7 +35,7 @@ namespace NKafka.Client.Producer.Logging
 
     internal sealed class KafkaProducerTopicBufferLogger<TKey, TData> : IKafkaProducerTopicBufferLogger<TKey, TData>
     {
-        [NotNull] private IKafkaProducerLogger<TKey, TData> _logger;
+        [NotNull] private readonly IKafkaProducerLogger<TKey, TData> _logger;
         [CanBeNull] private IKafkaProducerTopic<TKey, TData> _topic;
 
         public KafkaProducerTopicBufferLogger([NotNull] IKafkaProducerLogger<TKey, TData> logger)

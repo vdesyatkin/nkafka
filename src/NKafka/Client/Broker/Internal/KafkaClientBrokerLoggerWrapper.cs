@@ -2,6 +2,7 @@
 using JetBrains.Annotations;
 using NKafka.Client.Broker.Diagnostics;
 using NKafka.Connection.Diagnostics;
+using NKafka.Connection.Logging;
 
 namespace NKafka.Client.Broker.Internal
 {

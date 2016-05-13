@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace NKafka.Connection.Diagnostics
+namespace NKafka.Connection.Logging
 {
     internal interface IKafkaBrokerLogger
     {

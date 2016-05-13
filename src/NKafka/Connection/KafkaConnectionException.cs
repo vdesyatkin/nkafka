@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using NKafka.Connection.Diagnostics;
+using NKafka.Connection.Logging;
 
 namespace NKafka.Connection
 {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Diagnostics;
+using NKafka.Client.Consumer.Logging;
 using NKafka.Client.Diagnostics;
 
 namespace NKafka.Client.Consumer.Internal
@@ -25,7 +26,8 @@ namespace NKafka.Client.Consumer.Internal
 
         public KafkaConsumerTopic([NotNull] string topicName, 
             [NotNull] string groupName, [CanBeNull] string catchUpGroupName,
-            [NotNull] KafkaConsumerSettings settings)
+            [NotNull] KafkaConsumerSettings settings,
+            [CanBeNull] IKafkaConsumerTopicLogger logger)
         { 
             TopicName = topicName;
             GroupName = groupName;

@@ -68,7 +68,7 @@ namespace NKafka.Protocol.API.Produce
                 writer.WriteInt8(MessageGZipAttribute);
                 if (useTimestamp)
                 {
-                    writer.WriteTimestampUtc(defaultTimestampUtc); // (V010) todo??
+                    writer.WriteTimestampUtc(defaultTimestampUtc);
                 }
                 writer.WriteByteArray(null); // key
 
@@ -121,7 +121,7 @@ namespace NKafka.Protocol.API.Produce
                         writer.WriteInt8(MessageEmptyAttribute);
                         if (useTimestamp)
                         {
-                            writer.WriteTimestampUtc(defaultTimestampUtc);
+                            writer.WriteTimestampUtc(message.TiemestampUtc ?? defaultTimestampUtc);
                         }
                         writer.WriteByteArray(message.Key);
                         writer.WriteByteArray(message.Data);
