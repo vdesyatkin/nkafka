@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
 using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.ConsumerGroup.Diagnostics;
 using NKafka.Client.Internal;
@@ -22,6 +23,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
     internal sealed class KafkaCoordinatorBroker
     {
         [NotNull] private readonly KafkaBroker _broker;
+        [NotNull] private readonly IKafkaClientBroker _clientBroker;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaCoordinatorGroup> _groups;
         [NotNull] private readonly Dictionary<string, int> _joinGroupRequests;
         [NotNull] private readonly Dictionary<string, int> _additionalTopicsRequests;
@@ -37,9 +39,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
         // ReSharper disable once InconsistentNaming
         private readonly string DefaultMemberId = string.Empty;
 
-        public KafkaCoordinatorBroker([NotNull] KafkaBroker broker, TimeSpan consumePeriod)
+        public KafkaCoordinatorBroker([NotNull] KafkaBroker broker, [NotNull] IKafkaClientBroker clientBroker, TimeSpan consumePeriod)
         {
             _broker = broker;
+            _clientBroker = clientBroker;
             _groups = new ConcurrentDictionary<string, KafkaCoordinatorGroup>();            
             _joinGroupRequests = new Dictionary<string, int>();
             _syncGroupRequests = new Dictionary<string, int>();

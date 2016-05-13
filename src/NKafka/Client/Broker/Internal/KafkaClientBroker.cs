@@ -58,8 +58,8 @@ namespace NKafka.Client.Broker.Internal
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
             _groups = new ConcurrentDictionary<string, KafkaClientBrokerGroup>();
             _producer = new KafkaProducerBroker(broker, this, settings.WorkerPeriod);
-            _consumer = new KafkaConsumerBroker(broker, settings.WorkerPeriod);
-            _coordinator = new KafkaCoordinatorBroker(broker, settings.WorkerPeriod);            
+            _consumer = new KafkaConsumerBroker(broker, this, settings.WorkerPeriod);
+            _coordinator = new KafkaCoordinatorBroker(broker, this, settings.WorkerPeriod);            
 
             var workerPeriod = settings.WorkerPeriod;
             if (workerPeriod < TimeSpan.FromMilliseconds(100)) //todo (E006) settings rage validation?

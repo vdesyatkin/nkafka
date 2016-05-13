@@ -20,7 +20,7 @@ namespace NKafka.Client.Producer.Internal
         [NotNull] private readonly ConcurrentDictionary<string, KafkaProducerBrokerTopic> _topics;
         [NotNull] private readonly Dictionary<string, ProduceBatchSet> _produceRequests;
 
-        private readonly TimeSpan _produceClientTimeout;         
+        private readonly TimeSpan _produceClientTimeout;       
         
         public KafkaProducerBroker([NotNull] KafkaBroker broker, [NotNull] IKafkaClientBroker clientBroker, TimeSpan producePeriod)
         {

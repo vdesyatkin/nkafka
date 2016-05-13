@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.Consumer.Diagnostics;
+using NKafka.Client.Consumer.Logging;
 
 namespace NKafka.Client.Consumer.Internal
 {
@@ -14,6 +15,7 @@ namespace NKafka.Client.Consumer.Internal
 
         public readonly int PartitionId;
         [NotNull] public readonly KafkaConsumerSettings Settings;
+        [CanBeNull] public readonly IKafkaConsumerTopicLogger Logger;
 
         public KafkaConsumerBrokerPartitionStatus Status;
         public bool IsAssigned;
@@ -60,13 +62,16 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentQueue<KafkaMessageAndOffset> _consumeMessagesQueue;
         [NotNull] private readonly Queue<KafkaMessageAndOffset> _catchUpMesagesQueue;
 
-        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, [NotNull] KafkaConsumerGroupData group,
-            [NotNull] KafkaConsumerSettings settings)
+        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, 
+            [NotNull] KafkaConsumerGroupData group,
+            [NotNull] KafkaConsumerSettings settings,
+            [CanBeNull] IKafkaConsumerTopicLogger logger)
         {
             TopicName = topicName;
             PartitionId = partitionId;
             Settings = settings;
-            Group = group;          
+            Group = group;
+            Logger = logger;   
 
             _consumeMessagesQueue = new ConcurrentQueue<KafkaMessageAndOffset>();
             _catchUpMesagesQueue = new Queue<KafkaMessageAndOffset>();

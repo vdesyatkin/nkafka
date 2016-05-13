@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Logging;
 
 namespace NKafka.Client.Consumer.Internal
 {
@@ -19,10 +20,11 @@ namespace NKafka.Client.Consumer.Internal
 
         public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId,
             [NotNull] KafkaConsumerGroupData group,
-            [NotNull] KafkaConsumerSettings settings)
+            [NotNull] KafkaConsumerSettings settings,
+            [CanBeNull] IKafkaConsumerTopicLogger logger)
         {            
             PartitonId = partitionId;            
-            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, group, settings);            
+            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, group, settings, logger);            
         }        
 
         public void SetCommitClientOffset(long beginOffset, long endOffset)

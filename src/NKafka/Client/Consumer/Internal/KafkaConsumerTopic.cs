@@ -17,7 +17,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] public KafkaClientTopicMetadataInfo TopicMetadataInfo;
 
         [CanBeNull] private KafkaConsumerGroupData _group;
-
+        [CanBeNull] private readonly IKafkaConsumerTopicLogger _logger;
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
         [NotNull] private IReadOnlyDictionary<int, KafkaConsumerTopicPartition> _topicPartitions;
@@ -32,6 +32,7 @@ namespace NKafka.Client.Consumer.Internal
             TopicName = topicName;
             GroupName = groupName;
             Settings = settings;
+            _logger = logger;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
             _packages = new ConcurrentDictionary<long, KafkaConsumerTopicPackageInfo>();
             TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, false, null, null, DateTime.UtcNow);
@@ -41,7 +42,7 @@ namespace NKafka.Client.Consumer.Internal
         public KafkaConsumerTopicPartition CreatePartition(int partitionId)
         {
             var group = _group;
-            return group == null ? null : new KafkaConsumerTopicPartition(TopicName, partitionId, group, Settings);
+            return group == null ? null : new KafkaConsumerTopicPartition(TopicName, partitionId, group, Settings, _logger);
         }
 
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartition> partitions)

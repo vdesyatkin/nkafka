@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using JetBrains.Annotations;
+using NKafka.Client.Consumer.Logging;
 
 namespace NKafka.Client.Consumer.Internal
 {
@@ -13,7 +14,10 @@ namespace NKafka.Client.Consumer.Internal
 
         [NotNull] public readonly ConcurrentDictionary<int, KafkaConsumerBrokerPartition> Partitions;
 
-        public KafkaConsumerBrokerTopic([NotNull]string topicName, [NotNull]string topicConsumerName, [NotNull] KafkaConsumerGroupData group,
+        [CanBeNull] public IKafkaConsumerTopicLogger Logger;
+
+        public KafkaConsumerBrokerTopic([NotNull]string topicName, [NotNull]string topicConsumerName, 
+            [NotNull] KafkaConsumerGroupData group,
             [NotNull] KafkaConsumerSettings settings)
         {
             TopicName = topicName;

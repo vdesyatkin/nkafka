@@ -16,6 +16,6 @@ namespace NKafka.Client.Producer.Internal
         {            
             PartitonId = partitionId;            
             BrokerPartition = new KafkaProducerBrokerPartition(topicName, partitionId, settings, fallbackHandler, logger);
-        }       
+        }
     }
 }
