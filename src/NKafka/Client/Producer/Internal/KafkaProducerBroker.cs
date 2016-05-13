@@ -13,6 +13,7 @@ using NKafka.Protocol.API.Produce;
 
 namespace NKafka.Client.Producer.Internal
 {
+    //todo (E013) producer reset error logging
     internal sealed class KafkaProducerBroker
     {        
         [NotNull] private readonly KafkaBroker _broker;
@@ -440,15 +441,20 @@ namespace NKafka.Client.Producer.Internal
                 var logger = partition.Logger;
                 if (logger != null)
                 {
-                    var errorInfo = new KafkaProducerTopicProtocolErrorInfo(partition.PartitionId, error, "PartitionProduceError", _clientBroker, batchMessages.Count);
+                    var errorInfo = new KafkaProducerTopicProtocolErrorInfo(partition.PartitionId, error, "ProduceResponse", _clientBroker, batchMessages.Count);
                     if (errorType == ProducerErrorType.Warning)
                     {
                         logger.OnProtocolWarning(errorInfo);
+                        return false;
                     }
-                    else
+
+                    if (error == KafkaProducerTopicPartitionErrorCode.NotLeaderForPartition)
                     {
-                        logger.OnProtocolError(errorInfo);
+                        logger.OnServerRebalance(errorInfo);
+                        return false;
                     }
+
+                    logger.OnProtocolError(errorInfo);
                 }
                 return false;
             }

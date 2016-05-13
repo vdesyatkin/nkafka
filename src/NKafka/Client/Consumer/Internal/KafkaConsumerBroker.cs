@@ -14,6 +14,7 @@ using NKafka.Protocol.API.Offset;
 
 namespace NKafka.Client.Consumer.Internal
 {
+    //todo (E013) consumer reset error logging
     internal sealed class KafkaConsumerBroker
     {
         [NotNull] private readonly KafkaBroker _broker;
@@ -334,6 +335,7 @@ namespace NKafka.Client.Consumer.Internal
             if (offsetResponseTopics == null || offsetResponseTopics.Count == 0)
             {
                 SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
+                LogProtocolError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error, "OffsetResponse(no topics)");
                 return false;
             }
 
@@ -341,6 +343,7 @@ namespace NKafka.Client.Consumer.Internal
             if (offsetResponsePartitions == null || offsetResponsePartitions.Count == 0)
             {
                 SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
+                LogProtocolError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error, "OffsetResponse(no partitions)");
                 return false;
             }
 
@@ -372,12 +375,14 @@ namespace NKafka.Client.Consumer.Internal
                 }
 
                 SetPartitionError(partition, errorCode, errorType);
+                LogProtocolError(partition, errorCode, errorType, "OffsetResponse");
                 return false;
             }
 
             var offsets = offsetResponsePartition.Offsets;
             if (offsets == null)
             {
+                LogProtocolError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error, "OffsetResponse(no offsets)");
                 SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
                 return false;
             }
@@ -399,6 +404,7 @@ namespace NKafka.Client.Consumer.Internal
             if (minOffset == null)
             {
                 SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
+                LogProtocolError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error, "OffsetResponse(no offsets)");
                 return false;
             }
 
@@ -523,8 +529,9 @@ namespace NKafka.Client.Consumer.Internal
                                 errorType = ConsumerErrorType.Rearrange;
                                 break;
                         }
-
+                        
                         SetPartitionError(partition, errorCode, errorType);
+                        LogProtocolError(partition, errorCode, errorType, "FetchResponse");
                         continue;
                     }
 
@@ -561,6 +568,28 @@ namespace NKafka.Client.Consumer.Internal
             if (logger == null) return;
             var errorInfo = new KafkaConsumerTopicTransportErrorInfo(brokerError, errorDescription, _clientBroker);
             logger.OnTransportError(errorInfo);
+        }
+        
+        private void LogProtocolError([NotNull] KafkaConsumerBrokerPartition partition, KafkaConsumerTopicPartitionErrorCode error, ConsumerErrorType erorrType, string errorDescription)
+        {
+            var logger = partition.Logger;
+            if (logger != null)
+            {
+                var errorInfo = new KafkaConsumerTopicProtocolErrorInfo(partition.PartitionId, error, errorDescription, _clientBroker);
+                if (erorrType == ConsumerErrorType.Warning)
+                {
+                    logger.OnProtocolWarning(errorInfo);
+                    return;
+                }
+
+                if (error == KafkaConsumerTopicPartitionErrorCode.NotLeaderForPartition)
+                {
+                    logger.OnServerRebalance(errorInfo);
+                    return;
+                }
+
+                logger.OnProtocolError(errorInfo);
+            }
         }
 
         private void HandleBrokerError([NotNull] KafkaConsumerBrokerPartition partition, KafkaBrokerErrorCode errorCode)

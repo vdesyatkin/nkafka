@@ -20,6 +20,8 @@ using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Client.ConsumerGroup.Internal
 {
+    //todo (E013) coordinator error logging
+    //todo (E013) coordinator reset error logging
     internal sealed class KafkaCoordinatorBroker
     {
         [NotNull] private readonly KafkaBroker _broker;

@@ -17,8 +17,7 @@ namespace NKafka.Client.Consumer.Logging
 
         public KafkaConsumerTopicProtocolErrorInfo(int partitionId,
             KafkaConsumerTopicPartitionErrorCode protocolError, string errorDescription,
-            IKafkaClientBroker broker,
-            int batchSizeMessageCount)
+            IKafkaClientBroker broker)
         {
             ProtocolError = protocolError;
             ErrorDescription = errorDescription;
