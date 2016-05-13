@@ -57,7 +57,7 @@ namespace NKafka.Client.Broker.Internal
 
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
             _groups = new ConcurrentDictionary<string, KafkaClientBrokerGroup>();
-            _producer = new KafkaProducerBroker(broker, settings.WorkerPeriod);
+            _producer = new KafkaProducerBroker(broker, this, settings.WorkerPeriod);
             _consumer = new KafkaConsumerBroker(broker, settings.WorkerPeriod);
             _coordinator = new KafkaCoordinatorBroker(broker, settings.WorkerPeriod);            
 

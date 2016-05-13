@@ -61,10 +61,16 @@ namespace NKafka.Client.Producer.Internal
                 {
                     partitionId = _partitioner.GetPartition(message, partitionIds);
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
-                    _logger?.OnPartitioningError(message);
                     partitionId = partitionIds[0];
+
+                    var logger = _logger;
+                    if (logger != null)
+                    {
+                        var errorInfo = new KafkaProducerTopicPartitioningErrorInfo(message, partitionIds, exception);
+                        logger.OnPartitioningError(errorInfo);
+                    }                                        
                 }
 
                 if (!partitions.ContainsKey(partitionId))
@@ -139,9 +145,14 @@ namespace NKafka.Client.Producer.Internal
                     serializedMessage = _serializer.SerializeMessage(message);
                     if (serializedMessage == null) continue;
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
-                    _logger?.OnSerializationError(message);
+                    var logger = _logger;
+                    if (logger != null)
+                    {
+                        var errorInfo = new KafkaProducerTopicSerializationErrorInfo<TKey, TData>(message, exception);
+                        logger.OnSerializationError(errorInfo);
+                    }
                     continue;
                 }
 
@@ -150,10 +161,16 @@ namespace NKafka.Client.Producer.Internal
                 {
                     partitionId = _partitioner.GetPartition(message, partitionIds);
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
                     partitionId = partitionIds[0];
-                    _logger?.OnPartitioningError(message);
+
+                    var logger = _logger;
+                    if (logger != null)
+                    {
+                        var errorInfo = new KafkaProducerTopicPartitioningErrorInfo<TKey, TData>(message, partitionIds, exception);
+                        logger.OnPartitioningError(errorInfo);
+                    }
                 }
 
                 if (!partitions.ContainsKey(partitionId))

@@ -18,13 +18,13 @@ namespace NKafka.Client.Producer.Logging
             _topic = topic;
         }
 
-        public void OnPartitioningError([NotNull] KafkaMessage message)
+        public void OnPartitioningError(KafkaProducerTopicPartitioningErrorInfo error)
         {
             var topic = _topic;
             if (topic == null) return;
             try
             {
-                _logger.OnPartitioningError(topic, message);
+                _logger.OnPartitioningError(topic, error);
             }
             catch (Exception)
             {
@@ -48,13 +48,13 @@ namespace NKafka.Client.Producer.Logging
             _topic = topic;
         }
 
-        public void OnPartitioningError([NotNull] KafkaMessage<TKey, TData> message)
+        public void OnPartitioningError(KafkaProducerTopicPartitioningErrorInfo<TKey, TData> error)
         {
             var topic = _topic;
             if (topic == null) return;
             try
             {
-                _logger.OnPartitioningError(topic, message);
+                _logger.OnPartitioningError(topic, error);
             }
             catch (Exception)
             {
@@ -62,13 +62,13 @@ namespace NKafka.Client.Producer.Logging
             }
         }
 
-        public void OnSerializationError([NotNull] KafkaMessage<TKey, TData> message)
+        public void OnSerializationError(KafkaProducerTopicSerializationErrorInfo<TKey, TData> error)
         {
             var topic = _topic;
             if (topic == null) return;
             try
             {
-                _logger.OnSerializationError(topic, message);
+                _logger.OnSerializationError(topic, error);
             }
             catch (Exception)
             {

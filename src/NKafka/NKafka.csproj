@@ -40,6 +40,10 @@
     <Compile Include="Client\Producer\Logging\IKafkaProducerTopicLogger.cs" />
     <Compile Include="Client\Producer\Logging\KafkaProducerTopicBufferLogger.cs" />
     <Compile Include="Client\Producer\Logging\KafkaProducerTopicLogger.cs" />
+    <Compile Include="Client\Producer\Logging\KafkaProducerTopicPartitioningErrorInfo.cs" />
+    <Compile Include="Client\Producer\Logging\KafkaProducerTopicProtocolErrorInfo.cs" />
+    <Compile Include="Client\Producer\Logging\KafkaProducerTopicSerializationErrorInfo.cs" />
+    <Compile Include="Client\Producer\Logging\KafkaProducerTopicTransportErrorInfo.cs" />
     <Compile Include="Connection\Diagnostics\KafkaBrokerProtocolErrorInfo.cs" />
     <Compile Include="Connection\Diagnostics\KafkaBrokerRequestInfo.cs" />
     <Compile Include="Client\Broker\Diagnostics\IKafkaClientBrokerLogger.cs" />

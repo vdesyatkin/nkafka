@@ -14,7 +14,7 @@ namespace NKafka.Client.Producer.Internal
         [NotNull] public readonly KafkaProducerSettings Settings;
         [NotNull] private readonly string _topicName;
         [CanBeNull] private readonly IKafkaProducerFallbackHandler _fallbackHandler;
-        [CanBeNull] private readonly IKafkaProducerTopicLogger _logger;
+        [CanBeNull] public readonly IKafkaProducerTopicLogger Logger;
 
         public KafkaProducerBrokerPartitionStatus Status;
         public bool IsReady => Status == KafkaProducerBrokerPartitionStatus.Ready && Error == null;
@@ -54,7 +54,7 @@ namespace NKafka.Client.Producer.Internal
             _topicName = topicName;
             Settings = settings;            
             _fallbackHandler = fallbackHandler;
-            _logger = logger;
+            Logger = logger;
             _mainQueue = new ConcurrentQueue<KafkaMessage>();
             _retryQueue = new Queue<KafkaMessage>();
             LimitInfo = new KafkaProducerTopicPartitionLimitInfo(settings.MaxMessageSizeByteCount, settings.BatchMaxMessageCount, DateTime.UtcNow);

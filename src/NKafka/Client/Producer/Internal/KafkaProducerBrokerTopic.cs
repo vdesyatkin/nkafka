@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using JetBrains.Annotations;
+using NKafka.Client.Producer.Logging;
 
 namespace NKafka.Client.Producer.Internal
 {
@@ -17,6 +18,8 @@ namespace NKafka.Client.Producer.Internal
         public KafkaConsistencyLevel ConsistencyLevel;
 
         public int BatchSizeByteCount;
+
+        [CanBeNull] public IKafkaProducerTopicLogger Logger;
 
         public KafkaProducerBrokerTopic([NotNull]string topicName, [NotNull]string topicProducerName, [NotNull] KafkaProducerSettings settings)
         {

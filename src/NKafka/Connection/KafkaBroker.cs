@@ -8,11 +8,12 @@ using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Connection
 {
+    //todo (E013) OnDisconnected on error?
     internal sealed class KafkaBroker
     {
         public bool IsOpenned => _isOpenned;
 
-        public bool IsEnabled => _isOpenned && !_isConnectionMaintenance;
+        public bool IsEnabled => _isOpenned && !_isConnectionMaintenance;        
 
         public KafkaBrokerStateErrorCode? Error => _sendError ?? _receiveError;        
 

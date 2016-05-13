@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace NKafka.Client.Producer.Logging
 {
@@ -16,6 +17,51 @@ namespace NKafka.Client.Producer.Logging
         {
             _topic = topic;
         }
+
+        public void OnTransportError(KafkaProducerTopicTransportErrorInfo error)
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnTransportError(topic, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
+
+        public void OnProtocolError(KafkaProducerTopicProtocolErrorInfo error)
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnProtocolError(topic, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
+
+        public void OnProtocolWarning(KafkaProducerTopicProtocolErrorInfo error)
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnProtocolWarning(topic, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
     }
 
     internal sealed class KafkaProducerTopicLogger<TKey, TData> : IKafkaProducerTopicLogger
@@ -31,6 +77,51 @@ namespace NKafka.Client.Producer.Logging
         public void SetTopic(IKafkaProducerTopic<TKey, TData> topic)
         {
             _topic = topic;
+        }
+
+        public void OnTransportError(KafkaProducerTopicTransportErrorInfo error)
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnTransportError(topic, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
+
+        public void OnProtocolError(KafkaProducerTopicProtocolErrorInfo error)
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnProtocolError(topic, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
+
+        public void OnProtocolWarning(KafkaProducerTopicProtocolErrorInfo error)
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnProtocolWarning(topic, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
         }
     }
 }

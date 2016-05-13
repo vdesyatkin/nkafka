@@ -4,12 +4,12 @@ namespace NKafka.Client.Producer.Logging
 {
     internal interface IKafkaProducerTopicBufferLogger
     {
-        void OnPartitioningError([NotNull] KafkaMessage message);
+        void OnPartitioningError([NotNull] KafkaProducerTopicPartitioningErrorInfo error);
     }
 
     internal interface IKafkaProducerTopicBufferLogger<TKey, TData>
     {
-        void OnPartitioningError([NotNull] KafkaMessage<TKey, TData> message);
-        void OnSerializationError([NotNull] KafkaMessage<TKey, TData> message);
+        void OnPartitioningError([NotNull] KafkaProducerTopicPartitioningErrorInfo<TKey, TData> error);
+        void OnSerializationError([NotNull] KafkaProducerTopicSerializationErrorInfo<TKey, TData> error);
     }
 }
