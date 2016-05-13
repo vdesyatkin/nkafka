@@ -3,12 +3,12 @@ using JetBrains.Annotations;
 
 namespace NKafka.Client.ConsumerGroup.Logging
 {
-    internal sealed class KafkaConsumerGroupCoordinatorLogger : IKafkaConsumerGroupCoordinatorLogger
+    internal sealed class KafkaCoordinatorGroupLogger : IKafkaCoordinatorGroupLogger
     {
         [NotNull] private readonly IKafkaConsumerGroupLogger _logger;
         [CanBeNull] private IKafkaConsumerGroup _group;
 
-        public KafkaConsumerGroupCoordinatorLogger([NotNull] IKafkaConsumerGroupLogger logger)
+        public KafkaCoordinatorGroupLogger([NotNull] IKafkaConsumerGroupLogger logger)
         {
             _logger = logger;
         }

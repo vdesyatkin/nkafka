@@ -25,7 +25,7 @@ namespace NKafka.Client.Internal
         public KafkaClientGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
             [NotNull] KafkaConsumerGroupSettings settings,
-            [CanBeNull] IKafkaConsumerGroupCoordinatorLogger logger)
+            [CanBeNull] IKafkaCoordinatorGroupLogger logger)
         {
             GroupName = groupName;
             var groupCoordinatorName = $"group[{groupName}]";

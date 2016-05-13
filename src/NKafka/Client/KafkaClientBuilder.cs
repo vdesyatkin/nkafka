@@ -310,7 +310,7 @@ namespace NKafka.Client
                     continue;
                 }
 
-                var groupLogger = group.Logger != null ? new KafkaConsumerGroupCoordinatorLogger(group.Logger) : null;
+                var groupLogger = group.Logger != null ? new KafkaCoordinatorGroupLogger(group.Logger) : null;
                 groupLogger?.SetGroup(group);
                 var clientGroup = new KafkaClientGroup(groupName, group.GroupType, groupTopics, group.Settings, groupLogger);                
                 group.ClientGroup = clientGroup;

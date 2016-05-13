@@ -19,7 +19,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public KafkaClientGroupMetadataInfo GroupMetadataInfo;
 
         [NotNull] public readonly KafkaConsumerGroupSettings Settings;
-        [CanBeNull] public readonly IKafkaConsumerGroupCoordinatorLogger Logger;
+        [CanBeNull] public readonly IKafkaCoordinatorGroupLogger Logger;
         [NotNull, ItemNotNull] public readonly IReadOnlyDictionary<string, KafkaClientTopic> Topics;
         [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;       
 
@@ -48,7 +48,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             KafkaConsumerGroupType groupType, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
             [NotNull] KafkaConsumerGroupSettings settings,
-            [CanBeNull] IKafkaConsumerGroupCoordinatorLogger logger)
+            [CanBeNull] IKafkaCoordinatorGroupLogger logger)
         {
             GroupName = groupName;
             GroupCoordinatorName = groupCoordinatorName;

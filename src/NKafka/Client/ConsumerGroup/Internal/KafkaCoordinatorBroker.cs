@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using NKafka.Client.Broker;
 using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.ConsumerGroup.Diagnostics;
+using NKafka.Client.ConsumerGroup.Logging;
 using NKafka.Client.Internal;
 using NKafka.Connection;
 using NKafka.Connection.Diagnostics;
@@ -20,7 +21,6 @@ using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Client.ConsumerGroup.Internal
 {
-    //todo (E013) coordinator error logging
     //todo (E013) coordinator reset error logging
     internal sealed class KafkaCoordinatorBroker
     {
@@ -1278,6 +1278,36 @@ namespace NKafka.Client.ConsumerGroup.Internal
         #endregion LeaveGroup
 
         #region Error handling
+
+        private void LogBrokerError([NotNull] KafkaCoordinatorGroup group, KafkaBrokerErrorCode brokerError, string errorDescription)
+        {
+            var logger = group.Logger;
+            if (logger == null) return;
+            var errorInfo = new KafkaConsumerGroupTransportErrorInfo(brokerError, errorDescription, _clientBroker);
+            logger.OnTransportError(errorInfo);
+        }
+
+        private void LogProtocolError([NotNull] KafkaCoordinatorGroup group, KafkaConsumerGroupErrorCode error, GroupErrorType erorrType, string errorDescription)
+        {
+            var logger = group.Logger;
+            if (logger != null)
+            {
+                var errorInfo = new KafkaConsumerGroupProtocolErrorInfo(error, errorDescription, _clientBroker);
+                if (erorrType == GroupErrorType.Warning)
+                {
+                    logger.OnProtocolWarning(errorInfo);
+                    return;
+                }
+
+                if (erorrType == GroupErrorType.Rebalance)
+                {
+                    logger.OnServerRebalance(errorInfo);
+                    return;
+                }
+
+                logger.OnProtocolError(errorInfo);
+            }
+        }
 
         private bool TrySendRequest<TRequest>([NotNull] KafkaCoordinatorGroup group, [NotNull] TRequest request, [NotNull] Dictionary<string, int> requests, TimeSpan timeout)
             where TRequest : class, IKafkaRequest

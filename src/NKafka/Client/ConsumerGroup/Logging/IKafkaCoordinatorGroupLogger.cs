@@ -3,7 +3,7 @@
 namespace NKafka.Client.ConsumerGroup.Logging
 {
     [PublicAPI]
-    internal interface IKafkaConsumerGroupCoordinatorLogger
+    internal interface IKafkaCoordinatorGroupLogger
     {
         void OnTransportError([NotNull] KafkaConsumerGroupTransportErrorInfo error);
 
