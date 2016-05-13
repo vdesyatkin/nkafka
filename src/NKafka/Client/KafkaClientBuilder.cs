@@ -5,6 +5,7 @@ using NKafka.Client.Consumer;
 using NKafka.Client.Consumer.Internal;
 using NKafka.Client.Consumer.Logging;
 using NKafka.Client.ConsumerGroup;
+using NKafka.Client.ConsumerGroup.Logging;
 using NKafka.Client.Internal;
 using NKafka.Client.Producer;
 using NKafka.Client.Producer.Internal;
@@ -207,7 +208,9 @@ namespace NKafka.Client
             return wrapper;
         }
 
-        public IKafkaConsumerGroup CreateConsumerGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, [CanBeNull] KafkaConsumerGroupSettings settings = null)
+        public IKafkaConsumerGroup CreateConsumerGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, 
+            [CanBeNull] IKafkaConsumerGroupLogger logger = null,
+            [CanBeNull] KafkaConsumerGroupSettings settings = null)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse            
             // ReSharper disable ConstantNullCoalescingCondition
@@ -216,7 +219,7 @@ namespace NKafka.Client
             // ReSharper restore ConditionIsAlwaysTrueOrFalse
             // ReSharper restore ConstantNullCoalescingCondition
 
-            var group = new KafkaConsumerGroup(groupName, groupType, settings);
+            var group = new KafkaConsumerGroup(groupName, groupType, settings, logger);
             _consumerGroups[groupName] = group;
 
             return group;
@@ -307,8 +310,10 @@ namespace NKafka.Client
                     continue;
                 }
 
-                var clientGroup = new KafkaClientGroup(groupName, group.GroupType, groupTopics, group.Settings);
-                group.ClientGroup = clientGroup;                
+                var groupLogger = group.Logger != null ? new KafkaConsumerGroupCoordinatorLogger(group.Logger) : null;
+                groupLogger?.SetGroup(group);
+                var clientGroup = new KafkaClientGroup(groupName, group.GroupType, groupTopics, group.Settings, groupLogger);                
+                group.ClientGroup = clientGroup;
 
                 groups.Add(clientGroup);
                 groupsDictionary[groupName] = clientGroup;

@@ -13,7 +13,7 @@ namespace NKafka.Client.Consumer.Logging
             _logger = logger;
         }
 
-        public void SetTopic(IKafkaConsumerTopic topic)
+        public void SetTopic([NotNull] IKafkaConsumerTopic topic)
         {
             _topic = topic;
         }
@@ -91,7 +91,7 @@ namespace NKafka.Client.Consumer.Logging
             _logger = logger;
         }
 
-        public void SetTopic(IKafkaConsumerTopic<TKey, TData> topic)
+        public void SetTopic([NotNull] IKafkaConsumerTopic<TKey, TData> topic)
         {
             _topic = topic;
         }

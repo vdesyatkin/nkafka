@@ -35,6 +35,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client\Broker\Internal\KafkaClientBrokerLoggerWrapper.cs" />
+    <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroupLogger.cs" />
+    <Compile Include="Client\ConsumerGroup\Logging\IKafkaConsumerGroupCoordinatorLogger.cs" />
+    <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupCoordinatorLogger.cs" />
+    <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupTransportErrorInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupProtocolErrorInfo.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerLogger.cs" />
     <Compile Include="Client\Consumer\Logging\IKafkaConsumerTopicBufferLogger.cs" />
     <Compile Include="Client\Consumer\Logging\IKafkaConsumerTopicLogger.cs" />

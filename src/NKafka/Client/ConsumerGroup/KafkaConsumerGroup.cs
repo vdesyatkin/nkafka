@@ -15,14 +15,18 @@ namespace NKafka.Client.ConsumerGroup
         public bool IsReady => ClientGroup?.Coordinator.IsReady == true;
 
         [NotNull] public readonly KafkaConsumerGroupSettings Settings;
+        [CanBeNull] public readonly IKafkaConsumerGroupLogger Logger;
 
         [CanBeNull] public KafkaClientGroup ClientGroup;
 
-        public KafkaConsumerGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, [NotNull] KafkaConsumerGroupSettings settings)
+        public KafkaConsumerGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, 
+            [NotNull] KafkaConsumerGroupSettings settings,
+            [CanBeNull] IKafkaConsumerGroupLogger logger)
         {
             GroupName = groupName;
             GroupType = groupType;
             Settings = settings;
+            Logger = logger;
         }
 
         public KafkaConsumerGroupInfo GetDiagnosticsInfo()

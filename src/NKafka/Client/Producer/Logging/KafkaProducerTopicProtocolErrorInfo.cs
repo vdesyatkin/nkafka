@@ -13,13 +13,13 @@ namespace NKafka.Client.Producer.Logging
 
         public readonly string ErrorDescription;
 
-        public readonly IKafkaClientBroker Broker;        
+        [NotNull] public readonly IKafkaClientBroker Broker;        
 
         public readonly int BatchSizeMessageCount;
 
         public KafkaProducerTopicProtocolErrorInfo(int partitionId, 
             KafkaProducerTopicPartitionErrorCode protocolError, string errorDescription,
-            IKafkaClientBroker broker, 
+            [NotNull] IKafkaClientBroker broker, 
             int batchSizeMessageCount)
         {
             ProtocolError = protocolError;

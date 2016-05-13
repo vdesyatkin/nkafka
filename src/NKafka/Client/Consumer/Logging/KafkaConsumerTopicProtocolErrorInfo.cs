@@ -13,11 +13,11 @@ namespace NKafka.Client.Consumer.Logging
 
         public readonly string ErrorDescription;
 
-        public readonly IKafkaClientBroker Broker;
+        [NotNull] public readonly IKafkaClientBroker Broker;
 
         public KafkaConsumerTopicProtocolErrorInfo(int partitionId,
             KafkaConsumerTopicPartitionErrorCode protocolError, string errorDescription,
-            IKafkaClientBroker broker)
+            [NotNull] IKafkaClientBroker broker)
         {
             ProtocolError = protocolError;
             ErrorDescription = errorDescription;

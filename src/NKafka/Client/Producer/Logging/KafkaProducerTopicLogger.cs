@@ -13,7 +13,7 @@ namespace NKafka.Client.Producer.Logging
             _logger = logger;
         }
 
-        public void SetTopic(IKafkaProducerTopic topic)
+        public void SetTopic([NotNull] IKafkaProducerTopic topic)
         {
             _topic = topic;
         }
@@ -89,7 +89,7 @@ namespace NKafka.Client.Producer.Logging
             _logger = logger;
         }
 
-        public void SetTopic(IKafkaProducerTopic<TKey, TData> topic)
+        public void SetTopic([NotNull] IKafkaProducerTopic<TKey, TData> topic)
         {
             _topic = topic;
         }

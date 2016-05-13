@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using NKafka.Client.Broker.Internal;
 using NKafka.Client.ConsumerGroup;
 using NKafka.Client.ConsumerGroup.Internal;
+using NKafka.Client.ConsumerGroup.Logging;
 using NKafka.Client.Diagnostics;
 using NKafka.Metadata;
 
@@ -23,11 +24,12 @@ namespace NKafka.Client.Internal
 
         public KafkaClientGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
-            [NotNull] KafkaConsumerGroupSettings settings)
+            [NotNull] KafkaConsumerGroupSettings settings,
+            [CanBeNull] IKafkaConsumerGroupCoordinatorLogger logger)
         {
             GroupName = groupName;
             var groupCoordinatorName = $"group[{groupName}]";
-            Coordinator = new KafkaCoordinatorGroup(groupName, groupCoordinatorName, groupType, topics, settings);
+            Coordinator = new KafkaCoordinatorGroup(groupName, groupCoordinatorName, groupType, topics, settings, logger);
             MetadataInfo = new KafkaClientGroupMetadataInfo(groupName, false, null, null, DateTime.UtcNow);
         }
 

@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using NKafka.Client.Consumer.Internal;
 using NKafka.Client.ConsumerGroup.Assignment;
 using NKafka.Client.ConsumerGroup.Diagnostics;
+using NKafka.Client.ConsumerGroup.Logging;
 using NKafka.Client.Diagnostics;
 using NKafka.Client.Internal;
 
@@ -17,8 +18,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public readonly KafkaConsumerGroupType GroupType;
         public KafkaClientGroupMetadataInfo GroupMetadataInfo;
 
-        [NotNull]
-        public readonly KafkaConsumerGroupSettings Settings;
+        [NotNull] public readonly KafkaConsumerGroupSettings Settings;
+        [CanBeNull] public readonly IKafkaConsumerGroupCoordinatorLogger Logger;
         [NotNull, ItemNotNull] public readonly IReadOnlyDictionary<string, KafkaClientTopic> Topics;
         [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;       
 
@@ -46,13 +47,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public KafkaCoordinatorGroup([NotNull] string groupName, [NotNull] string groupCoordinatorName,
             KafkaConsumerGroupType groupType, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
-            [NotNull] KafkaConsumerGroupSettings settings)
+            [NotNull] KafkaConsumerGroupSettings settings,
+            [CanBeNull] IKafkaConsumerGroupCoordinatorLogger logger)
         {
             GroupName = groupName;
             GroupCoordinatorName = groupCoordinatorName;
             GroupType = groupType;
             TopicMetadataPartitionIds = new Dictionary<string, IReadOnlyList<int>>();            
-            Settings = settings;            
+            Settings = settings;
+            Logger = logger;       
             
             CommitPeriod = settings.OffsetCommitPeriod;            
 

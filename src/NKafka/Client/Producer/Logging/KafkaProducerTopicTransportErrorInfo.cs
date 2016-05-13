@@ -11,13 +11,14 @@ namespace NKafka.Client.Producer.Logging
 
         public readonly string ErrorDescription;
 
-        public readonly IKafkaClientBroker Broker;
+        [NotNull] public readonly IKafkaClientBroker Broker;
 
         public readonly int BatchSizeByteCount;
 
         public readonly int BatchSizeMessageCount;
 
-        public KafkaProducerTopicTransportErrorInfo(KafkaBrokerErrorCode brokerError, string errorDescription, IKafkaClientBroker broker, int batchSizeByteCount, int batchSizeMessageCount)
+        public KafkaProducerTopicTransportErrorInfo(KafkaBrokerErrorCode brokerError, string errorDescription, [NotNull] IKafkaClientBroker broker, 
+            int batchSizeByteCount, int batchSizeMessageCount)
         {
             BrokerError = brokerError;
             ErrorDescription = errorDescription;

@@ -2,10 +2,10 @@
 using NKafka.Client.Broker;
 using NKafka.Connection.Diagnostics;
 
-namespace NKafka.Client.Consumer.Logging
+namespace NKafka.Client.ConsumerGroup.Logging
 {    
     [PublicAPI]
-    public sealed class KafkaConsumerTopicTransportErrorInfo
+    public sealed class KafkaConsumerGroupTransportErrorInfo
     {
         public readonly KafkaBrokerErrorCode BrokerError;
 
@@ -13,11 +13,11 @@ namespace NKafka.Client.Consumer.Logging
 
         [NotNull] public readonly IKafkaClientBroker Broker;
 
-        public KafkaConsumerTopicTransportErrorInfo(KafkaBrokerErrorCode brokerError, string errorDescription, [NotNull] IKafkaClientBroker broker)
+        public KafkaConsumerGroupTransportErrorInfo(KafkaBrokerErrorCode brokerError, string errorDescription, [NotNull] IKafkaClientBroker broker)
         {
             BrokerError = brokerError;
             ErrorDescription = errorDescription;
-            Broker = broker;            
+            Broker = broker;
         }
     }
 }
