@@ -8,6 +8,8 @@ namespace NKafka.Client.Consumer
     {        
         void OnTransportError([NotNull] IKafkaConsumerTopic topic, [NotNull] KafkaConsumerTopicTransportErrorInfo error);
 
+        void OnServerRebalance([NotNull] IKafkaConsumerTopic topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
+
         void OnProtocolError([NotNull] IKafkaConsumerTopic topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
 
         void OnProtocolWarning([NotNull] IKafkaConsumerTopic topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
@@ -19,6 +21,8 @@ namespace NKafka.Client.Consumer
         void OnSerializationError([NotNull] IKafkaConsumerTopic<TKey, TData> topic, KafkaConsumerTopicSerializationErrorInfo error);
 
         void OnTransportError([NotNull] IKafkaConsumerTopic<TKey, TData> topic, [NotNull] KafkaConsumerTopicTransportErrorInfo error);
+
+        void OnServerRebalance([NotNull] IKafkaConsumerTopic<TKey, TData> topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
 
         void OnProtocolError([NotNull] IKafkaConsumerTopic<TKey, TData> topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
 

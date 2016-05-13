@@ -33,6 +33,21 @@ namespace NKafka.Client.Producer.Logging
             }
         }
 
+        public void OnServerRebalance(KafkaProducerTopicProtocolErrorInfo error)
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnServerRebalance(topic, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
+
         public void OnProtocolError(KafkaProducerTopicProtocolErrorInfo error)
         {
             var topic = _topic;
@@ -87,6 +102,21 @@ namespace NKafka.Client.Producer.Logging
             try
             {
                 _logger.OnTransportError(topic, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
+
+        public void OnServerRebalance(KafkaProducerTopicProtocolErrorInfo error)
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnProtocolError(topic, error);
             }
             catch (Exception)
             {

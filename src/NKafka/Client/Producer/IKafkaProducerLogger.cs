@@ -10,6 +10,8 @@ namespace NKafka.Client.Producer
 
         void OnTransportError([NotNull] IKafkaProducerTopic topic, [NotNull] KafkaProducerTopicTransportErrorInfo error);
 
+        void OnServerRebalance([NotNull] IKafkaProducerTopic topic, [NotNull] KafkaProducerTopicProtocolErrorInfo error);
+
         void OnProtocolError([NotNull] IKafkaProducerTopic topic, [NotNull] KafkaProducerTopicProtocolErrorInfo error);
 
         void OnProtocolWarning([NotNull] IKafkaProducerTopic topic, [NotNull] KafkaProducerTopicProtocolErrorInfo error);
@@ -23,6 +25,8 @@ namespace NKafka.Client.Producer
         void OnSerializationError([NotNull] IKafkaProducerTopic<TKey, TData> topic, KafkaProducerTopicSerializationErrorInfo<TKey, TData> error);
 
         void OnTransportError([NotNull] IKafkaProducerTopic<TKey, TData> topic, [NotNull] KafkaProducerTopicTransportErrorInfo error);
+
+        void OnServerRebalance([NotNull] IKafkaProducerTopic<TKey, TData> topic, [NotNull] KafkaProducerTopicProtocolErrorInfo error);
 
         void OnProtocolError([NotNull] IKafkaProducerTopic<TKey, TData> topic, [NotNull] KafkaProducerTopicProtocolErrorInfo error);
 
