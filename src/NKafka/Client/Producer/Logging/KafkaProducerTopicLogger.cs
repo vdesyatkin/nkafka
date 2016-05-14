@@ -78,14 +78,14 @@ namespace NKafka.Client.Producer.Logging
             }
         }
 
-        public void OnErrorReset()
+        public void OnPartitionErrorReset(KafkaProducerTopicErrorResetInfo partitionError)
         {
             var topic = _topic;
             if (topic == null) return;
 
             try
             {
-                _logger.OnErrorReset(topic);
+                _logger.OnPartitionErrorReset(topic, partitionError);
             }
             catch (Exception)
             {
@@ -169,14 +169,14 @@ namespace NKafka.Client.Producer.Logging
             }
         }
 
-        public void OnErrorReset()
+        public void OnPartitionErrorReset(KafkaProducerTopicErrorResetInfo partitionError)
         {
             var topic = _topic;
             if (topic == null) return;
 
             try
             {
-                _logger.OnErrorReset(topic);
+                _logger.OnPartitionErrorReset(topic, partitionError);
             }
             catch (Exception)
             {

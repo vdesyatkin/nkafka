@@ -15,6 +15,6 @@ namespace NKafka.Client.ConsumerGroup.Logging
 
         void OnProtocolWarning([NotNull] KafkaConsumerGroupProtocolErrorInfo error);
 
-        void OnErrorReset();
+        void OnErrorReset([NotNull] KafkaConsumerGroupErrorResetInfo error);
     }
 }

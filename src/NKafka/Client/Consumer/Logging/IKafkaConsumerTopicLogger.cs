@@ -12,6 +12,6 @@ namespace NKafka.Client.Consumer.Logging
 
         void OnProtocolWarning([NotNull] KafkaConsumerTopicProtocolErrorInfo error);
 
-        void OnErrorReset();
+        void OnPartitionErrorReset([NotNull] KafkaConsumerTopicErrorResetInfo partitionError);
     }
 }

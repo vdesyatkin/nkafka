@@ -93,14 +93,14 @@ namespace NKafka.Client.ConsumerGroup.Logging
             }
         }
 
-        public void OnErrorReset()
+        public void OnErrorReset(KafkaConsumerGroupErrorResetInfo error)
         {
             var group = _group;
             if (group == null) return;
 
             try
             {
-                _logger.OnErrorReset(group);
+                _logger.OnErrorReset(group, error);
             }
             catch (Exception)
             {

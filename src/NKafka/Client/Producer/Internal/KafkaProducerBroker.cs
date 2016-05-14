@@ -485,11 +485,13 @@ namespace NKafka.Client.Producer.Internal
 
         private void ResetPartitionError([NotNull] KafkaProducerBrokerPartition partition)
         {
-            var hasError = partition.Error != null;
+            var error = partition.Error;
+            var errorTimestamp = partition.ErrorTimestampUtc;
             partition.ResetError();
-            if (!hasError) return;
+            if (error == null) return;
 
-            partition.Logger?.OnErrorReset();
+            var errorInfo = new KafkaProducerTopicErrorResetInfo(partition.PartitionId, error.Value, errorTimestamp);
+            partition.Logger?.OnPartitionErrorReset(errorInfo);
         }
 
         private void HandleBrokerError(

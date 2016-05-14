@@ -14,7 +14,7 @@ using NKafka.Protocol.API.Offset;
 
 namespace NKafka.Client.Consumer.Internal
 {
-    //todo (E013) log ready and fix reset error (by partitions?)
+    //todo (E013) log ready
     internal sealed class KafkaConsumerBroker
     {
         [NotNull] private readonly KafkaBroker _broker;
@@ -594,11 +594,13 @@ namespace NKafka.Client.Consumer.Internal
 
         private void ResetPartitionError([NotNull] KafkaConsumerBrokerPartition partition)
         {
-            var hasError = partition.Error != null;
+            var error = partition.Error;
+            var errorTimestamp = partition.ErrorTimestampUtc;
             partition.ResetError();
-            if (!hasError) return;
+            if (error == null) return;
 
-            partition.Logger?.OnErrorReset();
+            var errorInfo = new KafkaConsumerTopicErrorResetInfo(partition.PartitionId, error.Value, errorTimestamp);
+            partition.Logger?.OnPartitionErrorReset(errorInfo);
         }
 
         private void HandleBrokerError([NotNull] KafkaConsumerBrokerPartition partition, KafkaBrokerErrorCode errorCode)

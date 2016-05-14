@@ -16,7 +16,7 @@ namespace NKafka.Client.Producer
 
         void OnProtocolWarning([NotNull] IKafkaProducerTopic topic, [NotNull] KafkaProducerTopicProtocolErrorInfo error);
 
-        void OnErrorReset([NotNull] IKafkaProducerTopic topic);
+        void OnPartitionErrorReset([NotNull] IKafkaProducerTopic topic, [NotNull] KafkaProducerTopicErrorResetInfo partitionError);
     }
 
     [PublicAPI]
@@ -34,6 +34,6 @@ namespace NKafka.Client.Producer
 
         void OnProtocolWarning([NotNull] IKafkaProducerTopic<TKey, TData> topic, [NotNull] KafkaProducerTopicProtocolErrorInfo error);
 
-        void OnErrorReset([NotNull] IKafkaProducerTopic<TKey, TData> topic);
+        void OnPartitionErrorReset([NotNull] IKafkaProducerTopic<TKey, TData> topic, [NotNull] KafkaProducerTopicErrorResetInfo partitionError);
     }
 }

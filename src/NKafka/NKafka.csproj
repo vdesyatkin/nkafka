@@ -38,6 +38,7 @@
     <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroupLogger.cs" />
     <Compile Include="Client\ConsumerGroup\Logging\IKafkaCoordinatorGroupLogger.cs" />
     <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupAssignmentErrorInfo.cs" />
+    <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupErrorResetInfo.cs" />
     <Compile Include="Client\ConsumerGroup\Logging\KafkaCoordinatorGroupLogger.cs" />
     <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupTransportErrorInfo.cs" />
     <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupProtocolErrorInfo.cs" />
@@ -45,6 +46,7 @@
     <Compile Include="Client\Consumer\Logging\IKafkaConsumerTopicBufferLogger.cs" />
     <Compile Include="Client\Consumer\Logging\IKafkaConsumerTopicLogger.cs" />
     <Compile Include="Client\Consumer\Logging\KafkaConsumerTopicBufferLogger.cs" />
+    <Compile Include="Client\Consumer\Logging\KafkaConsumerTopicErrorResetInfo.cs" />
     <Compile Include="Client\Consumer\Logging\KafkaConsumerTopicLogger.cs" />
     <Compile Include="Client\Consumer\Logging\KafkaConsumerTopicProtocolErrorInfo.cs" />
     <Compile Include="Client\Consumer\Logging\KafkaConsumerTopicSerializationErrorInfo.cs" />
@@ -54,6 +56,7 @@
     <Compile Include="Client\Producer\Logging\IKafkaProducerTopicLogger.cs" />
     <Compile Include="Client\Producer\Logging\KafkaProducerTopicBufferLogger.cs" />
     <Compile Include="Client\Producer\Logging\KafkaProducerTopicLogger.cs" />
+    <Compile Include="Client\Producer\Logging\KafkaProducerTopicErrorResetInfo.cs" />
     <Compile Include="Client\Producer\Logging\KafkaProducerTopicPartitioningErrorInfo.cs" />
     <Compile Include="Client\Producer\Logging\KafkaProducerTopicProtocolErrorInfo.cs" />
     <Compile Include="Client\Producer\Logging\KafkaProducerTopicSerializationErrorInfo.cs" />

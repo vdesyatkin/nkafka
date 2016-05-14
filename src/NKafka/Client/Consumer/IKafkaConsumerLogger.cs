@@ -14,7 +14,7 @@ namespace NKafka.Client.Consumer
 
         void OnProtocolWarning([NotNull] IKafkaConsumerTopic topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
 
-        void OnErrorReset([NotNull] IKafkaConsumerTopic topic);
+        void OnPartitionErrorReset([NotNull] IKafkaConsumerTopic topic, [NotNull] KafkaConsumerTopicErrorResetInfo partitionError);
     }
 
     [PublicAPI]
@@ -30,6 +30,6 @@ namespace NKafka.Client.Consumer
 
         void OnProtocolWarning([NotNull] IKafkaConsumerTopic<TKey, TData> topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
 
-        void OnErrorReset([NotNull] IKafkaConsumerTopic<TKey, TData> topic);
+        void OnPartitionErrorReset([NotNull] IKafkaConsumerTopic<TKey, TData> topic, [NotNull] KafkaConsumerTopicErrorResetInfo partitionError);
     }
 }

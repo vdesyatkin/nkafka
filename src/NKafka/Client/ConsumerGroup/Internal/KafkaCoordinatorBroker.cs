@@ -1335,12 +1335,14 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         private void ResetError([NotNull] KafkaCoordinatorGroup group)
-        {
-            var hasError = group.Error != null;
+        {            
+            var error = group.Error;
+            var errorTimestamp = group.ErrorTimestampUtc;
             group.ResetError();
-            if (!hasError) return;
+            if (error == null) return;
 
-            group.Logger?.OnErrorReset();
+            var errorInfo = new KafkaConsumerGroupErrorResetInfo(error.Value, errorTimestamp);
+            group.Logger?.OnErrorReset(errorInfo);
         }
 
         private bool TrySendRequest<TRequest>([NotNull] KafkaCoordinatorGroup group, [NotNull] TRequest request,
