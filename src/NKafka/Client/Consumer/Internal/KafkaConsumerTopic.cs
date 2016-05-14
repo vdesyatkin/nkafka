@@ -17,6 +17,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] public KafkaClientTopicMetadataInfo TopicMetadataInfo;
 
         [CanBeNull] private KafkaConsumerGroupData _group;
+        [CanBeNull] private readonly IKafkaConsumerFallbackHandler _fallbackHandler;
         [CanBeNull] private readonly IKafkaConsumerTopicLogger _logger;
         [NotNull] public readonly KafkaConsumerSettings Settings;
 
@@ -27,11 +28,13 @@ namespace NKafka.Client.Consumer.Internal
         public KafkaConsumerTopic([NotNull] string topicName, 
             [NotNull] string groupName, [CanBeNull] string catchUpGroupName,
             [NotNull] KafkaConsumerSettings settings,
+            [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler,
             [CanBeNull] IKafkaConsumerTopicLogger logger)
         { 
             TopicName = topicName;
             GroupName = groupName;
             Settings = settings;
+            _fallbackHandler = fallbackHandler;
             _logger = logger;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
             _packages = new ConcurrentDictionary<long, KafkaConsumerTopicPackageInfo>();
@@ -42,7 +45,7 @@ namespace NKafka.Client.Consumer.Internal
         public KafkaConsumerTopicPartition CreatePartition(int partitionId)
         {
             var group = _group;
-            return group == null ? null : new KafkaConsumerTopicPartition(TopicName, partitionId, group, Settings, _logger);
+            return group == null ? null : new KafkaConsumerTopicPartition(TopicName, partitionId, group, Settings, _fallbackHandler, _logger);
         }
 
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartition> partitions)
@@ -275,7 +278,7 @@ namespace NKafka.Client.Consumer.Internal
                     topicReceivePendingCount += partitionReceivePendingCount ?? 0;
                     topicConsumePendingCount += partitionConsumePendingCount;
                     topicClientCommitPendingCount += partitionClientCommitPendingCount;
-                    topicServerCommitPendingCount += partitionServerCommitPendingCount; //todo (E015) the main kafka problem =( some fallback on partition unassign?
+                    topicServerCommitPendingCount += partitionServerCommitPendingCount;
                 }
 
                 var partitionMessageCountInfo = new KafkaConsumerTopicMessageCountInfo(

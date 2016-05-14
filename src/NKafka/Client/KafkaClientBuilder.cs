@@ -89,6 +89,7 @@ namespace NKafka.Client
         }
         
         public IKafkaConsumerTopic CreateTopicConsumer([NotNull] string topicName, [NotNull] IKafkaConsumerGroup group,
+            [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler = null,
             [CanBeNull] IKafkaConsumerLogger logger = null,
             [CanBeNull] KafkaConsumerSettings settings = null)
         {
@@ -106,6 +107,7 @@ namespace NKafka.Client
             var topic = new KafkaConsumerTopic(topicName, 
                 group.GroupName, null, 
                 settings ?? KafkaConsumerSettingsBuilder.Default,
+                fallbackHandler,
                 topicLogger);
 
             topicLogger?.SetTopic(topic);
@@ -116,6 +118,7 @@ namespace NKafka.Client
         
         public IKafkaConsumerTopic<TKey,TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName, [NotNull] IKafkaConsumerGroup group,
             [NotNull] IKafkaSerializer<TKey, TData> serializer,
+            [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler = null,
             [CanBeNull] IKafkaConsumerLogger<TKey, TData> logger = null,
             [CanBeNull] KafkaConsumerSettings settings = null
            )
@@ -135,6 +138,7 @@ namespace NKafka.Client
             var topic = new KafkaConsumerTopic(topicName, 
                 group.GroupName, null, 
                 settings ?? KafkaConsumerSettingsBuilder.Default,
+                fallbackHandler,
                 topicLogger);
             var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer, topicBufferLogger);
 
@@ -148,6 +152,7 @@ namespace NKafka.Client
         public IKafkaConsumerTopic CreateTopicCatchUpConsumer([NotNull] string topicName, 
             [NotNull] IKafkaConsumerGroup consumerGroup,
             [NotNull] IKafkaConsumerGroup catchUpGroup,
+            [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler = null,
             [CanBeNull] IKafkaConsumerLogger logger = null,
             [CanBeNull] KafkaConsumerSettings settings = null)
         {
@@ -166,6 +171,7 @@ namespace NKafka.Client
             var topic = new KafkaConsumerTopic(topicName, 
                 consumerGroup.GroupName, catchUpGroup.GroupName,
                 settings ?? KafkaConsumerSettingsBuilder.Default,
+                fallbackHandler,
                 topicLogger);
 
             topicLogger?.SetTopic(topic);
@@ -178,6 +184,7 @@ namespace NKafka.Client
             [NotNull] IKafkaConsumerGroup consumerGroup,
             [NotNull] IKafkaConsumerGroup catchUpGroup,
             [NotNull] IKafkaSerializer<TKey, TData> serializer,
+            [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler = null,
             [CanBeNull] IKafkaConsumerLogger<TKey, TData> logger = null,
             [CanBeNull] KafkaConsumerSettings settings = null
            )
@@ -198,6 +205,7 @@ namespace NKafka.Client
             var topic = new KafkaConsumerTopic(topicName,
                 consumerGroup.GroupName, catchUpGroup.GroupName,
                 settings ?? KafkaConsumerSettingsBuilder.Default,
+                fallbackHandler,
                 topicLogger);
             var wrapper = new KafkaConsumerTopicWrapper<TKey, TData>(topic, serializer, topicBufferLogger);
 

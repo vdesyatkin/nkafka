@@ -15,6 +15,7 @@ namespace NKafka.Client.Consumer.Internal
 
         public readonly int PartitionId;
         [NotNull] public readonly KafkaConsumerSettings Settings;
+        [CanBeNull] public readonly IKafkaConsumerFallbackHandler FallbackHandler;
         [CanBeNull] public readonly IKafkaConsumerTopicLogger Logger;
 
         public KafkaConsumerBrokerPartitionStatus Status;
@@ -65,12 +66,14 @@ namespace NKafka.Client.Consumer.Internal
         public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, 
             [NotNull] KafkaConsumerGroupData group,
             [NotNull] KafkaConsumerSettings settings,
+            [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler,
             [CanBeNull] IKafkaConsumerTopicLogger logger)
         {
             TopicName = topicName;
             PartitionId = partitionId;
             Settings = settings;
             Group = group;
+            FallbackHandler = fallbackHandler;
             Logger = logger;   
 
             _consumeMessagesQueue = new ConcurrentQueue<KafkaMessageAndOffset>();

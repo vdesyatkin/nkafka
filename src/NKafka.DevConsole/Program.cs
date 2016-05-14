@@ -45,7 +45,7 @@ namespace NKafka.DevConsole
             var topicProducer = clientBuilder.CreateTopicProducer(topicName,
                 new TestPartitioner(), new TestSerializer(), null, null, producerConfigBuilder.Build());
             var topicConsumer = clientBuilder.CreateTopicConsumer(topicName, group,
-                new TestSerializer(), null, consumerConfigBuilder.Build());
+                new TestSerializer(), null, null, consumerConfigBuilder.Build());
             var client = clientBuilder.Build();
 
             client.Start();

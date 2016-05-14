@@ -21,11 +21,12 @@ namespace NKafka.Client.Consumer.Internal
         public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId,
             [NotNull] KafkaConsumerGroupData group,
             [NotNull] KafkaConsumerSettings settings,
+            [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler,
             [CanBeNull] IKafkaConsumerTopicLogger logger)
         {            
             PartitonId = partitionId;            
-            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, group, settings, logger);            
-        }        
+            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, group, settings, fallbackHandler, logger);  
+        }
 
         public void SetCommitClientOffset(long beginOffset, long endOffset)
         {

@@ -12,8 +12,7 @@ using NKafka.Protocol;
 using NKafka.Protocol.API.Produce;
 
 namespace NKafka.Client.Producer.Internal
-{    
-    //todo (E013) log ready and fix reset error (by partitions?)
+{
     internal sealed class KafkaProducerBroker
     {        
         [NotNull] private readonly KafkaBroker _broker;

@@ -13,8 +13,7 @@ using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.Offset;
 
 namespace NKafka.Client.Consumer.Internal
-{
-    //todo (E013) log ready
+{    
     internal sealed class KafkaConsumerBroker
     {
         [NotNull] private readonly KafkaBroker _broker;
@@ -176,13 +175,30 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     if (partition.IsAssigned)
                     {
+                        // check uncommited offsets for unassigned partitions
                         var unassignedClientOffset = partition.GetCommitClientOffset();
                         var unassignedServerOffset = partition.GetCommitServerOffset();
                         if (unassignedClientOffset.HasValue &&  
                             (unassignedServerOffset == null || (unassignedClientOffset > unassignedServerOffset)))
                         {
-                            //todo (E015) fallback   
+                            var fallbackHandler = partition.FallbackHandler;
+                            if (fallbackHandler != null)
+                            {
+                                var fallbackInfo = new KafkaConsumerFallbackInfo(topic.TopicName, partitionId, 
+                                    KafkaConsumerFallbackErrorCode.UnassignedBeforeCommit, unassignedClientOffset.Value, unassignedServerOffset);
+                                try
+                                {
+                                    fallbackHandler.HandleСommitFallback(fallbackInfo);
+                                }
+                                catch (Exception)
+                                {
+                                    //ignored
+                                }
+                            }
                         }
+                        
+                        //todo (E015) reset uncommited offsets
+                        //partition.SetCommitClientOffset(unassignedServerOffset);
                     }
                     partition.IsAssigned = false; // partition is not allowed for this consumer node
                     continue; 
