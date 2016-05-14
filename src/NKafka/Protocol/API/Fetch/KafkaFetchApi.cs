@@ -118,7 +118,7 @@ namespace NKafka.Protocol.API.Fetch
                 var messageKey = reader.ReadByteArray();
 
                 var messageCodecAttribute = messageAttribute & MessageAttributeCodecMask;
-                var messageTimestampAttribute = messageAttribute & MessageAttributeTimestampMask; //todo (v10) use timestamp?
+                var messageTimestampAttribute = messageAttribute & MessageAttributeTimestampMask;
 
                 if (messageCodecAttribute == MessageCodecGZipAttribute)
                 {
