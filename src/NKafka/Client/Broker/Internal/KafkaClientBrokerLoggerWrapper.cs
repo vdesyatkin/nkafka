@@ -26,19 +26,7 @@ namespace NKafka.Client.Broker.Internal
             {
                 //ignored
             }
-        }
-
-        public void OnDisconnected()
-        {
-            try
-            {
-                _logger.OnBrokerDisconnected(_broker);
-            }
-            catch (Exception)
-            {
-                //ignored
-            }
-        }
+        }       
 
         public void OnConnectionError(KafkaBrokerConnectionErrorInfo error)
         {

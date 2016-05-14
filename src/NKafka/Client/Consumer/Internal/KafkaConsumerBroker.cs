@@ -172,9 +172,11 @@ namespace NKafka.Client.Consumer.Internal
                 }
                 IKafkaConsumerCoordinatorOffsetsData coordinatorOffset;
                 if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset) || coordinatorOffset == null)
-                {
+                {                    
                     if (partition.IsAssigned)
                     {
+                        partition.IsAssigned = false; // partition is not allowed for this consumer node
+
                         // check uncommited offsets for unassigned partitions
                         var unassignedClientOffset = partition.GetCommitClientOffset();
                         var unassignedServerOffset = partition.GetCommitServerOffset();
@@ -195,15 +197,17 @@ namespace NKafka.Client.Consumer.Internal
                                     //ignored
                                 }
                             }
-                        }
-                        
-                        //todo (E015) reset uncommited offsets
-                        //partition.SetCommitClientOffset(unassignedServerOffset);
+                        }                                                                       
                     }
-                    partition.IsAssigned = false; // partition is not allowed for this consumer node
+                    
                     continue; 
                 }
-                partition.IsAssigned = true;
+
+                if (!partition.IsAssigned)
+                {
+                    partition.ResetCommitClientOffset();                    
+                    partition.IsAssigned = true;
+                }
                 partition.SetCommitServerOffset(coordinatorOffset.GroupServerOffset, coordinatorOffset.TimestampUtc);
 
                 IKafkaConsumerCoordinatorOffsetsData catchUpOffset = null;

@@ -4,9 +4,7 @@ namespace NKafka.Connection.Logging
 {
     internal interface IKafkaBrokerLogger
     {
-        void OnConnected();
-
-        void OnDisconnected();        
+        void OnConnected();        
 
         void OnConnectionError([NotNull] KafkaBrokerConnectionErrorInfo error);
 

@@ -6,9 +6,7 @@ namespace NKafka.Client.Broker.Diagnostics
     [PublicAPI]
     public interface IKafkaClientBrokerLogger
     {
-        void OnBrokerConnected([NotNull] IKafkaClientBroker broker);
-
-        void OnBrokerDisconnected([NotNull] IKafkaClientBroker broker);        
+        void OnBrokerConnected([NotNull] IKafkaClientBroker broker);              
 
         void OnBrokerConnectionError([NotNull] IKafkaClientBroker broker, [NotNull] KafkaBrokerConnectionErrorInfo error);
 

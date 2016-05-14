@@ -9,7 +9,6 @@ using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Connection
 {
-    //todo (E013) OnDisconnected on error?
     internal sealed class KafkaBroker
     {
         public bool IsOpenned => _isOpenned;
@@ -195,13 +194,11 @@ namespace NKafka.Connection
         {
             try
             {
-                _connection.Close();
-                LogDisconnected();
+                _connection.Close();                
             }
             catch (KafkaConnectionException connectionException)
             {                
-                LogConnectionError("CloseConnection", connectionException);
-                LogDisconnected();                
+                LogConnectionError("CloseConnection", connectionException);                              
             }
         }
 
@@ -596,12 +593,7 @@ namespace NKafka.Connection
         private void LogConnected()
         {
             _logger?.OnConnected();
-        }
-
-        private void LogDisconnected()
-        {
-            _logger?.OnDisconnected();
-        }
+        }        
 
         private static KafkaBrokerStateErrorCode ConvertStateError([NotNull] KafkaConnectionException connectionException)
         {                     

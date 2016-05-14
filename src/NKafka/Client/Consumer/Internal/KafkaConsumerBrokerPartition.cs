@@ -251,6 +251,11 @@ namespace NKafka.Client.Consumer.Internal
             }
         }
 
+        public void ResetCommitClientOffset()
+        {
+            _currentCommitClientOffset = _currentCommitServerOffset;
+        }
+
         #endregion CommitClientOffset
 
         #region CommitServerOffset
