@@ -13,7 +13,8 @@ using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.Offset;
 
 namespace NKafka.Client.Consumer.Internal
-{    
+{
+    //todo (E013) log ready and fix reset error (by partitions?)
     internal sealed class KafkaConsumerBroker
     {
         [NotNull] private readonly KafkaBroker _broker;
@@ -365,7 +366,7 @@ namespace NKafka.Client.Consumer.Internal
                         break;
                     case KafkaResponseErrorCode.NotLeaderForPartition:
                         errorCode = KafkaConsumerTopicPartitionErrorCode.NotLeaderForPartition;                        
-                        errorType = ConsumerErrorType.Rearrange;
+                        errorType = ConsumerErrorType.Rebalance;
                         break;
                     default:
                         errorCode = KafkaConsumerTopicPartitionErrorCode.UnknownError;
@@ -517,7 +518,7 @@ namespace NKafka.Client.Consumer.Internal
                                 break;
                             case KafkaResponseErrorCode.NotLeaderForPartition:
                                 errorCode = KafkaConsumerTopicPartitionErrorCode.NotLeaderForPartition;
-                                errorType = ConsumerErrorType.Rearrange;
+                                errorType = ConsumerErrorType.Rebalance;
                                 break;
                             case KafkaResponseErrorCode.ReplicaNotAvailable:
                                 errorCode = KafkaConsumerTopicPartitionErrorCode.ReplicaNotAvailable;
@@ -581,7 +582,7 @@ namespace NKafka.Client.Consumer.Internal
                     return;
                 }
 
-                if (error == KafkaConsumerTopicPartitionErrorCode.NotLeaderForPartition)
+                if (erorrType == ConsumerErrorType.Rebalance)
                 {
                     logger.OnServerRebalance(errorInfo);
                     return;
@@ -672,6 +673,10 @@ namespace NKafka.Client.Consumer.Internal
                     partition.ResetData();               
                     partition.Status = KafkaConsumerBrokerPartitionStatus.Error;
                     break;
+                case ConsumerErrorType.Rebalance:
+                    partition.ResetData();
+                    partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
+                    break;
                 case ConsumerErrorType.Rearrange:
                     partition.ResetData();
                     partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
@@ -683,7 +688,8 @@ namespace NKafka.Client.Consumer.Internal
         {
             Warning = 0,
             Error = 1,
-            Rearrange = 2
+            Rebalance = 2,
+            Rearrange = 3
         }
 
         #endregion Error handling           

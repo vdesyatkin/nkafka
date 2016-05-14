@@ -13,6 +13,7 @@ using NKafka.Protocol.API.Produce;
 
 namespace NKafka.Client.Producer.Internal
 {    
+    //todo (E013) log ready and fix reset error (by partitions?)
     internal sealed class KafkaProducerBroker
     {        
         [NotNull] private readonly KafkaBroker _broker;
@@ -365,7 +366,7 @@ namespace NKafka.Client.Producer.Internal
                         break;
                     case KafkaResponseErrorCode.NotLeaderForPartition:
                         error = KafkaProducerTopicPartitionErrorCode.NotLeaderForPartition;
-                        errorType = ProducerErrorType.Rearrange;
+                        errorType = ProducerErrorType.Rebalance;
                         break;
                     case KafkaResponseErrorCode.RequestTimedOut:
                         error = KafkaProducerTopicPartitionErrorCode.ServerTimeout;
@@ -437,6 +438,7 @@ namespace NKafka.Client.Producer.Internal
                 
                 SetPartitionError(partition, error, errorType);
                 partition.RollbackMessags(batchMessages);
+
                 var logger = partition.Logger;
                 if (logger != null)
                 {
@@ -447,7 +449,7 @@ namespace NKafka.Client.Producer.Internal
                         return false;
                     }
 
-                    if (error == KafkaProducerTopicPartitionErrorCode.NotLeaderForPartition)
+                    if (errorType == ProducerErrorType.Rebalance)
                     {
                         logger.OnServerRebalance(errorInfo);
                         return false;
@@ -576,6 +578,10 @@ namespace NKafka.Client.Producer.Internal
                 case ProducerErrorType.Error:                    
                     partition.Status = KafkaProducerBrokerPartitionStatus.Error;
                     break;
+                case ProducerErrorType.Rebalance:
+                    partition.ResetData();
+                    partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
+                    break;
                 case ProducerErrorType.Rearrange:
                     partition.ResetData();
                     partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
@@ -617,7 +623,8 @@ namespace NKafka.Client.Producer.Internal
         {
             Warning = 0,
             Error = 1,
-            Rearrange = 2
+            Rebalance = 2,
+            Rearrange = 3
         }
 
         #endregion Error handling

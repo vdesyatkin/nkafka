@@ -1340,7 +1340,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             group.ResetError();
             if (!hasError) return;
 
-            group.Logger?.OnErrorReset();            
+            group.Logger?.OnErrorReset();
         }
 
         private bool TrySendRequest<TRequest>([NotNull] KafkaCoordinatorGroup group, [NotNull] TRequest request,
