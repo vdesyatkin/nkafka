@@ -8,6 +8,8 @@ namespace NKafka.Client.ConsumerGroup
     {
         void OnTransportError([NotNull] IKafkaConsumerGroup group, [NotNull] KafkaConsumerGroupTransportErrorInfo error);
 
+        void OnAssignmentError([NotNull] IKafkaConsumerGroup group, [NotNull] KafkaConsumerGroupAssignmentErrorInfo error);
+
         void OnServerRebalance([NotNull] IKafkaConsumerGroup group, [NotNull] KafkaConsumerGroupProtocolErrorInfo error);
 
         void OnProtocolError([NotNull] IKafkaConsumerGroup group, [NotNull] KafkaConsumerGroupProtocolErrorInfo error);

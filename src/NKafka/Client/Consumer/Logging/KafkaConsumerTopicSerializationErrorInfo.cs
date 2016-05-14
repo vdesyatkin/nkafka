@@ -6,11 +6,9 @@ namespace NKafka.Client.Consumer.Logging
     [PublicAPI]
     public sealed class KafkaConsumerTopicSerializationErrorInfo
     {
-        [NotNull]
-        public readonly KafkaMessage Message;
+        [NotNull] public readonly KafkaMessage Message;
 
-        [CanBeNull]
-        public readonly Exception Exception;
+        [CanBeNull] public readonly Exception Exception;
 
         public KafkaConsumerTopicSerializationErrorInfo([NotNull] KafkaMessage message, [CanBeNull] Exception exception)
         {

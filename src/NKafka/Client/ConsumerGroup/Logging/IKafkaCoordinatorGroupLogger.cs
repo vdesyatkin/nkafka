@@ -7,6 +7,8 @@ namespace NKafka.Client.ConsumerGroup.Logging
     {
         void OnTransportError([NotNull] KafkaConsumerGroupTransportErrorInfo error);
 
+        void OnAssignmentError([NotNull] KafkaConsumerGroupAssignmentErrorInfo error);
+
         void OnServerRebalance([NotNull] KafkaConsumerGroupProtocolErrorInfo error);
 
         void OnProtocolError([NotNull] KafkaConsumerGroupProtocolErrorInfo error);

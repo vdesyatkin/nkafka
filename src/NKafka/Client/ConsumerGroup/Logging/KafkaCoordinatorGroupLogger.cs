@@ -33,6 +33,21 @@ namespace NKafka.Client.ConsumerGroup.Logging
             }
         }
 
+        public void OnAssignmentError(KafkaConsumerGroupAssignmentErrorInfo error)
+        {
+            var group = _group;
+            if (group == null) return;
+
+            try
+            {
+                _logger.OnAssignmentError(group, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
+
         public void OnServerRebalance(KafkaConsumerGroupProtocolErrorInfo error)
         {
             var group = _group;
