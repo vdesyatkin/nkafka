@@ -236,8 +236,8 @@ namespace NKafka.Client.Consumer.Internal
 
         public long? GetCommitClientOffset()
         {
-            var currenConsumedClientOffset = _currentCommitClientOffset;
-            return currenConsumedClientOffset != UnknownOffset ? currenConsumedClientOffset : (long?) null;
+            var currenCommitClientOffset = _currentCommitClientOffset;
+            return currenCommitClientOffset != UnknownOffset ? currenCommitClientOffset : (long?) null;
         }
 
         public void SetCommitClientOffset(long offset)
@@ -251,6 +251,12 @@ namespace NKafka.Client.Consumer.Internal
         #endregion CommitClientOffset
 
         #region CommitServerOffset
+
+        public long? GetCommitServerOffset()
+        {
+            var currenCommitServerOffset = _currentCommitServerOffset;
+            return currenCommitServerOffset != UnknownOffset ? currenCommitServerOffset : (long?)null;
+        }
 
         public void SetCommitServerOffset(long? offset, DateTime timestampUtc)
         {
@@ -312,7 +318,7 @@ namespace NKafka.Client.Consumer.Internal
             {
             }
             _consumePendingMessageCount = 0;
-            _catchUpPendingMessageCount = 0;
+            _catchUpPendingMessageCount = 0;            
         }
 
         private static int GetMessageSize([CanBeNull] KafkaMessageAndOffset message)

@@ -234,7 +234,7 @@ namespace NKafka.Client.Producer.Internal
                     var messageSize = (message.Key?.Length ?? 0) + (message.Data?.Length ?? 0);
                     if (messageSize > partition.LimitInfo.MaxMessageSizeByteCount)
                     {                        
-                        partition.FallbackMessage(message, DateTime.UtcNow, KafkaProdcuerFallbackErrorCode.TooLargeSize);                        
+                        partition.FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.TooLargeSize);                        
                         
                         continue;
                     }                                       

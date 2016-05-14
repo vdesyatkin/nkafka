@@ -10,18 +10,15 @@ namespace NKafka.Client.Producer
 
         public readonly int PartitionId;
 
-        public readonly DateTime TimestampUtc;
-
         [NotNull] public readonly KafkaMessage Message;
 
-        public readonly KafkaProdcuerFallbackErrorCode Reason;
+        public readonly KafkaProducerFallbackErrorCode Reason;
 
-        public KafkaProducerFallbackInfo([NotNull] string topicName, int partitionId, DateTime timestampUtc, 
-            [NotNull] KafkaMessage message, KafkaProdcuerFallbackErrorCode reason)
+        public KafkaProducerFallbackInfo([NotNull] string topicName, int partitionId,
+            [NotNull] KafkaMessage message, KafkaProducerFallbackErrorCode reason)
         {
             TopicName = topicName;
-            PartitionId = partitionId;
-            TimestampUtc = timestampUtc;
+            PartitionId = partitionId;            
             Message = message;
             Reason = reason;
         }
@@ -33,21 +30,17 @@ namespace NKafka.Client.Producer
         [NotNull]
         public readonly string TopicName;
 
-        public readonly int PartitionId;
+        public readonly int PartitionId;        
 
-        public readonly DateTime TimestampUtc;
+        [NotNull] public readonly KafkaMessage<TKey, TData> Message;
 
-        [NotNull]
-        public readonly KafkaMessage<TKey, TData> Message;
+        public readonly KafkaProducerFallbackErrorCode Reason;
 
-        public readonly KafkaProdcuerFallbackErrorCode Reason;
-
-        public KafkaProducerFallbackInfo([NotNull] string topicName, int partitionId, DateTime timestampUtc,
-            [NotNull] KafkaMessage<TKey, TData> message, KafkaProdcuerFallbackErrorCode reason)
+        public KafkaProducerFallbackInfo([NotNull] string topicName, int partitionId,
+            [NotNull] KafkaMessage<TKey, TData> message, KafkaProducerFallbackErrorCode reason)
         {
             TopicName = topicName;
-            PartitionId = partitionId;
-            TimestampUtc = timestampUtc;
+            PartitionId = partitionId;            
             Message = message;
             Reason = reason;
         }

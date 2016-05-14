@@ -117,14 +117,14 @@ namespace NKafka.Client.Producer.Internal
             SendMessageTimestampUtc = DateTime.UtcNow;
         }
 
-        public void FallbackMessage([NotNull] KafkaMessage message, DateTime timestampUtc, KafkaProdcuerFallbackErrorCode reason)
+        public void FallbackMessage([NotNull] KafkaMessage message, DateTime timestampUtc, KafkaProducerFallbackErrorCode reason)
         {
             TotalFallbackMessageCount++;
             FallbackTimestampUtc = timestampUtc;
 
             try
             {
-                var fallbackInfo = new KafkaProducerFallbackInfo(_topicName, PartitionId, timestampUtc, message, reason);
+                var fallbackInfo = new KafkaProducerFallbackInfo(_topicName, PartitionId, message, reason);
                 _fallbackHandler?.HandleMessageFallback(fallbackInfo);
             }
             catch (Exception)
@@ -175,14 +175,14 @@ namespace NKafka.Client.Producer.Internal
             {
                 message = _retryQueue.Dequeue();
                 if (message == null) continue;
-                FallbackMessage(message, DateTime.UtcNow, KafkaProdcuerFallbackErrorCode.ClientStopping);
+                FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.ClientStopped);
             }            
             
             while (_mainQueue.TryDequeue(out message))
             {
                 Interlocked.Decrement(ref _sendPendingMessageCount);
                 if (message == null) continue;
-                FallbackMessage(message, DateTime.UtcNow, KafkaProdcuerFallbackErrorCode.ClientStopping);
+                FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.ClientStopped);
             }
 
             _sendPendingMessageCount = 0;

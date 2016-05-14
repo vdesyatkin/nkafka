@@ -53,7 +53,7 @@ namespace NKafka.Client.Consumer.Internal
                     }
                 }
 
-                wrappedPackages.Add(new KafkaMessagePackage<TKey, TData>(package.PackageId, genericMessages));
+                wrappedPackages.Add(new KafkaMessagePackage<TKey, TData>(package.PackageId, package.PartitionId, package.BeginOffset, package.EndOffset, genericMessages));
             }
 
             return wrappedPackages;

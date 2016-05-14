@@ -103,7 +103,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     var packageId = Interlocked.Increment(ref _currentPackageId);                    
                     _packages[packageId] = new KafkaConsumerTopicPackageInfo(partition.PartitonId, beginOffset, endOffset);
-                    resultPackages.Add(new KafkaMessagePackage(packageId, partitionMessages));
+                    resultPackages.Add(new KafkaMessagePackage(packageId, partition.PartitonId, beginOffset, endOffset, partitionMessages));
                 }
 
                 if (totalMessageCount >= maxMessageCount)

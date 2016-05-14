@@ -42,7 +42,10 @@
     <Compile Include="Client\ConsumerGroup\Logging\KafkaCoordinatorGroupLogger.cs" />
     <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupTransportErrorInfo.cs" />
     <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupProtocolErrorInfo.cs" />
+    <Compile Include="Client\Consumer\IKafkaConsumerFallbackHandler.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerLogger.cs" />
+    <Compile Include="Client\Consumer\KafkaConsumerFallbackErrorCode.cs" />
+    <Compile Include="Client\Consumer\KafkaConsumerFallbackInfo.cs" />
     <Compile Include="Client\Consumer\Logging\IKafkaConsumerTopicBufferLogger.cs" />
     <Compile Include="Client\Consumer\Logging\IKafkaConsumerTopicLogger.cs" />
     <Compile Include="Client\Consumer\Logging\KafkaConsumerTopicBufferLogger.cs" />
@@ -161,7 +164,7 @@
     <Compile Include="Client\Producer\Internal\KafkaProducerTopicBuffer.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerTopicFacade.cs" />
     <Compile Include="Client\Producer\Internal\KafkaProducerTopicPartition.cs" />
-    <Compile Include="Client\Producer\KafkaProdcuerFallbackErrorCode.cs" />
+    <Compile Include="Client\Producer\KafkaProducerFallbackErrorCode.cs" />
     <Compile Include="Client\Producer\IKafkaProducerFallbackHandler.cs" />
     <Compile Include="Client\Producer\KafkaProducerFallbackInfo.cs" />
     <Compile Include="Client\Producer\KafkaProducerSettings.cs" />

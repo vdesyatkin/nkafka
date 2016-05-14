@@ -213,7 +213,7 @@ namespace NKafka.Client.Producer.Internal
                     if (deserializedMessage == null) return;
 
                     var genericFallbackInfo = new KafkaProducerFallbackInfo<TKey, TData>(fallbackInfo.TopicName,
-                        fallbackInfo.PartitionId, fallbackInfo.TimestampUtc, deserializedMessage, fallbackInfo.Reason);
+                        fallbackInfo.PartitionId, deserializedMessage, fallbackInfo.Reason);
                     _fallbackHandler.HandleMessageFallback(genericFallbackInfo);
                 }
                 catch (Exception)

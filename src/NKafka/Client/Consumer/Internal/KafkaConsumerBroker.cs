@@ -174,6 +174,16 @@ namespace NKafka.Client.Consumer.Internal
                 IKafkaConsumerCoordinatorOffsetsData coordinatorOffset;
                 if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset) || coordinatorOffset == null)
                 {
+                    if (partition.IsAssigned)
+                    {
+                        var unassignedClientOffset = partition.GetCommitClientOffset();
+                        var unassignedServerOffset = partition.GetCommitServerOffset();
+                        if (unassignedClientOffset.HasValue &&  
+                            (unassignedServerOffset == null || (unassignedClientOffset > unassignedServerOffset)))
+                        {
+                            //todo (E015) fallback   
+                        }
+                    }
                     partition.IsAssigned = false; // partition is not allowed for this consumer node
                     continue; 
                 }

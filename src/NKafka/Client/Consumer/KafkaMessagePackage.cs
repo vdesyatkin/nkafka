@@ -8,13 +8,23 @@ namespace NKafka.Client.Consumer
     {
         public readonly long PackageId;
 
+        public readonly int PartitionId;
+
+        public readonly long BeginOffset;
+
+        public readonly long EndOffset;
+
         [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaMessage> Messages;
 
-        public KafkaMessagePackage(long packageId, [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> messages)
+        public KafkaMessagePackage(long packageId, int partitionId, long beginOffset, long endOffset, 
+            [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> messages)
         {
             Messages = messages;
             PackageId = packageId;
+            PartitionId = partitionId;
+            BeginOffset = beginOffset;
+            EndOffset = endOffset;
         }
     }
 
@@ -23,13 +33,23 @@ namespace NKafka.Client.Consumer
     {
         public readonly long PackageId;
 
+        public readonly int PartitionId;
+
+        public readonly long BeginOffset;
+
+        public readonly long EndOffset;
+
         [NotNull, ItemNotNull]
         public readonly IReadOnlyList<KafkaMessage<TKey,TData>> Messages;
 
-        public KafkaMessagePackage(long packageId, [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage<TKey, TData>> messages)
+        public KafkaMessagePackage(long packageId, int partitionId, long beginOffset, long endOffset,
+            [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage<TKey, TData>> messages)
         {
             Messages = messages;
             PackageId = packageId;
+            PartitionId = partitionId;
+            BeginOffset = beginOffset;
+            EndOffset = endOffset;
         }
     }
 }
