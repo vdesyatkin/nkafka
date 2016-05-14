@@ -13,6 +13,8 @@ namespace NKafka.Client.Consumer
         void OnProtocolError([NotNull] IKafkaConsumerTopic topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
 
         void OnProtocolWarning([NotNull] IKafkaConsumerTopic topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
+
+        void OnErrorReset([NotNull] IKafkaConsumerTopic topic);
     }
 
     [PublicAPI]
@@ -27,5 +29,7 @@ namespace NKafka.Client.Consumer
         void OnProtocolError([NotNull] IKafkaConsumerTopic<TKey, TData> topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
 
         void OnProtocolWarning([NotNull] IKafkaConsumerTopic<TKey, TData> topic, [NotNull] KafkaConsumerTopicProtocolErrorInfo error);
+
+        void OnErrorReset([NotNull] IKafkaConsumerTopic<TKey, TData> topic);
     }
 }

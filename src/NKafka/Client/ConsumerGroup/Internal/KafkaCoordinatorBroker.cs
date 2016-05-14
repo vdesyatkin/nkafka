@@ -21,7 +21,6 @@ using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Client.ConsumerGroup.Internal
 {
-    //todo (E013) coordinator reset error logging
     internal sealed class KafkaCoordinatorBroker
     {
         [NotNull] private readonly KafkaBroker _broker;
@@ -427,7 +426,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         }
                     }
 
-                    group.ResetError();
+                    ResetError(group);
                 }
 
                 if (group.GroupType == KafkaConsumerGroupType.Observer)
@@ -454,7 +453,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         }
                     }
 
-                    group.ResetError();
+                    ResetError(group);
                 }
             }
         }              
@@ -1333,6 +1332,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             var errorInfo = new KafkaConsumerGroupAssignmentErrorInfo(request, exception);
             logger.OnAssignmentError(errorInfo);            
+        }
+
+        private void ResetError([NotNull] KafkaCoordinatorGroup group)
+        {
+            var hasError = group.Error != null;
+            group.ResetError();
+            if (!hasError) return;
+
+            group.Logger?.OnErrorReset();            
         }
 
         private bool TrySendRequest<TRequest>([NotNull] KafkaCoordinatorGroup group, [NotNull] TRequest request,

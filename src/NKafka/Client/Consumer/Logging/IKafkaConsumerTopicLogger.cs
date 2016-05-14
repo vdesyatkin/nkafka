@@ -11,5 +11,7 @@ namespace NKafka.Client.Consumer.Logging
         void OnProtocolError([NotNull] KafkaConsumerTopicProtocolErrorInfo error);
 
         void OnProtocolWarning([NotNull] KafkaConsumerTopicProtocolErrorInfo error);
+
+        void OnErrorReset();
     }
 }

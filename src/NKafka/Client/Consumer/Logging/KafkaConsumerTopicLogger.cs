@@ -77,6 +77,21 @@ namespace NKafka.Client.Consumer.Logging
                 //ignored
             }
         }
+
+        public void OnErrorReset()
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnErrorReset(topic);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
     }
 
     internal sealed class KafkaConsumerTopicLogger<TKey, TData> : IKafkaConsumerTopicLogger
@@ -149,6 +164,21 @@ namespace NKafka.Client.Consumer.Logging
             try
             {
                 _logger.OnProtocolWarning(topic, error);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
+
+        public void OnErrorReset()
+        {
+            var topic = _topic;
+            if (topic == null) return;
+
+            try
+            {
+                _logger.OnErrorReset(topic);
             }
             catch (Exception)
             {

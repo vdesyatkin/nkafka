@@ -25,7 +25,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public KafkaCoordinatorGroupStatus Status;
         public bool IsReady => Status == KafkaCoordinatorGroupStatus.Ready;
-        private KafkaConsumerGroupErrorCode? _error;
+        public KafkaConsumerGroupErrorCode? Error { get; private set; }
         public DateTime ErrorTimestampUtc { get; private set; }
 
         [CanBeNull] public KafkaCoordinatorGroupMemberData MemberData { get; private set; }
@@ -248,7 +248,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             var sessionInfo = new KafkaConsumerGroupSessionInfo(GroupName,                
                 status,
-                _error,
+                Error,
                 ErrorTimestampUtc,
                 memberInfo,
                 protcolInfo,
@@ -265,12 +265,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public void SetError(KafkaConsumerGroupErrorCode errorCode)
         {
             ErrorTimestampUtc = DateTime.UtcNow;
-            _error = errorCode;            
+            Error = errorCode;            
         }
         
         public void ResetError()
         {            
-            _error = null;
+            Error = null;
         }
 
         public void SetMemberData(int generationId, string memberId, bool isLeader)

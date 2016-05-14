@@ -12,8 +12,7 @@ using NKafka.Protocol;
 using NKafka.Protocol.API.Produce;
 
 namespace NKafka.Client.Producer.Internal
-{
-    //todo (E013) producer reset error logging
+{    
     internal sealed class KafkaProducerBroker
     {        
         [NotNull] private readonly KafkaBroker _broker;
@@ -331,7 +330,7 @@ namespace NKafka.Client.Producer.Internal
                         continue;
                     }
 
-                    partition.ResetError();
+                    ResetPartitionError(partition);
                     partition.Status = KafkaProducerBrokerPartitionStatus.Ready;
                 }
             }
@@ -481,6 +480,15 @@ namespace NKafka.Client.Producer.Internal
         }
 
         #region Error handling
+
+        private void ResetPartitionError([NotNull] KafkaProducerBrokerPartition partition)
+        {
+            var hasError = partition.Error != null;
+            partition.ResetError();
+            if (!hasError) return;
+
+            partition.Logger?.OnErrorReset();
+        }
 
         private void HandleBrokerError(
            [NotNull] KafkaProducerBrokerTopic topic,

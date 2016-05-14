@@ -13,8 +13,7 @@ using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.Offset;
 
 namespace NKafka.Client.Consumer.Internal
-{
-    //todo (E013) consumer reset error logging
+{    
     internal sealed class KafkaConsumerBroker
     {
         [NotNull] private readonly KafkaBroker _broker;
@@ -535,7 +534,7 @@ namespace NKafka.Client.Consumer.Internal
                         continue;
                     }
 
-                    partition.ResetError();
+                    ResetPartitionError(partition);
                     if (responsePartition.Messages != null && responsePartition.Messages.Count > 0)
                     {
                         partition.SetMaxAvailableServerOffset(responsePartition.HighwaterMarkOffset - 1);
@@ -590,6 +589,15 @@ namespace NKafka.Client.Consumer.Internal
 
                 logger.OnProtocolError(errorInfo);
             }
+        }
+
+        private void ResetPartitionError([NotNull] KafkaConsumerBrokerPartition partition)
+        {
+            var hasError = partition.Error != null;
+            partition.ResetError();
+            if (!hasError) return;
+
+            partition.Logger?.OnErrorReset();
         }
 
         private void HandleBrokerError([NotNull] KafkaConsumerBrokerPartition partition, KafkaBrokerErrorCode errorCode)

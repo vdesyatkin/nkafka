@@ -92,5 +92,20 @@ namespace NKafka.Client.ConsumerGroup.Logging
                 //ignored
             }
         }
+
+        public void OnErrorReset()
+        {
+            var group = _group;
+            if (group == null) return;
+
+            try
+            {
+                _logger.OnErrorReset(group);
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+        }
     }
 }
