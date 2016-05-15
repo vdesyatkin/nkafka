@@ -17,8 +17,7 @@ namespace NKafka.Protocol.API.Fetch
 
         const byte MessageAttributeCodecMask = 0x7;
         const byte MessageCodecNoneAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecNone;
-        const byte MessageCodecGZipAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecGzip;
-        //todo (v10) snappy
+        const byte MessageCodecGZipAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecGzip;        
 
         const byte MessageAttributeTimestampMask = 0x8;
         const byte MessageTimestampLogAppendTimeAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.LogAppendTime << 3;

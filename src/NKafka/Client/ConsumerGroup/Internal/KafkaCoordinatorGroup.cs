@@ -316,7 +316,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             }
             if (heartbeatPeriod < TimeSpan.FromSeconds(1))
             {
-                heartbeatPeriod = TimeSpan.FromSeconds(1); //todo (E006)
+                heartbeatPeriod = TimeSpan.FromSeconds(1); //todo (E006) hearbeat period, by default 3 sec or 1/3 of session timeout.
             }
             HeartbeatPeriod = heartbeatPeriod;
         }

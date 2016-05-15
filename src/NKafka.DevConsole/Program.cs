@@ -34,7 +34,7 @@ namespace NKafka.DevConsole
                 .SetConsistencyLevel(KafkaConsistencyLevel.OneReplica)
                 .SetCodecType(KafkaCodecType.CodecGzip)
                 .SetBatchServerTimeout(TimeSpan.FromSeconds(5))
-                .SetBatchMaxSizeByteCount(10000);
+                .SetBatchSizeByteCount(10000);
             var consumerConfigBuilder = new KafkaConsumerSettingsBuilder()
                 .SetBatchMinSizeBytes(1)
                 .SetBatchMaxSizeBytes(10000)

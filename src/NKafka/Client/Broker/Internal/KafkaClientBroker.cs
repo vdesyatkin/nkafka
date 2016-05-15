@@ -62,7 +62,7 @@ namespace NKafka.Client.Broker.Internal
             _coordinator = new KafkaCoordinatorBroker(broker, this, settings.WorkerPeriod);            
 
             var workerPeriod = settings.WorkerPeriod;
-            if (workerPeriod < TimeSpan.FromMilliseconds(100)) //todo (E006) settings rage validation?
+            if (workerPeriod < TimeSpan.FromMilliseconds(100))
             {
                 workerPeriod = TimeSpan.FromMilliseconds(100);
             }

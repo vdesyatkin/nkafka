@@ -250,7 +250,7 @@ namespace NKafka.Client.Producer.Internal
                     
                     if (topicPartionMessages == null)
                     {
-                        topicPartionMessages = new List<KafkaMessage>(partition.LimitInfo.MaxMessageCount ?? batchMaxMessageCount ?? 200);
+                        topicPartionMessages = new List<KafkaMessage>(partition.LimitInfo.MaxMessageCount ?? batchMaxMessageCount);
                         topicBatch.Partitions[partition.PartitionId] = topicPartionMessages;
                     }
                     topicPartionMessages.Add(message);

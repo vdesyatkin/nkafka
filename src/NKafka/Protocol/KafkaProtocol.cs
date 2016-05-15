@@ -159,7 +159,7 @@ namespace NKafka.Protocol
             {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.IOError, exception);
             }            
-        }
+        }       
 
         #region Configuration
 

@@ -8,7 +8,7 @@ namespace NKafka.Client.Producer
     {
         private KafkaConsistencyLevel? _consistencyLevel;
         private KafkaCodecType? _codecType;        
-        private int? _batchMaxSizeByteCount;
+        private int? _batchSizeByteCount;
         private int? _batchMaxMessageCount;
         private int? _partitionBatchSizeByteCount;
         private int? _messageMaxSizeByteCount;
@@ -32,9 +32,9 @@ namespace NKafka.Client.Producer
         }
 
         [PublicAPI, NotNull]
-        public KafkaProducerSettingsBuilder SetBatchMaxSizeByteCount(int byteCount)
+        public KafkaProducerSettingsBuilder SetBatchSizeByteCount(int byteCount)
         {
-            _batchMaxSizeByteCount = byteCount;
+            _batchSizeByteCount = byteCount;
             return this;
         }
 
@@ -43,14 +43,7 @@ namespace NKafka.Client.Producer
         {
             _batchMaxMessageCount = messageCount;
             return this;
-        }
-
-        [PublicAPI, NotNull]
-        public KafkaProducerSettingsBuilder SetPartitionBatchSizeByteCount(int byteCount)
-        {
-            _partitionBatchSizeByteCount = byteCount;
-            return this;
-        }
+        }        
 
         [PublicAPI, NotNull]
         public KafkaProducerSettingsBuilder SetMessageMaxSizeByteCount(int maxMessageSizeByteCount)
@@ -79,19 +72,17 @@ namespace NKafka.Client.Producer
             // https://kafka.apache.org/documentation.html#brokerconfigs
             var consistencyLevel = _consistencyLevel ?? KafkaConsistencyLevel.OneReplica;
             var codecType = _codecType ?? KafkaCodecType.CodecNone;            
-            var batchMaxSizeByteCount = _batchMaxSizeByteCount ?? 1048576;
-            var batchMaxMessageCount = _batchMaxMessageCount;
-            var partitionBatchSizeByteCount = _partitionBatchSizeByteCount ?? 16384;
-            var messageMaxSizeByteCount = _messageMaxSizeByteCount ?? 1000012;
-            var batchServerTimeout = _batchServerTimeout ?? TimeSpan.FromSeconds(1);
+            var batchSizeByteCount = _batchSizeByteCount ?? 16384;
+            var batchMaxMessageCount = _batchMaxMessageCount ?? 1048576;            
+            var messageMaxSizeByteCount = _messageMaxSizeByteCount ?? 1000012; //todo (E006) Use protocol header size for it
+            var batchServerTimeout = _batchServerTimeout ?? TimeSpan.FromSeconds(1); //todo (E006) 30 seconds by default, but it's too long.
             var errorRetryPeriod = _errorRetryPeriod ?? TimeSpan.FromSeconds(10);
 
             return new KafkaProducerSettings(
                 consistencyLevel,
                 codecType,
-                batchMaxSizeByteCount,
-                batchMaxMessageCount,
-                partitionBatchSizeByteCount,
+                batchSizeByteCount,
+                batchMaxMessageCount,                
                 messageMaxSizeByteCount,
                 batchServerTimeout,
                 errorRetryPeriod);
