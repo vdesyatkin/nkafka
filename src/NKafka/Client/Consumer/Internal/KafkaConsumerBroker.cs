@@ -91,20 +91,44 @@ namespace NKafka.Client.Consumer.Internal
                 {                    
                     var partition = partitionPair.Value;
                     if (partition == null) continue;
+                    
+                    IKafkaConsumerCoordinatorOffsetsData coordinatorOffset = null;
+                    coordinatorPartitionOffsets?.TryGetValue(partition.PartitionId, out coordinatorOffset);                  
+                    if (coordinatorPartitionOffsets?.TryGetValue(partition.PartitionId, out coordinatorOffset) == true && coordinatorOffset != null)
+                    {
+                        partition.IsAssigned = true;
+                    }
+                    else
+                    {
+                        partition.IsAssigned = false;
+                    }
 
-                    if (coordinatorPartitionOffsets == null)
+                    if (coordinatorOffset != null)
                     {
-                        partition.IsAssigned = false; // coordinator is not ready or topic is not allowed for this consumer node
-                        continue;
+                        partition.SetCommitServerOffset(coordinatorOffset.GroupServerOffset, coordinatorOffset.TimestampUtc);
                     }
-                    IKafkaConsumerCoordinatorOffsetsData coordinatorOffset;
-                    if (!coordinatorPartitionOffsets.TryGetValue(partition.PartitionId, out coordinatorOffset) || coordinatorOffset == null)
+
+                    // check uncommited offsets for unassigned partitions
+                    var commitClientOffset = partition.GetCommitClientOffset();
+                    var commitServerOffset = partition.GetCommitServerOffset();
+                    if (commitClientOffset.HasValue &&
+                        (commitServerOffset == null || (commitClientOffset > commitServerOffset)))
                     {
-                        partition.IsAssigned = false; // partition is not allowed for this consumer node
-                        continue;
+                        var fallbackHandler = partition.FallbackHandler;
+                        if (fallbackHandler != null)
+                        {
+                            var fallbackInfo = new KafkaConsumerFallbackInfo(topic.TopicName, partition.PartitionId,
+                                KafkaConsumerFallbackErrorCode.ClientStopped, commitClientOffset.Value, commitServerOffset);
+                            try
+                            {
+                                fallbackHandler.HandleСommitFallback(fallbackInfo);
+                            }
+                            catch (Exception)
+                            {
+                                //ignored
+                            }
+                        }
                     }
-                    partition.IsAssigned = true;
-                    partition.SetCommitServerOffset(coordinatorOffset.GroupServerOffset, coordinatorOffset.TimestampUtc);
 
                     partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
                     partition.Clear();
