@@ -129,6 +129,7 @@ namespace NKafka.Client.Consumer.Internal
                             }
                         }
                     }
+                    partition.ResetCommitClientOffset();
 
                     partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
                     partition.Clear();
@@ -269,6 +270,8 @@ namespace NKafka.Client.Consumer.Internal
                             }
                         }
                     }
+
+                    partition.ResetCommitClientOffset();
                 }
 
                 return null;
