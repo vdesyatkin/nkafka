@@ -189,70 +189,16 @@ namespace NKafka.Client.Consumer.Internal
                 if (partition == null) continue;
                 var partitionId = partition.PartitionId;
 
-                if (coordinatorPartitionOffsets == null)
-                {
-                    partition.IsAssigned = false; // coordinator is not ready or topic is not allowed for this consumer node
-                    continue; 
-                }
-                IKafkaConsumerCoordinatorOffsetsData coordinatorOffset;
-                if (!coordinatorPartitionOffsets.TryGetValue(partitionId, out coordinatorOffset) || coordinatorOffset == null)
-                {                    
-                    if (partition.IsAssigned)
-                    {
-                        partition.IsAssigned = false; // partition is not allowed for this consumer node
-
-                        // check uncommited offsets for unassigned partitions
-                        var unassignedClientOffset = partition.GetCommitClientOffset();
-                        var unassignedServerOffset = partition.GetCommitServerOffset();
-                        if (unassignedClientOffset.HasValue &&  
-                            (unassignedServerOffset == null || (unassignedClientOffset > unassignedServerOffset)))
-                        {
-                            var fallbackHandler = partition.FallbackHandler;
-                            if (fallbackHandler != null)
-                            {
-                                var fallbackInfo = new KafkaConsumerFallbackInfo(topic.TopicName, partitionId, 
-                                    KafkaConsumerFallbackErrorCode.UnassignedBeforeCommit, unassignedClientOffset.Value, unassignedServerOffset);
-                                try
-                                {
-                                    fallbackHandler.HandleСommitFallback(fallbackInfo);
-                                }
-                                catch (Exception)
-                                {
-                                    //ignored
-                                }
-                            }
-                        }                                                                       
-                    }
-                    
-                    continue; 
-                }
-
-                if (!partition.IsAssigned)
-                {
-                    partition.ResetCommitClientOffset();                    
-                    partition.IsAssigned = true;
-                }
-                partition.SetCommitServerOffset(coordinatorOffset.GroupServerOffset, coordinatorOffset.TimestampUtc);
+                var coordinatorOffset = SyncPartitionWithCoordinator(partition, coordinatorPartitionOffsets);
 
                 IKafkaConsumerCoordinatorOffsetsData catchUpOffset = null;
                 if (catchUpCoordinator != null)
                 {
                     // uses catch-up group
-                    if (catchUpPartitionOffsets == null)
-                    {
-                        // catch-up group coordinator is not ready
-                        continue;
-                    }
-                    
-                    if (!catchUpPartitionOffsets.TryGetValue(partitionId, out catchUpOffset) || catchUpOffset == null)
-                    {
-                        // catch-up group coordinator has not received partition offset
-                        continue;
-                    }
-                    partition.SetCatchUpGroupServerOffset(catchUpOffset.GroupServerOffset);
+                    catchUpOffset = SyncPartitionWithCatchUpCoordinator(partition, catchUpPartitionOffsets);
                 }
 
-                if (!IsConsumeEnabled) continue;
+                if (!IsConsumeEnabled || coordinatorOffset == null) continue;                
 
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(topic, partition)) continue;
@@ -285,6 +231,76 @@ namespace NKafka.Client.Consumer.Internal
             if (newFetchBatch.Count == 0) return;
 
             SendFetchRequest(topic, newFetchBatch);
+        }
+
+        private IKafkaConsumerCoordinatorOffsetsData SyncPartitionWithCoordinator([NotNull] KafkaConsumerBrokerPartition partition, 
+            [CanBeNull] IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> coordinatorPartitionOffsets)
+        {
+            if (coordinatorPartitionOffsets == null)
+            {
+                partition.IsAssigned = false; // coordinator is not ready or topic is not allowed for this consumer node
+                return null;
+            }
+            IKafkaConsumerCoordinatorOffsetsData coordinatorOffset;
+            if (!coordinatorPartitionOffsets.TryGetValue(partition.PartitionId, out coordinatorOffset) || coordinatorOffset == null)
+            {
+                if (partition.IsAssigned)
+                {
+                    partition.IsAssigned = false; // partition is not allowed for this consumer node
+
+                    // check uncommited offsets for unassigned partitions
+                    var unassignedClientOffset = partition.GetCommitClientOffset();
+                    var unassignedServerOffset = partition.GetCommitServerOffset();
+                    if (unassignedClientOffset.HasValue &&
+                        (unassignedServerOffset == null || (unassignedClientOffset > unassignedServerOffset)))
+                    {
+                        var fallbackHandler = partition.FallbackHandler;
+                        if (fallbackHandler != null)
+                        {
+                            var fallbackInfo = new KafkaConsumerFallbackInfo(partition.TopicName, partition.PartitionId,
+                                KafkaConsumerFallbackErrorCode.UnassignedBeforeCommit, unassignedClientOffset.Value, unassignedServerOffset);
+                            try
+                            {
+                                fallbackHandler.HandleСommitFallback(fallbackInfo);
+                            }
+                            catch (Exception)
+                            {
+                                //ignored
+                            }
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            if (!partition.IsAssigned)
+            {
+                partition.ResetCommitClientOffset();
+                partition.IsAssigned = true;
+            }
+            partition.SetCommitServerOffset(coordinatorOffset.GroupServerOffset, coordinatorOffset.TimestampUtc);
+            return coordinatorOffset;
+        }
+
+        private IKafkaConsumerCoordinatorOffsetsData SyncPartitionWithCatchUpCoordinator(
+            [NotNull] KafkaConsumerBrokerPartition partition,
+            [CanBeNull] IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> catchUpPartitionOffsets)
+        {                        
+            if (catchUpPartitionOffsets == null)
+            {
+                // catch-up group coordinator is not ready
+                return null;
+            }
+            IKafkaConsumerCoordinatorOffsetsData catchUpOffset;
+
+            if (!catchUpPartitionOffsets.TryGetValue(partition.PartitionId, out catchUpOffset) || catchUpOffset == null)
+            {
+                // catch-up group coordinator has not received partition offset
+                return null;
+            }
+            partition.SetCatchUpGroupServerOffset(catchUpOffset.GroupServerOffset);
+            return catchUpOffset;
         }
 
         private bool TryPreparePartition([NotNull] KafkaConsumerBrokerTopic topic, [NotNull] KafkaConsumerBrokerPartition partition)
