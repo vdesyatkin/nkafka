@@ -12,8 +12,8 @@ namespace NKafka.Client.ConsumerGroup
         public readonly TimeSpan HeartbeatServerTimeout;
         public readonly TimeSpan OffsetFetchServerTimeout;
         public readonly TimeSpan OffsetCommitServerTimeout;
-
-        public readonly TimeSpan GroupSessionLifetime;
+        
+        public readonly TimeSpan GroupSessionTimeout;
         public readonly TimeSpan OffsetCommitPeriod;
         public readonly TimeSpan HeartbeatPeriod;
         public readonly TimeSpan OffsetCommitRetentionTime;
@@ -23,10 +23,9 @@ namespace NKafka.Client.ConsumerGroup
         public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;
         public readonly string OffsetCommitMetadata;
         
-
         public KafkaConsumerGroupSettings(TimeSpan joinGroupServerTimeout, TimeSpan syncGroupServerTimeout,
             TimeSpan heartbeatServerTimeout, TimeSpan offsetFetchServerTimeout, TimeSpan offsetCommitServerTimeout,
-            TimeSpan groupSessionLifetime, TimeSpan heartbeatPeriod, TimeSpan offsetCommitPeriod,
+            TimeSpan groupSessionTimeout, TimeSpan heartbeatPeriod, TimeSpan offsetCommitPeriod,
             TimeSpan offsetCommitRetentionTime, 
             TimeSpan errorRetryPeriod,
             IReadOnlyList<KafkaConsumerGroupSettingsProtocol> protocols,
@@ -37,7 +36,7 @@ namespace NKafka.Client.ConsumerGroup
             HeartbeatServerTimeout = heartbeatServerTimeout;
             OffsetFetchServerTimeout = offsetFetchServerTimeout;
             OffsetCommitServerTimeout = offsetCommitServerTimeout;
-            GroupSessionLifetime = groupSessionLifetime;            
+            GroupSessionTimeout = groupSessionTimeout;            
             HeartbeatPeriod = heartbeatPeriod;
             OffsetCommitPeriod = offsetCommitPeriod;
             OffsetCommitRetentionTime = offsetCommitRetentionTime;

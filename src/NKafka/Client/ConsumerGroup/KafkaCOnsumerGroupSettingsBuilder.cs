@@ -18,7 +18,7 @@ namespace NKafka.Client.ConsumerGroup
         /// <summary>
         /// 6-30 seconds by default
         /// </summary>        
-        private TimeSpan? _groupSessionLifetime;
+        private TimeSpan? _groupSessionTimeout;
         private TimeSpan? _heartbeatPeriod;
         private TimeSpan? _offsetCommitPeriod;
         private TimeSpan? _offsetCommitRetentionTime;
@@ -69,7 +69,7 @@ namespace NKafka.Client.ConsumerGroup
             _offsetFetchServerWaitTime = timeout;
             return this;
         }
-
+                       
         [PublicAPI, NotNull]
         public KafkaConsumerGroupSettingsBuilder SetOffsetCommitServerTimeout(TimeSpan timeout)
         {
@@ -77,10 +77,11 @@ namespace NKafka.Client.ConsumerGroup
             return this;
         }
 
+        /// <param name="timeout">6-30 seconds by default</param>
         [PublicAPI, NotNull]
-        public KafkaConsumerGroupSettingsBuilder SetGroupSessionLifetime(TimeSpan lifeTime)
+        public KafkaConsumerGroupSettingsBuilder SetGroupSessionTimeout(TimeSpan timeout)
         {
-            _groupSessionLifetime = lifeTime;
+            _groupSessionTimeout = timeout;
             return this;
         }
 
@@ -158,13 +159,14 @@ namespace NKafka.Client.ConsumerGroup
         [PublicAPI, NotNull]
         public KafkaConsumerGroupSettings Build()
         {
+            // https://kafka.apache.org/documentation.html#brokerconfigs
             var joinGroupServerWaitTime = _joinGroupServerWaitTime ?? TimeSpan.FromMinutes(2);
             var syncGroupServerWaitTime = _joinGroupServerWaitTime ?? TimeSpan.FromMinutes(1);
             var heartbeatServerWaitTime = _heartbeatServerWaitTime ?? TimeSpan.FromSeconds(5);
             var offsetFetchServerWaitTime = _offsetFetchServerWaitTime ?? TimeSpan.FromSeconds(5);
             var offsetCommitServerWaitTime = _offsetCommitServerWaitTime ?? TimeSpan.FromSeconds(10);
 
-            var groupSessionTimeout = _groupSessionLifetime ?? TimeSpan.FromSeconds(30);
+            var groupSessionTimeout = _groupSessionTimeout ?? TimeSpan.FromSeconds(30);
             var heartbeatPeriod = _heartbeatPeriod ?? TimeSpan.FromMinutes(1);
             var offsetCommitPeriod = _offsetCommitPeriod ?? TimeSpan.FromMinutes(1);
             var offsetCommitRetentionTime = _offsetCommitRetentionTime ?? TimeSpan.FromDays(7);

@@ -27,7 +27,7 @@ namespace NKafka.Client.Producer.Internal
             TopicProducerName = topicProducerName;
             Settings = settings;
             ConsistencyLevel = settings.ConsistencyLevel;
-            BatchSizeByteCount = settings.BatchSizeByteCount;
+            BatchSizeByteCount = settings.BatchMaxSizeByteCount;
             Partitions = new ConcurrentDictionary<int, KafkaProducerBrokerPartition>();
         }
     }
