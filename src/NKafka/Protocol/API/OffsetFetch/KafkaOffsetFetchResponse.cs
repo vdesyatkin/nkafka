@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.OffsetFetch
 {
     [PublicAPI]
-    internal sealed class KafkaOffsetFetchResponse : IKafkaResponse
+    public sealed class KafkaOffsetFetchResponse : IKafkaResponse
     {
         public readonly IReadOnlyList<KafkaOffsetFetchResponseTopic> Topics;
 

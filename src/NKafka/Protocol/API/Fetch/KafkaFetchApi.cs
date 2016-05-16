@@ -6,10 +6,8 @@ using NKafka.Protocol.Serialization;
 namespace NKafka.Protocol.API.Fetch
 {
     [PublicAPI]
-    internal class KafkaFetchApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof(KafkaFetchRequest);
-
+    internal sealed class KafkaFetchApi : IKafkaRequestApi
+    {        
         const byte MessageMagicByteV09 = 0;
         const byte MessageMagicByteV010 = 1;
 

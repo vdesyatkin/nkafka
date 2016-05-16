@@ -5,10 +5,8 @@ using NKafka.Protocol.Serialization;
 namespace NKafka.Protocol.API.Produce
 {
     [PublicAPI]
-    internal class KafkaProduceApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof(KafkaProduceRequest);
-
+    internal sealed class KafkaProduceApi : IKafkaRequestApi
+    {        
         const byte MessageMagicByteV09 = 0;
         const byte MessageMagicByteV010 = 1;
 

@@ -8,7 +8,7 @@ namespace NKafka.Protocol.API.Offset
     /// As with the produce and fetch APIs requests must be directed to the broker that is currently the leader for the partitions in question. This can be determined using the metadata API.
     /// </summary>
     [PublicAPI]
-    internal sealed class KafkaOffsetRequest : IKafkaRequest
+    public sealed class KafkaOffsetRequest : IKafkaRequest
     {
         /// <summary>
         /// The replica id indicates the node id of the replica initiating this request. Normal client consumers should always specify this as -1 (or null) as they have no node id. 

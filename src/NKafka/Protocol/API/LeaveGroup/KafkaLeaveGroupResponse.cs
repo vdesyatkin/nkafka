@@ -3,7 +3,7 @@
 namespace NKafka.Protocol.API.LeaveGroup
 {
     [PublicAPI]
-    internal sealed class KafkaLeaveGroupResponse : IKafkaResponse
+    public sealed class KafkaLeaveGroupResponse : IKafkaResponse
     {
         public readonly KafkaResponseErrorCode ErrorCode;
 

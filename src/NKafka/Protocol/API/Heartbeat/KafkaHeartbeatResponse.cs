@@ -3,7 +3,7 @@
 namespace NKafka.Protocol.API.Heartbeat
 {
     [PublicAPI]
-    internal sealed class KafkaHeartbeatResponse : IKafkaResponse
+    public sealed class KafkaHeartbeatResponse : IKafkaResponse
     {
         public readonly KafkaResponseErrorCode ErrorCode;
 

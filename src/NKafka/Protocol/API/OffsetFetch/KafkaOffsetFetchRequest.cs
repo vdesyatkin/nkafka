@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.OffsetFetch
 {
     [PublicAPI]
-    internal sealed class KafkaOffsetFetchRequest : IKafkaRequest
+    public sealed class KafkaOffsetFetchRequest : IKafkaRequest
     {
         public readonly string GroupName;
 

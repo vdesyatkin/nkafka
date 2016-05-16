@@ -6,7 +6,7 @@ namespace NKafka.Protocol
     /// Enumeration of error codes that might be returned from a Kafka server
     /// </summary>
     [PublicAPI]
-    internal enum KafkaResponseErrorCode : short
+    public enum KafkaResponseErrorCode : short
     {
         /// <summary>
         /// No error - it worked!

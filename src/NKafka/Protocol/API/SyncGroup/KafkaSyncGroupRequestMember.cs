@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.SyncGroup
 {
     [PublicAPI]
-    internal sealed class KafkaSyncGroupRequestMember
+    public sealed class KafkaSyncGroupRequestMember
     {       
         public string MemberId { get; set; }
 

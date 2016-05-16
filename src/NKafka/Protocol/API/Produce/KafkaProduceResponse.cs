@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.Produce
 {
     [PublicAPI]
-    internal sealed class KafkaProduceResponse: IKafkaResponse
+    public sealed class KafkaProduceResponse: IKafkaResponse
     {
         /// <summary>
         /// Topics.

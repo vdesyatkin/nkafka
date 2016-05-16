@@ -1,6 +1,6 @@
 ﻿namespace NKafka.Protocol
 {
-    internal sealed class KafkaResponseHeader
+    public sealed class KafkaResponseHeader
     {
         public readonly int DataSize;
         public readonly int CorrelationId;

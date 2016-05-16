@@ -13,7 +13,7 @@ namespace NKafka.Protocol.API.JoinGroup
     /// </para>
     /// </summary>
     [PublicAPI]
-    internal sealed class KafkaJoinGroupResponse : IKafkaResponse
+    public sealed class KafkaJoinGroupResponse : IKafkaResponse
     {
         public readonly KafkaResponseErrorCode ErrorCode;
 

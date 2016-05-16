@@ -9,7 +9,7 @@ namespace NKafka.Protocol.API.GroupCoordinator
     /// </para>
     /// </summary>
     [PublicAPI]
-    internal sealed class KafkaGroupCoordinatorRequest : IKafkaRequest
+    public sealed class KafkaGroupCoordinatorRequest : IKafkaRequest
     {
         public readonly string GroupId;
 

@@ -3,7 +3,7 @@
 namespace NKafka.Protocol.API.OffsetCommit
 {
     [PublicAPI]
-    internal sealed class KafkaOffsetCommitRequestTopicPartition
+    public sealed class KafkaOffsetCommitRequestTopicPartition
     {
         public readonly int PartitionId;
 

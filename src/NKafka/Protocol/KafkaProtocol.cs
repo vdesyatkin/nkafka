@@ -16,10 +16,12 @@ using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol
 {
-    internal sealed class KafkaProtocol
+    [PublicAPI]
+    public sealed class KafkaProtocol
     {
         public readonly int ResponseHeaderSize = 8;
 
+        private readonly KafkaVersion _kafkaVersion;
         [NotNull] private readonly KafkaProtocolConfiguration _configuration;
         [NotNull] private readonly KafkaProtocolSettings _settings;
         [CanBeNull] private readonly string _clientId;
@@ -27,10 +29,36 @@ namespace NKafka.Protocol
         private const int DefaultDataCapacity = 100;        
 
         public KafkaProtocol(KafkaVersion kafkaVersion, [NotNull] KafkaProtocolSettings settings, [CanBeNull] string clientId)
-        {            
+        {
+            _kafkaVersion = kafkaVersion;
             _clientId = clientId;
-            _settings = settings;
+            _settings = settings;            
             _configuration = CreateConfiguration(kafkaVersion);
+        }
+
+        public int GetMessageSize(KafkaMessage message)
+        {
+            if (message == null) return 0;
+
+            var messageSize = _kafkaVersion == KafkaVersion.V0_10 ? 22 : 14; // header
+            if (message.Key != null)
+            {
+                messageSize += message.Key.Length;
+            }
+
+            if (message.Data != null)
+            {
+                messageSize += message.Data.Length;
+            }
+
+            return messageSize;
+        }
+
+        public int GetMessageSizeInSet(KafkaMessage message)
+        {
+            if (message == null) return 0;
+
+            return GetMessageSize(message) + 12; // header
         }
 
         public KafkaRequestType? GetRequestType<TRequest>() where TRequest : IKafkaRequest

@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.Fetch
 {
     [PublicAPI]
-    internal sealed class KafkaFetchResponse : IKafkaResponse
+    public sealed class KafkaFetchResponse : IKafkaResponse
     {
         /// <summary>
         /// Topics.

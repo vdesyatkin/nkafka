@@ -1,14 +1,11 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.OffsetCommit
 {
     [PublicAPI]
     internal sealed class KafkaOffsetCommitApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof(KafkaOffsetCommitRequest);
-
+    {        
         #region OffsetCommitRequest
         
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)

@@ -1,14 +1,11 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.TopicMetadata
 {
     [PublicAPI]
-    internal class KafkaTopicMetadataApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof(KafkaTopicMetadataRequest);
-
+    internal sealed class KafkaTopicMetadataApi : IKafkaRequestApi
+    {        
         private readonly KafkaRequestVersion _requestVersion;
 
         public KafkaTopicMetadataApi(KafkaRequestVersion requestVersion)

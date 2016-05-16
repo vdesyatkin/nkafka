@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.OffsetCommit
 {
     [PublicAPI]
-    internal sealed class KafkaOffsetCommitResponseTopic
+    public sealed class KafkaOffsetCommitResponseTopic
     {
         public readonly string TopicName;
 

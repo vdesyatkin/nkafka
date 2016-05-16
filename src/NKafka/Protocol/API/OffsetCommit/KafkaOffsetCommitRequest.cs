@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.OffsetCommit
 {
     [PublicAPI]
-    internal sealed class KafkaOffsetCommitRequest : IKafkaRequest
+    public sealed class KafkaOffsetCommitRequest : IKafkaRequest
     {
         public readonly string GroupName;
 

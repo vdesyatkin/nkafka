@@ -3,7 +3,7 @@
 namespace NKafka.Protocol.API.GroupCoordinator
 {
     [PublicAPI]
-    internal sealed class KafkaGroupCoordinatorResponse : IKafkaResponse
+    public sealed class KafkaGroupCoordinatorResponse : IKafkaResponse
     {
         /// <summary>
         /// Error code.

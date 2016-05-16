@@ -1,14 +1,10 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.GroupCoordinator
-{
-    [PublicAPI]
-    internal class KafkaGroupCoordinatorApi : IKafkaRequestApi
+{    
+    internal sealed class KafkaGroupCoordinatorApi : IKafkaRequestApi
     {
-        public Type RequestType => typeof(KafkaGroupCoordinatorRequest);
-
         #region GroupCoordinatorRequest
         
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)

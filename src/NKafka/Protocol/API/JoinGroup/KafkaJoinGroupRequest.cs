@@ -15,7 +15,7 @@ namespace NKafka.Protocol.API.JoinGroup
     /// </para>
     /// </summary>
     [PublicAPI]
-    internal sealed class KafkaJoinGroupRequest : IKafkaRequest
+    public sealed class KafkaJoinGroupRequest : IKafkaRequest
     {
         public readonly string GroupName;
 

@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.SyncGroup
 {
     [PublicAPI]
-    internal sealed class KafkaSyncGroupResponse : IKafkaResponse
+    public sealed class KafkaSyncGroupResponse : IKafkaResponse
     {
         public readonly KafkaResponseErrorCode ErrorCode;
 

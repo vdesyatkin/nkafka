@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.Fetch
 {
     [PublicAPI]
-    internal sealed class KafkaFetchResponseTopic
+    public sealed class KafkaFetchResponseTopic
     {
         /// <summary>
         /// The name of the topic this response entry is for.

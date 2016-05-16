@@ -1,14 +1,11 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.JoinGroup
 {
     [PublicAPI]
-    internal class KafkaJoinGroupApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof (KafkaJoinGroupRequest);
-
+    internal sealed class KafkaJoinGroupApi : IKafkaRequestApi
+    {       
         #region JoinGroupRequest
 
         private const string DefaultProtocolType = "consumer";
