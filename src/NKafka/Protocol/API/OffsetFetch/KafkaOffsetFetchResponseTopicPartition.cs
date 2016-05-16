@@ -3,7 +3,7 @@
 namespace NKafka.Protocol.API.OffsetFetch
 {
     [PublicAPI]
-    internal sealed class KafkaOffsetFetchResponseTopicPartition
+    public sealed class KafkaOffsetFetchResponseTopicPartition
     {
         public readonly int PartitionId;
 

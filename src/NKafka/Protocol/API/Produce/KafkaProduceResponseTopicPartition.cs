@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.Produce
 {
     [PublicAPI]
-    internal sealed class KafkaProduceResponseTopicPartition
+    public sealed class KafkaProduceResponseTopicPartition
     {
         /// <summary>
         /// The partition this response entry corresponds to.

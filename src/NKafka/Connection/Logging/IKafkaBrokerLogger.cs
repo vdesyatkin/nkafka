@@ -2,7 +2,7 @@
 
 namespace NKafka.Connection.Logging
 {
-    internal interface IKafkaBrokerLogger
+    public interface IKafkaBrokerLogger
     {
         void OnConnected();        
 

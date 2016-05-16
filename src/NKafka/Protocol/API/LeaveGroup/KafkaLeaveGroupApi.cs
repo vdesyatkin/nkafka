@@ -1,14 +1,11 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.LeaveGroup
 {
     [PublicAPI]
     internal sealed class KafkaLeaveGroupApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof(KafkaLeaveGroupRequest);
-
+    {        
         #region LeaveGroupRequest
         
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)

@@ -75,10 +75,10 @@ namespace NKafka.Client.Producer.Internal
                 var topic = topicPair.Value;
                 if (topic == null) continue;
                 
-                var batches = CreateTopicRequests(topic, new HashSet<int>());
+                var batches = CreateTopicBatches(topic, new HashSet<int>());
                 foreach (var batch in batches)
                 {
-                    var batchRequest = CreateBatchRequest(topic, batch);
+                    var batchRequest = CreateProduceRequest(topic, batch);
                     _broker.SendWithoutResponse(batchRequest, topic.TopicProducerName, batch.ByteCount*2);
                 }
 
@@ -137,10 +137,10 @@ namespace NKafka.Client.Producer.Internal
             }
 
             // send batches
-            var newBatches = CreateTopicRequests(topic, batchSet.GetBusyPartitionSet());            
+            var newBatches = CreateTopicBatches(topic, batchSet.GetBusyPartitionSet());            
             foreach (var batch in newBatches)
             {
-                var batchRequest = CreateBatchRequest(topic, batch);
+                var batchRequest = CreateProduceRequest(topic, batch);
                 var batchTimeout = _produceClientTimeout + topic.Settings.BatchServerTimeout;
 
                 var batchRequestResult = topic.Settings.ConsistencyLevel == KafkaConsistencyLevel.None
@@ -159,7 +159,7 @@ namespace NKafka.Client.Producer.Internal
         }
 
         [NotNull, ItemNotNull]
-        private IReadOnlyList<ProduceBatch> CreateTopicRequests([NotNull]KafkaProducerBrokerTopic topic, [NotNull] HashSet<int> busyPartitionSet)
+        private IReadOnlyList<ProduceBatch> CreateTopicBatches([NotNull]KafkaProducerBrokerTopic topic, [NotNull] HashSet<int> busyPartitionSet)
         {
             var partitionList = new List<KafkaProducerBrokerPartition>(100);
             foreach (var partitionPair in topic.Partitions)
@@ -230,13 +230,13 @@ namespace NKafka.Client.Producer.Internal
                         continue;
                     }
 
-                    var messageSize = (message.Key?.Length ?? 0) + (message.Data?.Length ?? 0);
+                    var messageSize = _broker.Protocol.GetMessageSizeInSet(message);
                     if (messageSize > partition.LimitInfo.MaxMessageSizeByteCount)
                     {                        
                         partition.FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.TooLargeSize);                        
                         
                         continue;
-                    }                                       
+                    }
 
                     if (message.Key != null)
                     {
@@ -250,7 +250,7 @@ namespace NKafka.Client.Producer.Internal
                     
                     if (topicPartionMessages == null)
                     {
-                        topicPartionMessages = new List<KafkaMessage>(partition.LimitInfo.MaxMessageCount ?? batchMaxMessageCount ?? 200);
+                        topicPartionMessages = new List<KafkaMessage>(partition.LimitInfo.MaxMessageCount ?? batchMaxMessageCount);
                         topicBatch.Partitions[partition.PartitionId] = topicPartionMessages;
                     }
                     topicPartionMessages.Add(message);
@@ -464,7 +464,7 @@ namespace NKafka.Client.Producer.Internal
         }       
 
         [NotNull]
-        private KafkaProduceRequest CreateBatchRequest([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch)
+        private KafkaProduceRequest CreateProduceRequest([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch)
         {            
             var requestPartitions = new List<KafkaProduceRequestTopicPartition>(batch.Partitions.Count);
             foreach (var batchPartiton in batch.Partitions)

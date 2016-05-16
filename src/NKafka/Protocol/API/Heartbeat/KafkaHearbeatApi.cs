@@ -1,14 +1,11 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.Heartbeat
 {
     [PublicAPI]
     internal sealed class KafkaHearbeatApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof(KafkaHeartbeatRequest);
-
+    {        
         #region HeartbeatRequest
         
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)

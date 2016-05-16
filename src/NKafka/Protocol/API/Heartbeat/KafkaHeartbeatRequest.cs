@@ -3,7 +3,7 @@
 namespace NKafka.Protocol.API.Heartbeat
 {
     [PublicAPI]
-    internal sealed class KafkaHeartbeatRequest : IKafkaRequest
+    public sealed class KafkaHeartbeatRequest : IKafkaRequest
     {
         public readonly string GroupId;
 

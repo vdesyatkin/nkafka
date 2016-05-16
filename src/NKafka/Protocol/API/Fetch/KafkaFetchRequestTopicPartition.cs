@@ -3,7 +3,7 @@
 namespace NKafka.Protocol.API.Fetch
 {
     [PublicAPI]
-    internal sealed class KafkaFetchRequestTopicPartition
+    public sealed class KafkaFetchRequestTopicPartition
     {
         /// <summary>
         /// The id of the partition the fetch is for.

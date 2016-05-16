@@ -3,7 +3,7 @@
 namespace NKafka.Protocol.API.LeaveGroup
 {
     [PublicAPI]
-    internal sealed class KafkaLeaveGroupRequest : IKafkaRequest
+    public sealed class KafkaLeaveGroupRequest : IKafkaRequest
     {
         public readonly string GroupId;
 

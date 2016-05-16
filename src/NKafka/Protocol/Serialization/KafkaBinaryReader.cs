@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.Serialization
 {
     [PublicAPI]
-    internal class KafkaBinaryReader : IDisposable
+    public class KafkaBinaryReader : IDisposable
     {
         private const int NullValue = -1;
 

@@ -22,7 +22,7 @@ namespace NKafka.Protocol.API.TopicMetadata
     /// Note: If "auto.create.topics.enable" is set in the broker configuration, a topic metadata request will create the topic with the default replication factor and number of partitions.
     /// </remarks>   
     [PublicAPI]
-    internal sealed class KafkaTopicMetadataRequest : IKafkaRequest
+    public sealed class KafkaTopicMetadataRequest : IKafkaRequest
     {
         /// <summary>
         /// The topics to produce metadata for. If empty the request will yield metadata for all topics.

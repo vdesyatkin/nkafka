@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.OffsetCommit
 {
     [PublicAPI]
-    internal sealed class KafkaOffsetCommitResponse : IKafkaResponse
+    public sealed class KafkaOffsetCommitResponse : IKafkaResponse
     {
         public readonly IReadOnlyList<KafkaOffsetCommitResponseTopic> Topics;
 

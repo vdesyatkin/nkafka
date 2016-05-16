@@ -8,7 +8,7 @@ namespace NKafka.Protocol.API.TopicMetadata
     /// This metadata refers to brokers by their broker id. The brokers each have a host and port.
     /// </summary>
     [PublicAPI]
-    internal sealed class KafkaTopicMetadataResponse : IKafkaResponse
+    public sealed class KafkaTopicMetadataResponse : IKafkaResponse
     {
         /// <summary>
         /// The broker id of the controller broker.

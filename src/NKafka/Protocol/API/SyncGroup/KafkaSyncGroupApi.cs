@@ -1,14 +1,11 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.SyncGroup
 {
     [PublicAPI]
     internal sealed class KafkaSyncGroupApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof (KafkaSyncGroupRequest);
-
+    {        
         #region SyncGroupRequest
         
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)

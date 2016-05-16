@@ -8,7 +8,7 @@ namespace NKafka.Protocol.API.Produce
     /// The produce API is used to send message sets to the server. For efficiency it allows sending message sets intended for many topic partitions in a single request.
     /// </summary>
     [PublicAPI]
-    internal sealed class KafkaProduceRequest : IKafkaRequest
+    public sealed class KafkaProduceRequest : IKafkaRequest
     {
         /// <summary>
         /// <para>

@@ -8,9 +8,9 @@ namespace NKafka.Client.Producer
     {        
         public readonly KafkaConsistencyLevel ConsistencyLevel;
         public readonly KafkaCodecType CodecType;        
-        public readonly int BatchSizeByteCount;        
-        public readonly int? BatchMaxMessageCount;
-        public readonly int? MaxMessageSizeByteCount;
+        public readonly int BatchSizeByteCount;
+        public readonly int BatchMaxMessageCount;        
+        public readonly int MessageMaxSizeByteCount;
         public readonly TimeSpan BatchServerTimeout;
         public readonly TimeSpan ErrorRetryPeriod;
 
@@ -18,8 +18,8 @@ namespace NKafka.Client.Producer
           KafkaConsistencyLevel consistencyLevel,
           KafkaCodecType codecType,          
           int batchSizeByteCount,
-          int? batchMaxMessageCount,
-          int? maxMessageSizeByteCount,
+          int batchMaxMessageCount,          
+          int messageMaxSizeByteCount,
           TimeSpan batchServerTimeout,
           TimeSpan errorRetryPeriod
           )
@@ -27,8 +27,8 @@ namespace NKafka.Client.Producer
             ConsistencyLevel = consistencyLevel;
             CodecType = codecType;                   
             BatchSizeByteCount = batchSizeByteCount;
-            BatchMaxMessageCount = batchMaxMessageCount;
-            MaxMessageSizeByteCount = maxMessageSizeByteCount;
+            BatchMaxMessageCount = batchMaxMessageCount;            
+            MessageMaxSizeByteCount = messageMaxSizeByteCount;
             BatchServerTimeout = batchServerTimeout;
             ErrorRetryPeriod = errorRetryPeriod;
         }

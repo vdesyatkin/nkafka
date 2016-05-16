@@ -57,7 +57,7 @@ namespace NKafka.Client.Producer.Internal
             Logger = logger;
             _mainQueue = new ConcurrentQueue<KafkaMessage>();
             _retryQueue = new Queue<KafkaMessage>();
-            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(settings.MaxMessageSizeByteCount, settings.BatchMaxMessageCount, DateTime.UtcNow);
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(settings.MessageMaxSizeByteCount, settings.BatchMaxMessageCount, DateTime.UtcNow);
         }
 
         public void EnqueueMessage([NotNull] KafkaMessage message)
@@ -135,7 +135,7 @@ namespace NKafka.Client.Producer.Internal
 
         public void ResetData()
         {
-            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(Settings.MaxMessageSizeByteCount, Settings.BatchMaxMessageCount, DateTime.UtcNow);
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(Settings.MessageMaxSizeByteCount, Settings.BatchMaxMessageCount, DateTime.UtcNow);
         }
 
         public void SetMaxMessageSizeByteCount(int maxMessageSizeByteCount)

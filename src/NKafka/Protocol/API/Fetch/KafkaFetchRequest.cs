@@ -20,7 +20,7 @@ namespace NKafka.Protocol.API.Fetch
     /// </para>
     /// </remarks>
     [PublicAPI]
-    internal sealed class KafkaFetchRequest : IKafkaRequest
+    public sealed class KafkaFetchRequest : IKafkaRequest
     {
         /// <summary>
         /// The replica id indicates the node id of the replica initiating this request. Normal client consumers should always specify this as -1 (or null) as they have no node id. 

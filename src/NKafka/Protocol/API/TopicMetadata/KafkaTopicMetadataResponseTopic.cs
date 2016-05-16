@@ -7,7 +7,7 @@ namespace NKafka.Protocol.API.TopicMetadata
     /// Topic metadata.
     /// </summary>
     [PublicAPI]
-    internal sealed class KafkaTopicMetadataResponseTopic
+    public sealed class KafkaTopicMetadataResponseTopic
     {
         /// <summary>
         /// Error code.

@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.JoinGroup
 {
     [PublicAPI]
-    internal sealed class KafkaJoinGroupRequestProtocol
+    public sealed class KafkaJoinGroupRequestProtocol
     {
         public readonly string ProtocolName;
 

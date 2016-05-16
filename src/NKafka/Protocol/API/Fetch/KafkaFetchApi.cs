@@ -6,10 +6,8 @@ using NKafka.Protocol.Serialization;
 namespace NKafka.Protocol.API.Fetch
 {
     [PublicAPI]
-    internal class KafkaFetchApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof(KafkaFetchRequest);
-
+    internal sealed class KafkaFetchApi : IKafkaRequestApi
+    {        
         const byte MessageMagicByteV09 = 0;
         const byte MessageMagicByteV010 = 1;
 
@@ -17,8 +15,7 @@ namespace NKafka.Protocol.API.Fetch
 
         const byte MessageAttributeCodecMask = 0x7;
         const byte MessageCodecNoneAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecNone;
-        const byte MessageCodecGZipAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecGzip;
-        //todo (v10) snappy
+        const byte MessageCodecGZipAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecGzip;        
 
         const byte MessageAttributeTimestampMask = 0x8;
         const byte MessageTimestampLogAppendTimeAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.LogAppendTime << 3;

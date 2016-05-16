@@ -1,14 +1,11 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NKafka.Protocol.Serialization;
 
 namespace NKafka.Protocol.API.OffsetFetch
 {
     [PublicAPI]
     internal sealed class KafkaOffsetFetchApi : IKafkaRequestApi
-    {
-        public Type RequestType => typeof(KafkaOffsetFetchRequest);
-
+    {        
         #region OffsetFetchRequest
         
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)

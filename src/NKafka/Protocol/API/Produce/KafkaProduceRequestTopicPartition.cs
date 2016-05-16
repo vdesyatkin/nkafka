@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.Produce
 {
     [PublicAPI]
-    internal sealed class KafkaProduceRequestTopicPartition
+    public sealed class KafkaProduceRequestTopicPartition
     {
         /// <summary>
         /// The partition that data is being published to.

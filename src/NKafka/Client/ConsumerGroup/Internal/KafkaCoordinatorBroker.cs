@@ -499,8 +499,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (protocols.Count == 0) return null;
 
-            var sessionLifetime = group.CustomSessionLifetime ?? group.Settings.GroupSessionLifetime;
-            var request = new KafkaJoinGroupRequest(group.GroupName, group.MemberData?.MemberId ?? string.Empty, sessionLifetime, protocols);
+            var sessionTimeout = group.CustomSessionTimeout ?? group.Settings.GroupSessionTimeout;
+            var request = new KafkaJoinGroupRequest(group.GroupName, group.MemberData?.MemberId ?? string.Empty, sessionTimeout, protocols);
             return request;
         }
 
@@ -535,8 +535,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     case KafkaResponseErrorCode.InvalidSessionTimeout:
                         error = KafkaConsumerGroupErrorCode.InvalidSessionTimeout;
                         errorType = GroupErrorType.Warning;
-                        var customSessionLifetime = group.CustomSessionLifetime;
-                        group.SetSessionLifetime(customSessionLifetime?.Add(TimeSpan.FromSeconds(1)) ?? TimeSpan.FromSeconds(6)); //todo (E006)
+                        var customSessionLifetime = group.CustomSessionTimeout;
+                        group.SetSessionLifetime(customSessionLifetime?.Add(TimeSpan.FromSeconds(1)) ?? TimeSpan.FromSeconds(6));
                         break;
                     case KafkaResponseErrorCode.RebalanceInProgress:
                         error = KafkaConsumerGroupErrorCode.Rebalance;

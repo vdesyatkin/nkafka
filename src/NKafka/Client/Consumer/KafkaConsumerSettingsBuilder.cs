@@ -52,12 +52,13 @@ namespace NKafka.Client.Consumer
 
         [PublicAPI, NotNull]
         public KafkaConsumerSettings Build()
-        {            
+        {
+            // https://kafka.apache.org/documentation.html#brokerconfigs;
             var batchMinSizeBytes = _consumeBatchMinSizeBytes ?? 0;
-            var batchMaxSizeBytes = _consumeBatchMaxSizeBytes ?? 200 * 200;
+            var batchMaxSizeBytes = _consumeBatchMaxSizeBytes ?? 1048576;
             var consumerServerWaitTime = _consumeServerWaitTime ?? TimeSpan.Zero;
             var bufferMaxMessageCount = _bufferMaxMessageCount;
-            var bufferMaxSizeBytes = _bufferMaxSizeBytes ?? 10*1000*1000;
+            var bufferMaxSizeBytes = _bufferMaxSizeBytes ?? 100 * 1024 * 1024;
             var errorRetryPeriod = _errorRetryPeriod ?? TimeSpan.FromSeconds(10);
 
             return new KafkaConsumerSettings(                

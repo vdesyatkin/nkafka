@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.API.Fetch
 {
     [PublicAPI]
-    internal sealed class KafkaFetchResponseTopicPartition
+    public sealed class KafkaFetchResponseTopicPartition
     {
         /// <summary>
         /// The id of the partition this response is for.

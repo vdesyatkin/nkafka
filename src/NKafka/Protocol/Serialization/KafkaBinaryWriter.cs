@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 namespace NKafka.Protocol.Serialization
 {
     [PublicAPI]
-    internal class KafkaBinaryWriter : IDisposable
+    public class KafkaBinaryWriter : IDisposable
     {        
         [NotNull] private readonly MemoryStream _stream;
         [NotNull] private readonly Stack<long> _beginPositions = new Stack<long>();

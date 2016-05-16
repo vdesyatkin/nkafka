@@ -38,7 +38,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                
         public DateTime HeartbeatTimestampUtc;
         public TimeSpan HeartbeatPeriod { get; private set; }
-        public TimeSpan? CustomSessionLifetime { get; private set; }
+        public TimeSpan? CustomSessionTimeout { get; private set; }
 
         public DateTime CommitTimestampUtc;
         public readonly TimeSpan CommitPeriod;
@@ -303,20 +303,20 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public void SetSessionLifetime(TimeSpan sessionLifetime)
         {
-            CustomSessionLifetime = sessionLifetime; 
+            CustomSessionTimeout = sessionLifetime; 
             UpdateHeartbeatPeriod(sessionLifetime);
         }
 
         private void UpdateHeartbeatPeriod(TimeSpan sessionLifetime)
         {
-            var heartbeatPeriod = TimeSpan.FromSeconds(sessionLifetime.TotalSeconds / 2 - 1);
+            var heartbeatPeriod = TimeSpan.FromSeconds(sessionLifetime.TotalSeconds / 3 - 1);
             if (Settings.HeartbeatPeriod < heartbeatPeriod)
             {
                 heartbeatPeriod = Settings.HeartbeatPeriod;
             }
             if (heartbeatPeriod < TimeSpan.FromSeconds(1))
             {
-                heartbeatPeriod = TimeSpan.FromSeconds(1); //todo (E006)
+                heartbeatPeriod = TimeSpan.FromSeconds(1); //todo (E006) hearbeat period, by default 3 sec or 1/3 of session timeout.
             }
             HeartbeatPeriod = heartbeatPeriod;
         }
@@ -328,8 +328,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public void ResetSettings()
         {
-            CustomSessionLifetime = null;
-            UpdateHeartbeatPeriod(Settings.GroupSessionLifetime);
+            CustomSessionTimeout = null;
+            UpdateHeartbeatPeriod(Settings.GroupSessionTimeout);
             CommitMetadata = Settings.OffsetCommitMetadata;            
         }
 

@@ -6,7 +6,7 @@ namespace NKafka.Protocol.API.TopicMetadata
     /// Topic broker metadata.
     /// </summary>
     [PublicAPI]
-    internal sealed class KafkaTopicMetadataResponseBroker
+    public sealed class KafkaTopicMetadataResponseBroker
     {
         /// <summary>
         /// Broker Id.
