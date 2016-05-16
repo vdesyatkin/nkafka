@@ -57,7 +57,7 @@ namespace NKafka.Client.Producer.Internal
             Logger = logger;
             _mainQueue = new ConcurrentQueue<KafkaMessage>();
             _retryQueue = new Queue<KafkaMessage>();
-            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(settings.MessageMaxSizeByteCount, settings.BatchMaxMessageCount, DateTime.UtcNow);
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(settings.MessageMaxSizeByteCount, settings.ProduceRequestMaxSizeByteCount, DateTime.UtcNow);
         }
 
         public void EnqueueMessage([NotNull] KafkaMessage message)
@@ -69,6 +69,17 @@ namespace NKafka.Client.Producer.Internal
             Interlocked.Add(ref _sendPendingMessageSizeByteses, messageSize);
             Interlocked.Add(ref _totalEnqueuedMessageSizeBytes, messageSize);
             EnqueueTimestampUtc = DateTime.UtcNow;
+        }
+
+        public bool TryPeekMessage(out KafkaMessage message)
+        {
+            if (_retryQueue.Count == 0)
+            {
+                return _mainQueue.TryPeek(out message);
+            }
+
+            message = _retryQueue.Peek();            
+            return message != null;
         }
 
         public bool TryDequeueMessage(out KafkaMessage message)
@@ -135,15 +146,15 @@ namespace NKafka.Client.Producer.Internal
 
         public void ResetData()
         {
-            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(Settings.MessageMaxSizeByteCount, Settings.BatchMaxMessageCount, DateTime.UtcNow);
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(Settings.MessageMaxSizeByteCount, Settings.ProduceRequestMaxSizeByteCount, DateTime.UtcNow);
         }
 
         public void SetMaxMessageSizeByteCount(int maxMessageSizeByteCount)
         {
-            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(maxMessageSizeByteCount, LimitInfo.MaxMessageCount, DateTime.UtcNow);
+            LimitInfo = new KafkaProducerTopicPartitionLimitInfo(maxMessageSizeByteCount, LimitInfo.MaxBatchSizeByteCount, DateTime.UtcNow);
         }
 
-        public void SetMaxMessageCount(int maxMessageCount)
+        public void SetMaxBatchSizeByteCount(int maxMessageCount)
         {
             LimitInfo = new KafkaProducerTopicPartitionLimitInfo(LimitInfo.MaxMessageSizeByteCount, maxMessageCount, DateTime.UtcNow);
         }

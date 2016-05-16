@@ -301,22 +301,22 @@ namespace NKafka.Client.ConsumerGroup.Internal
             OffsetsData = new KafkaCoordinatorGroupOffsetsData(topics, DateTime.UtcNow);
         }
 
-        public void SetSessionLifetime(TimeSpan sessionLifetime)
-        {
-            CustomSessionTimeout = sessionLifetime; 
-            UpdateHeartbeatPeriod(sessionLifetime);
+        public void SetSessionTimeout(TimeSpan sessionTimeout)
+        {            
+            CustomSessionTimeout = sessionTimeout; 
+            UpdateHeartbeatPeriod(sessionTimeout);
         }
 
-        private void UpdateHeartbeatPeriod(TimeSpan sessionLifetime)
+        private void UpdateHeartbeatPeriod(TimeSpan sessionTimeout)
         {
-            var heartbeatPeriod = TimeSpan.FromSeconds(sessionLifetime.TotalSeconds / 3 - 1);
-            if (Settings.HeartbeatPeriod < heartbeatPeriod)
+            var heartbeatPeriod = TimeSpan.FromSeconds(sessionTimeout.TotalSeconds / 3 - 1);
+            if (heartbeatPeriod > Settings.HeartbeatPeriod)
             {
                 heartbeatPeriod = Settings.HeartbeatPeriod;
             }
-            if (heartbeatPeriod < TimeSpan.FromSeconds(1))
+            if (heartbeatPeriod < TimeSpan.Zero)
             {
-                heartbeatPeriod = TimeSpan.FromSeconds(1); //todo (E006) hearbeat period, by default 3 sec or 1/3 of session timeout.
+                heartbeatPeriod = TimeSpan.Zero;
             }
             HeartbeatPeriod = heartbeatPeriod;
         }
@@ -330,7 +330,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         {
             CustomSessionTimeout = null;
             UpdateHeartbeatPeriod(Settings.GroupSessionTimeout);
-            CommitMetadata = Settings.OffsetCommitMetadata;            
+            CommitMetadata = Settings.OffsetCommitMetadata;          
         }
 
         public void ResetData()

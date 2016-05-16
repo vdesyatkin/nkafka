@@ -6,6 +6,7 @@ namespace NKafka.Client.Producer
     public enum KafkaProducerFallbackErrorCode
     {
         ClientStopped = 0,
-        TooLargeSize = 1,        
+        MessageSizeTooLarge = 1,
+        MessageSizeLargerThanBatchMaxSize = 2
     }
 }

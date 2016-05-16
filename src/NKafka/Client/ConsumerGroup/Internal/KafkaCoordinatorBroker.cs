@@ -536,7 +536,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         error = KafkaConsumerGroupErrorCode.InvalidSessionTimeout;
                         errorType = GroupErrorType.Warning;
                         var customSessionLifetime = group.CustomSessionTimeout;
-                        group.SetSessionLifetime(customSessionLifetime?.Add(TimeSpan.FromSeconds(1)) ?? TimeSpan.FromSeconds(6));
+                        group.SetSessionTimeout(customSessionLifetime?.Add(TimeSpan.FromSeconds(1)) ?? KafkaConsumerGroupSettingsBuilder.MinGroupSessionTimeout);
                         break;
                     case KafkaResponseErrorCode.RebalanceInProgress:
                         error = KafkaConsumerGroupErrorCode.Rebalance;

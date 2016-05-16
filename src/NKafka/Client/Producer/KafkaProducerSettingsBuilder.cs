@@ -6,16 +6,28 @@ namespace NKafka.Client.Producer
     [PublicAPI]
     public sealed class KafkaProducerSettingsBuilder
     {
+        // https://kafka.apache.org/documentation.html#brokerconfigs
+
+        [NotNull]
+        public static readonly KafkaProducerSettings Default = new KafkaProducerSettingsBuilder().Build();
+
+        public readonly static KafkaConsistencyLevel DefaultConsistencyLevel = KafkaConsistencyLevel.OneReplica;
+        public readonly static KafkaCodecType DefaultCodecType = KafkaCodecType.CodecNone;
+        public readonly static int DefaultMessageMaxSizeByteCount = 999990; //1000012 in original - 22 bytes reserved for headers
+        public readonly static int DefaultPartitionBatchPreferredSizeByteCount = 16384;
+        public readonly static int DefaultPartitionBatchMaxSizeByteCount = 32 * DefaultPartitionBatchPreferredSizeByteCount; // multiplier = 64 in original - total cap for all request bytes
+        public readonly static int DefaultProduceRequestMaxSizeByteCount = 32 * DefaultPartitionBatchPreferredSizeByteCount; 
+        public readonly static TimeSpan DefaultProduceRequestServerTimeout = TimeSpan.FromSeconds(3); // 30 seconds in original - too long.
+        public readonly static TimeSpan DefaultErrorRetryPeriod = TimeSpan.FromSeconds(10);
+
         private KafkaConsistencyLevel? _consistencyLevel;
-        private KafkaCodecType? _codecType;        
-        private int? _batchSizeByteCount;
-        private int? _batchMaxMessageCount;
-        private int? _partitionBatchSizeByteCount;
+        private KafkaCodecType? _codecType;
         private int? _messageMaxSizeByteCount;
+        private int? _partitionBatchPreferredSizeByteCount;
+        private int? _partitionBatchMaxSizeByteCount;
+        private int? _produceRequestMaxSizeByteCount;
         private TimeSpan? _batchServerTimeout;
         private TimeSpan? _errorRetryPeriod;
-
-        [NotNull] public static KafkaProducerSettings Default => new KafkaProducerSettingsBuilder().Build();
 
         [PublicAPI, NotNull]
         public KafkaProducerSettingsBuilder SetConsistencyLevel(KafkaConsistencyLevel consistencyLevel)
@@ -30,30 +42,39 @@ namespace NKafka.Client.Producer
             _codecType = codecType;
             return this;
         }
-
+        
         [PublicAPI, NotNull]
-        public KafkaProducerSettingsBuilder SetBatchSizeByteCount(int byteCount)
+        public KafkaProducerSettingsBuilder SetMessageMaxSizeByteCount(int byteCount)
         {
-            _batchSizeByteCount = byteCount;
+            _messageMaxSizeByteCount = byteCount;
             return this;
         }
 
         [PublicAPI, NotNull]
-        public KafkaProducerSettingsBuilder SetBatchMaxMessageCount(int messageCount)
+        public KafkaProducerSettingsBuilder SetPartitionBatchPreferredSizeByteCount(int byteCount)
         {
-            _batchMaxMessageCount = messageCount;
-            return this;
-        }        
-
-        [PublicAPI, NotNull]
-        public KafkaProducerSettingsBuilder SetMessageMaxSizeByteCount(int maxMessageSizeByteCount)
-        {
-            _messageMaxSizeByteCount = maxMessageSizeByteCount;
+            _partitionBatchPreferredSizeByteCount = byteCount;
             return this;
         }
 
         [PublicAPI, NotNull]
-        public KafkaProducerSettingsBuilder SetBatchServerTimeout(TimeSpan timeout)
+        public KafkaProducerSettingsBuilder SetPartitionBatchMaxSizeByteCount(int byteCount)
+        {
+            _partitionBatchMaxSizeByteCount = byteCount;
+            return this;
+        }
+
+
+        [PublicAPI, NotNull]
+        public KafkaProducerSettingsBuilder SetProduceRequestMaxSizeByteCount(int byteCount)
+        {
+            _produceRequestMaxSizeByteCount = byteCount;
+            return this;
+        }
+
+
+        [PublicAPI, NotNull]
+        public KafkaProducerSettingsBuilder SetProduceRequestServerTimeout(TimeSpan timeout)
         {
             _batchServerTimeout = timeout;
             return this;
@@ -68,23 +89,24 @@ namespace NKafka.Client.Producer
 
         [PublicAPI, NotNull]
         public KafkaProducerSettings Build()
-        {
-            // https://kafka.apache.org/documentation.html#brokerconfigs
-            var consistencyLevel = _consistencyLevel ?? KafkaConsistencyLevel.OneReplica;
-            var codecType = _codecType ?? KafkaCodecType.CodecNone;            
-            var batchSizeByteCount = _batchSizeByteCount ?? 16384;
-            var batchMaxMessageCount = _batchMaxMessageCount ?? 1048576;            
-            var messageMaxSizeByteCount = _messageMaxSizeByteCount ?? 1000012; //todo (E006) Use protocol header size for it
-            var batchServerTimeout = _batchServerTimeout ?? TimeSpan.FromSeconds(1); //todo (E006) 30 seconds by default, but it's too long.
-            var errorRetryPeriod = _errorRetryPeriod ?? TimeSpan.FromSeconds(10);
+        {            
+            var consistencyLevel = _consistencyLevel ?? DefaultConsistencyLevel;
+            var codecType = _codecType ?? DefaultCodecType;
+            var messageMaxSizeByteCount = _messageMaxSizeByteCount ?? DefaultMessageMaxSizeByteCount;
+            var partitionBatchPreferredSizeByteCount = _partitionBatchPreferredSizeByteCount ?? DefaultPartitionBatchPreferredSizeByteCount;
+            var partitionBatchMaxSizeByteCount = _partitionBatchMaxSizeByteCount ?? DefaultPartitionBatchPreferredSizeByteCount;
+            var produceRequestMaxSizeByteCount = _produceRequestMaxSizeByteCount ?? DefaultProduceRequestMaxSizeByteCount;            
+            var produceRequestServerTimeout = _batchServerTimeout ?? DefaultProduceRequestServerTimeout;
+            var errorRetryPeriod = _errorRetryPeriod ?? DefaultErrorRetryPeriod;
 
             return new KafkaProducerSettings(
                 consistencyLevel,
-                codecType,
-                batchSizeByteCount,
-                batchMaxMessageCount,                
+                codecType,                
                 messageMaxSizeByteCount,
-                batchServerTimeout,
+                partitionBatchPreferredSizeByteCount,
+                partitionBatchMaxSizeByteCount,
+                produceRequestMaxSizeByteCount,
+                produceRequestServerTimeout,
                 errorRetryPeriod);
         }
     }

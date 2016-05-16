@@ -59,7 +59,7 @@ namespace NKafka.Client.Producer.Diagnostics
         /// <summary>
         /// If a message batch in a produce request exceeds the maximum configured segment size.
         /// </summary>
-        RecordListTooLarge = 18,
+        MessageBatchTooLarge = 18,
 
         /// <summary>
         /// Returned from a produce request when the number of in-sync replicas is lower than the configured minimum and requiredAcks is -1.

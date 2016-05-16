@@ -94,7 +94,7 @@ namespace NKafka.Client.Consumer.Internal
                 return false;
             }
 
-            if (_consumePendingMessageSizeBytes + _catchUpPendingMessageSizeBytes >= Settings.BufferedMaxSizeBytes)
+            if (_consumePendingMessageSizeBytes + _catchUpPendingMessageSizeBytes >= Settings.BufferMaxSizeBytes)
             {
                 return false;
             }

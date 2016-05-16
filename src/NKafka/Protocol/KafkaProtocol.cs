@@ -54,7 +54,7 @@ namespace NKafka.Protocol
             return messageSize;
         }
 
-        public int GetMessageSizeInSet(KafkaMessage message)
+        public int GetMessageSizeInBatch(KafkaMessage message)
         {
             if (message == null) return 0;
 

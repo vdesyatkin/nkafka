@@ -33,12 +33,12 @@ namespace NKafka.DevConsole
             var producerConfigBuilder = new KafkaProducerSettingsBuilder()
                 .SetConsistencyLevel(KafkaConsistencyLevel.OneReplica)
                 .SetCodecType(KafkaCodecType.CodecGzip)
-                .SetBatchServerTimeout(TimeSpan.FromSeconds(5))
-                .SetBatchSizeByteCount(10000);
+                .SetProduceRequestServerTimeout(TimeSpan.FromSeconds(5))
+                .SetPartitionBatchPreferredSizeByteCount(10000);
             var consumerConfigBuilder = new KafkaConsumerSettingsBuilder()
-                .SetBatchMinSizeBytes(1)
-                .SetBatchMaxSizeBytes(10000)
-                .SetConsumeServerWaitTime(TimeSpan.FromSeconds(5));
+                .SetTopicBatchMinSizeBytes(1)
+                .SetPartitionBatchMaxSizeBytes(10000)
+                .SetFetchServerWaitTime(TimeSpan.FromSeconds(5));
 
             var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());
             var group = clientBuilder.CreateConsumerGroup(groupName, KafkaConsumerGroupType.BalancedConsumers);

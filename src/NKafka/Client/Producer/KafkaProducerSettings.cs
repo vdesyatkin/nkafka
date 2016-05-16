@@ -7,29 +7,31 @@ namespace NKafka.Client.Producer
     public sealed class KafkaProducerSettings
     {        
         public readonly KafkaConsistencyLevel ConsistencyLevel;
-        public readonly KafkaCodecType CodecType;        
-        public readonly int BatchSizeByteCount;
-        public readonly int BatchMaxMessageCount;        
+        public readonly KafkaCodecType CodecType;
         public readonly int MessageMaxSizeByteCount;
-        public readonly TimeSpan BatchServerTimeout;
+        public readonly int PartitionBatchPreferredSizeByteCount;
+        public readonly int PartitionBatchMaxSizeByteCount;
+        public readonly int ProduceRequestMaxSizeByteCount;
+        public readonly TimeSpan ProduceRequestServerTimeout;
         public readonly TimeSpan ErrorRetryPeriod;
 
-        public KafkaProducerSettings(         
+        public KafkaProducerSettings(
           KafkaConsistencyLevel consistencyLevel,
-          KafkaCodecType codecType,          
-          int batchSizeByteCount,
-          int batchMaxMessageCount,          
+          KafkaCodecType codecType,
           int messageMaxSizeByteCount,
-          TimeSpan batchServerTimeout,
+          int partitionBatchPreferredSizeByteCount,
+          int partitionBatchMaxSizeByteCount,
+          int produceRequestMaxSizeByteCount,
+          TimeSpan produceRequestServerTimeout,
           TimeSpan errorRetryPeriod
           )
         {
             ConsistencyLevel = consistencyLevel;
-            CodecType = codecType;                   
-            BatchSizeByteCount = batchSizeByteCount;
-            BatchMaxMessageCount = batchMaxMessageCount;            
+            CodecType = codecType;            
             MessageMaxSizeByteCount = messageMaxSizeByteCount;
-            BatchServerTimeout = batchServerTimeout;
+            PartitionBatchPreferredSizeByteCount = partitionBatchPreferredSizeByteCount;
+            PartitionBatchMaxSizeByteCount = produceRequestMaxSizeByteCount;
+            ProduceRequestServerTimeout = produceRequestServerTimeout;
             ErrorRetryPeriod = errorRetryPeriod;
         }
     }

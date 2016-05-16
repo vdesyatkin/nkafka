@@ -494,7 +494,7 @@ namespace NKafka.Client.Consumer.Internal
             [NotNull] Dictionary<int, long> fetchBatch)
         {
             var fetchRequest = CreateFetchRequest(topic, fetchBatch);
-            var fetchTimeout = _consumeClientTimeout + topic.Settings.ConsumeServerWaitTime;
+            var fetchTimeout = _consumeClientTimeout + topic.Settings.FetchServerWaitTime;
             var fetchResult = _broker.Send(fetchRequest, topic.TopicConsumerName, fetchTimeout);
             if (fetchResult.HasError || fetchResult.Data == null)
             {
@@ -526,10 +526,10 @@ namespace NKafka.Client.Consumer.Internal
             {
                 var partitionId = paritionPair.Key;
                 var patitionOffset = paritionPair.Value;
-                partitionRequests.Add(new KafkaFetchRequestTopicPartition(partitionId, patitionOffset, topic.Settings.ConsumeBatchMaxSizeBytes));
+                partitionRequests.Add(new KafkaFetchRequestTopicPartition(partitionId, patitionOffset, topic.Settings.PartitionBatchMaxSizeBytes));
             }
             var topicRequest = new KafkaFetchRequestTopic(topic.TopicName, partitionRequests);
-            var fetchRequest = new KafkaFetchRequest(topic.Settings.ConsumeServerWaitTime, topic.Settings.ConsumeBatchMinSizeBytes, new[] { topicRequest });
+            var fetchRequest = new KafkaFetchRequest(topic.Settings.FetchServerWaitTime, topic.Settings.TopicBatchMinSizeBytes, new[] { topicRequest });
 
             return fetchRequest;
         }
