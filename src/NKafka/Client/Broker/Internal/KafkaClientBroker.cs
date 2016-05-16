@@ -49,10 +49,9 @@ namespace NKafka.Client.Broker.Internal
                 ? $"broker(id={brokerId})[{host}:{port}]"
                 : $"broker(metdata)[{host}:{port}]";
             Name = brokerName;
-
-            var connection = new KafkaConnection(host, port);
+            
             var loggerWrapper = logger != null ? new KafkaClientBrokerLoggerWrapper(this, logger) : null;
-            var broker = new KafkaBroker(brokerName, connection, protocol, settings.ConnectionSettings, loggerWrapper);
+            var broker = new KafkaBroker(brokerName, host, port, protocol, settings.ConnectionSettings, loggerWrapper);
             _broker = broker;
 
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();

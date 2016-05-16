@@ -9,7 +9,7 @@ using NKafka.Protocol.API.TopicMetadata;
 
 namespace NKafka.Connection
 {
-    internal sealed class KafkaBroker
+    public sealed class KafkaBroker
     {
         public bool IsOpenned => _isOpenned;
 
@@ -35,6 +35,8 @@ namespace NKafka.Connection
             }
         }
 
+        [NotNull] public KafkaProtocol Protocol => _kafkaProtocol;
+
         [NotNull] private readonly string _name;
         [NotNull] private readonly KafkaConnection _connection;
         [NotNull] private readonly KafkaProtocol _kafkaProtocol;
@@ -57,13 +59,13 @@ namespace NKafka.Connection
         private int _currentRequestId;
 
         public KafkaBroker([NotNull] string name,
-            [NotNull] KafkaConnection connection, 
+            [NotNull] string host, int port, 
             [NotNull] KafkaProtocol kafkaProtocol,
             [CanBeNull] KafkaConnectionSettings settings,
             [CanBeNull] IKafkaBrokerLogger logger)
         {
             _name = name;
-            _connection = connection;
+            _connection = new KafkaConnection(host, port);
             _kafkaProtocol = kafkaProtocol;
             _settings = settings ?? KafkaConnectionSettingsBuilder.Default;
             _logger = logger;

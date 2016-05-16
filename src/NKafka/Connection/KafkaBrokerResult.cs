@@ -4,7 +4,7 @@ using NKafka.Connection.Diagnostics;
 namespace NKafka.Connection
 {
     [PublicAPI]
-    internal struct KafkaBrokerResult<TData>
+    public struct KafkaBrokerResult<TData>
     {
         public readonly bool HasData;        
 
