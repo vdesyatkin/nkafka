@@ -42,12 +42,27 @@ namespace NKafka.DevConsole
 
             var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());
             var group = clientBuilder.CreateConsumerGroup(groupName, KafkaConsumerGroupType.BalancedConsumers);
+
+            if (group == null)
+            {
+                Console.WriteLine("Initialization error");
+                Console.ReadLine();
+                return;
+            }
+
             var topicProducer = clientBuilder.CreateTopicProducer(topicName,
                 new TestPartitioner(), new TestSerializer(), null, null, producerConfigBuilder.Build());
             var topicConsumer = clientBuilder.CreateTopicConsumer(topicName, group,
-                new TestSerializer(), null, null, consumerConfigBuilder.Build());
-            var client = clientBuilder.Build();
+                new TestSerializer(), null, null, consumerConfigBuilder.Build());            
 
+            if (topicProducer == null || topicConsumer == null)
+            {
+                Console.WriteLine("Initialization error");
+                Console.ReadLine();
+                return;
+            }
+
+            var client = clientBuilder.Build();
             client.Start();
 
             string userText;
@@ -62,7 +77,7 @@ namespace NKafka.DevConsole
                     continue;
                 }
 
-                var command = data[0].Trim();
+                var command = data[0]?.Trim();
                 if (command == "produce" || command == "p")
                 {
                     if (data.Length < 3)
@@ -70,7 +85,11 @@ namespace NKafka.DevConsole
                         Console.WriteLine("Key and data required");
                         continue;
                     }
-                    topicProducer.EnqueueMessage(data[1].Trim(), data[2].Trim(), DateTime.UtcNow);
+
+                    var messageKey = (data[1] ?? "[null]").Trim();
+                    var messageValue = (data[2] ?? "[null]").Trim();
+
+                    topicProducer.EnqueueMessage(messageKey, messageValue, DateTime.UtcNow);
                 }                
 
                 if (command == "consume" || command == "c")
@@ -95,29 +114,20 @@ namespace NKafka.DevConsole
 
                 if (command == "produceinfo" || command == "pi")
                 {
-                    var info = topicProducer?.GetDiagnosticsInfo();
-                    if (info != null)
-                    {
-                        Console.WriteLine(info.IsReady);
-                    }
+                    var info = topicProducer.GetDiagnosticsInfo();
+                    Console.WriteLine(info.IsReady);
                 }
 
                 if (command == "consumeinfo" || command == "ci")
                 {
                     var info = topicConsumer.GetDiagnosticsInfo();
-                    if (info != null)
-                    {
-                        Console.WriteLine(info.IsReady);
-                    }
+                    Console.WriteLine(info.IsReady);
                 }
 
                 if (command == "groupinfo" || command == "gi")
                 {
-                    var info = group?.GetDiagnosticsInfo();
-                    if (info != null)
-                    {
-                        Console.WriteLine(info.IsReady);
-                    }
+                    var info = group.GetDiagnosticsInfo();
+                    Console.WriteLine(info.IsReady);
                 }
 
             } while (userText != "exit" && userText != "q" && userText != "quit");            
@@ -125,14 +135,7 @@ namespace NKafka.DevConsole
             Console.WriteLine("flushing...");
 
             var isFlushed = client.TryPauseAndFlush(TimeSpan.FromSeconds(10));
-            if (!isFlushed)
-            {
-                Console.WriteLine("not flushed!");                
-            }
-            else
-            {
-                Console.WriteLine("flushed");
-            }
+            Console.WriteLine(!isFlushed ? "not flushed!" : "flushed");
 
             Console.WriteLine("stopping...");
             client.Stop();

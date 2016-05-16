@@ -17,7 +17,7 @@ namespace NKafka.Client.Producer.Diagnostics
         HostUnreachable = -7,
         HostNotAvailable = -8,
         NotAuthorized = -9,
-        MessageBatchSizeTooLarge = -10,
+        TransportRequestTooLarge = -10,
 
         /// <summary>
         /// This request is for a topic or partition that does not exist on this broker.

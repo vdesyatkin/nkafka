@@ -190,8 +190,7 @@ namespace NKafka.Client.Producer.Internal
             var topicBatchMessageCount = 0;
             var topicBatchIsFilled = false;
 
-
-            var topicBatchMaxSize = topic.TopicBatchMaxSizeByteCount;
+            var topicBatchMaxSize = topic.Settings.ProduceRequestMaxSizeByteCount;
             var partitionBatchPreferredSize = topic.Settings.PartitionBatchPreferredSizeByteCount;
 
             for (var i = 0; i < partitionList.Count; i++)
@@ -261,7 +260,7 @@ namespace NKafka.Client.Producer.Internal
                     
                     if (topicPartionMessages == null)
                     {
-                        topicPartionMessages = new List<KafkaMessage>(1024); //todo (E006) save partition capacity?
+                        topicPartionMessages = new List<KafkaMessage>(1024); // empiric capacity value, may be need to save max message count for partition
                         topicBatch.Partitions[partition.PartitionId] = topicPartionMessages;
                     }
                     topicPartionMessages.Add(message);                    
@@ -337,7 +336,7 @@ namespace NKafka.Client.Producer.Internal
                     List<KafkaMessage> batchMessages;
                     if (!topicBatch.Partitions.TryGetValue(partitionId, out batchMessages) || batchMessages == null) continue;
 
-                    if (!TryHandlePartitionResponse(topic, partition, partitionResponse, batchMessages))
+                    if (!TryHandlePartitionResponse(partition, partitionResponse, batchMessages))
                     {
                         continue;
                     }
@@ -348,7 +347,7 @@ namespace NKafka.Client.Producer.Internal
             }
         }
 
-        private bool TryHandlePartitionResponse([NotNull] KafkaProducerBrokerTopic topic, [NotNull] KafkaProducerBrokerPartition partition, 
+        private bool TryHandlePartitionResponse([NotNull] KafkaProducerBrokerPartition partition, 
             [NotNull] KafkaProduceResponseTopicPartition response, 
             [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> batchMessages)
         {            
@@ -429,17 +428,7 @@ namespace NKafka.Client.Producer.Internal
                         break;
                     case KafkaResponseErrorCode.InvalidRequiredAcks:
                         error = KafkaProducerTopicPartitionErrorCode.InvalidRequiredAcks;
-                        if (topic.ConsistencyLevel == KafkaConsistencyLevel.None ||
-                            topic.ConsistencyLevel == KafkaConsistencyLevel.OneReplica ||
-                            topic.ConsistencyLevel == KafkaConsistencyLevel.AllReplicas)
-                        {
-                            errorType = ProducerErrorType.Error;
-                        }
-                        else
-                        {
-                            topic.ConsistencyLevel = KafkaConsistencyLevel.OneReplica;
-                            errorType = ProducerErrorType.Warning;
-                        }                        
+                        errorType = ProducerErrorType.Error;                        
                         break;
                     case KafkaResponseErrorCode.TopicAuthorizationFailed:
                         error = KafkaProducerTopicPartitionErrorCode.TopicAuthorizationFailed;
@@ -492,7 +481,7 @@ namespace NKafka.Client.Producer.Internal
             }
             var requestTopic = new KafkaProduceRequestTopic(topic.TopicName, requestPartitions);
             
-            var batchRequest = new KafkaProduceRequest(topic.ConsistencyLevel, topic.Settings.ProduceRequestServerTimeout, new [] { requestTopic});
+            var batchRequest = new KafkaProduceRequest(topic.Settings.ConsistencyLevel, topic.Settings.ProduceRequestServerTimeout, new [] { requestTopic});
             return batchRequest;
         }
 
@@ -509,8 +498,7 @@ namespace NKafka.Client.Producer.Internal
             partition.Logger?.OnPartitionErrorReset(errorInfo);
         }
 
-        private void HandleBrokerError(
-           [NotNull] KafkaProducerBrokerTopic topic,
+        private void HandleBrokerError(           
            [NotNull] KafkaProducerBrokerPartition partition,
            KafkaBrokerErrorCode brokerError)
         {            
@@ -560,17 +548,8 @@ namespace NKafka.Client.Producer.Internal
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.HostNotAvailable;
                     break;
                 case KafkaBrokerErrorCode.TooBigMessage:
-                    if (topic.TopicBatchMaxSizeByteCount < 1024) //todo (E006) empiric small size
-                    {
-                        partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportError;
-                        errorType = ProducerErrorType.Rearrange;
-                    }
-                    else
-                    {
-                        partitionErrorCode = KafkaProducerTopicPartitionErrorCode.MessageBatchSizeTooLarge;
-                        topic.TopicBatchMaxSizeByteCount = (int)Math.Round(topic.TopicBatchMaxSizeByteCount * 0.66); //todo (E006) empiric multiplier
-                        errorType = ProducerErrorType.Warning;
-                    }
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportRequestTooLarge;
+                    errorType = ProducerErrorType.Rearrange;
                     break;
                 case KafkaBrokerErrorCode.UnknownError:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.UnknownError;
@@ -624,7 +603,7 @@ namespace NKafka.Client.Producer.Internal
                     partition.RollbackMessags(batchMessags);
                 }
 
-                HandleBrokerError(topic, partition, brokerError);
+                HandleBrokerError(partition, brokerError);
             }
 
             var logger = topic.Logger;

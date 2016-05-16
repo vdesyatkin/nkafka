@@ -13,11 +13,7 @@ namespace NKafka.Client.Producer.Internal
 
         [NotNull] public readonly ConcurrentDictionary<int, KafkaProducerBrokerPartition> Partitions;
 
-        public int ProducePartitionIndex;
-
-        public KafkaConsistencyLevel ConsistencyLevel;
-
-        public int TopicBatchMaxSizeByteCount;
+        public int ProducePartitionIndex;        
 
         [CanBeNull] public IKafkaProducerTopicLogger Logger;
 
@@ -25,10 +21,8 @@ namespace NKafka.Client.Producer.Internal
         {
             TopicName = topicName;
             TopicProducerName = topicProducerName;
-            Settings = settings;
-            ConsistencyLevel = settings.ConsistencyLevel;
-            TopicBatchMaxSizeByteCount = settings.ProduceRequestMaxSizeByteCount;
+            Settings = settings;                      
             Partitions = new ConcurrentDictionary<int, KafkaProducerBrokerPartition>();
-        }
+        }        
     }
 }
