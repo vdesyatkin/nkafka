@@ -232,7 +232,7 @@ namespace NKafka.Client.Producer.Internal
                     if (messageSize > partition.LimitInfo.MaxMessageSizeByteCount)
                     {                        
                         partition.FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.MessageSizeTooLarge);
-                        partition.TryDequeueMessage(out message);
+                        partition.DequeueMessage();
                         continue;
                     }
 
@@ -241,7 +241,7 @@ namespace NKafka.Client.Producer.Internal
                         messageSizeInBatch > topicBatchMaxSize)
                     {                        
                         partition.FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.MessageSizeLargerThanBatchMaxSize);
-                        partition.TryDequeueMessage(out message);
+                        partition.DequeueMessage();
                         continue;
                     }
                     
@@ -253,7 +253,7 @@ namespace NKafka.Client.Producer.Internal
                     }
 
                     // message is accepted to batch
-                    partition.TryDequeueMessage(out message);
+                    partition.DequeueMessage();
                     partitionBatchSize += messageSizeInBatch;
                     topicBatchSize += messageSizeInBatch;
                     topicBatchMessageCount++;

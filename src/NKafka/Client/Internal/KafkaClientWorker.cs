@@ -21,7 +21,7 @@ namespace NKafka.Client.Internal
         [NotNull] private readonly string _wokerName;
         [NotNull] private readonly KafkaProtocol _protocol;
         [NotNull] private readonly KafkaClientSettings _settings;
-        [CanBeNull] private readonly IKafkaClientBrokerLogger _brokerLogger;
+        [CanBeNull] private readonly IKafkaClientLogger _logger;
 
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientTopic> _topics;
         [NotNull] private readonly ConcurrentDictionary<string, MetadataRequestInfo> _topicMetadataRequests;
@@ -43,13 +43,13 @@ namespace NKafka.Client.Internal
         public event ArrangeGroupDelegate ArrangeGroup;
 
         public KafkaClientWorker(int workerId, [NotNull] KafkaClientSettings settings,
-            [CanBeNull] IKafkaClientBrokerLogger brokerLogger)
+            [CanBeNull] IKafkaClientLogger logger)
         {
             _workerId = workerId;
             _wokerName = $"worker(id={workerId})";
 
             _settings = settings;
-            _brokerLogger = brokerLogger;
+            _logger = logger;
             _protocol = new KafkaProtocol(settings.KafkaVersion, settings.ProtocolSettings ?? KafkaProtocolSettingsBuilder.Default, settings.ClientId);
             _workerPeriod = settings.WorkerPeriod;
             if (_workerPeriod < TimeSpan.FromMilliseconds(100))
@@ -328,25 +328,26 @@ namespace NKafka.Client.Internal
                 topic.Status == KafkaClientTopicStatus.Rearrange)
             {
                 var metadataBroker = GetMetadataBroker();
-                if (metadataBroker != null)
+                if (metadataBroker == null)
                 {
-                    var metadataRequest = CreateTopicMetadataRequest(topic.TopicName);
-                    var metadataRequestResult = metadataBroker.SendRequest(metadataRequest, _wokerName);
-                    if (metadataRequestResult.HasError)
-                    {
-                        topic.Status = KafkaClientTopicStatus.MetadataError;
-                        topic.ChangeMetadataState(false, ConvertTopicMetadataRequestError(metadataRequestResult.Error), null);
-                        return;
-                    }
-
-                    var metadataRequestId = metadataRequestResult.HasData ? metadataRequestResult.Data : null;
-                    if (metadataRequestId.HasValue)
-                    {
-
-                        _topicMetadataRequests[topic.TopicName] = new MetadataRequestInfo(metadataRequestId.Value, metadataBroker);
-                        topic.Status = KafkaClientTopicStatus.MetadataRequested;
-                    }
+                    return;
+                }                
+                
+                var metadataRequest = CreateTopicMetadataRequest(topic.TopicName);
+                var metadataRequestResult = metadataBroker.SendRequest(metadataRequest, _wokerName);
+                if (metadataRequestResult.HasError)
+                {
+                    topic.Status = KafkaClientTopicStatus.MetadataError;
+                    topic.ChangeMetadataState(false, ConvertTopicMetadataRequestError(metadataRequestResult.Error), null);                    
+                    return;
                 }
+
+                var metadataRequestId = metadataRequestResult.HasData ? metadataRequestResult.Data : null;
+                if (metadataRequestId.HasValue)
+                {
+                    _topicMetadataRequests[topic.TopicName] = new MetadataRequestInfo(metadataRequestId.Value, metadataBroker);
+                    topic.Status = KafkaClientTopicStatus.MetadataRequested;
+                }                
             }
 
             if (topic.Status == KafkaClientTopicStatus.MetadataRequested)
@@ -387,7 +388,16 @@ namespace NKafka.Client.Internal
                 {
                     topic.Status = KafkaClientTopicStatus.MetadataError;
                     topic.ChangeMetadataState(false, KafkaClientTopicMetadataErrorCode.MetadataError, metadata);
-                    return;
+                    try
+                    {
+                        var broker = metadataRequest.Broker;
+                        broker.Logger?.OnTopicMetadataError(broker, metadata);
+                    }
+                    catch (Exception)
+                    {
+                        //ignored
+                    }
+                    return;                    
                 }
 
                 topic.ChangeMetadataState(true, null, metadata);
@@ -398,17 +408,8 @@ namespace NKafka.Client.Internal
                     brokerPartitions.Add(topicPartition.BrokerPartition);
                 }
 
-                try
-                {
-                    ArrangeTopic?.Invoke(topic.TopicName, brokerPartitions);
-                    topic.Status = KafkaClientTopicStatus.Ready;
-                }
-                catch (Exception)
-                {
-                    topic.Status = KafkaClientTopicStatus.MetadataError;
-                    topic.ChangeMetadataState(false, KafkaClientTopicMetadataErrorCode.ClientError, null);
-                    return;
-                }
+                ArrangeTopic?.Invoke(topic.TopicName, brokerPartitions);
+                topic.Status = KafkaClientTopicStatus.Ready;
             }
 
             if (topic.Status == KafkaClientTopicStatus.Ready)
@@ -458,23 +459,25 @@ namespace NKafka.Client.Internal
                 group.Status == KafkaClientGroupStatus.Rearrange)
             {
                 var metadataBroker = GetMetadataBroker();
-                if (metadataBroker != null)
+                if (metadataBroker == null)
                 {
-                    var metadataRequest = CreateGroupMetadataRequest(group.GroupName);
-                    var metadataRequestResult = metadataBroker.SendRequest(metadataRequest, _wokerName);
-                    if (metadataRequestResult.HasError)
-                    {
-                        group.Status = KafkaClientGroupStatus.MetadataError;
-                        group.ChangeMetadataState(false, ConvertGroupMetadataRequestError(metadataRequestResult.Error), null);
-                        return;
-                    }
+                    return;
+                }
 
-                    var metadataRequestId = metadataRequestResult.HasData ? metadataRequestResult.Data : null;
-                    if (metadataRequestId.HasValue)
-                    {
-                        _groupMetadataRequests[group.GroupName] = new MetadataRequestInfo(metadataRequestId.Value, metadataBroker);
-                        group.Status = KafkaClientGroupStatus.MetadataRequested;
-                    }
+                var metadataRequest = CreateGroupMetadataRequest(group.GroupName);
+                var metadataRequestResult = metadataBroker.SendRequest(metadataRequest, _wokerName);
+                if (metadataRequestResult.HasError)
+                {
+                    group.Status = KafkaClientGroupStatus.MetadataError;
+                    group.ChangeMetadataState(false, ConvertGroupMetadataRequestError(metadataRequestResult.Error), null);
+                    return;
+                }
+
+                var metadataRequestId = metadataRequestResult.HasData ? metadataRequestResult.Data : null;
+                if (metadataRequestId.HasValue)
+                {
+                    _groupMetadataRequests[group.GroupName] = new MetadataRequestInfo(metadataRequestId.Value, metadataBroker);
+                    group.Status = KafkaClientGroupStatus.MetadataRequested;
                 }
             }
 
@@ -519,7 +522,16 @@ namespace NKafka.Client.Internal
                 {
                     group.Status = KafkaClientGroupStatus.MetadataError;
                     group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.MetadataError, metadata);
-                    return;
+                    try
+                    {
+                        var broker = metadataRequest.Broker;
+                        broker.Logger?.OnGroupMetadataError(broker, metadata);
+                    }
+                    catch (Exception)
+                    {
+                        //ignored
+                    }
+                    return;                    
                 }
 
                 group.ChangeMetadataState(true, null, metadata);
@@ -532,17 +544,8 @@ namespace NKafka.Client.Internal
                     return;
                 }
 
-                try
-                {
-                    ArrangeGroup?.Invoke(group.GroupName, groupCoordinator);
-                    group.Status = KafkaClientGroupStatus.Ready;
-                }
-                catch (Exception)
-                {
-                    group.Status = KafkaClientGroupStatus.MetadataError;
-                    group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.ClientError, null);
-                    return;
-                }
+                ArrangeGroup?.Invoke(group.GroupName, groupCoordinator);
+                group.Status = KafkaClientGroupStatus.Ready;
             }
 
             if (group.Status == KafkaClientGroupStatus.Ready)
@@ -635,7 +638,7 @@ namespace NKafka.Client.Internal
         private KafkaClientBroker CreateBroker([NotNull]KafkaBrokerMetadata brokerMetadata)
         {
             return new KafkaClientBroker(_protocol, _workerId, KafkaClientBrokerType.MessageBroker,
-                brokerMetadata, _settings, _brokerLogger);
+                brokerMetadata, _settings, _logger);
         }
 
         [NotNull]
@@ -643,7 +646,7 @@ namespace NKafka.Client.Internal
         {
             var brokerMetadata = new KafkaBrokerMetadata(0, brokerInfo.Host, brokerInfo.Port, null);
             return new KafkaClientBroker(_protocol, _workerId, KafkaClientBrokerType.MetadataBroker,
-                brokerMetadata, _settings, _brokerLogger);
+                brokerMetadata, _settings, _logger);
         }
 
         #region Topic metadata

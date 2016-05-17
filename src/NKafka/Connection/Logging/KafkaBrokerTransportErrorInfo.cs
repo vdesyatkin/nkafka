@@ -5,7 +5,7 @@ using NKafka.Connection.Diagnostics;
 namespace NKafka.Connection.Logging
 {
     [PublicAPI]
-    public sealed class KafkaBrokerConnectionErrorInfo
+    public sealed class KafkaBrokerTransportErrorInfo
     {        
         public readonly KafkaBrokerErrorCode ErrorCode;
 
@@ -17,7 +17,7 @@ namespace NKafka.Connection.Logging
 
         [CanBeNull] public readonly Exception Exception;
 
-        public KafkaBrokerConnectionErrorInfo(KafkaBrokerErrorCode errorCode,
+        public KafkaBrokerTransportErrorInfo(KafkaBrokerErrorCode errorCode,
             string errorDescription,
             [NotNull] KafkaConnectionErrorInfo connectionError,
             [CanBeNull] KafkaBrokerRequestInfo requestInfo,

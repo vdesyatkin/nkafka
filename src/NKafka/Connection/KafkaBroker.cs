@@ -565,9 +565,9 @@ namespace NKafka.Connection
         {
             var logger = _logger;
             if (logger == null) return;            
-            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, errorDescription,
+            var errorInfo = new KafkaBrokerTransportErrorInfo(errorCode, errorDescription,
                 connectionException.ErrorInfo, requestInfo, connectionException.InnerException);
-            logger.OnConnectionError(errorInfo);
+            logger.OnTransportError(errorInfo);
         }
 
         private void LogConnectionError(KafkaBrokerErrorCode errorCode, string errorDescription, KafkaConnectionErrorCode connectionErrorCode,
@@ -576,9 +576,9 @@ namespace NKafka.Connection
             var logger = _logger;
             if (logger == null) return;
             var connectionErrorInfo = new KafkaConnectionErrorInfo(connectionErrorCode, null);
-            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, errorDescription,
+            var errorInfo = new KafkaBrokerTransportErrorInfo(errorCode, errorDescription,
                 connectionErrorInfo, requestInfo, null);
-            logger.OnConnectionError(errorInfo);
+            logger.OnTransportError(errorInfo);
         }
 
         private void LogConnectionError(string errorDescription, [NotNull] KafkaConnectionException connectionException,
@@ -587,9 +587,9 @@ namespace NKafka.Connection
             var logger = _logger;
             if (logger == null) return;
             var errorCode = ConvertError(connectionException);
-            var errorInfo = new KafkaBrokerConnectionErrorInfo(errorCode, errorDescription,
+            var errorInfo = new KafkaBrokerTransportErrorInfo(errorCode, errorDescription,
                 connectionException.ErrorInfo, requestInfo, connectionException.InnerException);
-            logger.OnConnectionError(errorInfo);
+            logger.OnTransportError(errorInfo);
         }
 
         private void LogConnected()

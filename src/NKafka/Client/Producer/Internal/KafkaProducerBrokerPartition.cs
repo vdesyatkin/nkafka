@@ -82,16 +82,17 @@ namespace NKafka.Client.Producer.Internal
             return message != null;
         }
 
-        public bool TryDequeueMessage(out KafkaMessage message)
+        public void DequeueMessage()
         {
             if (_retryQueue.Count == 0)
             {
-                return _mainQueue.TryDequeue(out message);
+                KafkaMessage message;
+                _mainQueue.TryDequeue(out message);
+                return;
             }
 
-            message = _retryQueue.Dequeue();
+            _retryQueue.Dequeue();
             RetrySendPendingMessageCount = _retryQueue.Count;            
-            return message != null;
         }
 
         public void RollbackMessags([NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> messages)

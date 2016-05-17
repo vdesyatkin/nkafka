@@ -22,6 +22,8 @@ namespace NKafka.Client.Broker.Internal
         public bool IsEnabled => _broker.IsEnabled;
         public bool IsStarted => _broker.IsOpenned;
 
+        [CanBeNull] public IKafkaClientLogger Logger { get; }
+
         [NotNull] private readonly KafkaBroker _broker;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerGroup> _groups;
@@ -29,18 +31,16 @@ namespace NKafka.Client.Broker.Internal
         [NotNull] private readonly KafkaConsumerBroker _consumer;
         [NotNull] private readonly KafkaCoordinatorBroker _coordinator;
 
-        [CanBeNull] private readonly IKafkaClientBrokerLogger _logger;
-
         private readonly TimeSpan _clientTimeout;        
 
         public KafkaClientBroker([NotNull] KafkaProtocol protocol, int workerId,
             KafkaClientBrokerType brokerType, [NotNull] KafkaBrokerMetadata metadata, 
             [NotNull] KafkaClientSettings settings,
-            [CanBeNull] IKafkaClientBrokerLogger logger)
-        {                       
+            [CanBeNull] IKafkaClientLogger logger)
+        {
             BrokerType = brokerType;
             BrokerMetadata = metadata;
-            _logger = logger;
+            Logger = logger;
 
             var brokerId = metadata.BrokerId;
             var host = metadata.Host ?? string.Empty;
@@ -50,7 +50,7 @@ namespace NKafka.Client.Broker.Internal
                 : $"broker(metdata)[{host}:{port}]";
             Name = brokerName;
             
-            var loggerWrapper = logger != null ? new KafkaClientBrokerLoggerWrapper(this, logger) : null;
+            var loggerWrapper = logger != null ? new KafkaClientBrokerLogger(this, logger) : null;
             var broker = new KafkaBroker(brokerName, host, port, protocol, settings.ConnectionSettings, loggerWrapper);
             _broker = broker;
 

@@ -34,7 +34,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client\Broker\Internal\KafkaClientBrokerLoggerWrapper.cs" />
+    <Compile Include="Client\Broker\Internal\KafkaClientBrokerLogger.cs" />
     <Compile Include="Client\ConsumerGroup\IKafkaConsumerGroupLogger.cs" />
     <Compile Include="Client\ConsumerGroup\Logging\IKafkaCoordinatorGroupLogger.cs" />
     <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupAssignmentErrorInfo.cs" />
@@ -66,7 +66,7 @@
     <Compile Include="Client\Producer\Logging\KafkaProducerTopicTransportErrorInfo.cs" />
     <Compile Include="Connection\Logging\KafkaBrokerProtocolErrorInfo.cs" />
     <Compile Include="Connection\Logging\KafkaBrokerRequestInfo.cs" />
-    <Compile Include="Client\Broker\Diagnostics\IKafkaClientBrokerLogger.cs" />
+    <Compile Include="Client\IKafkaClientLogger.cs" />
     <Compile Include="Client\Broker\KafkaClientBrokerType.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignment.cs" />
     <Compile Include="Client\ConsumerGroup\Assignment\KafkaConsumerAssignmentMember.cs" />
@@ -170,10 +170,10 @@
     <Compile Include="Client\Producer\KafkaProducerSettings.cs" />
     <Compile Include="Client\Producer\KafkaProducerSettingsBuilder.cs" />
     <Compile Include="Client\Broker\IKafkaClientBroker.cs" />
-    <Compile Include="Connection\Logging\IKafkaBrokerLogger.cs" />
+    <Compile Include="Connection\IKafkaBrokerLogger.cs" />
     <Compile Include="Connection\KafkaBroker.cs" />
     <Compile Include="Connection\Diagnostics\KafkaBrokerErrorCode.cs" />
-    <Compile Include="Connection\Logging\KafkaBrokerConnectionErrorInfo.cs" />
+    <Compile Include="Connection\Logging\KafkaBrokerTransportErrorInfo.cs" />
     <Compile Include="Connection\KafkaBrokerResult.cs" />
     <Compile Include="Connection\Diagnostics\KafkaConnectionErrorCode.cs" />
     <Compile Include="Connection\Logging\KafkaConnectionErrorInfo.cs" />

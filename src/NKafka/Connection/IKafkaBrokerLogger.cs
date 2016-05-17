@@ -1,12 +1,14 @@
 ﻿using JetBrains.Annotations;
+using NKafka.Connection.Logging;
 
-namespace NKafka.Connection.Logging
+namespace NKafka.Connection
 {
+    [PublicAPI]
     public interface IKafkaBrokerLogger
     {
         void OnConnected();        
 
-        void OnConnectionError([NotNull] KafkaBrokerConnectionErrorInfo error);
+        void OnTransportError([NotNull] KafkaBrokerTransportErrorInfo error);
 
         void OnProtocolError([NotNull] KafkaBrokerProtocolErrorInfo error);        
     }

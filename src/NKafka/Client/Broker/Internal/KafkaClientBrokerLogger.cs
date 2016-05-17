@@ -1,16 +1,16 @@
 ﻿using System;
 using JetBrains.Annotations;
-using NKafka.Client.Broker.Diagnostics;
+using NKafka.Connection;
 using NKafka.Connection.Logging;
 
 namespace NKafka.Client.Broker.Internal
 {
-    internal sealed class KafkaClientBrokerLoggerWrapper : IKafkaBrokerLogger
+    internal sealed class KafkaClientBrokerLogger : IKafkaBrokerLogger
     {
         [NotNull] private readonly IKafkaClientBroker _broker;
-        [NotNull] private readonly IKafkaClientBrokerLogger _logger;
+        [NotNull] private readonly IKafkaClientLogger _logger;
 
-        public KafkaClientBrokerLoggerWrapper([NotNull] IKafkaClientBroker broker, [NotNull] IKafkaClientBrokerLogger logger)
+        public KafkaClientBrokerLogger([NotNull] IKafkaClientBroker broker, [NotNull] IKafkaClientLogger logger)
         {
             _broker = broker;
             _logger = logger;
@@ -28,11 +28,11 @@ namespace NKafka.Client.Broker.Internal
             }
         }       
 
-        public void OnConnectionError(KafkaBrokerConnectionErrorInfo error)
+        public void OnTransportError(KafkaBrokerTransportErrorInfo error)
         {
             try
             {
-                _logger.OnBrokerConnectionError(_broker, error);
+                _logger.OnBrokerTransportError(_broker, error);
             }
             catch (Exception)
             {
