@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using JetBrains.Annotations;
 using NKafka.Client;
 using NKafka.Client.Consumer;
 using NKafka.Client.ConsumerGroup;
@@ -163,7 +162,7 @@ namespace NKafka.DevConsole
 
         private class TestPartitioner : IKafkaProducerPartitioner<string, string>
         {            
-            [NotNull] private readonly Random _rand = new Random();
+            private readonly Random _rand = new Random();
 
             public int GetPartition(KafkaMessage<string, string> message, IReadOnlyList<int> partitions)
             {                
@@ -175,7 +174,7 @@ namespace NKafka.DevConsole
                     return partitions[intKey%partitions.Count];
                 }
 
-                return partitions[_rand.Next(0, 100) % partitions.Count];
+                return partitions[(_rand?.Next(0, 100) ?? 0) % partitions.Count];
             }
         }        
     }
