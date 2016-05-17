@@ -11,7 +11,7 @@ namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClient : IKafkaClient
     {
-        [NotNull, ItemNotNull] private readonly IReadOnlyList<KafkaClientWorker> _workers;        
+        [NotNull, ItemNotNull] private readonly IReadOnlyList<KafkaClientWorker> _workers;
 
         public KafkaClientStatus Status { get; private set; }
 
@@ -30,17 +30,17 @@ namespace NKafka.Client.Internal
             return new KafkaClientInfo(workerInfos, DateTime.UtcNow);
         }
 
-        public KafkaClient([NotNull]KafkaClientSettings settings, 
+        public KafkaClient([NotNull]KafkaClientSettings settings,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaClientGroup> groups,
             [CanBeNull] IKafkaClientBrokerLogger brokerLogger)
-        {            
+        {
             var workerCount = settings.WorkerThreadCount;
             if (workerCount < 1)
             {
                 workerCount = 1;
             }
-            
+
             var workers = new List<KafkaClientWorker>(workerCount);
             for (var i = 0; i < workerCount; i++)
             {
@@ -60,28 +60,28 @@ namespace NKafka.Client.Internal
 
             foreach (var group in groups)
             {
-                var worker = GetWorker(group.GroupName.GetHashCode());                
+                var worker = GetWorker(group.GroupName.GetHashCode());
 
                 worker?.AssignGroup(group);
-            }            
-        }        
+            }
+        }
 
         /// <summary>
         /// Non thread-safe.
         /// </summary>
         public void Start()
         {
-            if (Status == KafkaClientStatus.Started) return;            
+            if (Status == KafkaClientStatus.Started) return;
 
             lock (_stateLocker)
             {
                 if (Status == KafkaClientStatus.Started) return;
-                    
-                if (Status == KafkaClientStatus.Paused)
+
+                if (Status == KafkaClientStatus.Flushing)
                 {
-                    Resume();
+                    EndFlushing();
                     return;
-                }                
+                }
 
                 foreach (var worker in _workers)
                 {
@@ -103,10 +103,10 @@ namespace NKafka.Client.Internal
             {
                 if (Status == KafkaClientStatus.Stopped) return;
 
-                if (Status != KafkaClientStatus.Paused)
+                if (Status != KafkaClientStatus.Flushing)
                 {
-                    Pause();
-                    Status = KafkaClientStatus.Paused;
+                    BeginFlushing();
+                    Status = KafkaClientStatus.Flushing;
                 }
 
                 foreach (var worker in _workers)
@@ -130,7 +130,7 @@ namespace NKafka.Client.Internal
         /// <summary>
         /// Non thread-safe.
         /// </summary>
-        public bool TryPauseAndFlush(TimeSpan flushTimeout)
+        public bool TryFlush(TimeSpan flushTimeout)
         {
             if (Status == KafkaClientStatus.Stopped) return true;
 
@@ -138,10 +138,10 @@ namespace NKafka.Client.Internal
             {
                 if (Status == KafkaClientStatus.Stopped) return true;
 
-                if (Status != KafkaClientStatus.Paused)
+                if (Status != KafkaClientStatus.Flushing)
                 {
-                    Pause();
-                    Status = KafkaClientStatus.Paused;
+                    BeginFlushing();
+                    Status = KafkaClientStatus.Flushing;
                 }
 
                 var cancellation = new CancellationTokenSource(flushTimeout);
@@ -155,7 +155,7 @@ namespace NKafka.Client.Internal
                         isSynchronized = isSynchronized && worker.IsAllTopicsSynchronized();
                     }
                     if (isSynchronized)
-                    {                        
+                    {
                         return true;
                     }
                     spinWait.SpinOnce();
@@ -164,24 +164,24 @@ namespace NKafka.Client.Internal
                 return false;
             }
         }
-              
+
         #region Flush
 
-        private void Pause()
+        private void BeginFlushing()
         {
             foreach (var worker in _workers)
             {
-                worker.DisableConsume();
+                worker.BeginFlushing();
             }
         }
 
-        private void Resume()
+        private void EndFlushing()
         {
             foreach (var worker in _workers)
             {
-                worker.EnableConsume();
+                worker.EndFlushing();
             }
-        }      
+        }
 
         #endregion Flush
 

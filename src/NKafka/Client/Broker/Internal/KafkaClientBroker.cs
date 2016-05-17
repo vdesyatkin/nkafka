@@ -258,8 +258,7 @@ namespace NKafka.Client.Broker.Internal
         }
 
         public KafkaClientBrokerInfo GetDiagnosticsInfo()
-        {
-            
+        {           
             return new KafkaClientBrokerInfo(Name, BrokerType, BrokerMetadata, _broker.IsOpenned, _broker.Error, 
                 _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc, DateTime.UtcNow);
         }

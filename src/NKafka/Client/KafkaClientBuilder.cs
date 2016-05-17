@@ -16,6 +16,8 @@ namespace NKafka.Client
     [PublicAPI]
     public class KafkaClientBuilder
     {
+        public const int DefaultKafkaPort = 9092;
+
         [NotNull, ItemNotNull] private readonly List<KafkaProducerTopic> _topicProducers;
         [NotNull, ItemNotNull] private readonly List<KafkaConsumerTopic> _topicConsumers;
         [NotNull] private readonly Dictionary<string, KafkaConsumerGroup> _consumerGroups;        
