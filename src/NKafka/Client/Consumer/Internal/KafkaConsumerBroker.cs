@@ -207,7 +207,18 @@ namespace NKafka.Client.Consumer.Internal
                 var currentReceivedOffset = partition.GetReceivedClientOffset();
                 var minAvailableOffset = partition.GetMinAvailableServerOffset();
 
-                var clientOffset = currentReceivedOffset ?? coordinatorOffset.GroupServerOffset ?? partition.GetMaxAvailableServerOffset();
+                var clientOffset = currentReceivedOffset ?? coordinatorOffset.GroupServerOffset;
+                if (clientOffset == null)
+                {
+                    if (partition.Settings.BeginBehavior == KafkaConsumerBeginBehavior.BeginFromMinAvailableOffset)
+                    {
+                        clientOffset = partition.GetMinAvailableServerOffset() - 1;
+                    }
+                    if (partition.Settings.BeginBehavior == KafkaConsumerBeginBehavior.BeginFromMaxAvailableOffset)
+                    {
+                        clientOffset = partition.GetMaxAvailableServerOffset();
+                    }
+                }
 
                 if (clientOffset == null) continue;
 

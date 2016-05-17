@@ -44,6 +44,7 @@
     <Compile Include="Client\ConsumerGroup\Logging\KafkaConsumerGroupProtocolErrorInfo.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerFallbackHandler.cs" />
     <Compile Include="Client\Consumer\IKafkaConsumerLogger.cs" />
+    <Compile Include="Client\Consumer\KafkaConsumerBeginBehavior.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerFallbackErrorCode.cs" />
     <Compile Include="Client\Consumer\KafkaConsumerFallbackInfo.cs" />
     <Compile Include="Client\Consumer\Logging\IKafkaConsumerTopicBufferLogger.cs" />
