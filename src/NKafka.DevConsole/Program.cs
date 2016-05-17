@@ -133,14 +133,14 @@ namespace NKafka.DevConsole
 
             Console.WriteLine("flushing...");
 
-            var isFlushed = client.TryPauseAndFlush(TimeSpan.FromSeconds(10));
+            var isFlushed = client.PauseAndWaitFlush(TimeSpan.FromSeconds(10));
             Console.WriteLine(!isFlushed ? "not flushed!" : "flushed");
 
             Console.WriteLine("stopping...");
             client.Stop();
             Console.WriteLine("stopped");
 
-            Console.ReadLine();            
+            Console.ReadLine();
         }       
 
         private class TestSerializer : IKafkaSerializer<string, string>

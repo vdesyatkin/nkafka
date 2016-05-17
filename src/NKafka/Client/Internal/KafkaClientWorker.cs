@@ -156,7 +156,7 @@ namespace NKafka.Client.Internal
             broker.AddGroupCoordinator(groupName, groupCoordinator);
         }
 
-        public void BeginFlushing()
+        public void Pause()
         {
             foreach (var broker in _brokers)
             {
@@ -164,7 +164,7 @@ namespace NKafka.Client.Internal
             }
         }
 
-        public void EndFlushing()
+        public void Resume()
         {
             foreach (var broker in _brokers)
             {
@@ -183,8 +183,7 @@ namespace NKafka.Client.Internal
         }
 
         public void Start()
-        {
-            EndFlushing();
+        {            
             _workerCancellation = new CancellationTokenSource();
             var produceTimer = new Timer(Work);
             // ReSharper disable once InconsistentlySynchronizedField
@@ -220,7 +219,7 @@ namespace NKafka.Client.Internal
             }
             foreach (var topic in _topics)
             {
-                topic.Value?.Flush();
+                topic.Value?.DistributeMessages();
             }
             foreach (var broker in _brokers)
             {
@@ -236,7 +235,7 @@ namespace NKafka.Client.Internal
                 var topic = topicPair.Value;
                 if (topic == null) continue;
 
-                topic.Status = KafkaClientTopicStatus.RearrangeRequired;
+                topic.Status = KafkaClientTopicStatus.NotInitialized;
             }
 
             foreach (var groupPair in _groups)
@@ -244,11 +243,12 @@ namespace NKafka.Client.Internal
                 var group = groupPair.Value;
                 if (group == null) continue;
 
-                group.Status = KafkaClientGroupStatus.RearrangeRequired;
+                group.Status = KafkaClientGroupStatus.NotInitialized;
             }
 
             _topicMetadataRequests.Clear();
             _groupMetadataRequests.Clear();
+            _brokers.Clear();
         }
 
         private void Work(object state)
@@ -413,7 +413,7 @@ namespace NKafka.Client.Internal
 
             if (topic.Status == KafkaClientTopicStatus.Ready)
             {
-                topic.Flush();
+                topic.DistributeMessages();
 
                 foreach (var paritition in topic.Partitions)
                 {

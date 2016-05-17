@@ -4,6 +4,6 @@
     {
         Stopped = 0,
         Started = 1,
-        Flushing = 2
+        Paused = 2
     }
 }

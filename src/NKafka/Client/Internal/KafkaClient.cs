@@ -65,10 +65,7 @@ namespace NKafka.Client.Internal
                 worker?.AssignGroup(group);
             }
         }
-
-        /// <summary>
-        /// Non thread-safe.
-        /// </summary>
+        
         public void Start()
         {
             if (Status == KafkaClientStatus.Started) return;
@@ -77,9 +74,9 @@ namespace NKafka.Client.Internal
             {
                 if (Status == KafkaClientStatus.Started) return;
 
-                if (Status == KafkaClientStatus.Flushing)
+                if (Status == KafkaClientStatus.Paused)
                 {
-                    EndFlushing();
+                    ResumeWorkers();
                     return;
                 }
 
@@ -91,10 +88,7 @@ namespace NKafka.Client.Internal
                 Status = KafkaClientStatus.Started;
             }
         }
-
-        /// <summary>
-        /// Non thread-safe.
-        /// </summary>
+        
         public void Stop()
         {
             if (Status == KafkaClientStatus.Stopped) return;
@@ -103,10 +97,10 @@ namespace NKafka.Client.Internal
             {
                 if (Status == KafkaClientStatus.Stopped) return;
 
-                if (Status != KafkaClientStatus.Flushing)
+                if (Status != KafkaClientStatus.Paused)
                 {
-                    BeginFlushing();
-                    Status = KafkaClientStatus.Flushing;
+                    PauseWorkers();
+                    Status = KafkaClientStatus.Paused;
                 }
 
                 foreach (var worker in _workers)
@@ -126,11 +120,24 @@ namespace NKafka.Client.Internal
                 Status = KafkaClientStatus.Stopped;
             }
         }
+        
+        public void Pause()
+        {
+            if (Status == KafkaClientStatus.Stopped) return;
 
-        /// <summary>
-        /// Non thread-safe.
-        /// </summary>
-        public bool TryFlush(TimeSpan flushTimeout)
+            lock (_stateLocker)
+            {
+                if (Status == KafkaClientStatus.Stopped) return;
+
+                if (Status != KafkaClientStatus.Paused)
+                {
+                    PauseWorkers();
+                    Status = KafkaClientStatus.Paused;
+                }
+            }
+        }        
+       
+        public bool PauseAndWaitFlush(TimeSpan flushTimeout)
         {
             if (Status == KafkaClientStatus.Stopped) return true;
 
@@ -138,10 +145,10 @@ namespace NKafka.Client.Internal
             {
                 if (Status == KafkaClientStatus.Stopped) return true;
 
-                if (Status != KafkaClientStatus.Flushing)
+                if (Status != KafkaClientStatus.Paused)
                 {
-                    BeginFlushing();
-                    Status = KafkaClientStatus.Flushing;
+                    PauseWorkers();
+                    Status = KafkaClientStatus.Paused;
                 }
 
                 var cancellation = new CancellationTokenSource(flushTimeout);
@@ -167,19 +174,19 @@ namespace NKafka.Client.Internal
 
         #region Flush
 
-        private void BeginFlushing()
+        private void PauseWorkers()
         {
             foreach (var worker in _workers)
             {
-                worker.BeginFlushing();
+                worker.Pause();
             }
         }
 
-        private void EndFlushing()
+        private void ResumeWorkers()
         {
             foreach (var worker in _workers)
             {
-                worker.EndFlushing();
+                worker.Resume();
             }
         }
 

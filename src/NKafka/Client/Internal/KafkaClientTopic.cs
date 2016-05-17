@@ -113,7 +113,7 @@ namespace NKafka.Client.Internal
             Consumer?.ApplyPartitions(consumerPartitions);
         }
 
-        public void Flush()
+        public void DistributeMessages()
         {
             Producer?.DistributeMessagesByPartitions();
         }

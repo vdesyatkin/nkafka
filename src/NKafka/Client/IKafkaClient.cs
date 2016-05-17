@@ -9,9 +9,10 @@ namespace NKafka.Client
     {
         KafkaClientStatus Status { get; }
 
-        void Start();
-        bool TryFlush(TimeSpan flushTimeout);
+        void Start();        
         void Stop();
+        void Pause();
+        bool PauseAndWaitFlush(TimeSpan flushTimeout);
 
         [NotNull]
         KafkaClientInfo GetDiagnosticsInfo();
