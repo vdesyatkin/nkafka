@@ -25,19 +25,23 @@ namespace NKafka.Client
         [CanBeNull] private IKafkaClientLogger _logger;
 
         public KafkaClientBuilder([NotNull] KafkaBrokerInfo metadataBroker)
-            : this(new KafkaClientSettingsBuilder(metadataBroker).Build())
+             : this(new KafkaClientSettingsBuilder(metadataBroker).Build())
         {
         }
 
-        public KafkaClientBuilder([NotNull]KafkaClientSettings settings)
+        public KafkaClientBuilder(IReadOnlyCollection<KafkaBrokerInfo> metadataBrokers)
+            : this(new KafkaClientSettingsBuilder(metadataBrokers).Build())
+        {
+        }
+
+        public KafkaClientBuilder(KafkaClientSettings settings)
         {
             _topicProducers = new List<KafkaProducerTopic>();
             _topicConsumers = new List<KafkaConsumerTopic>();
-            _consumerGroups = new Dictionary<string, KafkaConsumerGroup>();            
-            // ReSharper disable once ConstantNullCoalescingCondition
-            _settings = settings ?? new KafkaClientSettingsBuilder(null).Build();
+            _consumerGroups = new Dictionary<string, KafkaConsumerGroup>();
+            _settings = settings ?? new KafkaClientSettingsBuilder(new KafkaBrokerInfo[0]).Build();
         }
-        
+
         public IKafkaProducerTopic CreateTopicProducer([NotNull] string topicName,             
             [NotNull] IKafkaProducerPartitioner partitioner,
             [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler = null,

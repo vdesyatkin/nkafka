@@ -22,9 +22,22 @@ namespace NKafka.Client
 
         [CanBeNull] private KafkaProtocolSettings _protocolSettings;
 
-        public KafkaClientSettingsBuilder([NotNull] KafkaBrokerInfo metadataBroker)
+        public KafkaClientSettingsBuilder(KafkaBrokerInfo metadataBroker)
         {
-            _metadataBrokers = new List<KafkaBrokerInfo> { metadataBroker };
+            _metadataBrokers = new List<KafkaBrokerInfo>();
+            if (metadataBroker == null) return;
+            _metadataBrokers.Add(metadataBroker);
+        }
+
+        public KafkaClientSettingsBuilder(IReadOnlyCollection<KafkaBrokerInfo> metadataBrokers)
+        {
+            metadataBrokers = metadataBrokers ?? new KafkaBrokerInfo[0];
+            _metadataBrokers = new List<KafkaBrokerInfo>(metadataBrokers.Count);
+            foreach (var metadataBroker in metadataBrokers)
+            {
+                if (metadataBroker == null) continue;
+                _metadataBrokers.Add(metadataBroker);
+            }
         }
 
         [PublicAPI, NotNull]
