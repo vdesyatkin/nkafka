@@ -1330,7 +1330,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             var logger = group.Logger;
             if (logger == null) return;
 
-            var errorInfo = new KafkaConsumerGroupAssignmentErrorInfo(request, exception);
+            var errorInfo = new KafkaConsumerGroupAssignmentErrorInfo(request, _clientBroker, exception);
             logger.OnAssignmentError(errorInfo);            
         }
 
@@ -1341,7 +1341,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             group.ResetError();
             if (error == null) return;
 
-            var errorInfo = new KafkaConsumerGroupErrorResetInfo(error.Value, errorTimestamp);
+            var errorInfo = new KafkaConsumerGroupErrorResetInfo(error.Value, errorTimestamp, _clientBroker);
             group.Logger?.OnErrorReset(errorInfo);
         }
 

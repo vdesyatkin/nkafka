@@ -20,7 +20,7 @@ namespace NKafka.Client.Consumer
     [PublicAPI]
     public interface IKafkaConsumerLogger<TKey, TData>
     {        
-        void OnSerializationError([NotNull] IKafkaConsumerTopic<TKey, TData> topic, KafkaConsumerTopicSerializationErrorInfo error);
+        void OnSerializationError([NotNull] IKafkaConsumerTopic<TKey, TData> topic, [NotNull] KafkaConsumerTopicSerializationErrorInfo error);
 
         void OnTransportError([NotNull] IKafkaConsumerTopic<TKey, TData> topic, [NotNull] KafkaConsumerTopicTransportErrorInfo error);
 

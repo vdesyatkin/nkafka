@@ -6,7 +6,7 @@ namespace NKafka.Client.Producer
     [PublicAPI]
     public interface IKafkaProducerLogger
     {
-        void OnPartitioningError([NotNull] IKafkaProducerTopic topic, KafkaProducerTopicPartitioningErrorInfo error);
+        void OnPartitioningError([NotNull] IKafkaProducerTopic topic, [NotNull] KafkaProducerTopicPartitioningErrorInfo error);
 
         void OnTransportError([NotNull] IKafkaProducerTopic topic, [NotNull] KafkaProducerTopicTransportErrorInfo error);
 
@@ -22,9 +22,9 @@ namespace NKafka.Client.Producer
     [PublicAPI]
     public interface IKafkaProducerLogger<TKey, TData>
     {
-        void OnPartitioningError([NotNull] IKafkaProducerTopic<TKey, TData> topic, KafkaProducerTopicPartitioningErrorInfo<TKey, TData> error);
+        void OnPartitioningError([NotNull] IKafkaProducerTopic<TKey, TData> topic, [NotNull] KafkaProducerTopicPartitioningErrorInfo<TKey, TData> error);
 
-        void OnSerializationError([NotNull] IKafkaProducerTopic<TKey, TData> topic, KafkaProducerTopicSerializationErrorInfo<TKey, TData> error);
+        void OnSerializationError([NotNull] IKafkaProducerTopic<TKey, TData> topic, [NotNull] KafkaProducerTopicSerializationErrorInfo<TKey, TData> error);
 
         void OnTransportError([NotNull] IKafkaProducerTopic<TKey, TData> topic, [NotNull] KafkaProducerTopicTransportErrorInfo error);
 

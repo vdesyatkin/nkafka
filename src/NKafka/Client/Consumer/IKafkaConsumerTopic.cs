@@ -7,6 +7,7 @@ namespace NKafka.Client.Consumer
     [PublicAPI]
     public interface IKafkaConsumerTopic
     {
+        [NotNull] string TopicName { get; }
         bool IsReady { get; }
         bool IsSynchronized { get; }
 
@@ -19,6 +20,7 @@ namespace NKafka.Client.Consumer
     [PublicAPI]
     public interface IKafkaConsumerTopic<TKey, TData>
     {
+        [NotNull] string TopicName { get; }
         bool IsReady { get; }
         bool IsSynchronized { get; }
 

@@ -11,6 +11,7 @@ namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopic : IKafkaConsumerTopic
     {
+        string IKafkaConsumerTopic.TopicName => TopicName;
         [NotNull] public readonly string TopicName;
         [NotNull] public readonly string GroupName;
         [CanBeNull] public readonly string CatchUpGroupName;

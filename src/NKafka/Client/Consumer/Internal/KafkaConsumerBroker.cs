@@ -683,7 +683,7 @@ namespace NKafka.Client.Consumer.Internal
             partition.ResetError();
             if (error == null) return;
 
-            var errorInfo = new KafkaConsumerTopicErrorResetInfo(partition.PartitionId, error.Value, errorTimestamp);
+            var errorInfo = new KafkaConsumerTopicErrorResetInfo(partition.PartitionId, error.Value, errorTimestamp, _clientBroker);
             partition.Logger?.OnPartitionErrorReset(errorInfo);
         }
 

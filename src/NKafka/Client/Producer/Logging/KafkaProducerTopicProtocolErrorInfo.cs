@@ -22,6 +22,7 @@ namespace NKafka.Client.Producer.Logging
             [NotNull] IKafkaClientBroker broker, 
             int batchSizeMessageCount)
         {
+            PartitionId = partitionId;
             ProtocolError = protocolError;
             ErrorDescription = errorDescription;
             Broker = broker;            

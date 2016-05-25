@@ -19,6 +19,7 @@ namespace NKafka.Client.Consumer.Logging
             KafkaConsumerTopicPartitionErrorCode protocolError, string errorDescription,
             [NotNull] IKafkaClientBroker broker)
         {
+            PartitionId = partitionId;
             ProtocolError = protocolError;
             ErrorDescription = errorDescription;
             Broker = broker;         

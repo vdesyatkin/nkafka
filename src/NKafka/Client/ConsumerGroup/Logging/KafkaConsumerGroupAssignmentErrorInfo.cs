@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
 using NKafka.Client.ConsumerGroup.Assignment;
 
 namespace NKafka.Client.ConsumerGroup.Logging
@@ -11,9 +12,13 @@ namespace NKafka.Client.ConsumerGroup.Logging
 
         [CanBeNull] public readonly Exception Exception;
 
-        public KafkaConsumerGroupAssignmentErrorInfo([NotNull] KafkaConsumerAssignmentRequest assignmentRequest, [CanBeNull] Exception exception)
+        [NotNull]
+        public readonly IKafkaClientBroker Broker;
+
+        public KafkaConsumerGroupAssignmentErrorInfo([NotNull] KafkaConsumerAssignmentRequest assignmentRequest, [NotNull] IKafkaClientBroker broker, [CanBeNull] Exception exception)
         {
             AssignmentRequest = assignmentRequest;
+            Broker = broker;
             Exception = exception;
         }
     }

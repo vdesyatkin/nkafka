@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
 using NKafka.Client.Consumer.Diagnostics;
 
 namespace NKafka.Client.Consumer.Logging
@@ -13,11 +14,15 @@ namespace NKafka.Client.Consumer.Logging
 
         public readonly DateTime? ErrorTimestampUtc;
 
-        public KafkaConsumerTopicErrorResetInfo(int partitionId, KafkaConsumerTopicPartitionErrorCode errorCode, DateTime? errorTimestampUtc)
+        [NotNull] public readonly IKafkaClientBroker Broker;
+
+        public KafkaConsumerTopicErrorResetInfo(int partitionId, KafkaConsumerTopicPartitionErrorCode errorCode, DateTime? errorTimestampUtc,
+            [NotNull] IKafkaClientBroker broker)
         {
             PartitionId = partitionId;
             ErrorCode = errorCode;
             ErrorTimestampUtc = errorTimestampUtc;
+            Broker = broker;
         }
     }
 }

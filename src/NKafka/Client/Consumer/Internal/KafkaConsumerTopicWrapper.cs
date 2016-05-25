@@ -8,6 +8,7 @@ namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopicWrapper<TKey, TData> : IKafkaConsumerTopic<TKey, TData>
     {
+        string IKafkaConsumerTopic<TKey, TData>.TopicName => _topic.TopicName;
         [NotNull] private readonly KafkaConsumerTopic _topic;
 
         [NotNull] private readonly IKafkaSerializer<TKey, TData> _serializer;

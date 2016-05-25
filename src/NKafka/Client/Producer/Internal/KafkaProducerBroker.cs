@@ -494,7 +494,7 @@ namespace NKafka.Client.Producer.Internal
             partition.ResetError();
             if (error == null) return;
 
-            var errorInfo = new KafkaProducerTopicErrorResetInfo(partition.PartitionId, error.Value, errorTimestamp);
+            var errorInfo = new KafkaProducerTopicErrorResetInfo(partition.PartitionId, error.Value, errorTimestamp, _clientBroker);
             partition.Logger?.OnPartitionErrorReset(errorInfo);
         }
 

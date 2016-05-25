@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using NKafka.Client.Broker;
 using NKafka.Client.ConsumerGroup.Diagnostics;
 
 namespace NKafka.Client.ConsumerGroup.Logging
@@ -11,10 +12,14 @@ namespace NKafka.Client.ConsumerGroup.Logging
 
         public readonly DateTime? ErrorTimestampUtc;
 
-        public KafkaConsumerGroupErrorResetInfo(KafkaConsumerGroupErrorCode errorCode, DateTime? errorTimestampUtc)
+        [NotNull] public readonly IKafkaClientBroker Broker;
+
+        public KafkaConsumerGroupErrorResetInfo(KafkaConsumerGroupErrorCode errorCode, DateTime? errorTimestampUtc,
+            [NotNull] IKafkaClientBroker broker)
         {            
             ErrorCode = errorCode;
             ErrorTimestampUtc = errorTimestampUtc;
+            Broker = broker;
         }
     }
 }
