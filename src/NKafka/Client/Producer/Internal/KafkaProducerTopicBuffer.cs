@@ -202,7 +202,7 @@ namespace NKafka.Client.Producer.Internal
                 _serializer = serializer;
             }
 
-            public void HandleMessageFallback(KafkaProducerFallbackInfo fallbackInfo)
+            public void OnMessageFallback(KafkaProducerFallbackInfo fallbackInfo)
             {                
                 try
                 {
@@ -212,7 +212,7 @@ namespace NKafka.Client.Producer.Internal
 
                     var genericFallbackInfo = new KafkaProducerFallbackInfo<TKey, TData>(fallbackInfo.TopicName,
                         fallbackInfo.PartitionId, deserializedMessage, fallbackInfo.Reason);
-                    _fallbackHandler.HandleMessageFallback(genericFallbackInfo);
+                    _fallbackHandler.OnMessageFallback(genericFallbackInfo);
                 }
                 catch (Exception)
                 {

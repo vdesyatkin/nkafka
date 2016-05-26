@@ -12,7 +12,8 @@ namespace NKafka.Client.Producer
 
         public int GetPartition(KafkaMessage message, IReadOnlyList<int> partitions)
         {
-            return _random.Next(0, partitions.Count);
+            if (partitions.Count == 0) return 0;
+            return partitions[_random.Next(0, partitions.Count)];
         }
     }
 
@@ -24,7 +25,8 @@ namespace NKafka.Client.Producer
 
         public int GetPartition(KafkaMessage<TKey, TData> message, IReadOnlyList<int> partitions)
         {
-            return _random.Next(0, partitions.Count);
+            if (partitions.Count == 0) return 0;
+            return partitions[_random.Next(0, partitions.Count)];
         }
     }
 }

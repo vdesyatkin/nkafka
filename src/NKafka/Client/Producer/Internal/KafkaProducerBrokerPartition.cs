@@ -137,7 +137,7 @@ namespace NKafka.Client.Producer.Internal
             try
             {
                 var fallbackInfo = new KafkaProducerFallbackInfo(_topicName, PartitionId, message, reason);
-                _fallbackHandler?.HandleMessageFallback(fallbackInfo);
+                _fallbackHandler?.OnMessageFallback(fallbackInfo);
             }
             catch (Exception)
             {

@@ -5,12 +5,12 @@ namespace NKafka.Client.Producer
     [PublicAPI]
     public interface IKafkaProducerFallbackHandler
     {
-        void HandleMessageFallback([NotNull] KafkaProducerFallbackInfo fallbackInfo);
+        void OnMessageFallback([NotNull] KafkaProducerFallbackInfo fallbackInfo);
     }
 
     [PublicAPI]
     public interface IKafkaProducerFallbackHandler<TKey, TData>
     {
-        void HandleMessageFallback([NotNull] KafkaProducerFallbackInfo<TKey, TData> fallbackInfo);
+        void OnMessageFallback([NotNull] KafkaProducerFallbackInfo<TKey, TData> fallbackInfo);
     }
 }

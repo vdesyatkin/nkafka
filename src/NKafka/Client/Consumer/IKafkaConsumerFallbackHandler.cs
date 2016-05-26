@@ -5,6 +5,6 @@ namespace NKafka.Client.Consumer
     [PublicAPI]
     public interface IKafkaConsumerFallbackHandler
     {
-        void HandleСommitFallback([NotNull] KafkaConsumerFallbackInfo fallbackInfo);
+        void OnСommitFallback([NotNull] KafkaConsumerFallbackInfo fallbackInfo);
     }
 }

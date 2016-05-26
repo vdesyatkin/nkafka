@@ -121,7 +121,7 @@ namespace NKafka.Client.Consumer.Internal
                                 KafkaConsumerFallbackErrorCode.ClientStopped, commitClientOffset.Value, commitServerOffset);
                             try
                             {
-                                fallbackHandler.HandleСommitFallback(fallbackInfo);
+                                fallbackHandler.OnСommitFallback(fallbackInfo);
                             }
                             catch (Exception)
                             {
@@ -273,7 +273,7 @@ namespace NKafka.Client.Consumer.Internal
                                 KafkaConsumerFallbackErrorCode.UnassignedBeforeCommit, unassignedClientOffset.Value, unassignedServerOffset);
                             try
                             {
-                                fallbackHandler.HandleСommitFallback(fallbackInfo);
+                                fallbackHandler.OnСommitFallback(fallbackInfo);
                             }
                             catch (Exception)
                             {
