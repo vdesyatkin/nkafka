@@ -101,10 +101,11 @@ namespace NKafka.Client
             [CanBeNull] IKafkaConsumerLogger logger = null,
             [CanBeNull] KafkaConsumerSettings settings = null)
         {
-            // ReSharper disable once ConstantNullCoalescingCondition
+            // ReSharper disable ConstantNullCoalescingCondition
             topicName = topicName ?? string.Empty;
             // ReSharper disable once ConstantConditionalAccessQualifier
             var groupName = group?.GroupName ?? string.Empty;
+            // ReSharper restore ConstantNullCoalescingCondition
 
             settings = settings ?? KafkaConsumerSettingsBuilder.Default;
             var topicLogger = logger != null ? new KafkaConsumerTopicLogger(logger) : null;
@@ -129,10 +130,11 @@ namespace NKafka.Client
             [CanBeNull] KafkaConsumerSettings settings = null
            )
         {
-            // ReSharper disable once ConstantNullCoalescingCondition
+            // ReSharper disable ConstantNullCoalescingCondition
             topicName = topicName ?? string.Empty;
             // ReSharper disable once ConstantConditionalAccessQualifier
             var groupName = group?.GroupName ?? string.Empty;
+            // ReSharper restore ConstantNullCoalescingCondition
 
             settings = settings ?? KafkaConsumerSettingsBuilder.Default;
             var topicLogger = logger != null ? new KafkaConsumerTopicLogger<TKey, TData>(logger) : null;
@@ -160,12 +162,13 @@ namespace NKafka.Client
             [CanBeNull] IKafkaConsumerLogger logger = null,
             [CanBeNull] KafkaConsumerSettings settings = null)
         {
-            // ReSharper disable once ConstantNullCoalescingCondition
+            // ReSharper disable ConstantNullCoalescingCondition
             topicName = topicName ?? string.Empty;
             // ReSharper disable ConstantConditionalAccessQualifier
             var consumerGroupName = consumerGroup?.GroupName ?? string.Empty;
             var catchupGroupName = catchUpGroup?.GroupName ?? string.Empty;
             // ReSharper restore ConstantConditionalAccessQualifier  
+            // ReSharper restore ConstantNullCoalescingCondition
 
             settings = settings ?? KafkaConsumerSettingsBuilder.Default;
             var topicLogger = logger != null ? new KafkaConsumerTopicLogger(logger) : null;
@@ -192,11 +195,12 @@ namespace NKafka.Client
             [CanBeNull] KafkaConsumerSettings settings = null
            )
         {
-            // ReSharper disable once ConstantNullCoalescingCondition
+            // ReSharper disable ConstantNullCoalescingCondition
             topicName = topicName ?? string.Empty;
             // ReSharper disable ConstantConditionalAccessQualifier
             var consumerGroupName = consumerGroup?.GroupName ?? string.Empty;
             var catchupGroupName = catchUpGroup?.GroupName ?? string.Empty;
+            // ReSharper restore ConstantConditionalAccessQualifier
             // ReSharper restore ConstantConditionalAccessQualifier
 
             settings = settings ?? KafkaConsumerSettingsBuilder.Default;
