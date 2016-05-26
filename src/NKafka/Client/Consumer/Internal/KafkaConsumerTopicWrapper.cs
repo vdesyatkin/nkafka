@@ -11,7 +11,7 @@ namespace NKafka.Client.Consumer.Internal
         string IKafkaConsumerTopic<TKey, TData>.TopicName => _topic.TopicName;
         [NotNull] private readonly KafkaConsumerTopic _topic;
 
-        [NotNull] private readonly IKafkaSerializer<TKey, TData> _serializer;
+        [CanBeNull] private readonly IKafkaSerializer<TKey, TData> _serializer;
 
         [CanBeNull] private readonly IKafkaConsumerTopicBufferLogger _logger;
 
@@ -39,7 +39,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     try
                     {
-                        var genericMessage = _serializer.DeserializeMessage(message);
+                        var genericMessage = _serializer?.DeserializeMessage(message);
                         if (genericMessage == null) continue;
                         genericMessages.Add(genericMessage);
                     }

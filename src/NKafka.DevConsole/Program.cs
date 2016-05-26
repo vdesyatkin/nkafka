@@ -50,16 +50,9 @@ namespace NKafka.DevConsole
             }
 
             var topicProducer = clientBuilder.CreateTopicProducer(topicName,
-                new TestPartitioner(), new TestSerializer(), null, null, producerConfigBuilder.Build());
+                new TestSerializer(), new TestPartitioner(), null, null, producerConfigBuilder.Build());
             var topicConsumer = clientBuilder.CreateTopicConsumer(topicName, group,
-                new TestSerializer(), null, null, consumerConfigBuilder.Build());            
-
-            if (topicProducer == null || topicConsumer == null)
-            {
-                Console.WriteLine("Initialization error");
-                Console.ReadLine();
-                return;
-            }
+                new TestSerializer(), null, null, consumerConfigBuilder.Build());                        
 
             var client = clientBuilder.Build();
             client.Start();

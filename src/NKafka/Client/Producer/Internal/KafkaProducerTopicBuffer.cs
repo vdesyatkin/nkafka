@@ -98,7 +98,7 @@ namespace NKafka.Client.Producer.Internal
         [CanBeNull] public IKafkaProducerFallbackHandler FallbackHandler { get; }        
 
         [NotNull] private readonly IKafkaProducerPartitioner<TKey, TData> _partitioner;
-        [NotNull] private readonly IKafkaSerializer<TKey, TData> _serializer;
+        [CanBeNull] private readonly IKafkaSerializer<TKey, TData> _serializer;
         [CanBeNull] private readonly IKafkaProducerTopicBufferLogger<TKey, TData> _logger;
         [NotNull] private readonly ConcurrentQueue<KafkaMessage<TKey, TData>> _messageQueue;
 
@@ -142,7 +142,7 @@ namespace NKafka.Client.Producer.Internal
                 KafkaMessage serializedMessage;
                 try
                 {
-                    serializedMessage = _serializer.SerializeMessage(message);
+                    serializedMessage = _serializer?.SerializeMessage(message);
                     if (serializedMessage == null) continue;
                 }
                 catch (Exception exception)
@@ -203,9 +203,7 @@ namespace NKafka.Client.Producer.Internal
             }
 
             public void HandleMessageFallback(KafkaProducerFallbackInfo fallbackInfo)
-            {
-                if (fallbackInfo == null) return;
-                
+            {                
                 try
                 {
                     var message = fallbackInfo.Message;
