@@ -6,7 +6,7 @@ namespace NKafka.Client.ConsumerGroup
     [PublicAPI]
     public interface IKafkaConsumerGroup
     {
-        string GroupName { get; }
+        [NotNull] string GroupName { get; }
         KafkaConsumerGroupType GroupType { get; }
 
         bool IsReady { get; }
