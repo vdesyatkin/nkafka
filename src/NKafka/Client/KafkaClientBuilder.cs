@@ -221,12 +221,16 @@ namespace NKafka.Client
             [CanBeNull] IKafkaConsumerGroupLogger logger = null,
             [CanBeNull] KafkaConsumerGroupSettings settings = null)
         {
-            // ReSharper disable ConditionIsAlwaysTrueOrFalse            
-            // ReSharper disable ConstantNullCoalescingCondition
-            if (string.IsNullOrEmpty(groupName)) return null;
-            settings = settings ?? KafkaConsumerGroupSettingsBuilder.Default;
-            // ReSharper restore ConditionIsAlwaysTrueOrFalse
-            // ReSharper restore ConstantNullCoalescingCondition
+            // ReSharper disable once ConstantNullCoalescingCondition
+            groupName = groupName ?? string.Empty;
+
+            KafkaConsumerGroup currentGroup;
+            if (_consumerGroups.TryGetValue(groupName, out currentGroup) && currentGroup != null)
+            {
+                return currentGroup;
+            }
+                        
+            settings = settings ?? KafkaConsumerGroupSettingsBuilder.Default;            
 
             var group = new KafkaConsumerGroup(groupName, groupType, settings, logger);
             _consumerGroups[groupName] = group;

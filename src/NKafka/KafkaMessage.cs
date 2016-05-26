@@ -16,13 +16,13 @@ namespace NKafka
         /// </summary>
         public readonly byte[] Data;
 
-        public readonly DateTime? TiemestampUtc;
+        public readonly DateTime? TimestampUtc;
 
         public KafkaMessage(byte[] key, byte[] data, DateTime? timestampUtc)
         {
             Key = key;
             Data = data;
-            TiemestampUtc = timestampUtc;
+            TimestampUtc = timestampUtc;
         }
     }
 
@@ -39,7 +39,7 @@ namespace NKafka
         /// </summary>
         public readonly TData Data;
 
-        public readonly DateTime? TiemestampUtc;
+        public readonly DateTime? TimestampUtc;
 
         public KafkaMessage(TKey key, TData data, DateTime? timestampUtc)
         {

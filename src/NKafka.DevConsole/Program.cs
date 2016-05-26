@@ -142,14 +142,14 @@ namespace NKafka.DevConsole
             {
                 var key = message.Key != null ? Encoding.UTF8.GetBytes(message.Key) : null;
                 var data = message.Data != null ? Encoding.UTF8.GetBytes(message.Data) : null;
-                return new KafkaMessage(key, data, message.TiemestampUtc);
+                return new KafkaMessage(key, data, message.TimestampUtc);
             }
 
             public KafkaMessage<string, string> DeserializeMessage(KafkaMessage message)
             {
                 var key = message.Key != null ? Encoding.UTF8.GetString(message.Key) : null;
                 var data = message.Data != null ? Encoding.UTF8.GetString(message.Data) : null;
-                return new KafkaMessage<string, string>(key, data, message.TiemestampUtc);
+                return new KafkaMessage<string, string>(key, data, message.TimestampUtc);
             }
         }
 

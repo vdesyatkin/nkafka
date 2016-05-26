@@ -87,7 +87,7 @@ namespace NKafka.Protocol.API.Produce
                         writer.WriteInt8(MessageEmptyAttribute);
                         if (useTimestamp)
                         {
-                            writer.WriteTimestampUtc(message.TiemestampUtc ?? defaultTimestampUtc);
+                            writer.WriteTimestampUtc(message.TimestampUtc ?? defaultTimestampUtc);
                         }
                         writer.WriteByteArray(message.Key);
                         writer.WriteByteArray(message.Data);
@@ -119,7 +119,7 @@ namespace NKafka.Protocol.API.Produce
                         writer.WriteInt8(MessageEmptyAttribute);
                         if (useTimestamp)
                         {
-                            writer.WriteTimestampUtc(message.TiemestampUtc ?? defaultTimestampUtc);
+                            writer.WriteTimestampUtc(message.TimestampUtc ?? defaultTimestampUtc);
                         }
                         writer.WriteByteArray(message.Key);
                         writer.WriteByteArray(message.Data);
