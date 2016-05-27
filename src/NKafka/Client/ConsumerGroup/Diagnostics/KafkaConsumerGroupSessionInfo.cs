@@ -13,7 +13,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
 
         public readonly KafkaConsumerGroupErrorCode? Error;
 
-        public readonly DateTime? ErrorTimestampUtcUtc;
+        public readonly DateTime? ErrorTimestampUtc;
 
         [CanBeNull] public readonly KafkaConsumerGroupMemberInfo MemberInfo;
 
@@ -35,7 +35,7 @@ namespace NKafka.Client.ConsumerGroup.Diagnostics
             GroupName = groupName;            
             Status = status;
             Error = error;
-            ErrorTimestampUtcUtc = errorTimestampUtc;            
+            ErrorTimestampUtc = errorTimestampUtc;            
             MemberInfo = memberInfo;
             ProtocolInfo = protocolInfo;
             OffsetsInfo = offsetsInfo;
