@@ -245,6 +245,24 @@ namespace NKafka.Client.Consumer.Internal
 
         public void SetCommitClientOffset(long offset)
         {
+            if (!IsAssigned)
+            {
+                var fallbackHandler = FallbackHandler;
+                if (fallbackHandler != null)
+                {
+                    var fallbackInfo = new KafkaConsumerFallbackInfo(TopicName, PartitionId,
+                        KafkaConsumerFallbackErrorCode.UnassignedBeforeCommit, offset, _currentCommitServerOffset);
+                    try
+                    {
+                        fallbackHandler.OnСommitFallback(fallbackInfo);
+                    }
+                    catch (Exception)
+                    {
+                        //ignored
+                    }
+                }
+                return;
+            }
             while (offset > _currentCommitClientOffset)
             {
                 Interlocked.CompareExchange(ref _currentCommitClientOffset, offset, _currentCommitClientOffset);

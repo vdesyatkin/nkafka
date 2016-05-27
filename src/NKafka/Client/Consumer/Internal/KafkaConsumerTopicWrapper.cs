@@ -60,9 +60,9 @@ namespace NKafka.Client.Consumer.Internal
             return wrappedPackages;
         }
 
-        public bool TryEnqueueCommit(long packageNumber)
+        public void EnqueueCommit(long packageId)
         {
-            return _topic.TryEnqueueCommit(packageNumber);
+            _topic.EnqueueCommit(packageId);
         }
 
         #region Diagnostics

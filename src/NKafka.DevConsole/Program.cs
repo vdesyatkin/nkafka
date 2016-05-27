@@ -95,7 +95,7 @@ namespace NKafka.DevConsole
                             {
                                 Console.WriteLine($"key={message.Key} data={message.Data}");
                             }
-                            topicConsumer.TryEnqueueCommit(package.PackageId);
+                            topicConsumer.EnqueueCommit(package.PackageId);
                         }                                              
                     }
                     else

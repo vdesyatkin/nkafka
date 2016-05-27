@@ -12,7 +12,7 @@ namespace NKafka.Client.Consumer
         bool IsSynchronized { get; }
 
         [NotNull, ItemNotNull] IReadOnlyList<KafkaMessagePackage> Consume(int? maxMessageCount = null);
-        bool TryEnqueueCommit(long packageId);
+        void EnqueueCommit(long packageId);
 
         [NotNull] KafkaConsumerTopicInfo GetDiagnosticsInfo();
     }
@@ -25,7 +25,7 @@ namespace NKafka.Client.Consumer
         bool IsSynchronized { get; }
 
         [NotNull, ItemNotNull] IReadOnlyList<KafkaMessagePackage<TKey, TData>> Consume(int? maxMessageCount = null);
-        bool TryEnqueueCommit(long packageNumber);
+        void EnqueueCommit(long packageId);
         [NotNull] KafkaConsumerTopicInfo GetDiagnosticsInfo();
     }
 }

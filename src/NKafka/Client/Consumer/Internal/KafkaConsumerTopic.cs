@@ -119,24 +119,22 @@ namespace NKafka.Client.Consumer.Internal
             return resultPackages;
         }
 
-        public bool TryEnqueueCommit(long packageId)
+        public void EnqueueCommit(long packageId)
         {
             KafkaConsumerTopicPackageInfo package;
             if (!_packages.TryGetValue(packageId, out package) || package == null)
             {
-                return true;
+                return;
             }
 
             KafkaConsumerTopicPartition partition;
             if (_topicPartitions.TryGetValue(package.PartitionId, out partition) && partition != null)
-            {
-                if (!partition.BrokerPartition.IsAssigned) return false;
+            {                
                 partition.SetCommitClientOffset(package.BeginOffset, package.EndOffset);
             }
 
-            _packages.TryRemove(packageId, out package);            
-            return true;
-        }       
+            _packages.TryRemove(packageId, out package);
+        }
 
         public long? GetCommitClientOffset(int partitionId)
         {
