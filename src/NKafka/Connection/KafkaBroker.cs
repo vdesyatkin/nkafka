@@ -334,7 +334,7 @@ namespace NKafka.Connection
                 {
                     requestState.Error = error;
                 }
-                LogConnectionError(error, "BeginWriteRequest", connectionException, requestState?.RequestInfo);
+                LogConnectionError(error, "EndWriteRequest", connectionException, requestState?.RequestInfo);
                 return;
             }
             
