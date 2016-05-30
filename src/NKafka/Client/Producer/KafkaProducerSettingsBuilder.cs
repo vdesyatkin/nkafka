@@ -6,10 +6,7 @@ namespace NKafka.Client.Producer
     [PublicAPI]
     public sealed class KafkaProducerSettingsBuilder
     {
-        // https://kafka.apache.org/documentation.html#brokerconfigs
-
-        [NotNull]
-        public static readonly KafkaProducerSettings Default = new KafkaProducerSettingsBuilder().Build();
+        // https://kafka.apache.org/documentation.html#brokerconfigs        
 
         public readonly static KafkaConsistencyLevel DefaultConsistencyLevel = KafkaConsistencyLevel.OneReplica;
         public readonly static KafkaCodecType DefaultCodecType = KafkaCodecType.CodecNone;
@@ -19,6 +16,8 @@ namespace NKafka.Client.Producer
         public readonly static int DefaultProduceRequestMaxSizeByteCount = 32 * DefaultPartitionBatchPreferredSizeByteCount; 
         public readonly static TimeSpan DefaultProduceRequestServerTimeout = TimeSpan.FromSeconds(3); // 30 seconds in original - too long.
         public readonly static TimeSpan DefaultErrorRetryPeriod = TimeSpan.FromSeconds(10);
+
+        [NotNull] public static readonly KafkaProducerSettings Default = new KafkaProducerSettingsBuilder().Build();
 
         private KafkaConsistencyLevel? _consistencyLevel;
         private KafkaCodecType? _codecType;
@@ -94,7 +93,7 @@ namespace NKafka.Client.Producer
             var codecType = _codecType ?? DefaultCodecType;
             var messageMaxSizeByteCount = _messageMaxSizeByteCount ?? DefaultMessageMaxSizeByteCount;
             var partitionBatchPreferredSizeByteCount = _partitionBatchPreferredSizeByteCount ?? DefaultPartitionBatchPreferredSizeByteCount;
-            var partitionBatchMaxSizeByteCount = _partitionBatchMaxSizeByteCount ?? DefaultPartitionBatchPreferredSizeByteCount;
+            var partitionBatchMaxSizeByteCount = _partitionBatchMaxSizeByteCount ?? DefaultPartitionBatchMaxSizeByteCount;
             var produceRequestMaxSizeByteCount = _produceRequestMaxSizeByteCount ?? DefaultProduceRequestMaxSizeByteCount;            
             var produceRequestServerTimeout = _batchServerTimeout ?? DefaultProduceRequestServerTimeout;
             var errorRetryPeriod = _errorRetryPeriod ?? DefaultErrorRetryPeriod;

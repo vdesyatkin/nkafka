@@ -30,8 +30,9 @@ namespace NKafka.Client.Producer
             CodecType = codecType;            
             MessageMaxSizeByteCount = messageMaxSizeByteCount;
             PartitionBatchPreferredSizeByteCount = partitionBatchPreferredSizeByteCount;
-            PartitionBatchMaxSizeByteCount = produceRequestMaxSizeByteCount;
+            PartitionBatchMaxSizeByteCount = partitionBatchMaxSizeByteCount;
             ProduceRequestServerTimeout = produceRequestServerTimeout;
+            ProduceRequestMaxSizeByteCount = produceRequestMaxSizeByteCount;
             ErrorRetryPeriod = errorRetryPeriod;
         }
     }

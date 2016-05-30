@@ -6,10 +6,7 @@ namespace NKafka.Client.Consumer
     [PublicAPI]
     public sealed class KafkaConsumerSettingsBuilder
     {
-        // https://kafka.apache.org/documentation.html#brokerconfigs;
-
-        [NotNull]
-        public static readonly KafkaConsumerSettings Default = new KafkaConsumerSettingsBuilder().Build();
+        // https://kafka.apache.org/documentation.html#brokerconfigs;        
 
         public readonly static KafkaConsumerBeginBehavior DefaultBeginBehavior = KafkaConsumerBeginBehavior.BeginFromMinAvailableOffset;
         public readonly static int DefaultTopicBatchMinSizeBytes = 1;
@@ -17,6 +14,8 @@ namespace NKafka.Client.Consumer
         public readonly static TimeSpan DefaultFetchServerWaitTime = TimeSpan.FromMilliseconds(100);
         public readonly static long DefaultBufferMaxSizeBytes = 100 * DefaultPartitionBatchMaxSizeBytes;        
         public readonly static TimeSpan DefaultErrorRetryPeriod = TimeSpan.FromSeconds(10);
+
+        [NotNull] public static readonly KafkaConsumerSettings Default = new KafkaConsumerSettingsBuilder().Build();
 
         private KafkaConsumerBeginBehavior? _beginBehavior;
         private int? _topicBatchMinSizeBytes;
@@ -65,6 +64,13 @@ namespace NKafka.Client.Consumer
         public KafkaConsumerSettingsBuilder SetBufferMaxMessageCount(int messageCount)
         {
             _bufferMaxMessageCount = messageCount;
+            return this;
+        }
+
+        [PublicAPI, NotNull]
+        public KafkaConsumerSettingsBuilder SetErrorRetryPeriod(TimeSpan period)
+        {
+            _errorRetryPeriod = period;
             return this;
         }
 

@@ -78,6 +78,7 @@ namespace NKafka.Connection
         }
 
         /// <exception cref="KafkaConnectionException"/>
+        [PublicAPI]
         public void Write([NotNull] byte[] data, int offset, int length)
         {
             if (!CheckBufferData(data, offset, length))
@@ -102,6 +103,56 @@ namespace NKafka.Connection
         }
 
         /// <exception cref="KafkaConnectionException"/>
+        public void BeginWrite([NotNull] byte[] data, int offset, int length,
+            [CanBeNull] AsyncCallback callback, [CanBeNull] object state = null)
+        {
+            if (!CheckBufferData(data, offset, length))
+            {
+                throw new KafkaConnectionException(KafkaConnectionErrorCode.BadRequest);
+            }
+
+            try
+            {
+                var stream = _tcpClient?.GetStream();
+                if (stream == null)
+                {
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
+                }
+
+                stream.BeginWrite(data, offset, length, callback, state);
+            }
+            catch (Exception exception)
+            {
+                throw ConvertException(exception);
+            }
+        }
+
+        /// <exception cref="KafkaConnectionException"/>
+        public void EndWrite([NotNull] IAsyncResult asyncResult)
+        {
+            if (asyncResult == null)
+            {
+                throw new KafkaConnectionException(KafkaConnectionErrorCode.BadRequest);
+            }
+
+            try
+            {
+                var stream = _tcpClient?.GetStream();
+                if (stream == null)
+                {
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
+                }
+
+                stream.EndWrite(asyncResult);
+            }
+            catch (Exception exception)
+            {
+                throw ConvertException(exception);
+            }
+        }
+        
+        /// <exception cref="KafkaConnectionException"/>
+        [PublicAPI]
         public int Read([NotNull] byte[] data, int offset, int length)
         {
             if (!CheckBufferData(data, offset, length))

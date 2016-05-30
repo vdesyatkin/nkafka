@@ -268,19 +268,18 @@ namespace NKafka.Connection
 
             try
             {
-                _connection.Write(data, 0, data.Length);
+                _connection.BeginWrite(data, 0, data.Length, OnSent, requestState);
             }
             catch (KafkaConnectionException connectionException)
             {
                 var error = ConvertError(connectionException);
                 _sendError = ConvertStateError(connectionException);
                 requestState.Error = error;
-                LogConnectionError(error, "WriteRequest", connectionException, requestInfo);
+                LogConnectionError(error, "BeginWriteRequest", connectionException, requestInfo);
                 return error;
             }
-            
+
             requestState.SentTimestampUtc = DateTime.UtcNow;
-            _sendError = null;
             return requestId;
         }
 
@@ -308,6 +307,41 @@ namespace NKafka.Connection
 
             return (TResponse)null;
         }
+
+        #region Async send
+
+        private void OnSent(IAsyncResult result)
+        {
+            var responseState = _responseState;
+
+            if (!_isOpenned || result == null)
+            {
+                responseState.ResponseHeaderOffset = 0;
+                return;
+            }
+
+            var requestState = result.AsyncState as RequestState;            
+
+            try
+            {
+                _connection.EndWrite(result);
+            }
+            catch (KafkaConnectionException connectionException)
+            {
+                var error = ConvertError(connectionException);
+                _sendError = ConvertStateError(connectionException);
+                if (requestState != null)
+                {
+                    requestState.Error = error;
+                }
+                LogConnectionError(error, "BeginWriteRequest", connectionException, requestState?.RequestInfo);
+                return;
+            }
+            
+            _sendError = null;
+        }
+
+        #endregion Async send
 
         #region Async receive        
 

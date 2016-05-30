@@ -9,10 +9,7 @@ namespace NKafka.Client.ConsumerGroup
     [PublicAPI]
     public sealed class KafkaConsumerGroupSettingsBuilder
     {
-        // https://kafka.apache.org/documentation.html#brokerconfigs
-
-        [PublicAPI, NotNull]
-        public readonly static KafkaConsumerGroupSettings Default = new KafkaConsumerGroupSettingsBuilder().Build();
+        // https://kafka.apache.org/documentation.html#brokerconfigs       
         
         public readonly static TimeSpan DefaultJoinGroupRequestServerTimeout = TimeSpan.FromMinutes(2);
         public readonly static TimeSpan DefaultSyncGroupRequestServerTimeout = TimeSpan.FromMinutes(1);
@@ -29,6 +26,8 @@ namespace NKafka.Client.ConsumerGroup
         public readonly static TimeSpan DefaultOffsetCommitRetentionTime = TimeSpan.FromDays(1);
 
         public readonly static TimeSpan ErrorRetryPeriod = TimeSpan.FromSeconds(10);
+
+        [PublicAPI, NotNull] public readonly static KafkaConsumerGroupSettings Default = new KafkaConsumerGroupSettingsBuilder().Build();
 
         private TimeSpan? _joinGroupServerWaitTime;
         private TimeSpan? _syncGroupServerWaitTime;
@@ -185,7 +184,7 @@ namespace NKafka.Client.ConsumerGroup
 
             var groupSessionTimeout = _groupSessionTimeout ?? DefaultGroupSessionTimeout;
             var heartbeatPeriod = _heartbeatPeriod ?? DefaultHeartbeatGroupRequestServerTimeout;
-            var offsetCommitPeriod = _offsetCommitPeriod ?? DefaultOffsetCommitRequestServerTimeout;
+            var offsetCommitPeriod = _offsetCommitPeriod ?? DefaultOffsetCommitPeriod;
             var offsetCommitRetentionTime = _offsetCommitRetentionTime ?? DefaultOffsetCommitRetentionTime;
 
             var errorRetryPeriod = _errorRetryPeriod ?? TimeSpan.FromSeconds(10);

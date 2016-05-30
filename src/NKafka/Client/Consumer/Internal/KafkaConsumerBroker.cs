@@ -212,7 +212,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     if (partition.Settings.BeginBehavior == KafkaConsumerBeginBehavior.BeginFromMinAvailableOffset)
                     {
-                        clientOffset = partition.GetMinAvailableServerOffset() - 1;
+                        clientOffset = minAvailableOffset - 1;
                     }
                     if (partition.Settings.BeginBehavior == KafkaConsumerBeginBehavior.BeginFromMaxAvailableOffset)
                     {
@@ -222,7 +222,7 @@ namespace NKafka.Client.Consumer.Internal
 
                 if (clientOffset == null) continue;
 
-                if (clientOffset < minAvailableOffset)
+                if (clientOffset < minAvailableOffset - 1)
                 {
                     clientOffset = minAvailableOffset - 1;
                 }
@@ -492,7 +492,7 @@ namespace NKafka.Client.Consumer.Internal
                 return false;
             }
 
-            partition.SetMinAvailableServerOffset(minOffset.Value - 1);
+            partition.SetMinAvailableServerOffset(minOffset.Value);
             partition.SetMaxAvailableServerOffset(maxOffset.Value - 1);
             return true;
         }

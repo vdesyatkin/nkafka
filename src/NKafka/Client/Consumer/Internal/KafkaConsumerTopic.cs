@@ -128,9 +128,9 @@ namespace NKafka.Client.Consumer.Internal
             }
 
             KafkaConsumerTopicPartition partition;
-            if (_topicPartitions.TryGetValue(package.PartitionId, out partition) && partition != null)
+            if (_topicPartitions.TryGetValue(package.PartitionId, out partition))
             {                
-                partition.SetCommitClientOffset(package.BeginOffset, package.EndOffset);
+                partition?.SetCommitClientOffset(package.BeginOffset, package.EndOffset);
             }
 
             _packages.TryRemove(packageId, out package);
