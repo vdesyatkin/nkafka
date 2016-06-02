@@ -134,6 +134,10 @@ namespace NKafka.Protocol
                     {
                         throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
                     }
+                    if (dataSize > _settings.DataSizeByteCountLimit)
+                    {
+                        throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
+                    }
                     var correlationId = reader.ReadInt32();
 
                     return new KafkaResponseHeader(dataSize - 4, correlationId);

@@ -311,12 +311,9 @@ namespace NKafka.Connection
         #region Async send
 
         private void OnSent(IAsyncResult result)
-        {
-            var responseState = _responseState;
-
+        {            
             if (!_isOpenned || result == null)
-            {
-                responseState.ResponseHeaderOffset = 0;
+            {                
                 return;
             }
 
@@ -406,7 +403,8 @@ namespace NKafka.Connection
 
                         try
                         {
-                            dataSize = _connection.EndRead(result);
+                            dataSize = _connection.Read(responseState.ResponseHeaderBuffer, responseState.ResponseHeaderOffset,
+                                responseState.ResponseHeaderBuffer.Length - responseState.ResponseHeaderOffset);
                         }
                         catch (KafkaConnectionException connectionException)
                         {                            
