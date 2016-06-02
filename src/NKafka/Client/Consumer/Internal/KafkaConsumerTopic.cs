@@ -203,7 +203,7 @@ namespace NKafka.Client.Consumer.Internal
             long topicBufferedMessageSizeBytes = 0;
 
             bool? topicIsReady = null;
-            bool topicIsSynchronized = true;
+            var topicIsSynchronized = true;
 
             foreach (var partitionPair in _topicPartitions)
             {
@@ -320,10 +320,14 @@ namespace NKafka.Client.Consumer.Internal
             var topicMessageSizeInfo = new KafkaConsumerTopicMessageSizeInfo(
                 topicTotalReceivedMessageSizeBytes, topicTotalConsumedMessageSizeBytes, topicConsumePendingMessageSizeBytes, topicBufferedMessageSizeBytes);
 
-            var consumerGroupInfo = _group.GroupCoordinator.GetDiagnosticsInfo();
-            var catchUpGroupInfo = _group.CatchUpGroupCoordinator?.GetDiagnosticsInfo();
+            var consumerGroupInfo = _group?.GroupCoordinator?.GetDiagnosticsInfo();
+            var catchUpGroupInfo = _group?.CatchUpGroupCoordinator?.GetDiagnosticsInfo();
 
-            topicIsReady = topicIsReady == true && metadataInfo.IsReady && consumerGroupInfo.IsReady && (catchUpGroupInfo?.IsReady != false);
+            topicIsReady = (topicIsReady == true) && metadataInfo.IsReady && (consumerGroupInfo?.IsReady == true);
+            if (_group?.CatchUpGroupCoordinator != null)
+            {
+                topicIsReady = (topicIsReady == true) && (catchUpGroupInfo?.IsReady == true);
+            }
 
             return new KafkaConsumerTopicInfo(TopicName, 
                 topicIsReady == true, topicIsSynchronized,

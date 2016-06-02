@@ -89,7 +89,7 @@ namespace NKafka.Client.Producer.Internal
                     isSynchronized = isSynchronized && partitionBroker.IsSynchronized;
                 }
 
-                return isSynchronized;
+                return isSynchronized && _buffer.EnqueuedCount == 0;
             }
         }
 
