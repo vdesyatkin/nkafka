@@ -98,7 +98,7 @@ namespace NKafka.Protocol.Serialization
             var endPosition = _stream.Position;
             var actualSize = endPosition - beginPosition;
 
-            if (actualSize >= requiredSize)
+            if (actualSize >= requiredSize || endPosition >= _stream.Length)
             {
                 _sizeValues.Pop();
                 _beginPositions.Pop();                
@@ -271,7 +271,7 @@ namespace NKafka.Protocol.Serialization
         public void SkipData(int length)
         {
             if (length <= 0) return;
-            _stream.Position = Math.Max(_stream.Position + length, _stream.Length);
+            _stream.Position = Math.Min(_stream.Position + length, _stream.Length);
         }
 
         public byte[] ReadByteArray()

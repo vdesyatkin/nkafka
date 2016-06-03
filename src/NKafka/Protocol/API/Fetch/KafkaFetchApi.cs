@@ -103,6 +103,7 @@ namespace NKafka.Protocol.API.Fetch
                     messageRequiredSize > (messageSetRequiredSize - messageSetActualSize)))
                 {
                     reader.SkipData(messageSetRequiredSize - messageSetActualSize);
+                    reader.EndReadSize(); //message actual size
                     messageSetActualSize = reader.EndReadSize();
                     break;
                 }
@@ -132,6 +133,7 @@ namespace NKafka.Protocol.API.Fetch
                             nestedMessageRequiredSize > (nestedMessageSetRequiredSize - nestedMessageSetActualSize))
                         {
                             reader.SkipData(nestedMessageSetRequiredSize - nestedMessageSetActualSize);
+                            reader.EndReadSize(); //message actual size
                             nestedMessageSetActualSize = reader.EndReadGZipData();
                             break;
                         }
