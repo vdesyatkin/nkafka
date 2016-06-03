@@ -10,10 +10,10 @@ namespace NKafka.Client.Consumer
 
         // ReSharper disable RedundantDefaultMemberInitializer
         public readonly static KafkaConsumerBeginBehavior DefaultBeginBehavior = KafkaConsumerBeginBehavior.BeginFromMinAvailableOffset;
-        public readonly static int DefaultTopicBatchMinSizeBytes = 0;
-        public readonly static int DefaultPartitionBatchMaxSizeBytes = 1048576;
-        public readonly static TimeSpan DefaultFetchServerWaitTime = TimeSpan.Zero;
-        public readonly static long DefaultBufferMaxSizeBytes = 100 * DefaultPartitionBatchMaxSizeBytes;        
+        public static readonly int DefaultTopicBatchMinSizeBytes = 1;
+        public static readonly int DefaultPartitionBatchMaxSizeBytes = 1048576;
+        public static readonly TimeSpan DefaultFetchServerWaitTime = TimeSpan.FromMilliseconds(500);
+        public readonly static long DefaultBufferMaxSizeBytes = 100 * DefaultPartitionBatchMaxSizeBytes;
         public readonly static TimeSpan DefaultErrorRetryPeriod = TimeSpan.FromSeconds(10);
         // ReSharper restore RedundantDefaultMemberInitializer
 
