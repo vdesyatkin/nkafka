@@ -272,6 +272,8 @@ namespace NKafka.Protocol.Serialization
         {
             if (length <= 0) return;
             _stream.Position = Math.Min(_stream.Position + length, _stream.Length);
+            _sizeValues.Pop();
+            _beginPositions.Pop();
         }
 
         public byte[] ReadByteArray()

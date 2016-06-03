@@ -97,13 +97,13 @@ namespace NKafka.Protocol.API.Fetch
             while (reader.CanRead() && (messageSetActualSize < messageSetRequiredSize))
             {
                 var messageOffset = reader.ReadInt64();
+                var messageRequiredSize = reader.BeginReadSize();
+                messageSetActualSize += 12;
 
-                var messageRequiredSize = reader.BeginReadSize();                
                 if ((messageRequiredSize <= 0 ||
                     messageRequiredSize > (messageSetRequiredSize - messageSetActualSize)))
                 {
-                    reader.SkipData(messageSetRequiredSize - messageSetActualSize);
-                    reader.EndReadSize(); //message actual size
+                    reader.SkipData(messageSetRequiredSize - messageSetActualSize);                    
                     messageSetActualSize = reader.EndReadSize();
                     break;
                 }
@@ -126,14 +126,14 @@ namespace NKafka.Protocol.API.Fetch
                     while (reader.CanRead() && (nestedMessageSetActualSize < nestedMessageSetRequiredSize))
                     {
                         // nested message set
-                        var nestedMessageOffset = reader.ReadInt64();                        
-
+                        var nestedMessageOffset = reader.ReadInt64();
                         var nestedMessageRequiredSize = reader.BeginReadSize();
+                        nestedMessageSetActualSize += 12;
+
                         if (nestedMessageRequiredSize <= 0 ||
                             nestedMessageRequiredSize > (nestedMessageSetRequiredSize - nestedMessageSetActualSize))
                         {
-                            reader.SkipData(nestedMessageSetRequiredSize - nestedMessageSetActualSize);
-                            reader.EndReadSize(); //message actual size
+                            reader.SkipData(nestedMessageSetRequiredSize - nestedMessageSetActualSize);                            
                             nestedMessageSetActualSize = reader.EndReadGZipData();
                             break;
                         }
