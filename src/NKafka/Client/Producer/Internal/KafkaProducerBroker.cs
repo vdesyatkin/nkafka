@@ -540,12 +540,9 @@ namespace NKafka.Client.Producer.Internal
                     break;
                 case KafkaBrokerErrorCode.NotAuthorized:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.NotAuthorized;
-                    break;
-                case KafkaBrokerErrorCode.UnsupportedOperation:
-                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ProtocolError;
-                    break;
+                    break;                
                 case KafkaBrokerErrorCode.OperationRefused:
-                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.HostNotAvailable;
+                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportError;
                     break;
                 case KafkaBrokerErrorCode.TooBigMessage:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportRequestTooLarge;

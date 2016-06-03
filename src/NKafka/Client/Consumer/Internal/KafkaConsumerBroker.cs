@@ -725,14 +725,12 @@ namespace NKafka.Client.Consumer.Internal
                     break;
                 case KafkaBrokerErrorCode.NotAuthorized:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.NotAuthorized;
-                    break;
-                case KafkaBrokerErrorCode.UnsupportedOperation:
-                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ProtocolError;
-                    break;
+                    break;                
                 case KafkaBrokerErrorCode.OperationRefused:
-                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.ProtocolError;
+                    partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.TransportError;
                     break;
-                case KafkaBrokerErrorCode.TooBigMessage: // there are only command requests w/o data - network problem.
+                case KafkaBrokerErrorCode.TooBigMessage: 
+                    // there are only command requests w/o data - network problem.
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.TransportError;
                     break;
                 case KafkaBrokerErrorCode.UnknownError:

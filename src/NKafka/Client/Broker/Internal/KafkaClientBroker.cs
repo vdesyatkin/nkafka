@@ -41,13 +41,14 @@ namespace NKafka.Client.Broker.Internal
             BrokerType = brokerType;
             BrokerMetadata = metadata;
             Logger = logger;
+            WorkerId = workerId;
 
             var brokerId = metadata.BrokerId;
             var host = metadata.Host ?? string.Empty;
             var port = metadata.Port;
             var brokerName = brokerType == KafkaClientBrokerType.MetadataBroker
-                ? $"broker(id={brokerId})[{host}:{port}]"
-                : $"broker(metdata)[{host}:{port}]";
+                ? $"broker(metdata)[{host}:{port}]"
+                : $"broker(id={brokerId})[{host}:{port}]";
             Name = brokerName;
             
             var loggerWrapper = logger != null ? new KafkaClientBrokerLogger(this, logger) : null;

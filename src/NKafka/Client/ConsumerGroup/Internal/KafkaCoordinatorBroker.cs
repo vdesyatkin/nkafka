@@ -1432,12 +1432,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     break;
                 case KafkaBrokerErrorCode.NotAuthorized:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.NotAuthorized;
-                    break;
-                case KafkaBrokerErrorCode.UnsupportedOperation:
-                    sessionErrorCode = KafkaConsumerGroupErrorCode.ProtocolError;
-                    break;
+                    break;               
                 case KafkaBrokerErrorCode.OperationRefused:
-                    sessionErrorCode = KafkaConsumerGroupErrorCode.ProtocolError;
+                    sessionErrorCode = KafkaConsumerGroupErrorCode.TransportError;
                     break;
                 case KafkaBrokerErrorCode.TooBigMessage:
                     // there are only command requests w/o data - network problem.

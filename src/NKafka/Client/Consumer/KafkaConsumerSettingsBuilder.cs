@@ -8,12 +8,14 @@ namespace NKafka.Client.Consumer
     {
         // https://kafka.apache.org/documentation.html#brokerconfigs;        
 
+        // ReSharper disable RedundantDefaultMemberInitializer
         public readonly static KafkaConsumerBeginBehavior DefaultBeginBehavior = KafkaConsumerBeginBehavior.BeginFromMinAvailableOffset;
-        public readonly static int DefaultTopicBatchMinSizeBytes = 1;
+        public readonly static int DefaultTopicBatchMinSizeBytes = 0;
         public readonly static int DefaultPartitionBatchMaxSizeBytes = 1048576;
-        public readonly static TimeSpan DefaultFetchServerWaitTime = TimeSpan.FromMilliseconds(100);
+        public readonly static TimeSpan DefaultFetchServerWaitTime = TimeSpan.Zero;
         public readonly static long DefaultBufferMaxSizeBytes = 100 * DefaultPartitionBatchMaxSizeBytes;        
         public readonly static TimeSpan DefaultErrorRetryPeriod = TimeSpan.FromSeconds(10);
+        // ReSharper restore RedundantDefaultMemberInitializer
 
         [NotNull] public static readonly KafkaConsumerSettings Default = new KafkaConsumerSettingsBuilder().Build();
 
@@ -84,6 +86,12 @@ namespace NKafka.Client.Consumer
             var bufferMaxSizeBytes = _bufferMaxSizeBytes ?? DefaultBufferMaxSizeBytes;
             var bufferMaxMessageCount = _bufferMaxMessageCount;
             var errorRetryPeriod = _errorRetryPeriod ?? DefaultErrorRetryPeriod;
+
+            if (topicBatchMinSizeBytes <= 0)
+            {
+                topicBatchMinSizeBytes = 0;
+                fetchServerWaitTime = TimeSpan.Zero;
+            }
 
             return new KafkaConsumerSettings(
                 beginBehavior,           

@@ -9,6 +9,11 @@ namespace NKafka.Client
     [PublicAPI]
     public sealed class KafkaClientSettingsBuilder
     {
+        public static readonly KafkaVersion DefaultKafkaVersion = KafkaVersion.V0_10;
+        public static readonly int DefaultWorkerThreadCount = 1;
+        public static readonly TimeSpan DefaultWorkerPeriod = TimeSpan.FromSeconds(1);
+        public static readonly TimeSpan DefaultMetadataErrorRetryPeriod = TimeSpan.FromSeconds(10);
+
         private KafkaVersion? _kafkaVersion;
         private string _clientId;
 
@@ -16,11 +21,14 @@ namespace NKafka.Client
         private TimeSpan? _workerPeriod;
         private TimeSpan? _metadataErrorRetryPeriod;
 
-        [NotNull] private readonly List<KafkaBrokerInfo> _metadataBrokers;
-        
-        [CanBeNull] private KafkaConnectionSettings _connectionSettings;
+        [NotNull]
+        private readonly List<KafkaBrokerInfo> _metadataBrokers;
 
-        [CanBeNull] private KafkaProtocolSettings _protocolSettings;
+        [CanBeNull]
+        private KafkaConnectionSettings _connectionSettings;
+
+        [CanBeNull]
+        private KafkaProtocolSettings _protocolSettings;
 
         public KafkaClientSettingsBuilder(KafkaBrokerInfo metadataBroker)
         {
@@ -99,20 +107,20 @@ namespace NKafka.Client
         [PublicAPI, NotNull]
         public KafkaClientSettings Build()
         {
-            var kafkaVersion = _kafkaVersion ?? KafkaVersion.V0_9;
+            var kafkaVersion = _kafkaVersion ?? DefaultKafkaVersion;
             var clientId = _clientId;
             var metadataBrokers = _metadataBrokers.ToArray();
 
-            var workerThreadCount = _workerThreadCount ?? 0;
-            var workerPeriod = _workerPeriod ?? TimeSpan.FromSeconds(1);
-            var metadataErrorRetryPeriod = _metadataErrorRetryPeriod ?? TimeSpan.FromSeconds(10);
+            var workerThreadCount = _workerThreadCount ?? DefaultWorkerThreadCount;
+            var workerPeriod = _workerPeriod ?? DefaultWorkerPeriod;
+            var metadataErrorRetryPeriod = _metadataErrorRetryPeriod ?? DefaultMetadataErrorRetryPeriod;
 
             var connectionSettings = _connectionSettings ?? KafkaConnectionSettingsBuilder.Default;
             var protocolSettings = _protocolSettings ?? KafkaProtocolSettingsBuilder.Default;
 
-            return new KafkaClientSettings(kafkaVersion, clientId, metadataBrokers, 
+            return new KafkaClientSettings(kafkaVersion, clientId, metadataBrokers,
                 workerThreadCount, workerPeriod, metadataErrorRetryPeriod,
                 connectionSettings, protocolSettings);
-        }        
+        }
     }
 }

@@ -696,12 +696,9 @@ namespace NKafka.Client.Internal
                         break;
                     case KafkaBrokerErrorCode.NotAuthorized:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.NotAuthorized;
-                        break;
-                    case KafkaBrokerErrorCode.UnsupportedOperation:
-                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ProtocolError;
-                        break;
+                        break;                    
                     case KafkaBrokerErrorCode.OperationRefused:
-                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ProtocolError;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.TransportError;
                         break;
                     case KafkaBrokerErrorCode.TooBigMessage:
                         // there are only command requests w/o data - network problem.
@@ -839,12 +836,9 @@ namespace NKafka.Client.Internal
                         break;
                     case KafkaBrokerErrorCode.NotAuthorized:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.NotAuthorized;
-                        break;
-                    case KafkaBrokerErrorCode.UnsupportedOperation:
-                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ProtocolError;
-                        break;
+                        break;                    
                     case KafkaBrokerErrorCode.OperationRefused:
-                        groupErrorCode = KafkaClientGroupMetadataErrorCode.ProtocolError;
+                        groupErrorCode = KafkaClientGroupMetadataErrorCode.TransportError;
                         break;
                     case KafkaBrokerErrorCode.TooBigMessage:
                         // there are only command requests w/o data - network problem.

@@ -24,7 +24,7 @@ namespace NKafka.Connection
             _host = host;
             _port = port;
         }
-        
+
         /// <exception cref="KafkaConnectionException"/>
         public void Open(CancellationToken cancellation)
         {
@@ -39,11 +39,15 @@ namespace NKafka.Connection
                 }
                 if (!asyncConnectResult.IsCompleted)
                 {
-                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ClientTimeout);                    
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ClientTimeout);
                 }
 
                 tcpClient.EndConnect(asyncConnectResult);
-                _tcpClient = tcpClient;                
+                _tcpClient = tcpClient;
+            }
+            catch (KafkaConnectionException)
+            {
+                throw;
             }
             catch (SocketException socketException)
             {
@@ -85,7 +89,7 @@ namespace NKafka.Connection
             {
                 throw new KafkaConnectionException(KafkaConnectionErrorCode.BadRequest);
             }
-            
+
             try
             {
                 var stream = _tcpClient?.GetStream();
@@ -94,7 +98,11 @@ namespace NKafka.Connection
                     throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
                 }
 
-                stream.Write(data, offset, length);                
+                stream.Write(data, offset, length);
+            }
+            catch (KafkaConnectionException)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -121,6 +129,10 @@ namespace NKafka.Connection
 
                 stream.BeginWrite(data, offset, length, callback, state);
             }
+            catch (KafkaConnectionException)
+            {
+                throw;
+            }
             catch (Exception exception)
             {
                 throw ConvertException(exception);
@@ -145,12 +157,16 @@ namespace NKafka.Connection
 
                 stream.EndWrite(asyncResult);
             }
+            catch (KafkaConnectionException)
+            {
+                throw;
+            }
             catch (Exception exception)
             {
                 throw ConvertException(exception);
             }
         }
-        
+
         /// <exception cref="KafkaConnectionException"/>
         [PublicAPI]
         public int Read([NotNull] byte[] data, int offset, int length)
@@ -159,7 +175,7 @@ namespace NKafka.Connection
             {
                 throw new KafkaConnectionException(KafkaConnectionErrorCode.BadRequest);
             }
-            
+
             try
             {
                 var stream = _tcpClient?.GetStream();
@@ -170,6 +186,10 @@ namespace NKafka.Connection
 
                 return stream.Read(data, offset, length);
             }
+            catch (KafkaConnectionException)
+            {
+                throw;
+            }
             catch (Exception exception)
             {
                 throw ConvertException(exception);
@@ -177,7 +197,7 @@ namespace NKafka.Connection
         }
 
         /// <exception cref="KafkaConnectionException"/>
-        public void BeginRead([NotNull] byte[] data, int offset, int length, 
+        public void BeginRead([NotNull] byte[] data, int offset, int length,
             [CanBeNull] AsyncCallback callback, [CanBeNull] object state = null)
         {
             if (!CheckBufferData(data, offset, length))
@@ -193,7 +213,11 @@ namespace NKafka.Connection
                     throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
                 }
 
-                stream.BeginRead(data, offset, length, callback, state);                
+                stream.BeginRead(data, offset, length, callback, state);
+            }
+            catch (KafkaConnectionException)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -208,7 +232,7 @@ namespace NKafka.Connection
             {
                 throw new KafkaConnectionException(KafkaConnectionErrorCode.BadRequest);
             }
-            
+
             try
             {
                 var stream = _tcpClient?.GetStream();
@@ -218,6 +242,10 @@ namespace NKafka.Connection
                 }
 
                 return stream.EndRead(asyncResult);
+            }
+            catch (KafkaConnectionException)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -231,7 +259,10 @@ namespace NKafka.Connection
             try
             {
                 var stream = _tcpClient?.GetStream();
-                if (stream == null) return false;
+                if (stream == null)
+                {
+                    return false;
+                }
 
                 return stream.DataAvailable;
             }
@@ -264,10 +295,10 @@ namespace NKafka.Connection
             var socketException = exception as SocketException;
             if (socketException != null)
             {
-                var socketErrorInfo = new KafkaConnectionSocketErrorInfo(socketException.SocketErrorCode, socketException.ErrorCode, socketException.NativeErrorCode);                
+                var socketErrorInfo = new KafkaConnectionSocketErrorInfo(socketException.SocketErrorCode, socketException.ErrorCode, socketException.NativeErrorCode);
                 return new KafkaConnectionException(ConvertError(socketException.SocketErrorCode), socketException, socketErrorInfo);
             }
-            
+
             if (exception is SecurityException)
             {
                 return new KafkaConnectionException(KafkaConnectionErrorCode.NotAuthorized, exception);
@@ -401,7 +432,7 @@ namespace NKafka.Connection
                     return KafkaConnectionErrorCode.OperationRefused;
                 default:
                     return KafkaConnectionErrorCode.UnknownError;
-            }            
+            }
         }
     }
 }

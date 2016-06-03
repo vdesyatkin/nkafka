@@ -24,6 +24,7 @@ namespace NKafka.Connection.Logging
             [CanBeNull] Exception exception)
         {            
             ErrorCode = errorCode;
+            ErrorDescription = errorDescription;
             ConnectionError = connectionError;
             RequestInfo = requestInfo;
             Exception = exception;

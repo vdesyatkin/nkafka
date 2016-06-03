@@ -17,9 +17,8 @@ namespace NKafka.Connection.Diagnostics
         ConnectionRefused = 8,
         HostUnreachable = 9,
         HostNotAvailable = 10,
-        NotAuthorized = 11,
-        UnsupportedOperation = 12,
-        OperationRefused = 13,
-        TooBigMessage = 14
+        NotAuthorized = 11,        
+        OperationRefused = 12,
+        TooBigMessage = 13
     }
 }
