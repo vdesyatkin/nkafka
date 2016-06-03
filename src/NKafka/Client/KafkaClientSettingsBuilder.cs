@@ -10,6 +10,7 @@ namespace NKafka.Client
     public sealed class KafkaClientSettingsBuilder
     {
         public static readonly KafkaVersion DefaultKafkaVersion = KafkaVersion.V0_10;
+        public static readonly string DefaultClientId = "nkafka";
         public static readonly int DefaultWorkerThreadCount = 1;
         public static readonly TimeSpan DefaultWorkerPeriod = TimeSpan.FromSeconds(1);
         public static readonly TimeSpan DefaultMetadataErrorRetryPeriod = TimeSpan.FromSeconds(10);
@@ -108,7 +109,7 @@ namespace NKafka.Client
         public KafkaClientSettings Build()
         {
             var kafkaVersion = _kafkaVersion ?? DefaultKafkaVersion;
-            var clientId = _clientId;
+            var clientId = _clientId ?? DefaultClientId;
             var metadataBrokers = _metadataBrokers.ToArray();
 
             var workerThreadCount = _workerThreadCount ?? DefaultWorkerThreadCount;
