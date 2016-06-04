@@ -211,15 +211,15 @@ namespace NKafka.Connection
             return SendInternal(request, sender, timeout, dataCapacity, true);
         }
 
-        public KafkaBrokerResult<int?> SendWithoutResponse<TRequest>([NotNull] TRequest request, [NotNull] string sender,
+        public void SendWithoutResponse<TRequest>([NotNull] TRequest request, [NotNull] string sender,
             int? dataCapacity = null)
             where TRequest : class, IKafkaRequest
         {
-            return SendInternal(request, sender, TimeSpan.Zero, dataCapacity, false);
+            SendInternal(request, sender, TimeSpan.Zero, dataCapacity, false);
         }
 
         private KafkaBrokerResult<int?> SendInternal<TRequest>([NotNull] TRequest request, [NotNull] string sender,
-            TimeSpan timeout, int? dataCapacity, bool processResponse)
+            TimeSpan timeout, int? dataCapacity, bool responseIsCheckable)
             where TRequest : class, IKafkaRequest
         {
             if (!_isOpenned)
@@ -260,15 +260,15 @@ namespace NKafka.Connection
             }
 
             var requestState = new RequestState(requestInfo, DateTime.UtcNow, timeout);
-            if (processResponse)
+            if (responseIsCheckable)
             {
                 _requests[requestId] = requestState;
-                _lastActivityTimestampUtc = DateTime.UtcNow;
             }
 
             try
             {
-                _connection.BeginWrite(data, 0, data.Length, OnSent, requestState);
+                _lastActivityTimestampUtc = DateTime.UtcNow;
+                _connection.BeginWrite(data, 0, data.Length, OnSent, requestState);                
             }
             catch (KafkaConnectionException connectionException)
             {

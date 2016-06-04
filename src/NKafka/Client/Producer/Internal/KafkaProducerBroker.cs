@@ -143,9 +143,7 @@ namespace NKafka.Client.Producer.Internal
                 var batchRequest = CreateProduceRequest(topic, batch);
                 var batchTimeout = _produceClientTimeout + topic.Settings.ProduceRequestServerTimeout;
 
-                var batchRequestResult = topic.Settings.ConsistencyLevel == KafkaConsistencyLevel.None
-                    ? _broker.SendWithoutResponse(batchRequest, topic.TopicProducerName, batch.ByteCount * 2)
-                    : _broker.Send(batchRequest, topic.TopicProducerName, batchTimeout, batch.ByteCount * 2);
+                var batchRequestResult = _broker.Send(batchRequest, topic.TopicProducerName, batchTimeout, batch.ByteCount * 2);
                 
                 var batchRequestId = batchRequestResult.Data;
                 if (batchRequestId == null)
