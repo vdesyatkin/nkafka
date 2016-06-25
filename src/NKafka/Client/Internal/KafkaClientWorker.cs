@@ -290,7 +290,7 @@ namespace NKafka.Client.Internal
                     if (cancellation.IsCancellationRequested) return;
 
                     ProcessBroker(broker, isBrokersRequired, cancellation);
-                    if (broker.IsEnabled)
+                    if (broker.IsStarted)
                     {
                         isRegularBrokerAvailable = true;
                     }

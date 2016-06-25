@@ -242,9 +242,11 @@ namespace NKafka.Client
             return group;
         }
 
-        public void SetLogger([NotNull] IKafkaClientLogger logger)
+        [NotNull]
+        public KafkaClientBuilder SetLogger([NotNull] IKafkaClientLogger logger)
         {
             _logger = logger;
+            return this;
         }
 
         [NotNull]

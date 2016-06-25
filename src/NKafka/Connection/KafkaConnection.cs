@@ -12,12 +12,12 @@ namespace NKafka.Connection
 {
     internal sealed class KafkaConnection
     {
-        [NotNull]
-        private readonly string _host;
+        [NotNull] private readonly string _host;
         private readonly int _port;
 
-        [CanBeNull]
-        private TcpClient _tcpClient;
+        [CanBeNull] private TcpClient _tcpClient;
+
+        private bool _isConnectinMaintenance;
 
         public KafkaConnection([NotNull] string host, int port)
         {
@@ -30,6 +30,8 @@ namespace NKafka.Connection
         {
             try
             {
+                _isConnectinMaintenance = true;
+
                 var tcpClient = new TcpClient();
                 var asyncConnectResult = tcpClient.BeginConnect(_host, _port, null, null);
                 WaitHandle.WaitAny(new[] {asyncConnectResult.AsyncWaitHandle, cancellation.WaitHandle});
@@ -62,23 +64,54 @@ namespace NKafka.Connection
             {
                 throw ConvertException(exception);
             }
+            finally
+            {
+                _isConnectinMaintenance = false;
+            }
         }
-
+        
         /// <exception cref="KafkaConnectionException"/>
         public void Close()
         {
+            _isConnectinMaintenance = true;
+
+            var tcpClient = _tcpClient;
+            _tcpClient = null;
+
             try
-            {
-                _tcpClient?.Close();
+            {                
+                tcpClient?.Close();
             }
             catch (Exception exception)
             {
                 throw ConvertException(exception);
             }
             finally
+            {                
+                _isConnectinMaintenance = false;
+            }            
+        }
+        
+        public void Reopen(CancellationToken cancellation)
+        {
+            _isConnectinMaintenance = true;
+
+            var tcpClient = _tcpClient;            
+            _tcpClient = null;
+
+            try
             {
-                _tcpClient = null;
+                tcpClient?.Close();             
             }
+            catch (Exception)
+            {
+                //ignored
+            }
+                                
+            Open(cancellation);
+            GetStream();
+
+            _isConnectinMaintenance = false;
         }
 
         /// <exception cref="KafkaConnectionException"/>
@@ -92,11 +125,7 @@ namespace NKafka.Connection
 
             try
             {
-                var stream = _tcpClient?.GetStream();
-                if (stream == null)
-                {
-                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
-                }
+                var stream = GetStream();
 
                 stream.Write(data, offset, length);
             }
@@ -121,11 +150,7 @@ namespace NKafka.Connection
 
             try
             {
-                var stream = _tcpClient?.GetStream();
-                if (stream == null)
-                {
-                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
-                }
+                var stream = GetStream();
 
                 stream.BeginWrite(data, offset, length, callback, state);
             }
@@ -149,11 +174,7 @@ namespace NKafka.Connection
 
             try
             {
-                var stream = _tcpClient?.GetStream();
-                if (stream == null)
-                {
-                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
-                }
+                var stream = GetStream();
 
                 stream.EndWrite(asyncResult);
             }
@@ -178,11 +199,7 @@ namespace NKafka.Connection
 
             try
             {
-                var stream = _tcpClient?.GetStream();
-                if (stream == null)
-                {
-                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
-                }
+                var stream = GetStream();
 
                 return stream.Read(data, offset, length);
             }
@@ -207,11 +224,7 @@ namespace NKafka.Connection
 
             try
             {
-                var stream = _tcpClient?.GetStream();
-                if (stream == null)
-                {
-                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
-                }
+                var stream = GetStream();
 
                 stream.BeginRead(data, offset, length, callback, state);
             }
@@ -235,16 +248,12 @@ namespace NKafka.Connection
 
             try
             {
-                var stream = _tcpClient?.GetStream();
-                if (stream == null)
-                {
-                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
-                }
+                var stream = GetStream();
 
                 return stream.EndRead(asyncResult);
             }
             catch (KafkaConnectionException)
-            {
+            {                
                 throw;
             }
             catch (Exception exception)
@@ -274,6 +283,31 @@ namespace NKafka.Connection
             {
                 throw ConvertException(exception);
             }
+        }
+
+        [NotNull]
+        private NetworkStream GetStream()
+        {
+            NetworkStream stream;
+            try
+            {
+                stream = _tcpClient?.GetStream();
+            }
+            catch (ObjectDisposedException)
+            {
+                throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionMaintenance);
+            }
+
+            if (stream == null)
+            {
+                if (_isConnectinMaintenance)
+                {
+                    throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionMaintenance);
+                }
+                throw new KafkaConnectionException(KafkaConnectionErrorCode.ConnectionClosed);
+            }
+
+            return stream;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

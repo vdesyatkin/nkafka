@@ -8,13 +8,11 @@ namespace NKafka.Connection
     [PublicAPI]
     internal sealed class KafkaConnectionException : Exception
     {
-        [NotNull] public readonly KafkaConnectionErrorInfo ErrorInfo;
-
-        [CanBeNull] public readonly KafkaConnectionSocketErrorInfo SocketError;
+        [NotNull] public readonly KafkaConnectionErrorInfo ErrorInfo;        
 
         public KafkaConnectionException(KafkaConnectionErrorCode errorCode) : base(errorCode.ToString())
         {
-            ErrorInfo = new KafkaConnectionErrorInfo(errorCode, null);            
+            ErrorInfo = new KafkaConnectionErrorInfo(errorCode, null);
         }
 
         public KafkaConnectionException(KafkaConnectionErrorCode errorCode, [CanBeNull] Exception innerException,

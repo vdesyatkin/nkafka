@@ -2,9 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 using NKafka.Client;
+using NKafka.Client.Broker;
 using NKafka.Client.Consumer;
 using NKafka.Client.ConsumerGroup;
 using NKafka.Client.Producer;
+using NKafka.Connection;
+using NKafka.Connection.Logging;
+using NKafka.Metadata;
+
 // ReSharper disable ClassNeverInstantiated.Global
 
 namespace NKafka.DevConsole
@@ -13,10 +18,10 @@ namespace NKafka.DevConsole
     {
         static void Main()
         {
-            var host = "192.168.137.196";
+            var host = "192.168.41.109";//"192.168.137.196";
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);
-            var topicName = "test2";
+            var topicName = "test";
             var groupName = "group61";
 
             //var tester = new KafkaTester();
@@ -24,11 +29,14 @@ namespace NKafka.DevConsole
             //Console.ReadLine();
             //return;
 
+            var connectionSettings = new KafkaConnectionSettingsBuilder()
+                .SetRegularReconnectPeriod(TimeSpan.FromMinutes(5)); //todo
             var clientConfigBuilder = new KafkaClientSettingsBuilder(metadataBroker)
                 .SetClientId("nkafka")
                 .SetKafkaVersion(KafkaVersion.V0_10)
                 .SetWorkerThreadCount(1)
-                .SetWorkerPeriod(TimeSpan.FromMilliseconds(500));
+                .SetWorkerPeriod(TimeSpan.FromMilliseconds(500))
+                .SetConnectionSettings(connectionSettings.Build());
             var producerConfigBuilder = new KafkaProducerSettingsBuilder()
                 .SetConsistencyLevel(KafkaConsistencyLevel.OneReplica)
                 .SetCodecType(KafkaCodecType.CodecGzip)
@@ -39,7 +47,9 @@ namespace NKafka.DevConsole
                 .SetPartitionBatchMaxSizeBytes(10000)
                 .SetFetchServerWaitTime(TimeSpan.FromSeconds(5));
 
-            var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build());
+            var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build())
+                .SetLogger(new TestConsoleLogger());
+
             var group = clientBuilder.CreateConsumerGroup(groupName, KafkaConsumerGroupType.BalancedConsumers);
 
             if (group == null)
@@ -169,6 +179,85 @@ namespace NKafka.DevConsole
 
                 return partitions[(_rand?.Next(0, 100) ?? 0) % partitions.Count];
             }
-        }        
+        }
+
+        private class TestConsoleLogger : IKafkaClientLogger
+        {
+            public void OnBrokerConnected(IKafkaClientBroker broker)
+            {
+                Console.WriteLine($"[connected] broker={broker.Name} worker={broker.WorkerId}");
+            }
+
+            public void OnBrokerTransportError(IKafkaClientBroker broker, KafkaBrokerTransportErrorInfo error)
+            {
+                var connectionError = error.ConnectionError.ErrorCode;
+                var socketError = error.ConnectionError.SockerError?.SocketErrorCode.ToString() ?? "";
+
+                string requestText = string.Empty;
+
+                if (error.RequestInfo != null)
+                {
+                    var requestId = error.RequestInfo.RequestId;
+                    var requestType = error.RequestInfo.RequestType;
+                    var requestSender = error.RequestInfo.Sender;
+
+                    requestText = $"{requestType}(sender={requestSender}, id={requestId})";
+                }
+
+                Console.WriteLine($"[transport][error] code={error.ErrorCode}({error.ErrorDescription}) broker={broker.Name} worker={broker.WorkerId} request={requestText} connection={connectionError} socket={socketError}", error.Exception);
+            }
+
+            public void OnBrokerProtocolError(IKafkaClientBroker broker, KafkaBrokerProtocolErrorInfo error)
+            {
+                if (error.RequestInfo == null)
+                {
+                    Console.WriteLine($"[protocol][error] code={error.ErrorCode}({error.ErrorDescription}) broker={broker.Name} worker={broker.WorkerId}", error.Exception);
+                    return;
+                }
+
+                var requestId = error.RequestInfo.RequestId;
+                var requestType = error.RequestInfo.RequestType;
+                var requestSender = error.RequestInfo.Sender;
+
+                var requestText = $"{requestType}(sender={requestSender}, id={requestId})";
+
+                Console.WriteLine($"[protocol][error] code={error.ErrorCode}({error.ErrorDescription}) broker={broker.Name} worker={broker.WorkerId} request={requestText}", error.Exception);
+            }
+
+            public void OnGroupMetadataError(IKafkaClientBroker broker, KafkaGroupMetadata groupMetadata)
+            {
+                var metadataText = string.Empty;
+                if (groupMetadata.Coordinator != null)
+                {
+                    var coordinator = groupMetadata.Coordinator;
+                    metadataText = $"(broker_id={coordinator.BrokerId}, host={coordinator.Host ?? string.Empty}, port={coordinator.Port})";
+                }
+
+                if (groupMetadata.Error != null)
+                {
+                    Console.WriteLine($"[group][{groupMetadata.GroupName}][error] code={groupMetadata.Error.Value} broker={broker.Name} worker={broker.WorkerId} metadata={metadataText}");
+                    return;
+                }
+
+                Console.WriteLine($"[group][{groupMetadata.GroupName}][error] broker={broker.Name} worker={broker.WorkerId} metadata={metadataText}");
+            }
+
+            public void OnTopicMetadataError(IKafkaClientBroker broker, KafkaTopicMetadata topicMetadata)
+            {
+                if (topicMetadata.Error != null)
+                {
+                    Console.WriteLine($"[topic][{topicMetadata.TopicName}][error] code={topicMetadata.Error.Value} broker={broker.Name} worker={broker.WorkerId}");
+                    return;
+                }
+
+                foreach (var partition in topicMetadata.Partitions)
+                {
+                    if (partition.Error == null) continue;
+
+                    var metadataText = $"(leader_broker_id={partition.LeaderBrokerId})";
+                    Console.WriteLine($"[topic][error] code={partition.Error.Value} broker={broker.Name} worker={broker.WorkerId} partition={partition.PartitionId} metadata={metadataText}");
+                }
+            }
+        }      
     }
 }
