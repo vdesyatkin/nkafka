@@ -19,7 +19,7 @@ namespace NKafka.Client.Broker.Internal
         public KafkaClientBrokerType BrokerType { get; }        
         public KafkaBrokerMetadata BrokerMetadata { get; }        
 
-        public bool IsEnabled => _broker.IsEnabled;
+        public bool IsEnabled => _broker.IsOpenned && _broker.Error == null;
         public bool IsStarted => _broker.IsOpenned;
 
         [CanBeNull] public IKafkaClientLogger Logger { get; }

@@ -30,7 +30,7 @@ namespace NKafka.DevConsole
             //return;
 
             var connectionSettings = new KafkaConnectionSettingsBuilder()
-                .SetRegularReconnectPeriod(TimeSpan.FromMinutes(5)); //todo
+                .SetRegularReconnectPeriod(TimeSpan.FromMinutes(5));
             var clientConfigBuilder = new KafkaClientSettingsBuilder(metadataBroker)
                 .SetClientId("nkafka")
                 .SetKafkaVersion(KafkaVersion.V0_10)

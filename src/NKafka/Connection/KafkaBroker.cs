@@ -12,9 +12,7 @@ namespace NKafka.Connection
 {
     public sealed class KafkaBroker
     {
-        public bool IsOpenned => _isOpenned;
-
-        public bool IsEnabled => _isOpenned && !_isConnectionMaintenance;
+        public bool IsOpenned => _isOpenned;        
 
         public KafkaBrokerStateErrorCode? Error => _sendError ?? _receiveError;
 
@@ -39,10 +37,14 @@ namespace NKafka.Connection
         [NotNull] public KafkaProtocol Protocol => _kafkaProtocol;
 
         [NotNull] private readonly string _name;
-        [NotNull] private readonly KafkaConnection _connection;
+        [NotNull] private readonly string _host;
+        private readonly int _port;        
         [NotNull] private readonly KafkaProtocol _kafkaProtocol;
         [NotNull] private readonly KafkaConnectionSettings _settings;
         [CanBeNull] private readonly IKafkaBrokerLogger _logger;
+
+        [CanBeNull] private ConnectionState _currentConnection;
+        [CanBeNull] private ConnectionState _previousConnection;
 
         [NotNull] private readonly ConcurrentDictionary<int, RequestState> _requests;
         [NotNull] private readonly ResponseState _responseState;
@@ -50,10 +52,7 @@ namespace NKafka.Connection
         private KafkaBrokerStateErrorCode? _sendError;
         private KafkaBrokerStateErrorCode? _receiveError;
 
-        private volatile bool _isOpenned;
-        private volatile bool _isReading;
-        private volatile bool _isConnectionMaintenance;
-        [NotNull] private volatile object _connectionLocker;
+        private volatile bool _isOpenned;        
 
         private DateTime _connectionTimestampUtc;
         private DateTime _lastActivityTimestampUtc;
@@ -68,7 +67,8 @@ namespace NKafka.Connection
             [CanBeNull] IKafkaBrokerLogger logger)
         {
             _name = name;
-            _connection = new KafkaConnection(host, port);
+            _host = host;
+            _port = port;            
             _kafkaProtocol = kafkaProtocol;
             _settings = settings ?? KafkaConnectionSettingsBuilder.Default;
             _logger = logger;
@@ -76,27 +76,24 @@ namespace NKafka.Connection
             _requests = new ConcurrentDictionary<int, RequestState>();
             _responseState = new ResponseState(kafkaProtocol);
 
-            _isOpenned = false;
-            _isReading = false;
-            _isConnectionMaintenance = false;
-
-            _connectionLocker = new object();
+            _isOpenned = false;                      
         }
 
         public void Open(CancellationToken cancellation)
-        {
-            _isConnectionMaintenance = true;
-            TryOpenConnection(cancellation);
-            _isConnectionMaintenance = false;
-            BeginRead(_connectionTimestampUtc);
+        {            
+            var connection = TryOpenConnection(cancellation);
+            _currentConnection = connection;
+            if (connection == null) return;
+
             _isOpenned = true;
+            BeginRead(connection);            
         }
 
         public void Close()
-        {
-            _isConnectionMaintenance = true;
+        {            
             _isOpenned = false;
-            CloseConnection();
+            CloseConnection(_previousConnection);
+            CloseConnection(_currentConnection);
             _sendError = null;
             _receiveError = null;
             _requests.Clear();
@@ -106,8 +103,7 @@ namespace NKafka.Connection
         {
             if (cancellation.IsCancellationRequested) return;
             if (!_isOpenned) return;
-
-            var hasActiveRequests = false;
+            
             //set timeout error if needed            
             foreach (var requestPair in _requests)
             {
@@ -123,69 +119,51 @@ namespace NKafka.Connection
                         _sendError = KafkaBrokerStateErrorCode.ClientTimeout;
                         LogConnectionError(KafkaBrokerErrorCode.ClientTimeout, "CheckTimeout",
                             KafkaConnectionErrorCode.ClientTimeout, request.RequestInfo);
-                    }
-
-                    hasActiveRequests = true;
+                    }                    
                 }
-            }
+            }            
 
             //reconnect if needed
-            var error = _sendError ?? _receiveError;          
+            var error = _sendError ?? _receiveError;
+            var reconnectPeriod = error != null
+                ? _settings.ErrorStateReconnectPeriod
+                : _settings.RegularReconnectPeriod;
 
-            // reconnect after error
-            if (error != null && DateTime.UtcNow - _connectionTimestampUtc >= _settings.ErrorStateReconnectPeriod)
+            var currentConnection = _currentConnection;
+
+            // reconnect if needed
+            if (DateTime.UtcNow - _connectionTimestampUtc >= reconnectPeriod)
             {
                 if (cancellation.IsCancellationRequested) return;
-                _isConnectionMaintenance = true;
 
-                lock (_connectionLocker)
+                if (currentConnection != null)
                 {
-                    TryReopenConnection(cancellation);                    
-                    BeginRead(_connectionTimestampUtc);
+                    currentConnection.IsDeprecated = true;
                 }
 
-                _isConnectionMaintenance = false;
-
-                return;
-            }
-
-            // regular reconnect
-            if (error == null && DateTime.UtcNow - _connectionTimestampUtc >= _settings.RegularReconnectPeriod)
-            {
-                if (cancellation.IsCancellationRequested) return;
-                _isConnectionMaintenance = true;
-
-                if (hasActiveRequests) return;
-
-                lock (_connectionLocker)
+                var previousConnection = _previousConnection;
+                if (previousConnection != null)
                 {
-                    // double check - are there active requests
-                    foreach (var requestPair in _requests)
-                    {
-                        var request = requestPair.Value;
-                        if (request == null) continue;
-
-                        if (request.Response == null && request.Error == null)
-                        {                           
-                            hasActiveRequests = true;
-                            break;
-                        }
-                    }
-                    if (hasActiveRequests) return;
-
-                    TryReopenConnection(cancellation);
-                    BeginRead(_connectionTimestampUtc);
+                    previousConnection.IsClosed = true;
+                    CloseConnection(previousConnection);
                 }
 
-                _isConnectionMaintenance = false;
+                _previousConnection = currentConnection;
+
+                currentConnection = TryOpenConnection(cancellation);
+                _currentConnection = currentConnection;
+                if (currentConnection != null)
+                {
+                    BeginRead(currentConnection);
+                }                                
 
                 return;
-            }
+            }            
 
             // begin read if previous try has been failed
-            if (!_isReading && !_isConnectionMaintenance)
+            if (currentConnection?.IsReading == false)
             {
-                BeginRead(_connectionTimestampUtc);
+                BeginRead(currentConnection);
             }
 
             //heartbeat: check response if requested
@@ -212,49 +190,37 @@ namespace NKafka.Connection
             }
         }
 
-        private void TryOpenConnection(CancellationToken cancellation)
+        [CanBeNull]
+        private ConnectionState TryOpenConnection(CancellationToken cancellation)
         {
-            _connectionTimestampUtc = DateTime.UtcNow;
-            _lastActivityTimestampUtc = DateTime.UtcNow;
-
+            var connection = new KafkaConnection(_host, _port);
+            var connectionState = new ConnectionState(connection);
             try
-            {
-                _connection.Open(cancellation);
+            {                
+                connection.Open(cancellation);
+                _connectionTimestampUtc = DateTime.UtcNow;
+                _lastActivityTimestampUtc = DateTime.UtcNow;
                 LogConnected();
+                return connectionState;
             }
             catch (KafkaConnectionException connectionException)
             {
-                _sendError = ConvertStateError(connectionException);
-                LogConnectionError("OpenConnection", connectionException);
+                _sendError = ConvertStateError(connectionState, connectionException);
+                LogConnectionError("OpenConnection", connectionState, connectionException);
+                return null;
             }
-        }
+        }        
 
-        private void TryReopenConnection(CancellationToken cancellation)
+        private void CloseConnection([CanBeNull] ConnectionState connection)
         {
-            _connectionTimestampUtc = DateTime.UtcNow;
-            _lastActivityTimestampUtc = DateTime.UtcNow;
-
+            if (connection == null) return;
             try
             {
-                _connection.Reopen(cancellation);
-                LogConnected();
-            }
-            catch (KafkaConnectionException connectionException)
-            {
-                _sendError = ConvertStateError(connectionException);
-                LogConnectionError("ReopenConnection", connectionException);
-            }
-        }
-
-        private void CloseConnection()
-        {
-            try
-            {
-                _connection.Close();
+                connection.Connection.Close();
             }
             catch (KafkaConnectionException connectionException)
             {                
-                LogConnectionError("CloseConnection", connectionException);
+                LogConnectionError("CloseConnection", connection, connectionException);
             }
         }
 
@@ -276,14 +242,11 @@ namespace NKafka.Connection
             TimeSpan timeout, int? dataCapacity, bool responseIsCheckable)
             where TRequest : class, IKafkaRequest
         {
-            if (!_isOpenned)
+            var connection = _currentConnection;
+            if (!_isOpenned || connection == null)
             {
                 return KafkaBrokerErrorCode.ConnectionClosed;
-            }
-            if (_isConnectionMaintenance)
-            {
-                return KafkaBrokerErrorCode.ConnectionMaintenance;
-            }
+            }            
 
             var requstType = _kafkaProtocol.GetRequestType<TRequest>();
             if (requstType == null)
@@ -308,48 +271,34 @@ namespace NKafka.Connection
                 data = _kafkaProtocol.WriteRequest(request, requstType.Value, requestId, dataCapacity);
             }
             catch (KafkaProtocolException protocolException)
-            {
-                if (_isConnectionMaintenance) return KafkaBrokerErrorCode.ConnectionMaintenance;
-
+            {                
                 LogProtocolError(KafkaBrokerErrorCode.ProtocolError, "WriteRequest", protocolException, requestInfo);
                 return KafkaBrokerErrorCode.ProtocolError;
             }
 
-            var requestState = new RequestState(requestInfo, DateTime.UtcNow, timeout);
+            var requestState = new RequestState(requestInfo, connection, DateTime.UtcNow, timeout);
+            if (responseIsCheckable)
+            {
+                _requests[requestId] = requestState;
+            }
 
             try
-            {
-                if (responseIsCheckable)
-                {
-                    Monitor.Enter(_connectionLocker);
-                    if (!_isOpenned) return KafkaBrokerErrorCode.ConnectionClosed;
-                    if (_isConnectionMaintenance) return KafkaBrokerErrorCode.ConnectionMaintenance;
-                    
-                    _requests[requestId] = requestState;
-                }
+            {                
                 _lastActivityTimestampUtc = DateTime.UtcNow;
-                _connection.BeginWrite(data, 0, data.Length, OnSent, requestState);
+                connection.Connection.BeginWrite(data, 0, data.Length, OnSent, requestState);
                 requestState.SentTimestampUtc = DateTime.UtcNow;
                 return requestId;
             }
             catch (KafkaConnectionException connectionException)
             {
-                _requests.TryRemove(requestId, out requestState);
-                if (_isConnectionMaintenance) return KafkaBrokerErrorCode.ConnectionMaintenance;
+                _requests.TryRemove(requestId, out requestState);                
 
-                var error = ConvertError(connectionException);
-                _sendError = ConvertStateError(connectionException);
+                var error = ConvertError(connection, connectionException);
+                _sendError = ConvertStateError(connection, connectionException);
 
                 LogConnectionError(error, "BeginWriteRequest", connectionException, requestInfo);
                 return error;
-            }
-            finally
-            {
-                if (responseIsCheckable)
-                {
-                    Monitor.Exit(_connectionLocker);
-                }
-            }
+            }           
         }
 
         public KafkaBrokerResult<TResponse> Receive<TResponse>(int requestId) where TResponse : class, IKafkaResponse
@@ -380,29 +329,29 @@ namespace NKafka.Connection
         #region Async send
 
         private void OnSent(IAsyncResult result)
-        {
+        {            
             if (!_isOpenned || result == null)
             {
                 return;
             }
 
             var requestState = result.AsyncState as RequestState;
+            if (requestState == null) return;
+            var connection = requestState.Connection;
 
             try
             {
-                _connection.EndWrite(result);
+                connection.Connection.EndWrite(result);
             }
             catch (KafkaConnectionException connectionException)
             {                
-                var error = ConvertError(connectionException);
-                if (requestState != null)
-                {
-                    requestState.Error = error;
-                }
-                if (_isConnectionMaintenance) return;
+                var error = ConvertError(connection, connectionException);
+                requestState.Error = error;
+                
+                if (requestState.Connection.IsDeprecated) return;
 
-                _sendError = ConvertStateError(connectionException);
-                LogConnectionError(error, "EndWriteRequest", connectionException, requestState?.RequestInfo);
+                _sendError = ConvertStateError(connection, connectionException);
+                LogConnectionError(error, "EndWriteRequest", connectionException, requestState.RequestInfo);
                 return;
             }
 
@@ -413,39 +362,25 @@ namespace NKafka.Connection
 
         #region Async receive        
         
-        private void BeginRead(DateTime connectionTimestampUtc)
-        {            
-            lock (_connectionLocker)
+        private void BeginRead([NotNull] ConnectionState connection)
+        {
+            if (connection.IsClosed) return;
+
+            var responseState = _responseState;                
+            var responseHeaderBuffer = responseState.ResponseHeaderBuffer;
+
+            try
             {
-                if (!_isOpenned)
-                {                    
-                    _isReading = false;
-                    return;
-                }
-                if (connectionTimestampUtc != _connectionTimestampUtc)
-                {
-                    // deprecated connection                    
-                    _isReading = false;
-                    return;
-                }
-
-                var responseState = _responseState;                
-                var responseHeaderBuffer = responseState.ResponseHeaderBuffer;
-
-                try
-                {                    
-                    _connection.BeginRead(responseHeaderBuffer, 0, responseHeaderBuffer.Length, 
-                        OnReceived, connectionTimestampUtc);
-                    _isReading = true;
-                }
-                catch (KafkaConnectionException connectionException)
-                {
-                    _isReading = false;                    
-
-                    _receiveError = ConvertStateError(connectionException);
-                    LogConnectionError("BeginReadResponseHeader", connectionException);
-                }
+                connection.Connection.BeginRead(responseHeaderBuffer, 0, responseHeaderBuffer.Length, 
+                    OnReceived, connection);
+                connection.IsReading = true;                
             }
+            catch (KafkaConnectionException connectionException)
+            {
+                _receiveError = ConvertStateError(connection, connectionException);
+                LogConnectionError("BeginReadResponseHeader", connection, connectionException);
+                connection.IsReading = false;
+            }            
         }       
 
         private void OnReceived(IAsyncResult result)
@@ -457,39 +392,26 @@ namespace NKafka.Connection
                 return;
             }
 
-            DateTime readConnectionTimestampUtc = DateTime.MinValue;
+            ConnectionState connection = null;            
             try
-            {
-                if (result == null)
-                {                    
-                    return;
-                }
-                
-                if (result.AsyncState is DateTime)
-                {
-                    readConnectionTimestampUtc = (DateTime) result.AsyncState;
-                }                
+            {               
+                connection = result?.AsyncState as ConnectionState;
+                if (connection == null) return;
+                if (connection.IsClosed) return;
 
                 int dataSize;
                 try
                 {
-                    dataSize = _connection.EndRead(result);
+                    dataSize = connection.Connection.EndRead(result);
                 }
                 catch (KafkaConnectionException connectionException)
                 {                    
-                    if (_isConnectionMaintenance) return;
-                    if (connectionException.ErrorInfo.ErrorCode == KafkaConnectionErrorCode.ConnectionMaintenance) return;
-                    if (readConnectionTimestampUtc != _connectionTimestampUtc) return;                                       
+                    if (connection.IsDeprecated) return;                    
 
-                    _receiveError = ConvertStateError(connectionException);
-                    LogConnectionError("EndReadResponseHeader", connectionException);
+                    _receiveError = ConvertStateError(connection, connectionException);
+                    LogConnectionError("EndReadResponseHeader", connection, connectionException);
                     return;
-                }
-
-                if (readConnectionTimestampUtc != _connectionTimestampUtc)
-                {
-                    return;
-                }
+                }                
 
                 if (dataSize == 0)
                 {
@@ -508,15 +430,15 @@ namespace NKafka.Connection
 
                         try
                         {
-                            dataSize = _connection.Read(responseHeaderBuffer, responseHeaderOffset, 
+                            dataSize = connection.Connection.Read(responseHeaderBuffer, responseHeaderOffset, 
                                 responseHeaderBuffer.Length - responseHeaderOffset);
                         }
                         catch (KafkaConnectionException connectionException)
                         {                            
-                            if (_isConnectionMaintenance) return;                            
+                            if (connection.IsDeprecated) return;                            
 
-                            _receiveError = ConvertStateError(connectionException);
-                            LogConnectionError("EndRepeatedReadResponseHeader", connectionException);
+                            _receiveError = ConvertStateError(connection, connectionException);
+                            LogConnectionError("EndRepeatedReadResponseHeader", connection, connectionException);
                             return;
                         }
 
@@ -537,7 +459,7 @@ namespace NKafka.Connection
                     }
                     catch (KafkaProtocolException protocolException)
                     {                        
-                        if (_isConnectionMaintenance) return;                        
+                        if (connection.IsDeprecated) return;                        
 
                         LogProtocolError(KafkaBrokerErrorCode.ProtocolError, "ReadResponseHeader", protocolException);
                         _receiveError = KafkaBrokerStateErrorCode.ProtocolError;
@@ -558,14 +480,14 @@ namespace NKafka.Connection
 
                             try
                             {
-                                _connection.Read(tempBuffer, 0, tempBuffer.Length);
+                                connection.Connection.Read(tempBuffer, 0, tempBuffer.Length);
                             }
                             catch (KafkaConnectionException connectionException)
                             {
-                                if (_isConnectionMaintenance) return;
+                                if (connection.IsDeprecated) return;
 
-                                _receiveError = ConvertStateError(connectionException);
-                                LogConnectionError("ReadUnexpectedResponse", connectionException);
+                                _receiveError = ConvertStateError(connection, connectionException);
+                                LogConnectionError("ReadUnexpectedResponse", connection, connectionException);
                                 return;
                             }
                         }
@@ -580,15 +502,15 @@ namespace NKafka.Connection
                         int responsePackageSize;
                         try
                         {
-                            responsePackageSize = _connection.Read(responseBuffer, responseOffset, responseBuffer.Length - responseOffset);
+                            responsePackageSize = connection.Connection.Read(responseBuffer, responseOffset, responseBuffer.Length - responseOffset);
                         }
                         catch (KafkaConnectionException connectionException)
                         {
-                            var error = ConvertError(connectionException);                            
+                            var error = ConvertError(connection, connectionException);                            
                             requestState.Error = error;
-                            if (_isConnectionMaintenance) return;
+                            if (connection.IsDeprecated) return;
 
-                            _receiveError = ConvertStateError(connectionException);
+                            _receiveError = ConvertStateError(connection, connectionException);
                             LogConnectionError(error, "ReadResponse", connectionException, requestState.RequestInfo);
                             return;
                         }
@@ -602,7 +524,7 @@ namespace NKafka.Connection
 
                     if (responseOffset != responseBuffer.Length)
                     {
-                        if (_isConnectionMaintenance)
+                        if (connection.IsDeprecated)
                         {
                             requestState.Error = KafkaBrokerErrorCode.ConnectionMaintenance;
                             return;
@@ -635,60 +557,28 @@ namespace NKafka.Connection
 
                     try
                     {
-                        isDataAvailable = _connection.IsDataAvailable();
+                        isDataAvailable = connection.Connection.IsDataAvailable();
                     }
                     catch (KafkaConnectionException connectionException)
                     {
-                        if (_isConnectionMaintenance) return;
+                        if (connection.IsDeprecated) return;
 
-                        _receiveError = ConvertStateError(connectionException);
-                        LogConnectionError("CheckDataAvailability", connectionException);
+                        _receiveError = ConvertStateError(connection, connectionException);
+                        LogConnectionError("CheckDataAvailability", connection, connectionException);
                     }
 
                 } while (isDataAvailable);
             }
             finally
             {
-                BeginRead(readConnectionTimestampUtc);
+                if (connection != null && _isOpenned)
+                {
+                    BeginRead(connection);
+                }
             }
         }
 
-        #endregion Async receive      
-
-        #region State classes
-
-        private sealed class RequestState
-        {
-            [NotNull] public readonly KafkaBrokerRequestInfo RequestInfo;
-            public readonly TimeSpan? Timeout;
-
-            public readonly DateTime CreateTimestampUtc;
-            public DateTime? SentTimestampUtc;
-
-            [CanBeNull]
-            public IKafkaResponse Response;
-            public KafkaBrokerErrorCode? Error;
-
-            public RequestState([NotNull] KafkaBrokerRequestInfo requestInfo,
-                DateTime createTimestampUtc, TimeSpan? timeout)
-            {
-                RequestInfo = requestInfo;
-                CreateTimestampUtc = createTimestampUtc;
-                Timeout = timeout;
-            }
-        }
-
-        private sealed class ResponseState
-        {
-            [NotNull] public readonly byte[] ResponseHeaderBuffer;            
-
-            public ResponseState([NotNull] KafkaProtocol kafkaProtocol)
-            {
-                ResponseHeaderBuffer = new byte[kafkaProtocol.ResponseHeaderSize];
-            }
-        }
-
-        #endregion State classes        
+        #endregion Async receive              
 
         private void LogProtocolError(KafkaBrokerErrorCode errorCode, string errorDescription,
             [NotNull] KafkaProtocolException protocolException, [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
@@ -742,7 +632,9 @@ namespace NKafka.Connection
             logger.OnTransportError(errorInfo);
         }
 
-        private void LogConnectionError(string errorDescription, [NotNull] KafkaConnectionException connectionException,
+        private void LogConnectionError(string errorDescription, 
+            [NotNull] ConnectionState state,
+            [NotNull] KafkaConnectionException connectionException,
             [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
         {
             if (!_isOpenned) return;
@@ -750,7 +642,7 @@ namespace NKafka.Connection
             var logger = _logger;
             if (logger == null) return;
 
-            var errorCode = ConvertError(connectionException);
+            var errorCode = ConvertError(state, connectionException);
             var errorInfo = new KafkaBrokerTransportErrorInfo(errorCode, errorDescription,
                 connectionException.ErrorInfo, requestInfo, connectionException.InnerException);
             logger.OnTransportError(errorInfo);
@@ -761,9 +653,9 @@ namespace NKafka.Connection
             _logger?.OnConnected();
         }
 
-        private KafkaBrokerStateErrorCode ConvertStateError([NotNull] KafkaConnectionException connectionException)
+        private KafkaBrokerStateErrorCode ConvertStateError([NotNull] ConnectionState state, [NotNull] KafkaConnectionException connectionException)
         {
-            if (_isConnectionMaintenance) return KafkaBrokerStateErrorCode.ConnectionMaintenance;
+            if (state.IsDeprecated) return KafkaBrokerStateErrorCode.ConnectionMaintenance;
 
             switch (connectionException.ErrorInfo.ErrorCode)
             {
@@ -808,9 +700,9 @@ namespace NKafka.Connection
             }
         }
 
-        private KafkaBrokerErrorCode ConvertError([NotNull] KafkaConnectionException connectionException)
+        private KafkaBrokerErrorCode ConvertError([NotNull] ConnectionState state, [NotNull] KafkaConnectionException connectionException)
         {
-            if (_isConnectionMaintenance) return KafkaBrokerErrorCode.ConnectionMaintenance;
+            if (state.IsDeprecated) return KafkaBrokerErrorCode.ConnectionMaintenance;
 
             switch (connectionException.ErrorInfo.ErrorCode)
             {
@@ -854,5 +746,58 @@ namespace NKafka.Connection
                     return KafkaBrokerErrorCode.UnknownError;
             }
         }
+
+        #region State classes
+
+        private sealed class RequestState
+        {
+            [NotNull]
+            public readonly KafkaBrokerRequestInfo RequestInfo;
+            [NotNull]
+            public readonly ConnectionState Connection;
+            public readonly TimeSpan? Timeout;
+
+            public readonly DateTime CreateTimestampUtc;
+            public DateTime? SentTimestampUtc;
+
+            [CanBeNull]
+            public IKafkaResponse Response;
+            public KafkaBrokerErrorCode? Error;
+
+            public RequestState([NotNull] KafkaBrokerRequestInfo requestInfo, [NotNull] ConnectionState connection,
+                DateTime createTimestampUtc, TimeSpan? timeout)
+            {
+                RequestInfo = requestInfo;
+                Connection = connection;
+                CreateTimestampUtc = createTimestampUtc;
+                Timeout = timeout;
+            }
+        }
+
+        private sealed class ResponseState
+        {
+            [NotNull]
+            public readonly byte[] ResponseHeaderBuffer;
+
+            public ResponseState([NotNull] KafkaProtocol kafkaProtocol)
+            {
+                ResponseHeaderBuffer = new byte[kafkaProtocol.ResponseHeaderSize];
+            }
+        }
+
+        private sealed class ConnectionState
+        {
+            [NotNull] public readonly KafkaConnection Connection;
+            public bool IsDeprecated;
+            public bool IsClosed;
+            public bool IsReading;
+
+            public ConnectionState([NotNull] KafkaConnection connection)
+            {
+                Connection = connection;
+            }
+        }
+
+        #endregion State classes        
     }
 }
