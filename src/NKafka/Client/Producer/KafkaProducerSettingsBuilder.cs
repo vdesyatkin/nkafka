@@ -28,35 +28,35 @@ namespace NKafka.Client.Producer
         private TimeSpan? _batchServerTimeout;
         private TimeSpan? _errorRetryPeriod;
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaProducerSettingsBuilder SetConsistencyLevel(KafkaConsistencyLevel consistencyLevel)
         {
             _consistencyLevel = consistencyLevel;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaProducerSettingsBuilder SetCodecType(KafkaCodecType codecType)
         {
             _codecType = codecType;
             return this;
         }
         
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaProducerSettingsBuilder SetMessageMaxSizeByteCount(int byteCount)
         {
             _messageMaxSizeByteCount = byteCount;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaProducerSettingsBuilder SetPartitionBatchPreferredSizeByteCount(int byteCount)
         {
             _partitionBatchPreferredSizeByteCount = byteCount;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaProducerSettingsBuilder SetPartitionBatchMaxSizeByteCount(int byteCount)
         {
             _partitionBatchMaxSizeByteCount = byteCount;
@@ -64,7 +64,7 @@ namespace NKafka.Client.Producer
         }
 
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaProducerSettingsBuilder SetProduceRequestMaxSizeByteCount(int byteCount)
         {
             _produceRequestMaxSizeByteCount = byteCount;
@@ -72,21 +72,21 @@ namespace NKafka.Client.Producer
         }
 
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaProducerSettingsBuilder SetProduceRequestServerTimeout(TimeSpan timeout)
         {
             _batchServerTimeout = timeout;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaProducerSettingsBuilder SetErrorRetryPeriod(TimeSpan period)
         {
             _errorRetryPeriod = period;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaProducerSettings Build()
         {            
             var consistencyLevel = _consistencyLevel ?? DefaultConsistencyLevel;

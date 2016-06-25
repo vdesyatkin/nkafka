@@ -650,6 +650,9 @@ namespace NKafka.Client.Consumer.Internal
         {
             var logger = topic.Logger;
             if (logger == null) return;
+
+            if (brokerError == KafkaBrokerErrorCode.ConnectionMaintenance) return;
+
             var errorInfo = new KafkaConsumerTopicTransportErrorInfo(brokerError, errorDescription, _clientBroker);
             logger.OnTransportError(errorInfo);
         }

@@ -1300,6 +1300,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
             var logger = group.Logger;
             if (logger == null) return;
 
+            if (brokerError == KafkaBrokerErrorCode.ConnectionMaintenance) return;
+
             var errorInfo = new KafkaConsumerGroupTransportErrorInfo(brokerError, errorDescription, _clientBroker);
             logger.OnTransportError(errorInfo);
         }

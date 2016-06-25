@@ -602,13 +602,13 @@ namespace NKafka.Client.Producer.Internal
             }
 
             var logger = topic.Logger;
-            if (logger != null)
+            if (logger != null && brokerError != KafkaBrokerErrorCode.ConnectionMaintenance)
             {
                 var errorInfo = new KafkaProducerTopicTransportErrorInfo(brokerError, errorDescription,
                     _clientBroker, batch.ByteCount, batch.MessageCount);
                 logger.OnTransportError(errorInfo);
             }
-        }
+        }       
 
         private enum ProducerErrorType
         {

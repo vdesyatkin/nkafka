@@ -12,7 +12,7 @@ namespace NKafka.Client
         public static readonly KafkaVersion DefaultKafkaVersion = KafkaVersion.V0_10;
         public static readonly string DefaultClientId = "nkafka";
         public static readonly int DefaultWorkerThreadCount = 1;
-        public static readonly TimeSpan DefaultWorkerPeriod = TimeSpan.FromSeconds(1);
+        public static readonly TimeSpan DefaultWorkerPeriod = TimeSpan.FromMilliseconds(1000);
         public static readonly TimeSpan DefaultMetadataErrorRetryPeriod = TimeSpan.FromSeconds(10);
 
         private KafkaVersion? _kafkaVersion;
@@ -49,63 +49,63 @@ namespace NKafka.Client
             }
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaClientSettingsBuilder SetKafkaVersion(KafkaVersion version)
         {
             _kafkaVersion = version;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaClientSettingsBuilder SetClientId([CanBeNull]string clientId)
         {
             _clientId = clientId;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaClientSettingsBuilder AppendMetadataBroker([NotNull] KafkaBrokerInfo metadataBroker)
         {
             _metadataBrokers.Add(metadataBroker);
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaClientSettingsBuilder SetWorkerThreadCount(int threadCount)
         {
             _workerThreadCount = threadCount;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaClientSettingsBuilder SetWorkerPeriod(TimeSpan workerPeriod)
         {
             _workerPeriod = workerPeriod;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaClientSettingsBuilder SetMetadataErrorRetryPeriod(TimeSpan period)
         {
             _metadataErrorRetryPeriod = period;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaClientSettingsBuilder SetConnectionSettings([NotNull]KafkaConnectionSettings connectionSettings)
         {
             _connectionSettings = connectionSettings;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaClientSettingsBuilder SetProtocolSettings([NotNull]KafkaProtocolSettings protocolSettings)
         {
             _protocolSettings = protocolSettings;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaClientSettings Build()
         {
             var kafkaVersion = _kafkaVersion ?? DefaultKafkaVersion;

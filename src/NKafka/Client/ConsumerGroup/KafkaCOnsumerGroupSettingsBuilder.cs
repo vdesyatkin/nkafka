@@ -27,7 +27,7 @@ namespace NKafka.Client.ConsumerGroup
 
         public readonly static TimeSpan ErrorRetryPeriod = TimeSpan.FromSeconds(10);
 
-        [PublicAPI, NotNull] public readonly static KafkaConsumerGroupSettings Default = new KafkaConsumerGroupSettingsBuilder().Build();
+        [NotNull] public readonly static KafkaConsumerGroupSettings Default = new KafkaConsumerGroupSettingsBuilder().Build();
 
         private TimeSpan? _joinGroupServerWaitTime;
         private TimeSpan? _syncGroupServerWaitTime;
@@ -60,90 +60,91 @@ namespace NKafka.Client.ConsumerGroup
             _protocols = new List<KafkaConsumerGroupSettingsProtocol>();
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetJoinGroupServerTimeout(TimeSpan timeout)
         {
             _joinGroupServerWaitTime = timeout;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetSyncGroupServerTimeout(TimeSpan timeout)
         {
             _syncGroupServerWaitTime = timeout;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetHeartbeatServerTimeout(TimeSpan timeout)
         {
             _heartbeatServerWaitTime = timeout;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetOffsetFetchServerTimeout(TimeSpan timeout)
         {
             _offsetFetchServerWaitTime = timeout;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetOffsetCommitServerTimeout(TimeSpan timeout)
         {
             _offsetCommitServerWaitTime = timeout;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetGroupSessionLifetime(TimeSpan lifeTime)
         {
             _groupSessionTimeout = lifeTime;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetHeartbeatPeriod(TimeSpan period)
         {
             _heartbeatPeriod = period;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetOffsetCommitPeriod(TimeSpan period)
         {
             _offsetCommitPeriod = period;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetOffsetCommitRetentionTime(TimeSpan retentionTime)
         {
             _offsetCommitRetentionTime = retentionTime;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetErrorRetryPeriod(TimeSpan period)
         {
             _errorRetryPeriod = period;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetOffsetCommitMetadata(string metadata)
         {
             _offsetCommitMetadta = metadata;
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerSettingsProtocolBuilder BeginAppendProtocol([NotNull] string protocolName,
             short protocolVersion)
         {
             return new KafkaConsumerSettingsProtocolBuilder(this, protocolName, protocolVersion);
         }
 
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder AppendProtocol(
             [NotNull] string protocolName,
             short protocolVersion,
@@ -160,7 +161,7 @@ namespace NKafka.Client.ConsumerGroup
             return AppendProtocol(protocol);
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettingsBuilder AppendProtocol([NotNull] KafkaConsumerGroupSettingsProtocol protocol)
         {
             // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -173,7 +174,7 @@ namespace NKafka.Client.ConsumerGroup
             return this;
         }
 
-        [PublicAPI, NotNull]
+        [NotNull]
         public KafkaConsumerGroupSettings Build()
         {
             var joinGroupServerWaitTime = _joinGroupServerWaitTime ?? DefaultJoinGroupRequestServerTimeout;
@@ -238,12 +239,14 @@ namespace NKafka.Client.ConsumerGroup
                 _strategies = new List<KafkaConsumerAssignmentStrategyInfo>();
             }
 
+            [NotNull]
             public KafkaConsumerSettingsProtocolBuilder SetCustomData([NotNull] byte[] customData)
             {
                 _customData = customData;
                 return this;
             }
 
+            [NotNull]
             public KafkaConsumerSettingsProtocolBuilder AppendStrategy([NotNull]string strategyName, [NotNull]IKafkaConsumerAssignmentStrategy strategy)
             {
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -257,6 +260,7 @@ namespace NKafka.Client.ConsumerGroup
                 return AppendStrategy(strategyInfo);
             }
 
+            [NotNull]
             public KafkaConsumerSettingsProtocolBuilder AppendStrategy([NotNull]KafkaConsumerAssignmentStrategyInfo strategyInfo)
             {
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
@@ -269,6 +273,7 @@ namespace NKafka.Client.ConsumerGroup
                 return this;
             }
 
+            [NotNull]
             public KafkaConsumerGroupSettingsBuilder EndAppendProtocol()
             {
                 var protocol = new KafkaConsumerGroupSettingsProtocol(_protocolName, _protocolVersion, _strategies.ToArray(), _customData);
