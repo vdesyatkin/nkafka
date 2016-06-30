@@ -6,6 +6,6 @@ namespace NKafka.Client.Consumer
     public enum KafkaConsumerBeginBehavior
     {
         BeginFromMinAvailableOffset = 0,
-        BeginFromMaxAvailableOffset = 1
+        BeginAfterMaxAvailableOffset = 1
     }
 }

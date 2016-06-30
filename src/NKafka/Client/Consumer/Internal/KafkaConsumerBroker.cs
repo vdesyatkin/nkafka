@@ -214,7 +214,7 @@ namespace NKafka.Client.Consumer.Internal
                     {
                         clientOffset = minAvailableOffset - 1;
                     }
-                    if (partition.Settings.BeginBehavior == KafkaConsumerBeginBehavior.BeginFromMaxAvailableOffset)
+                    if (partition.Settings.BeginBehavior == KafkaConsumerBeginBehavior.BeginAfterMaxAvailableOffset)
                     {
                         clientOffset = partition.GetMaxAvailableServerOffset();
                     }
