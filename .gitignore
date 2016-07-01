@@ -2,9 +2,12 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/src/NKafka/obj/Debug
-/src/NKafka.DevConsole/obj/Debug
-/src/NKafka/bin/Debug
-/src/NKafka.DevConsole/bin/Debug
+/src/NKafka/obj
+/src/NKafka.DevConsole/obj
+/src/NKafka/bin
+/src/NKafka.DevConsole/bin
 /src/NKafka.sln.DotSettings.user
 /src/.vs
+/src-core/NKafka/bin/
+/src-core/NKafka/obj/
+/src-core/NKafka/project.lock.json
