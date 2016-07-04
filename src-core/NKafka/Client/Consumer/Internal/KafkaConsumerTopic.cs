@@ -34,6 +34,7 @@ namespace NKafka.Client.Consumer.Internal
         { 
             TopicName = topicName;
             GroupName = groupName;
+            CatchUpGroupName = catchUpGroupName;
             Settings = settings;
             _fallbackHandler = fallbackHandler;
             _logger = logger;

@@ -285,7 +285,7 @@ namespace NKafka.Connection
             try
             {                
                 _lastActivityTimestampUtc = DateTime.UtcNow;
-                connection.Connection.BeginWrite(data, 0, data.Length, OnSent, requestState);
+                connection.Connection.WriteAsync(data, 0, data.Length, OnSent, requestState);
                 requestState.SentTimestampUtc = DateTime.UtcNow;
                 return requestId;
             }
@@ -328,34 +328,30 @@ namespace NKafka.Connection
 
         #region Async send
 
-        private void OnSent(IAsyncResult result)
+        private void OnSent(object state, KafkaConnectionException asyncConnectionException)
         {            
-            if (!_isOpenned || result == null)
+            if (!_isOpenned)
             {
                 return;
             }
 
-            var requestState = result.AsyncState as RequestState;
+            var requestState = state as RequestState;
             if (requestState == null) return;
             var connection = requestState.Connection;
 
-            try
+            if (asyncConnectionException != null)
             {
-                connection.Connection.EndWrite(result);
-            }
-            catch (KafkaConnectionException connectionException)
-            {                
-                var error = ConvertError(connection, connectionException);
+                var error = ConvertError(connection, asyncConnectionException);
                 requestState.Error = error;
-                
+
                 if (requestState.Connection.IsDeprecated) return;
 
-                _sendError = ConvertStateError(connection, connectionException);
-                LogConnectionError(error, "EndWriteRequest", connectionException, requestState.RequestInfo);
+                _sendError = ConvertStateError(connection, asyncConnectionException);
+                LogConnectionError(error, "EndWriteRequest", asyncConnectionException, requestState.RequestInfo);
                 return;
             }
 
-            _sendError = null;
+            _sendError = null;                
         }
 
         #endregion Async send
@@ -371,7 +367,7 @@ namespace NKafka.Connection
 
             try
             {
-                connection.Connection.BeginRead(responseHeaderBuffer, 0, responseHeaderBuffer.Length, 
+                connection.Connection.ReadAsync(responseHeaderBuffer, 0, responseHeaderBuffer.Length, 
                     OnReceived, connection);
                 connection.IsReading = true;                
             }
@@ -383,40 +379,33 @@ namespace NKafka.Connection
             }            
         }       
 
-        private void OnReceived(IAsyncResult result)
+        private void OnReceived(object state, int receivedBytes, KafkaConnectionException asyncConnectionException)
         {
             var responseState = _responseState;
 
-            if (!_isOpenned)
-            {                
+            if (!_isOpenned) return;            
+            var connection = state as ConnectionState;
+            if (connection == null) return;
+
+            if (connection.IsClosed) return;
+
+            if (asyncConnectionException != null)
+            {
+                if (connection.IsDeprecated) return;
+
+                _receiveError = ConvertStateError(connection, asyncConnectionException);
+                LogConnectionError("EndReadResponseHeader", connection, asyncConnectionException);
                 return;
             }
 
-            ConnectionState connection = null;            
+            var dataSize = receivedBytes;
+            if (dataSize == 0)
+            {
+                return;
+            }
+
             try
             {               
-                connection = result?.AsyncState as ConnectionState;
-                if (connection == null) return;
-                if (connection.IsClosed) return;
-
-                int dataSize;
-                try
-                {
-                    dataSize = connection.Connection.EndRead(result);
-                }
-                catch (KafkaConnectionException connectionException)
-                {                    
-                    if (connection.IsDeprecated) return;                    
-
-                    _receiveError = ConvertStateError(connection, connectionException);
-                    LogConnectionError("EndReadResponseHeader", connection, connectionException);
-                    return;
-                }                
-
-                if (dataSize == 0)
-                {
-                    return;
-                }
 
                 var responseHeaderOffset = dataSize;
                 var responseHeaderBuffer = responseState.ResponseHeaderBuffer;                

@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NKafka.Connection.Diagnostics;
 using NKafka.Connection.Logging;
@@ -39,6 +40,14 @@ namespace NKafka.Connection
                 if (cancellation.IsCancellationRequested)
                 {
                     throw new KafkaConnectionException(this, KafkaConnectionErrorCode.Cancelled);
+                }
+                if (asyncConnectTask.IsFaulted)
+                {
+                    var exceptions = asyncConnectTask.Exception?.InnerExceptions;
+                    if (exceptions != null && exceptions.Count > 0 && exceptions[0] != null)
+                    {
+                        throw exceptions[0];
+                    }                    
                 }
                 if (!asyncConnectTask.IsCompleted)
                 {
@@ -108,8 +117,8 @@ namespace NKafka.Connection
         }
 
         /// <exception cref="KafkaConnectionException"/>
-        public void BeginWrite([NotNull] byte[] data, int offset, int length,
-            [CanBeNull] AsyncCallback callback, [CanBeNull] object state = null)
+        public void WriteAsync([NotNull] byte[] data, int offset, int length,
+            [CanBeNull] Action<object, KafkaConnectionException> callback, [CanBeNull] object state = null)
         {
             if (!CheckBufferData(data, offset, length))
             {
@@ -119,8 +128,8 @@ namespace NKafka.Connection
             try
             {
                 var stream = GetStream();
-
-                stream.WriteAsync(data, offset, length)?.ContinueWith(t => callback?.Invoke(null));
+                                
+                stream.WriteAsync(data, offset, length)?.ContinueWith(EndWrite, new WriteAsyncCallback(callback, state), TaskContinuationOptions.None);
             }
             catch (KafkaConnectionException)
             {
@@ -130,29 +139,34 @@ namespace NKafka.Connection
             {
                 throw ConvertException(exception);
             }
-        }
+        }        
 
         /// <exception cref="KafkaConnectionException"/>
-        public void EndWrite([NotNull] IAsyncResult asyncResult)
+        private void EndWrite([NotNull] Task asyncWriteTask, object state)
         {
-            if (asyncResult == null)
-            {
-                throw new KafkaConnectionException(this, KafkaConnectionErrorCode.BadRequest);
-            }
+            var callback = state as WriteAsyncCallback;
+            if (callback == null) return;
 
             try
-            {
-                var stream = GetStream();
-
-                stream.EndWrite(asyncResult);
-            }
-            catch (KafkaConnectionException)
-            {
-                throw;
-            }
+            {                
+                if (asyncWriteTask.IsFaulted)
+                {
+                    var exceptions = asyncWriteTask.Exception?.InnerExceptions;
+                    if (exceptions != null && exceptions.Count > 0 && exceptions[0] != null)
+                    {
+                        callback.Callback?.Invoke(callback.State, ConvertException(exceptions[0]));
+                    }
+                }
+                if (!asyncWriteTask.IsCompleted)
+                {
+                    callback.Callback?.Invoke(callback.State, new KafkaConnectionException(this, KafkaConnectionErrorCode.ClientTimeout));
+                }
+                
+                callback.Callback?.Invoke(callback.State, null);
+            }            
             catch (Exception exception)
             {
-                throw ConvertException(exception);
+                callback.Callback?.Invoke(callback.State, ConvertException(exception));
             }
         }
 
@@ -182,8 +196,8 @@ namespace NKafka.Connection
         }
 
         /// <exception cref="KafkaConnectionException"/>
-        public void BeginRead([NotNull] byte[] data, int offset, int length,
-            [CanBeNull] AsyncCallback callback, [CanBeNull] object state = null)
+        public void ReadAsync([NotNull] byte[] data, int offset, int length,
+            [CanBeNull] Action<object, int, KafkaConnectionException> callback, [CanBeNull] object state = null)
         {
             if (!CheckBufferData(data, offset, length))
             {
@@ -194,7 +208,7 @@ namespace NKafka.Connection
             {
                 var stream = GetStream();
 
-                stream.ReadAsync(data, offset, length)?.ContinueWith(t => callback?.Invoke(null)); //todo
+                stream.ReadAsync(data, offset, length)?.ContinueWith(EndRead, new ReadAsyncCallback(callback, state), TaskContinuationOptions.None);
             }
             catch (KafkaConnectionException)
             {
@@ -207,27 +221,32 @@ namespace NKafka.Connection
         }
 
         /// <exception cref="KafkaConnectionException"/>
-        public int EndRead([NotNull] IAsyncResult asyncResult)
+        private void EndRead([NotNull] Task<int> asyncReadTask, object state)
         {
-            if (asyncResult == null)
-            {
-                throw new KafkaConnectionException(this, KafkaConnectionErrorCode.BadRequest);
-            }
+            var callback = state as ReadAsyncCallback;
+            if (callback == null) return;
 
             try
             {
-                var stream = GetStream();
+                if (asyncReadTask.IsFaulted)
+                {
+                    var exceptions = asyncReadTask.Exception?.InnerExceptions;
+                    if (exceptions != null && exceptions.Count > 0 && exceptions[0] != null)
+                    {
+                        callback.Callback?.Invoke(callback.State, 0, ConvertException(exceptions[0]));
+                    }
+                }
+                if (!asyncReadTask.IsCompleted)
+                {
+                    callback.Callback?.Invoke(callback.State, 0, new KafkaConnectionException(this, KafkaConnectionErrorCode.ClientTimeout));
+                }
 
-                return stream.EndRead(asyncResult);
-            }
-            catch (KafkaConnectionException)
-            {                
-                throw;
+                callback.Callback?.Invoke(callback.State, asyncReadTask.Result, null);
             }
             catch (Exception exception)
             {
-                throw ConvertException(exception);
-            }
+                callback.Callback?.Invoke(callback.State, 0, ConvertException(exception));
+            }            
         }
 
         /// <exception cref="KafkaConnectionException"/>
@@ -290,6 +309,12 @@ namespace NKafka.Connection
         [NotNull]
         private KafkaConnectionException ConvertException([NotNull] Exception exception)
         {
+            var connectionException = exception as KafkaConnectionException;
+            if (connectionException != null)
+            {
+                return connectionException;
+            }
+                        
             var socketException = exception as SocketException;
             if (socketException != null)
             {
@@ -430,6 +455,28 @@ namespace NKafka.Connection
                     return KafkaConnectionErrorCode.OperationRefused;
                 default:
                     return KafkaConnectionErrorCode.UnknownError;
+            }
+        }
+
+        private class WriteAsyncCallback
+        {
+            public readonly Action<object, KafkaConnectionException> Callback;
+            public readonly object State;
+            public WriteAsyncCallback(Action<object, KafkaConnectionException> callback, object state)
+            {
+                Callback = callback;
+                State = state;
+            }
+        }
+
+        private class ReadAsyncCallback
+        {
+            public readonly Action<object, int, KafkaConnectionException> Callback;
+            public readonly object State;
+            public ReadAsyncCallback(Action<object, int, KafkaConnectionException> callback, object state)
+            {
+                Callback = callback;
+                State = state;
             }
         }
     }
