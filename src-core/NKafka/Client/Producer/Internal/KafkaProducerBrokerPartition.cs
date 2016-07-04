@@ -97,7 +97,7 @@ namespace NKafka.Client.Producer.Internal
 
         public void RollbackMessags([NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> messages)
         {                        
-            var oldQueue = _retryQueue.ToArray();
+            var oldQueue = _retryQueue.ToArray() ?? new KafkaMessage[0];
             _retryQueue.Clear();
 
             foreach (var message in messages)

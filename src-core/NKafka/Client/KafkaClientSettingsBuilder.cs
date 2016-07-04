@@ -110,7 +110,7 @@ namespace NKafka.Client
         {
             var kafkaVersion = _kafkaVersion ?? DefaultKafkaVersion;
             var clientId = _clientId ?? DefaultClientId;
-            var metadataBrokers = _metadataBrokers.ToArray();
+            var metadataBrokers = _metadataBrokers.ToArray() ?? new KafkaBrokerInfo[0];
 
             var workerThreadCount = _workerThreadCount ?? DefaultWorkerThreadCount;
             var workerPeriod = _workerPeriod ?? DefaultWorkerPeriod;

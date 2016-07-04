@@ -190,7 +190,7 @@ namespace NKafka.Client.ConsumerGroup
 
             var errorRetryPeriod = _errorRetryPeriod ?? TimeSpan.FromSeconds(10);
 
-            var protocols = _protocols.ToArray();
+            var protocols = _protocols.ToArray() ?? new KafkaConsumerGroupSettingsProtocol[0];
             if (protocols.Length == 0)
             {
                 protocols = new[] { DefaultProtocol };
@@ -276,7 +276,8 @@ namespace NKafka.Client.ConsumerGroup
             [NotNull]
             public KafkaConsumerGroupSettingsBuilder EndAppendProtocol()
             {
-                var protocol = new KafkaConsumerGroupSettingsProtocol(_protocolName, _protocolVersion, _strategies.ToArray(), _customData);
+                var strategies = _strategies.ToArray() ?? new KafkaConsumerAssignmentStrategyInfo[0];
+                var protocol = new KafkaConsumerGroupSettingsProtocol(_protocolName, _protocolVersion, strategies, _customData);
                 return _baseBuilder.AppendProtocol(protocol);
             }
         }

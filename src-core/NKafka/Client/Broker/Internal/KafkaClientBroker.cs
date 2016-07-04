@@ -51,7 +51,7 @@ namespace NKafka.Client.Broker.Internal
                 : $"broker(id={brokerId})[{host}:{port}]";
             Name = brokerName;
             
-            var loggerWrapper = logger != null ? new KafkaClientBrokerLogger(this, logger) : null;
+            var loggerWrapper = logger != null ? new KafkaClientBrokerLogger(this, logger) : null;            
             var broker = new KafkaBroker(brokerName, host, port, protocol, settings.ConnectionSettings, loggerWrapper);
             _broker = broker;
 
