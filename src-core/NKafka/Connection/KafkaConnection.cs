@@ -28,15 +28,15 @@ namespace NKafka.Connection
         public void Open(CancellationToken cancellation)
         {
             try
-            {               
-                var tcpClient = new TcpClient();                
+            {
+                var tcpClient = new TcpClient();
                 var asyncConnectTask = tcpClient.ConnectAsync(_host, _port);
                 if (asyncConnectTask == null)
                 {
                     throw new KafkaConnectionException(this, KafkaConnectionErrorCode.ConnectionNotAllowed);
                 }
                 asyncConnectTask.Wait(cancellation);
-                
+
                 if (cancellation.IsCancellationRequested)
                 {
                     throw new KafkaConnectionException(this, KafkaConnectionErrorCode.Cancelled);
@@ -47,13 +47,13 @@ namespace NKafka.Connection
                     if (exceptions != null && exceptions.Count > 0 && exceptions[0] != null)
                     {
                         throw exceptions[0];
-                    }                    
+                    }
                 }
                 if (!asyncConnectTask.IsCompleted)
                 {
                     throw new KafkaConnectionException(this, KafkaConnectionErrorCode.ClientTimeout);
                 }
-                                
+
                 _tcpClient = tcpClient;
             }
             catch (KafkaConnectionException)
@@ -68,6 +68,15 @@ namespace NKafka.Connection
                 }
 
                 throw ConvertException(socketException);
+            }
+            catch (AggregateException exception)
+            {
+                var exceptions = exception.InnerExceptions;
+                if (exceptions != null && exceptions.Count > 0 && exceptions[0] != null)
+                {
+                    throw ConvertException(exceptions[0]);
+                }
+                throw ConvertException(exception);
             }
             catch (Exception exception)
             {

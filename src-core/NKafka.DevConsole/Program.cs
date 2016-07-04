@@ -18,16 +18,11 @@ namespace NKafka.DevConsole
     {
         static void Main()
         {
-            var host = "192.168.41.109";//"192.168.137.196";
+            var host = "192.168.137.196";//"192.168.41.109";
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);
             var topicName = "test";
-            var groupName = "group61";
-
-            //var tester = new KafkaTester();
-            //tester.Test(host, port, topicName);
-            //Console.ReadLine();
-            //return;
+            var groupName = "group61";            
 
             var connectionSettings = new KafkaConnectionSettingsBuilder()
                 .SetRegularReconnectPeriod(TimeSpan.FromMinutes(5));
