@@ -1,3 +1,3 @@
 # nkafka
 
-C# native client for Kafka 0.9.
+C# native client for Kafka 0.10. Supports .NET Core.
