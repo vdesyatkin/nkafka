@@ -9,11 +9,11 @@
 /src/NKafka.DevConsole/obj
 /src/NKafka.DevConsole/bin
 
-/src-core/.vs
-/src-core/NKafka.Core.sln.DotSettings.user
-/src-core/NKafka/project.lock.json
-/src-core/NKafka/bin/
-/src-core/NKafka/obj/
-/src-core/NKafka.DevConsole/project.lock.json
-/src-core/NKafka.DevConsole/obj/
-/src-core/NKafka.DevConsole/bin/
+/src/dotnet-core/.vs
+/src/dotnet-core/NKafka.Core.sln.DotSettings.user
+/src/dotnet-core/NKafka/project.lock.json
+/src/dotnet-core/NKafka/bin/
+/src/dotnet-core/NKafka/obj/
+/src/dotnet-core/NKafka.DevConsole/project.lock.json
+/src/dotnet-core/NKafka.DevConsole/obj/
+/src/dotnet-core/NKafka.DevConsole/bin/
