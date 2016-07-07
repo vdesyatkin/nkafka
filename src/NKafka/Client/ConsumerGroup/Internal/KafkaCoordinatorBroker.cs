@@ -120,8 +120,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         private void ProcessGroup([NotNull] KafkaCoordinatorGroup group, CancellationToken cancellation)
-        {
-            if (cancellation.IsCancellationRequested) return;
+        {            
+            if (cancellation.IsCancellationRequested) return;            
 
             if (group.Status == KafkaCoordinatorGroupStatus.RearrangeRequired)
             {
@@ -165,14 +165,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     group.TopicMetadataPartitionIds[topic.TopicName] = partitionIds;
                 }
 
-                if (group.GroupType == KafkaConsumerGroupType.SingleConsumer)
-                {
-                    group.SetMemberData(DefaultGenerationId, DefaultMemberId, false);
-                    group.SetAssignmentData(group.TopicMetadataPartitionIds);
-                    group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequired;
-                }
-
-                if (group.GroupType == KafkaConsumerGroupType.Observer)
+                if (group.GroupType == KafkaConsumerGroupType.SingleConsumer
+                    || group.GroupType == KafkaConsumerGroupType.Observer
+                    || group.GroupType == KafkaConsumerGroupType.Virtual)
                 {
                     group.SetMemberData(DefaultGenerationId, DefaultMemberId, false);
                     group.SetAssignmentData(group.TopicMetadataPartitionIds);
@@ -191,7 +186,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     }
 
                     group.Status = KafkaCoordinatorGroupStatus.JoinGroupRequested;
-                }                
+                }
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.JoinGroupRequested)
@@ -368,14 +363,40 @@ namespace NKafka.Client.ConsumerGroup.Internal
             {
                 if (cancellation.IsCancellationRequested) return;
 
-                var offsetFetchRequest = CreateOffsetFetchRequest(group);
-                if (!TrySendRequest(group, offsetFetchRequest, "SendOffsetFetchRequest",
-                        _offsetFetchRequests, _coordinatorClientTimeout + group.Settings.OffsetFetchServerTimeout))
+                if (group.GroupType == KafkaConsumerGroupType.BalancedConsumers
+                    || group.GroupType == KafkaConsumerGroupType.SingleConsumer
+                    || group.GroupType == KafkaConsumerGroupType.Observer)
                 {
-                    return;
+                    var offsetFetchRequest = CreateOffsetFetchRequest(group);
+                    if (!TrySendRequest(group, offsetFetchRequest, "SendOffsetFetchRequest",
+                            _offsetFetchRequests, _coordinatorClientTimeout + group.Settings.OffsetFetchServerTimeout))
+                    {
+                        return;
+                    }
+
+                    group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequested;
                 }
-                
-                group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequested;
+
+                if (group.GroupType == KafkaConsumerGroupType.Virtual)
+                {
+                    var topicOffsets = new Dictionary<string, KafkaCoordinatorGroupOffsetsDataTopic>(group.Topics.Count);
+                    foreach (var topic in group.Topics)
+                    {
+                        var partitions = topic.Value?.Partitions;
+                        if (partitions == null) continue;
+
+                        var partitionOffsets = new Dictionary<int, KafkaCoordinatorGroupOffsetsDataPartition>(partitions.Count);
+                        foreach (var partition in topic.Value.Partitions)
+                        {
+                            partitionOffsets[partition.PartitionId] = new KafkaCoordinatorGroupOffsetsDataPartition(-1, -1, DateTime.UtcNow);
+                        }
+
+                        topicOffsets[topic.Value.TopicName] = new KafkaCoordinatorGroupOffsetsDataTopic(partitionOffsets);
+                    }
+                    group.SetOffsetsData(topicOffsets);
+                    group.CommitTimestampUtc = DateTime.UtcNow;
+                    group.Status = KafkaCoordinatorGroupStatus.Ready;
+                }                               
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequested)
@@ -431,6 +452,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                 if (group.GroupType == KafkaConsumerGroupType.Observer)
                 {
+                    //regular check offset
+
                     if (_offsetFetchRequests.ContainsKey(group.GroupName))
                     {
                         if (!TryHandleResponse<KafkaOffsetFetchResponse>(group, "ReceiveOffsetFetchResponse",
@@ -455,8 +478,28 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                     ResetError(group);
                 }
+
+                if (group.GroupType == KafkaConsumerGroupType.Virtual)
+                {
+                    //regular pseudo-commit
+                    
+                    if (group.CommitTimestampUtc + group.CommitPeriod >= DateTime.UtcNow &&
+                        !_offsetCommitRequests.ContainsKey(group.GroupName))
+                    {
+                        group.CommitTimestampUtc = DateTime.UtcNow;
+
+                        var commitRequest = CreateOffsetCommitRequest(group);
+                        if (commitRequest != null)
+                        {
+                            var response = CreateVirtualOffsetCommitResponse(commitRequest);
+                            TryHandleOffsetCommitResponse(group, response, "VirtualCommit");
+                        }
+                    }
+
+                    ResetError(group);
+                }
             }
-        }              
+        }     
 
         #region JoinGroup
 
@@ -1154,6 +1197,34 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             var sessionInfo = group.MemberData;
             return new KafkaOffsetCommitRequest(group.GroupName, sessionInfo?.GenerationId ?? - 1, sessionInfo?.MemberId, group.Settings.OffsetCommitRetentionTime, requestTopics);
+        }
+
+
+        [NotNull]
+        private KafkaOffsetCommitResponse CreateVirtualOffsetCommitResponse([NotNull] KafkaOffsetCommitRequest request)
+        {
+            if (request.Topics == null) return new KafkaOffsetCommitResponse(new KafkaOffsetCommitResponseTopic[0]);
+
+            var responseTopics = new List<KafkaOffsetCommitResponseTopic>(request.Topics.Count);
+
+            foreach (var requestTopic in request.Topics)
+            {
+                var requestPartitions = requestTopic?.Partitions;
+                if (requestPartitions == null) continue;
+
+                var responsePartitions = new List<KafkaOffsetCommitResponseTopicPartition>(requestPartitions.Count);
+
+                foreach (var requestPartition in requestPartitions)
+                {
+                    if (requestPartition == null) continue;
+
+                    responsePartitions.Add(new KafkaOffsetCommitResponseTopicPartition(requestPartition.PartitionId, KafkaResponseErrorCode.NoError));
+                }
+
+                responseTopics.Add(new KafkaOffsetCommitResponseTopic(requestTopic.TopicName, responsePartitions));
+            }
+
+            return new KafkaOffsetCommitResponse(responseTopics);
         }
 
         private bool TryHandleOffsetCommitResponse([NotNull] KafkaCoordinatorGroup group, [NotNull] KafkaOffsetCommitResponse response, string description)
