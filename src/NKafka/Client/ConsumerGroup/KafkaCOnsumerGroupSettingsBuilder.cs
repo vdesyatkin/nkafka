@@ -11,23 +11,23 @@ namespace NKafka.Client.ConsumerGroup
     {
         // https://kafka.apache.org/documentation.html#brokerconfigs       
         
-        public readonly static TimeSpan DefaultJoinGroupRequestServerTimeout = TimeSpan.FromMinutes(2);
-        public readonly static TimeSpan DefaultSyncGroupRequestServerTimeout = TimeSpan.FromMinutes(1);
-        public readonly static TimeSpan DefaultHeartbeatGroupRequestServerTimeout = TimeSpan.FromSeconds(5);
-        public readonly static TimeSpan DefaultOffsetFetchRequestServerTimeout = TimeSpan.FromSeconds(5);
-        public readonly static TimeSpan DefaultOffsetCommitRequestServerTimeout = TimeSpan.FromSeconds(10);
+        public static readonly TimeSpan DefaultJoinGroupRequestServerTimeout = TimeSpan.FromMinutes(2);
+        public static readonly TimeSpan DefaultSyncGroupRequestServerTimeout = TimeSpan.FromMinutes(1);
+        public static readonly TimeSpan DefaultHeartbeatGroupRequestServerTimeout = TimeSpan.FromSeconds(5);
+        public static readonly TimeSpan DefaultOffsetFetchRequestServerTimeout = TimeSpan.FromSeconds(5);
+        public static readonly TimeSpan DefaultOffsetCommitRequestServerTimeout = TimeSpan.FromSeconds(10);
 
-        public readonly static TimeSpan DefaultGroupSessionTimeout = TimeSpan.FromSeconds(30);
-        public readonly static TimeSpan MinGroupSessionTimeout = TimeSpan.FromSeconds(6);
-        public readonly static TimeSpan MaxGroupSessionTimeout = TimeSpan.FromSeconds(30);
+        public static readonly TimeSpan DefaultGroupSessionTimeout = TimeSpan.FromSeconds(30);
+        public static readonly TimeSpan MinGroupSessionTimeout = TimeSpan.FromSeconds(6);
+        public static readonly TimeSpan MaxGroupSessionTimeout = TimeSpan.FromSeconds(30);
 
-        public readonly static TimeSpan DefaultHeartbeatPeriod = TimeSpan.FromSeconds(3);
-        public readonly static TimeSpan DefaultOffsetCommitPeriod = TimeSpan.FromSeconds(60);
-        public readonly static TimeSpan DefaultOffsetCommitRetentionTime = TimeSpan.FromDays(1);
+        public static readonly TimeSpan DefaultHeartbeatPeriod = TimeSpan.FromSeconds(3);
+        public static readonly TimeSpan DefaultOffsetCommitPeriod = TimeSpan.FromSeconds(60);
+        public static readonly TimeSpan DefaultOffsetCommitRetentionTime = TimeSpan.FromDays(1);
 
-        public readonly static TimeSpan ErrorRetryPeriod = TimeSpan.FromSeconds(10);
+        public static readonly TimeSpan ErrorRetryPeriod = TimeSpan.FromSeconds(10);
 
-        [NotNull] public readonly static KafkaConsumerGroupSettings Default = new KafkaConsumerGroupSettingsBuilder().Build();
+        [NotNull] public static readonly KafkaConsumerGroupSettings Default = new KafkaConsumerGroupSettingsBuilder().Build();
 
         private TimeSpan? _joinGroupServerWaitTime;
         private TimeSpan? _syncGroupServerWaitTime;

@@ -8,14 +8,14 @@ namespace NKafka.Client.Producer
     {
         // https://kafka.apache.org/documentation.html#brokerconfigs        
 
-        public readonly static KafkaConsistencyLevel DefaultConsistencyLevel = KafkaConsistencyLevel.OneReplica;
-        public readonly static KafkaCodecType DefaultCodecType = KafkaCodecType.CodecNone;
-        public readonly static int DefaultMessageMaxSizeByteCount = 999990; //1000012 in original - 22 bytes reserved for headers
-        public readonly static int DefaultPartitionBatchPreferredSizeByteCount = 16384;
-        public readonly static int DefaultPartitionBatchMaxSizeByteCount = 32 * DefaultPartitionBatchPreferredSizeByteCount; // multiplier = 64 in original - total cap for all request bytes
-        public readonly static int DefaultProduceRequestMaxSizeByteCount = 32 * DefaultPartitionBatchPreferredSizeByteCount; 
-        public readonly static TimeSpan DefaultProduceRequestServerTimeout = TimeSpan.FromSeconds(3); // 30 seconds in original - too long.
-        public readonly static TimeSpan DefaultErrorRetryPeriod = TimeSpan.FromSeconds(10);
+        public static readonly KafkaConsistencyLevel DefaultConsistencyLevel = KafkaConsistencyLevel.OneReplica;
+        public static readonly KafkaCodecType DefaultCodecType = KafkaCodecType.CodecNone;
+        public static readonly int DefaultMessageMaxSizeByteCount = 999990; //1000012 in original - 22 bytes reserved for headers
+        public static readonly int DefaultPartitionBatchPreferredSizeByteCount = 16384;
+        public static readonly int DefaultPartitionBatchMaxSizeByteCount = 32 * DefaultPartitionBatchPreferredSizeByteCount; // multiplier = 64 in original - total cap for all request bytes
+        public static readonly int DefaultProduceRequestMaxSizeByteCount = 32 * DefaultPartitionBatchPreferredSizeByteCount; 
+        public static readonly TimeSpan DefaultProduceRequestServerTimeout = TimeSpan.FromSeconds(3); // 30 seconds in original - too long.
+        public static readonly TimeSpan DefaultErrorRetryPeriod = TimeSpan.FromSeconds(10);
 
         [NotNull] public static readonly KafkaProducerSettings Default = new KafkaProducerSettingsBuilder().Build();
 

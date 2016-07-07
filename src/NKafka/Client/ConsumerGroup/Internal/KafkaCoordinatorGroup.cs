@@ -20,7 +20,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         [NotNull] public readonly KafkaConsumerGroupSettings Settings;
         [CanBeNull] public readonly IKafkaCoordinatorGroupLogger Logger;
-        [NotNull, ItemNotNull] public readonly IReadOnlyDictionary<string, KafkaClientTopic> Topics;
+        [NotNull] public readonly IReadOnlyDictionary<string, KafkaClientTopic> Topics;
         [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;       
 
         public KafkaCoordinatorGroupStatus Status;
