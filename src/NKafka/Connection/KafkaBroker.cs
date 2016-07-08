@@ -121,13 +121,17 @@ namespace NKafka.Connection
                     var requestTimestampUtc = request.SentTimestampUtc ?? request.CreateTimestampUtc;
                     if (DateTime.UtcNow >= requestTimestampUtc + request.Timeout)
                     {
-                        request.Error = KafkaBrokerErrorCode.ClientTimeout;
-                        if (currentConnection != null)
+                        if (request.Connection.IsDeprecated || request.Connection.IsClosed)
                         {
-                            currentConnection.SendError = KafkaBrokerStateErrorCode.ClientTimeout;
+                            request.Error = KafkaBrokerErrorCode.ConnectionMaintenance;                            
                         }
-                        LogConnectionError(KafkaBrokerErrorCode.ClientTimeout, "CheckTimeout",
+                        else
+                        {
+                            request.Error = KafkaBrokerErrorCode.ClientTimeout;
+                            request.Connection.SendError = KafkaBrokerStateErrorCode.ClientTimeout;
+                            LogConnectionError(KafkaBrokerErrorCode.ClientTimeout, "CheckTimeout",
                             KafkaConnectionErrorCode.ClientTimeout, request.RequestInfo);
+                        }                                              
                     }
                 }
             }
