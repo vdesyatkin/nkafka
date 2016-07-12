@@ -1532,10 +1532,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
         private void HandleProtocolError([NotNull] KafkaCoordinatorGroup group, KafkaConsumerGroupErrorCode errorCode,
             GroupErrorType errorType, string description)
         {
-            group.SetError(errorCode);
             switch (errorType)
             {
                 case GroupErrorType.Warning:
+                    group.SetError(errorCode);
                     break;
                 case GroupErrorType.Rebalance:
                     group.Status = KafkaCoordinatorGroupStatus.Rebalance;
@@ -1547,10 +1547,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     }
                     break;
                 case GroupErrorType.Error:
+                    group.SetError(errorCode);
                     group.ResetData();
                     group.Status = KafkaCoordinatorGroupStatus.Error;
                     break;
                 case GroupErrorType.Rearrange:
+                    group.SetError(errorCode);
                     group.ResetData();
                     group.ResetSettings();
                     group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
