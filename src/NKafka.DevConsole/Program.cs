@@ -21,8 +21,8 @@ namespace NKafka.DevConsole
             var host = "192.168.41.109";//"192.168.137.196";
             var port = 9092;
             var metadataBroker = new KafkaBrokerInfo(host, port);
-            var topicName = "test";
-            var groupName = "group61";
+            var topicName = "rawtelemetry";
+            var groupName = "storage";
 
             //var tester = new KafkaTester();
             //tester.Test(host, port, topicName);
@@ -30,7 +30,7 @@ namespace NKafka.DevConsole
             //return;
 
             var connectionSettings = new KafkaConnectionSettingsBuilder()
-                .SetRegularReconnectPeriod(TimeSpan.FromMinutes(5));
+                .SetRegularReconnectPeriod(TimeSpan.FromMinutes(60));
             var clientConfigBuilder = new KafkaClientSettingsBuilder(metadataBroker)
                 .SetClientId("nkafka")
                 .SetKafkaVersion(KafkaVersion.V0_10)
@@ -39,12 +39,12 @@ namespace NKafka.DevConsole
                 .SetConnectionSettings(connectionSettings.Build());
             var producerConfigBuilder = new KafkaProducerSettingsBuilder()
                 .SetConsistencyLevel(KafkaConsistencyLevel.OneReplica)
-                .SetCodecType(KafkaCodecType.CodecGzip)
+                .SetCodecType(KafkaCodecType.CodecNone)
                 .SetProduceRequestServerTimeout(TimeSpan.FromSeconds(5))
                 .SetPartitionBatchPreferredSizeByteCount(10000);
             var consumerConfigBuilder = new KafkaConsumerSettingsBuilder()
                 .SetTopicBatchMinSizeBytes(1)
-                .SetPartitionBatchMaxSizeBytes(10000)
+                .SetPartitionBatchMaxSizeBytes(1000 * 1000)
                 .SetFetchServerWaitTime(TimeSpan.FromSeconds(5));
 
             var clientBuilder = new KafkaClientBuilder(clientConfigBuilder.Build())
@@ -99,13 +99,16 @@ namespace NKafka.DevConsole
                     var packages = topicConsumer.Consume();
                     if (packages.Count > 0)
                     {
+                        var count = 0;
                         foreach (var package in packages)
                         {
                             foreach (var message in package.Messages)
                             {
-                                Console.WriteLine($"key={message.Key} data={message.Data}");
+                                count++;
+                                //Console.WriteLine($"key={message.Key} data={message.Data}");
                             }
                             topicConsumer.EnqueueCommit(package.PackageId);
+                            Console.WriteLine($"Received {count} messages");
                         }                                              
                     }
                     else

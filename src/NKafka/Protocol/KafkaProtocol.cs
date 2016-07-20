@@ -184,7 +184,7 @@ namespace NKafka.Protocol
                 }
             }
             catch (KafkaProtocolException)
-            {
+            {                
                 throw;
             }
             catch (Exception exception)

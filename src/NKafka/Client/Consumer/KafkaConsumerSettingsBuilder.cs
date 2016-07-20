@@ -21,6 +21,7 @@ namespace NKafka.Client.Consumer
         private int? _topicBatchMinSizeBytes;
         private int? _partitionBatchMaxSizeBytes;
         private TimeSpan? _fetchServerWaitTime;
+        private TimeSpan? _fetchTimeout;
         private int? _bufferMaxSizeBytes;
         private int? _bufferMaxMessageCount;
         private TimeSpan? _errorRetryPeriod;
@@ -51,7 +52,13 @@ namespace NKafka.Client.Consumer
         {
             _fetchServerWaitTime = waitTime;
             return this;
-        }        
+        }
+        [NotNull]
+        public KafkaConsumerSettingsBuilder SetFetchTimeout(TimeSpan timeout)
+        {
+            _fetchTimeout = timeout;
+            return this;
+        }
 
         [NotNull]
         public KafkaConsumerSettingsBuilder SetBufferMaxSizeBytes(int sizeBytes)
@@ -81,6 +88,7 @@ namespace NKafka.Client.Consumer
             var topicBatchMinSizeBytes = _topicBatchMinSizeBytes ?? DefaultTopicBatchMinSizeBytes;
             var partitionBatchMaxSizeBytes = _partitionBatchMaxSizeBytes ?? DefaultPartitionBatchMaxSizeBytes;
             var fetchServerWaitTime = _fetchServerWaitTime ?? DefaultFetchServerWaitTime;
+            var fetchTimeout = _fetchTimeout;
             var bufferMaxSizeBytes = _bufferMaxSizeBytes ?? DefaultBufferMaxSizeBytes;
             var bufferMaxMessageCount = _bufferMaxMessageCount;
             var errorRetryPeriod = _errorRetryPeriod ?? DefaultErrorRetryPeriod;
@@ -92,12 +100,13 @@ namespace NKafka.Client.Consumer
             }
 
             return new KafkaConsumerSettings(
-                beginBehavior,           
+                beginBehavior,
                 topicBatchMinSizeBytes,
                 partitionBatchMaxSizeBytes,
                 fetchServerWaitTime,
+                fetchTimeout,
                 bufferMaxSizeBytes,
-                bufferMaxMessageCount,                
+                bufferMaxMessageCount,
                 errorRetryPeriod);
         }
     }

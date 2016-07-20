@@ -21,6 +21,8 @@ namespace NKafka.Protocol.API.Fetch
         const byte MessageTimestampLogAppendTimeAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.LogAppendTime << 3;
         const byte MessageTimestampCreateTimeAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.CreateTime << 3;
 
+        const int MessageHeaderSize = 12;
+
         private readonly KafkaRequestVersion _requestVersion;
 
         public KafkaFetchApi(KafkaRequestVersion requestVersion)
@@ -83,7 +85,7 @@ namespace NKafka.Protocol.API.Fetch
 
         private KafkaFetchResponseTopicPartition ReadFetchResponseTopicPartition([NotNull] KafkaBinaryReader reader)
         {
-            // ReSharper disable UnusedVariable
+            // ReSharper disable UnusedVariable            
 
             var partitionId = reader.ReadInt32();
             var errorCode = (KafkaResponseErrorCode)reader.ReadInt16();
@@ -96,14 +98,22 @@ namespace NKafka.Protocol.API.Fetch
             
             while (reader.CanRead() && (messageSetActualSize < messageSetRequiredSize))
             {
+                if (messageSetRequiredSize - messageSetActualSize < MessageHeaderSize)
+                {
+                    reader.SkipData(messageSetRequiredSize - messageSetActualSize);
+                    messageSetActualSize = reader.EndReadSize();
+                    break;
+                }
+
                 var messageOffset = reader.ReadInt64();
                 var messageRequiredSize = reader.BeginReadSize();
-                messageSetActualSize += 12;
+                messageSetActualSize += MessageHeaderSize;
 
-                if ((messageRequiredSize <= 0 ||
-                    messageRequiredSize > (messageSetRequiredSize - messageSetActualSize)))
+                if (messageRequiredSize <= 0 ||
+                    messageRequiredSize > messageSetRequiredSize - messageSetActualSize)
                 {
-                    reader.SkipData(messageSetRequiredSize - messageSetActualSize);                    
+                    reader.SkipData(messageSetRequiredSize - messageSetActualSize);
+                    reader.CancelReadSize();
                     messageSetActualSize = reader.EndReadSize();
                     break;
                 }
@@ -125,15 +135,23 @@ namespace NKafka.Protocol.API.Fetch
                     var nestedMessageSetActualSize = 0;
                     while (reader.CanRead() && (nestedMessageSetActualSize < nestedMessageSetRequiredSize))
                     {
+                        if (nestedMessageSetRequiredSize - nestedMessageSetActualSize < MessageHeaderSize)
+                        {
+                            reader.SkipData(messageSetRequiredSize - messageSetActualSize);
+                            nestedMessageSetActualSize = reader.EndReadSize();
+                            break;
+                        }
+
                         // nested message set
                         var nestedMessageOffset = reader.ReadInt64();
                         var nestedMessageRequiredSize = reader.BeginReadSize();
-                        nestedMessageSetActualSize += 12;
+                        nestedMessageSetActualSize += MessageHeaderSize;
 
                         if (nestedMessageRequiredSize <= 0 ||
-                            nestedMessageRequiredSize > (nestedMessageSetRequiredSize - nestedMessageSetActualSize))
+                            nestedMessageRequiredSize > nestedMessageSetRequiredSize - nestedMessageSetActualSize)
                         {
-                            reader.SkipData(nestedMessageSetRequiredSize - nestedMessageSetActualSize);                            
+                            reader.SkipData(nestedMessageSetRequiredSize - nestedMessageSetActualSize);
+                            reader.CancelReadSize();
                             nestedMessageSetActualSize = reader.EndReadGZipData();
                             break;
                         }

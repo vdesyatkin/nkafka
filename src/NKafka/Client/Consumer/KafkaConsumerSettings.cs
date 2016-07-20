@@ -10,6 +10,7 @@ namespace NKafka.Client.Consumer
         public readonly int TopicBatchMinSizeBytes;
         public readonly int PartitionBatchMaxSizeBytes;
         public readonly TimeSpan FetchServerWaitTime;
+        public readonly TimeSpan? FetchTimeout;
         public readonly long BufferMaxSizeBytes;
         public readonly int? BufferMaxMessageCount;
         public readonly TimeSpan ErrorRetryPeriod;
@@ -19,8 +20,9 @@ namespace NKafka.Client.Consumer
           int topicBatchMinSizeBytes,
           int partitionBatchMaxSizeBytes,
           TimeSpan fetchServerWaitTime,
+          TimeSpan? fetchTimeout,
           long bufferMaxSizeBytes,
-          int? bufferMaxMesageCount,          
+          int? bufferMaxMesageCount,
           TimeSpan errorRetryPeriod
           )
         {
@@ -28,8 +30,9 @@ namespace NKafka.Client.Consumer
             TopicBatchMinSizeBytes = topicBatchMinSizeBytes;
             PartitionBatchMaxSizeBytes = partitionBatchMaxSizeBytes;
             FetchServerWaitTime = fetchServerWaitTime;
+            FetchTimeout = fetchTimeout;
             BufferMaxSizeBytes = bufferMaxSizeBytes;
-            BufferMaxMessageCount = bufferMaxMesageCount;            
+            BufferMaxMessageCount = bufferMaxMesageCount;
             ErrorRetryPeriod = errorRetryPeriod;
         }
     }

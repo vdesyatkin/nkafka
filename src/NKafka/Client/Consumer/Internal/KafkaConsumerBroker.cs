@@ -23,7 +23,8 @@ namespace NKafka.Client.Consumer.Internal
 
         public bool IsConsumeEnabled;
 
-        private readonly TimeSpan _consumeClientTimeout;
+        private readonly TimeSpan _fetchDefaultTimeout;
+        private readonly TimeSpan _offsetsTimeout;
 
         public KafkaConsumerBroker([NotNull] KafkaBroker broker, [NotNull] IKafkaClientBroker clientBroker, TimeSpan consumePeriod)
         {
@@ -31,7 +32,8 @@ namespace NKafka.Client.Consumer.Internal
             _clientBroker = clientBroker;
             _topics = new ConcurrentDictionary<string, KafkaConsumerBrokerTopic>();         
             _fetchRequests = new Dictionary<string, FetchRequestInfo>();   
-            _consumeClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;        
+            _fetchDefaultTimeout = consumePeriod + TimeSpan.FromSeconds(5) + consumePeriod;
+            _offsetsTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;
         }
 
         public void AddTopicPartition([NotNull] string topicName, [NotNull] KafkaConsumerBrokerPartition topicPartition)
@@ -197,6 +199,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     // uses catch-up group
                     catchUpOffset = SyncPartitionWithCatchUpCoordinator(partition, catchUpPartitionOffsets);
+                    if (catchUpOffset?.GroupServerOffset == null) continue;
                 }
 
                 if (!IsConsumeEnabled || coordinatorOffset == null) continue;                
@@ -373,8 +376,8 @@ namespace NKafka.Client.Consumer.Internal
         {
             var partitionRequest = new KafkaOffsetRequestTopicPartition(partition.PartitionId, null, 2);
             var topicRequest = new KafkaOffsetRequestTopic(partition.TopicName, new [] { partitionRequest });
-            var request = new KafkaOffsetRequest(new[] {topicRequest});
-            var requestResult = _broker.Send(request, topic.TopicConsumerName, _consumeClientTimeout);
+            var request = new KafkaOffsetRequest(new[] {topicRequest});            
+            var requestResult = _broker.Send(request, topic.TopicConsumerName, _offsetsTimeout);
             
             if (requestResult.HasError || requestResult.Data == null)
             {
@@ -505,7 +508,7 @@ namespace NKafka.Client.Consumer.Internal
             [NotNull] Dictionary<int, long> fetchBatch)
         {
             var fetchRequest = CreateFetchRequest(topic, fetchBatch);
-            var fetchTimeout = _consumeClientTimeout + topic.Settings.FetchServerWaitTime;
+            var fetchTimeout = topic.Settings.FetchTimeout ?? (_fetchDefaultTimeout + topic.Settings.FetchServerWaitTime);
             var fetchResult = _broker.Send(fetchRequest, topic.TopicConsumerName, fetchTimeout);
             if (fetchResult.HasError || fetchResult.Data == null)
             {
