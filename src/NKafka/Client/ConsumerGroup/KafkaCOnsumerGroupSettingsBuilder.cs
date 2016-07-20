@@ -29,11 +29,11 @@ namespace NKafka.Client.ConsumerGroup
 
         [NotNull] public static readonly KafkaConsumerGroupSettings Default = new KafkaConsumerGroupSettingsBuilder().Build();
 
-        private TimeSpan? _joinGroupServerWaitTime;
-        private TimeSpan? _syncGroupServerWaitTime;
-        private TimeSpan? _heartbeatServerWaitTime;
-        private TimeSpan? _offsetFetchServerWaitTime;
-        private TimeSpan? _offsetCommitServerWaitTime;
+        private TimeSpan? _joinGroupServerTimeout;
+        private TimeSpan? _syncGroupServerTimeout;
+        private TimeSpan? _heartbeatServerTimeout;
+        private TimeSpan? _offsetFetchServerTimeout;
+        private TimeSpan? _offsetCommitServerTimeout;
 
         /// <summary>
         /// 6-30 seconds by default
@@ -63,42 +63,42 @@ namespace NKafka.Client.ConsumerGroup
         [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetJoinGroupServerTimeout(TimeSpan timeout)
         {
-            _joinGroupServerWaitTime = timeout;
+            _joinGroupServerTimeout = timeout;
             return this;
         }
 
         [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetSyncGroupServerTimeout(TimeSpan timeout)
         {
-            _syncGroupServerWaitTime = timeout;
+            _syncGroupServerTimeout = timeout;
             return this;
         }
 
         [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetHeartbeatServerTimeout(TimeSpan timeout)
         {
-            _heartbeatServerWaitTime = timeout;
+            _heartbeatServerTimeout = timeout;
             return this;
         }
 
         [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetOffsetFetchServerTimeout(TimeSpan timeout)
         {
-            _offsetFetchServerWaitTime = timeout;
+            _offsetFetchServerTimeout = timeout;
             return this;
         }
 
         [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetOffsetCommitServerTimeout(TimeSpan timeout)
         {
-            _offsetCommitServerWaitTime = timeout;
+            _offsetCommitServerTimeout = timeout;
             return this;
         }
 
         [NotNull]
-        public KafkaConsumerGroupSettingsBuilder SetGroupSessionLifetime(TimeSpan lifeTime)
+        public KafkaConsumerGroupSettingsBuilder SetGroupSessionTimeout(TimeSpan timeout)
         {
-            _groupSessionTimeout = lifeTime;
+            _groupSessionTimeout = timeout;
             return this;
         }
 
@@ -177,11 +177,11 @@ namespace NKafka.Client.ConsumerGroup
         [NotNull]
         public KafkaConsumerGroupSettings Build()
         {
-            var joinGroupServerWaitTime = _joinGroupServerWaitTime ?? DefaultJoinGroupRequestServerTimeout;
-            var syncGroupServerWaitTime = _syncGroupServerWaitTime ?? DefaultSyncGroupRequestServerTimeout;
-            var heartbeatServerWaitTime = _heartbeatServerWaitTime ?? DefaultHeartbeatGroupRequestServerTimeout;
-            var offsetFetchServerWaitTime = _offsetFetchServerWaitTime ?? DefaultOffsetFetchRequestServerTimeout;
-            var offsetCommitServerWaitTime = _offsetCommitServerWaitTime ?? DefaultOffsetCommitRequestServerTimeout;
+            var joinGroupServerTimeout = _joinGroupServerTimeout ?? DefaultJoinGroupRequestServerTimeout;
+            var syncGroupServerTimeout = _syncGroupServerTimeout ?? DefaultSyncGroupRequestServerTimeout;
+            var heartbeatServerTimeout = _heartbeatServerTimeout ?? DefaultHeartbeatGroupRequestServerTimeout;
+            var offsetFetchServerTimeout = _offsetFetchServerTimeout ?? DefaultOffsetFetchRequestServerTimeout;
+            var offsetCommitServerTimeout = _offsetCommitServerTimeout ?? DefaultOffsetCommitRequestServerTimeout;
 
             var groupSessionTimeout = _groupSessionTimeout ?? DefaultGroupSessionTimeout;
             var heartbeatPeriod = _heartbeatPeriod ?? DefaultHeartbeatGroupRequestServerTimeout;
@@ -197,11 +197,11 @@ namespace NKafka.Client.ConsumerGroup
             }
 
             return new KafkaConsumerGroupSettings(
-                joinGroupServerWaitTime,
-                syncGroupServerWaitTime,
-                heartbeatServerWaitTime,
-                offsetFetchServerWaitTime,
-                offsetCommitServerWaitTime,
+                joinGroupServerTimeout,
+                syncGroupServerTimeout,
+                heartbeatServerTimeout,
+                offsetFetchServerTimeout,
+                offsetCommitServerTimeout,
                 groupSessionTimeout,
                 heartbeatPeriod,
                 offsetCommitPeriod,

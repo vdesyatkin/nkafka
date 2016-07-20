@@ -44,7 +44,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         {
             _broker = broker;
             _clientBroker = clientBroker;
-            _groups = new ConcurrentDictionary<string, KafkaCoordinatorGroup>();            
+            _groups = new ConcurrentDictionary<string, KafkaCoordinatorGroup>();
             _joinGroupRequests = new Dictionary<string, int>();
             _syncGroupRequests = new Dictionary<string, int>();
             _additionalTopicsRequests = new Dictionary<string, int>();
@@ -52,7 +52,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             _offsetFetchRequests = new Dictionary<string, int>();
             _offsetCommitRequests = new Dictionary<string, int>();
 
-            _coordinatorClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;            
+            _coordinatorClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;
         }
 
         public void RemoveGroup([NotNull] string groupName)
@@ -79,7 +79,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         public void Start()
-        {            
+        {
         }
 
         public void Stop()
@@ -106,7 +106,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         _broker.SendWithoutResponse(leaveGroupRequest, group.GroupCoordinatorName);
                     }
                 }
-                                
+
                 group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
                 group.Clear();
             }
@@ -120,23 +120,23 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         private void ProcessGroup([NotNull] KafkaCoordinatorGroup group, CancellationToken cancellation)
-        {            
-            if (cancellation.IsCancellationRequested) return;            
+        {
+            if (cancellation.IsCancellationRequested) return;
 
             if (group.Status == KafkaCoordinatorGroupStatus.RearrangeRequired)
             {
                 return;
             }
-           
+
             if (group.Status == KafkaCoordinatorGroupStatus.Error)
             {
                 if (DateTime.UtcNow - group.ErrorTimestampUtc < group.Settings.ErrorRetryPeriod)
                 {
                     return;
-                }                
+                }
             }
 
-            if (group.Status == KafkaCoordinatorGroupStatus.NotInitialized || 
+            if (group.Status == KafkaCoordinatorGroupStatus.NotInitialized ||
                 group.Status == KafkaCoordinatorGroupStatus.Error ||
                 group.Status == KafkaCoordinatorGroupStatus.Rebalance)
             {
@@ -180,7 +180,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     if (joinRequest == null) return;
 
                     if (!TrySendRequest(group, joinRequest, "SendJoinGroupRequest",
-                            _joinGroupRequests,_coordinatorClientTimeout + group.Settings.JoinGroupServerTimeout))
+                            _joinGroupRequests, _coordinatorClientTimeout + group.Settings.JoinGroupServerTimeout))
                     {
                         return;
                     }
@@ -236,7 +236,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     }
 
                     group.Status = KafkaCoordinatorGroupStatus.AdditionalTopicsMetadataRequested;
-                }                
+                }
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.AdditionalTopicsMetadataRequested)
@@ -247,7 +247,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         _additionalTopicsRequests, TryHandleAdditionalTopics))
                 {
                     return;
-                }                
+                }
 
                 group.Status = KafkaCoordinatorGroupStatus.JoinedAsLeader;
             }
@@ -257,7 +257,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (cancellation.IsCancellationRequested) return;
 
                 if (!TryAssignTopics(group, "Assignment"))
-                {                    
+                {
                     return;
                 }
 
@@ -267,7 +267,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 {
                     return;
                 }
-                
+
                 group.Status = KafkaCoordinatorGroupStatus.SyncGroupRequested;
             }
 
@@ -322,19 +322,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 {
                     return;
                 }
-                
+
                 group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequired;
             }
 
             if (group.GroupType == KafkaConsumerGroupType.BalancedConsumers &&
                 (group.Status == KafkaCoordinatorGroupStatus.Ready ||
-                 group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequired || 
+                 group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequired ||
                  group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequested))
             {
 
                 if (cancellation.IsCancellationRequested) return;
                 //regular heartbeat
-
 
                 if (_heartbeatRequests.ContainsKey(group.GroupName))
                 {
@@ -345,7 +344,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     }
                 }
 
-                if (group.HeartbeatTimestampUtc + group.HeartbeatPeriod >= DateTime.UtcNow &&
+                if (group.HeartbeatTimestampUtc + group.HeartbeatPeriod <= DateTime.UtcNow &&
                     !_heartbeatRequests.ContainsKey(group.GroupName))
                 {
                     var heartbeatRequest = CreateHeartbeatRequest(group);
@@ -353,9 +352,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
                             _heartbeatRequests, _coordinatorClientTimeout + group.Settings.HeartbeatServerTimeout))
                     {
                         return;
-                    }        
+                    }
 
-                    group.HeartbeatTimestampUtc = DateTime.UtcNow;                    
+                    group.HeartbeatTimestampUtc = DateTime.UtcNow;
                 }
             }
 
@@ -396,7 +395,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     group.SetOffsetsData(topicOffsets);
                     group.CommitTimestampUtc = DateTime.UtcNow;
                     group.Status = KafkaCoordinatorGroupStatus.Ready;
-                }                               
+                }
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequested)
@@ -431,7 +430,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         }
                     }
 
-                    if (group.CommitTimestampUtc + group.CommitPeriod >= DateTime.UtcNow &&
+                    if (group.CommitTimestampUtc + group.CommitPeriod <= DateTime.UtcNow &&
                         !_offsetCommitRequests.ContainsKey(group.GroupName))
                     {
                         group.CommitTimestampUtc = DateTime.UtcNow;
@@ -463,7 +462,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         }
                     }
 
-                    if (group.CommitTimestampUtc + group.CommitPeriod >= DateTime.UtcNow &&
+                    if (group.CommitTimestampUtc + group.CommitPeriod <= DateTime.UtcNow &&
                         !_offsetFetchRequests.ContainsKey(group.GroupName))
                     {
                         group.CommitTimestampUtc = DateTime.UtcNow;
@@ -482,8 +481,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (group.GroupType == KafkaConsumerGroupType.Virtual)
                 {
                     //regular pseudo-commit
-                    
-                    if (group.CommitTimestampUtc + group.CommitPeriod >= DateTime.UtcNow &&
+
+                    if (group.CommitTimestampUtc + group.CommitPeriod <= DateTime.UtcNow &&
                         !_offsetCommitRequests.ContainsKey(group.GroupName))
                     {
                         group.CommitTimestampUtc = DateTime.UtcNow;
@@ -499,7 +498,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     ResetError(group);
                 }
             }
-        }     
+        }
 
         #region JoinGroup
 
@@ -517,18 +516,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 topicNames.Add(topic.TopicName);
             }
 
-            var settingsProtocols = group.Protocols;            
+            var settingsProtocols = group.Protocols;
 
             var protocols = new List<KafkaJoinGroupRequestProtocol>(settingsProtocols.Count);
             foreach (var settingsProtocol in settingsProtocols)
             {
-                var protocolName = settingsProtocol.ProtocolName;                
+                var protocolName = settingsProtocol.ProtocolName;
                 var settingsAssignmentStrategies = settingsProtocol.AssignmentStrategies;
                 if (settingsAssignmentStrategies == null) continue;
-                
+
                 var assignmentStrategies = new List<string>(settingsAssignmentStrategies.Count);
                 foreach (var settingsAssignmentStrategy in settingsAssignmentStrategies)
-                {                                        
+                {
                     if (settingsAssignmentStrategy?.StrategyName == null) continue;
                     assignmentStrategies.Add(settingsAssignmentStrategy.StrategyName);
                 }
@@ -548,13 +547,13 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         private bool TryHandleJoinGroupResponse([NotNull] KafkaCoordinatorGroup group, [NotNull] KafkaJoinGroupResponse response, string description)
-        {            
+        {
             if (response.ErrorCode != KafkaResponseErrorCode.NoError)
             {
                 KafkaConsumerGroupErrorCode error;
-                GroupErrorType errorType;                
+                GroupErrorType errorType;
                 switch (response.ErrorCode)
-                {                    
+                {
                     case KafkaResponseErrorCode.GroupLoadInProgress:
                         error = KafkaConsumerGroupErrorCode.GroupLoadInProgress;
                         errorType = GroupErrorType.Error;
@@ -572,9 +571,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         errorType = GroupErrorType.Error;
                         break;
                     case KafkaResponseErrorCode.UnknownMemberId:
-                        error = KafkaConsumerGroupErrorCode.UnknownMemberId;
-                        errorType = GroupErrorType.Error;                        
-                        break;                    
+                        error = KafkaConsumerGroupErrorCode.Rebalance;
+                        errorType = GroupErrorType.Rebalance;
+                        break;
                     case KafkaResponseErrorCode.InvalidSessionTimeout:
                         error = KafkaConsumerGroupErrorCode.InvalidSessionTimeout;
                         errorType = GroupErrorType.Warning;
@@ -594,7 +593,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         errorType = GroupErrorType.Rearrange;
                         break;
                 }
-                
+
                 HandleProtocolError(group, error, errorType, description);
                 return false;
             }
@@ -602,12 +601,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
             var isLeader = response.MemberId == response.GroupLeaderId;
             group.SetMemberData(response.GroupGenerationId, response.MemberId, isLeader);
             group.SetProtocolData(response.GroupProtocolName, null);
-            
+
             if (!isLeader)
-            {                
+            {
                 return true;
-            }            
-                    
+            }
+
             // fill group members info that required for assignment process
 
             var topicMembers = new Dictionary<string, List<KafkaCoordinatorGroupMemberAssignmentData>>(group.Topics.Count);
@@ -620,7 +619,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             }
 
             var responseMembers = response.Members;
-            var additionalTopics = new List<string>();            
+            var additionalTopics = new List<string>();
             var groupMembers = new List<KafkaCoordinatorGroupMemberAssignmentData>();
             if (responseMembers != null)
             {
@@ -631,7 +630,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     var isMemberLeader = responseMember.MemberId == response.GroupLeaderId;
                     var member = new KafkaCoordinatorGroupMemberAssignmentData(responseMember.MemberId, isMemberLeader,
                         responseMember.ProtocolVersion,
-                        responseMember.AssignmentStrategies ?? new string[0], 
+                        responseMember.AssignmentStrategies ?? new string[0],
                         responseMember.CustomData);
 
                     foreach (var topicName in responseMember.TopicNames ?? new string[0])
@@ -652,7 +651,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 }
             }
 
-            group.SetLeaderData(null, groupMembers, topicMembers, additionalTopics);            
+            group.SetLeaderData(null, groupMembers, topicMembers, additionalTopics);
 
             return true;
         }
@@ -662,8 +661,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
         #region Additional topics
 
         private bool TryHandleAdditionalTopics([NotNull] KafkaCoordinatorGroup group, [NotNull] KafkaTopicMetadataResponse response, string description)
-        {            
-            var responseTopics = response.Topics ?? new KafkaTopicMetadataResponseTopic[0];            
+        {
+            var responseTopics = response.Topics ?? new KafkaTopicMetadataResponseTopic[0];
 
             foreach (var responseTopic in responseTopics)
             {
@@ -691,7 +690,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 var partitions = new List<int>(responsePartitons.Count);
                 foreach (var responsePartition in responsePartitons)
                 {
-                    if (responsePartition == null) continue;                    
+                    if (responsePartition == null) continue;
                     if (responsePartition.ErrorCode != KafkaResponseErrorCode.NoError)
                     {
                         if (responsePartition.ErrorCode == KafkaResponseErrorCode.UnknownTopicOrPartition)
@@ -699,11 +698,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
                             continue;
                         }
                     }
-                    
+
                     partitions.Add(responsePartition.PartitionId);
                 }
                 group.TopicMetadataPartitionIds[topicName] = partitions;
-            }                                   
+            }
 
             return true;
         }
@@ -722,18 +721,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
             }
             var groupMembers = leaderData.GroupMembers;
             var topicMembers = leaderData.TopicMembers;
-            
+
 
             var currentProtocol = group.ProtocolData;
-            var settingsProtocols = group.Protocols;            
-            
+            var settingsProtocols = group.Protocols;
+
             // prepare available protocol versions and strategies according to received protocol
             var supportedProtocolStrategiesByVersion = new Dictionary<short, IReadOnlyList<KafkaConsumerAssignmentStrategyInfo>>(settingsProtocols.Count);
             var supportedProtocolVersions = new List<short>(settingsProtocols.Count);
             foreach (var settingsProtocol in settingsProtocols)
-            {                             
+            {
                 if (settingsProtocol.ProtocolName == currentProtocol?.ProtocolName)
-                {                    
+                {
                     supportedProtocolVersions.Add(settingsProtocol.ProtocolVersion);
                     supportedProtocolStrategiesByVersion[settingsProtocol.ProtocolVersion] = settingsProtocol.AssignmentStrategies;
                 }
@@ -775,7 +774,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             {
                 HandleProtocolError(group, KafkaConsumerGroupErrorCode.AssignmentError, GroupErrorType.Error, $"{description}(strategies are not consistent)");
                 return false;
-            }            
+            }
 
             // find the most relevant protocol
             short? selectedProtocolVersion = null;
@@ -811,7 +810,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 {
                     selectedStrategy = selectedProtocolStrategies[0];
                 }
-            }            
+            }
 
             // assign topic partitions on members
             foreach (var topicMember in topicMembers)
@@ -885,7 +884,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         {
             var sessionInfo = group.MemberData;
             var groupGenerationId = sessionInfo?.GenerationId ?? -DefaultGenerationId;
-            var groupMemberId = sessionInfo?.MemberId ?? DefaultMemberId;            
+            var groupMemberId = sessionInfo?.MemberId ?? DefaultMemberId;
 
             var groupMembers = group.LeaderData?.GroupMembers;
 
@@ -895,7 +894,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             }
 
             var requestMembers = new List<KafkaSyncGroupRequestMember>(groupMembers.Count);
-            
+
             foreach (var groupMember in groupMembers)
             {
                 if (groupMember == null) continue;
@@ -940,10 +939,10 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     case KafkaResponseErrorCode.IllegalGeneration:
                         error = KafkaConsumerGroupErrorCode.Rebalance;
                         errorType = GroupErrorType.Rebalance;
-                        break;                    
+                        break;
                     case KafkaResponseErrorCode.UnknownMemberId:
-                        error = KafkaConsumerGroupErrorCode.UnknownMemberId;
-                        errorType = GroupErrorType.Error;
+                        error = KafkaConsumerGroupErrorCode.Rebalance;
+                        errorType = GroupErrorType.Rebalance;
                         break;
                     case KafkaResponseErrorCode.RebalanceInProgress:
                         error = KafkaConsumerGroupErrorCode.Rebalance;
@@ -988,7 +987,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull]
         private KafkaHeartbeatRequest CreateHeartbeatRequest([NotNull] KafkaCoordinatorGroup group)
         {
-            var sessionInfo = group.MemberData;            
+            var sessionInfo = group.MemberData;
             return new KafkaHeartbeatRequest(group.GroupName, sessionInfo?.GenerationId ?? DefaultGenerationId, sessionInfo?.MemberId ?? DefaultMemberId);
         }
 
@@ -1017,8 +1016,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         errorType = GroupErrorType.Rebalance;
                         break;
                     case KafkaResponseErrorCode.UnknownMemberId:
-                        error = KafkaConsumerGroupErrorCode.UnknownMemberId;
-                        errorType = GroupErrorType.Error;
+                        error = KafkaConsumerGroupErrorCode.Rebalance;
+                        errorType = GroupErrorType.Rebalance;
                         break;
                     case KafkaResponseErrorCode.RebalanceInProgress:
                         error = KafkaConsumerGroupErrorCode.Rebalance;
@@ -1068,18 +1067,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
             if (responseTopics == null || responseTopics.Count == 0 || assignmentTopics == null)
             {
                 return true;
-            }            
-            
+            }
+
             var topicPartitionOffsets = new Dictionary<string, KafkaCoordinatorGroupOffsetsDataTopic>(responseTopics.Count);
 
             // fill fetched offsets
             foreach (var responseTopic in responseTopics)
             {
-                if (responseTopic == null) continue;                
+                if (responseTopic == null) continue;
                 var topicName = responseTopic.TopicName;
                 var responseTopicPartitions = responseTopic.Partitions;
                 if (string.IsNullOrEmpty(topicName) || responseTopicPartitions == null) continue;
-                
+
                 IReadOnlyList<int> assignedTopicPartitions;
                 if (!assignmentTopics.TryGetValue(topicName, out assignedTopicPartitions) || assignedTopicPartitions == null) continue;
 
@@ -1090,7 +1089,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 // fill ofests for fetched partitions
                 foreach (var responsePartition in responseTopicPartitions)
                 {
-                    if (responsePartition == null) continue;                    
+                    if (responsePartition == null) continue;
                     if (!assignedPartitionSet.Contains(responsePartition.PartitionId)) continue;
 
                     if (responsePartition.ErrorCode != KafkaResponseErrorCode.NoError)
@@ -1116,9 +1115,9 @@ namespace NKafka.Client.ConsumerGroup.Internal
                                 errorType = GroupErrorType.Rebalance;
                                 break;
                             case KafkaResponseErrorCode.UnknownMemberId:
-                                error = KafkaConsumerGroupErrorCode.UnknownMemberId;
-                                errorType = GroupErrorType.Error;
-                                break;                            
+                                error = KafkaConsumerGroupErrorCode.Rebalance;
+                                errorType = GroupErrorType.Rebalance;
+                                break;
                             case KafkaResponseErrorCode.TopicAuthorizationFailed:
                                 error = KafkaConsumerGroupErrorCode.TopicAuthorizationFailed;
                                 errorType = GroupErrorType.Rearrange;
@@ -1139,7 +1138,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                     var initialOffset = responsePartition.Offset;
 
-                    partitionOffsets[responsePartition.PartitionId] = new KafkaCoordinatorGroupOffsetsDataPartition(initialOffset, initialOffset, DateTime.UtcNow);                    
+                    partitionOffsets[responsePartition.PartitionId] = new KafkaCoordinatorGroupOffsetsDataPartition(initialOffset, initialOffset, DateTime.UtcNow);
                 }
 
                 topicPartitionOffsets[topicName] = new KafkaCoordinatorGroupOffsetsDataTopic(partitionOffsets);
@@ -1173,7 +1172,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 {
                     continue;
                 }
-              
+
                 var requestPartitions = new List<KafkaOffsetCommitRequestTopicPartition>(topicOffsets.Partitions.Count);
                 foreach (var partitonPair in topicOffsets.Partitions)
                 {
@@ -1183,20 +1182,20 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                     var newClientOffset = groupTopic.Consumer?.GetCommitClientOffset(partitionId);
                     if (newClientOffset == null) continue;
-                    
+
                     if (partitionOffsets.GroupServerOffset >= newClientOffset.Value) continue;
                     partitionOffsets.GroupClientOffset = newClientOffset.Value;
                     partitionOffsets.TimestampUtc = DateTime.UtcNow;
 
-                    requestPartitions.Add(new KafkaOffsetCommitRequestTopicPartition(partitionId, newClientOffset.Value, group.CommitMetadata));                    
+                    requestPartitions.Add(new KafkaOffsetCommitRequestTopicPartition(partitionId, newClientOffset.Value, group.CommitMetadata));
                 }
-                if (requestPartitions.Count == 0) continue;                
+                if (requestPartitions.Count == 0) continue;
                 requestTopics.Add(new KafkaOffsetCommitRequestTopic(topicName, requestPartitions));
             }
             if (requestTopics.Count == 0) return null;
 
             var sessionInfo = group.MemberData;
-            return new KafkaOffsetCommitRequest(group.GroupName, sessionInfo?.GenerationId ?? - 1, sessionInfo?.MemberId, group.Settings.OffsetCommitRetentionTime, requestTopics);
+            return new KafkaOffsetCommitRequest(group.GroupName, sessionInfo?.GenerationId ?? -1, sessionInfo?.MemberId, group.Settings.OffsetCommitRetentionTime, requestTopics);
         }
 
 
@@ -1228,16 +1227,16 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         private bool TryHandleOffsetCommitResponse([NotNull] KafkaCoordinatorGroup group, [NotNull] KafkaOffsetCommitResponse response, string description)
-        {            
+        {
             var offsets = group.OffsetsData?.Topics;
-            
+
             var responseTopics = response.Topics;
             if (responseTopics == null || responseTopics.Count == 0 || offsets == null)
             {
                 return true;
             }
 
-            var hasError = false;     
+            var hasError = false;
 
             // fill fetched offsets
             foreach (var responseTopic in responseTopics)
@@ -1251,8 +1250,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (!offsets.TryGetValue(topicName, out topicOffsets) || topicOffsets == null)
                 {
                     continue;
-                }               
-                
+                }
+
                 foreach (var responsePartition in responseTopicPartitions)
                 {
                     if (responsePartition == null) continue;
@@ -1304,8 +1303,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                                 errorType = GroupErrorType.Rebalance;
                                 break;
                             case KafkaResponseErrorCode.UnknownMemberId:
-                                error = KafkaConsumerGroupErrorCode.UnknownMemberId;
-                                errorType = GroupErrorType.Error;
+                                error = KafkaConsumerGroupErrorCode.Rebalance;
+                                errorType = GroupErrorType.Rebalance;
                                 break;
                             case KafkaResponseErrorCode.RebalanceInProgress:
                                 error = KafkaConsumerGroupErrorCode.Rebalance;
@@ -1343,7 +1342,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     }
 
                     partitionOffsets.GroupServerOffset = partitionOffsets.GroupClientOffset;
-                    partitionOffsets.TimestampUtc = DateTime.UtcNow;                    
+                    partitionOffsets.TimestampUtc = DateTime.UtcNow;
                 }
             }
 
@@ -1404,11 +1403,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
             if (logger == null) return;
 
             var errorInfo = new KafkaConsumerGroupAssignmentErrorInfo(request, _clientBroker, exception);
-            logger.OnAssignmentError(errorInfo);            
+            logger.OnAssignmentError(errorInfo);
         }
 
         private void ResetError([NotNull] KafkaCoordinatorGroup group)
-        {            
+        {
             var error = group.Error;
             var errorTimestamp = group.ErrorTimestampUtc;
             group.ResetError();
@@ -1420,7 +1419,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         private bool TrySendRequest<TRequest>([NotNull] KafkaCoordinatorGroup group, [NotNull] TRequest request,
             string description,
-            [NotNull] Dictionary<string, int> requests,            
+            [NotNull] Dictionary<string, int> requests,
             TimeSpan timeout
             )
             where TRequest : class, IKafkaRequest
@@ -1437,7 +1436,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             return true;
         }
 
-        private delegate bool KafkaHandleResponseMethod<in TResponse>(KafkaCoordinatorGroup group, TResponse response, string description) where TResponse : class, IKafkaResponse;            
+        private delegate bool KafkaHandleResponseMethod<in TResponse>(KafkaCoordinatorGroup group, TResponse response, string description) where TResponse : class, IKafkaResponse;
 
         private bool TryHandleResponse<TResponse>([NotNull] KafkaCoordinatorGroup group, string description,
             [NotNull] Dictionary<string, int> requests,
@@ -1447,7 +1446,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         {
             int requestId;
             if (!requests.TryGetValue(group.GroupName, out requestId))
-            {                
+            {
                 HandleProtocolError(group, KafkaConsumerGroupErrorCode.ClientError, GroupErrorType.Error, description);
                 LogProtocolError(group, KafkaConsumerGroupErrorCode.ClientError, GroupErrorType.Warning, $"{description}(no request");
                 return false;
@@ -1470,7 +1469,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         private void HandleBrokerError([NotNull] KafkaCoordinatorGroup group, KafkaBrokerErrorCode brokerError, string errorDescription)
         {
             KafkaConsumerGroupErrorCode sessionErrorCode;
-            
+
             switch (brokerError)
             {
                 case KafkaBrokerErrorCode.ConnectionClosed:
@@ -1505,7 +1504,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     break;
                 case KafkaBrokerErrorCode.NotAuthorized:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.NotAuthorized;
-                    break;               
+                    break;
                 case KafkaBrokerErrorCode.OperationRefused:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.TransportError;
                     break;
@@ -1525,7 +1524,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
             group.ResetData();
             group.ResetSettings();
             group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
-            
+
             LogBrokerError(group, brokerError, errorDescription);
         }
 
