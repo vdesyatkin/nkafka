@@ -96,22 +96,18 @@ namespace NKafka.DevConsole
 
                 if (command == "consume" || command == "c")
                 {
-                    var packages = topicConsumer.Consume();
-                    if (packages.Count > 0)
+                    var hasPackages = false;                    
+                    foreach (var package in topicConsumer.Consume())
                     {
-                        var count = 0;
-                        foreach (var package in packages)
-                        {
-                            foreach (var message in package.Messages)
-                            {
-                                count++;
-                                //Console.WriteLine($"key={message.Key} data={message.Data}");
-                            }
-                            topicConsumer.EnqueueCommit(package.PackageId);
-                            Console.WriteLine($"Received {count} messages");
-                        }                                              
+                        //foreach (var message in package.Messages)
+                        //{
+                        //    Console.WriteLine($"key={message.Key} data={message.Data}");
+                        //}
+                        topicConsumer.EnqueueCommit(package.PackageId);
+                        Console.WriteLine($"Received {package.Messages.Count} messages");
+                        hasPackages = true;
                     }
-                    else
+                    if (!hasPackages)
                     {
                         Console.WriteLine("no packages");
                     }                   
