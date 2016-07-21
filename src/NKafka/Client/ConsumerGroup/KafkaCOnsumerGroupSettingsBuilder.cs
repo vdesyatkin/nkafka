@@ -22,7 +22,7 @@ namespace NKafka.Client.ConsumerGroup
         public static readonly TimeSpan MaxGroupSessionTimeout = TimeSpan.FromSeconds(30);
 
         public static readonly TimeSpan DefaultHeartbeatPeriod = TimeSpan.FromSeconds(3);
-        public static readonly TimeSpan DefaultOffsetCommitPeriod = TimeSpan.FromSeconds(60);
+        public static readonly TimeSpan DefaultOffsetCommitPeriod = TimeSpan.FromSeconds(10);
         public static readonly TimeSpan DefaultOffsetCommitRetentionTime = TimeSpan.FromDays(1);
 
         public static readonly TimeSpan ErrorRetryPeriod = TimeSpan.FromSeconds(10);

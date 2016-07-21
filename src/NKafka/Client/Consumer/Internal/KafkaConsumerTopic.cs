@@ -66,19 +66,18 @@ namespace NKafka.Client.Consumer.Internal
         {
             _group = new KafkaConsumerGroupData(groupCoordinator, catchUpGroupCoordinator);
         }
-        
-        public IReadOnlyList<KafkaMessagePackage> Consume(int? maxMessageCount = null)
-        {            
-            var resultPackages = new List<KafkaMessagePackage>(_topicPartitions.Count);
+
+        public IEnumerable<KafkaMessagePackage> Consume(int? maxMessageCount = null)
+        {
             var totalMessageCount = 0;
-            
+
             foreach (var partitionPair in _topicPartitions)
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
                 var partitionBroker = partition.BrokerPartition;
 
-                var partitionConsumePendingCount = partitionBroker.ConsumePendingMessageCount;                
+                var partitionConsumePendingCount = partitionBroker.ConsumePendingMessageCount;
                 var partitionMessages = new List<KafkaMessage>(partitionConsumePendingCount);
 
                 long beginOffset = 0;
@@ -88,7 +87,7 @@ namespace NKafka.Client.Consumer.Internal
                 while (partitionMessages.Count < partitionConsumePendingCount && partitionBroker.TryConsumeMessage(out messageAndOffset))
                 {
                     if (messageAndOffset == null) continue;
-                    
+
                     var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data, messageAndOffset.TiemestampUtc);
 
                     if (partitionMessages.Count == 0)
@@ -96,7 +95,7 @@ namespace NKafka.Client.Consumer.Internal
                         beginOffset = messageAndOffset.Offset;
                     }
                     partitionMessages.Add(message);
-                    endOffset = messageAndOffset.Offset;                 
+                    endOffset = messageAndOffset.Offset;
 
                     totalMessageCount++;
                     if (totalMessageCount >= maxMessageCount)
@@ -106,9 +105,9 @@ namespace NKafka.Client.Consumer.Internal
                 }
                 if (partitionMessages.Count > 0)
                 {
-                    var packageId = Interlocked.Increment(ref _currentPackageId);                    
+                    var packageId = Interlocked.Increment(ref _currentPackageId);
                     _packages[packageId] = new KafkaConsumerTopicPackageInfo(partition.PartitonId, beginOffset, endOffset);
-                    resultPackages.Add(new KafkaMessagePackage(packageId, partition.PartitonId, beginOffset, endOffset, partitionMessages));
+                    yield return new KafkaMessagePackage(packageId, partition.PartitonId, beginOffset, endOffset, partitionMessages);
                 }
 
                 if (totalMessageCount >= maxMessageCount)
@@ -116,8 +115,6 @@ namespace NKafka.Client.Consumer.Internal
                     break;
                 }
             }
-
-            return resultPackages;
         }
 
         public void EnqueueCommit(long packageId)

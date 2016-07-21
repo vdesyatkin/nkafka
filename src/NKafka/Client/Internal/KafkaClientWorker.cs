@@ -183,7 +183,7 @@ namespace NKafka.Client.Internal
         }
 
         public void Start()
-        {            
+        {
             _workerCancellation = new CancellationTokenSource();
             var produceTimer = new Timer(Work);
             // ReSharper disable once InconsistentlySynchronizedField
@@ -256,9 +256,9 @@ namespace NKafka.Client.Internal
             var cancellation = _workerCancellation.Token;
             if (cancellation.IsCancellationRequested) return;
             var workerTimer = _workerTimer;
+
             lock (workerTimer)
             {
-
                 var hasGroups = false;
                 foreach (var groupPair in _groups)
                 {
@@ -331,14 +331,14 @@ namespace NKafka.Client.Internal
                 if (metadataBroker == null)
                 {
                     return;
-                }                
-                
+                }
+
                 var metadataRequest = CreateTopicMetadataRequest(topic.TopicName);
                 var metadataRequestResult = metadataBroker.SendRequest(metadataRequest, _wokerName);
                 if (metadataRequestResult.HasError)
                 {
                     topic.Status = KafkaClientTopicStatus.MetadataError;
-                    topic.ChangeMetadataState(false, ConvertTopicMetadataRequestError(metadataRequestResult.Error), null);                    
+                    topic.ChangeMetadataState(false, ConvertTopicMetadataRequestError(metadataRequestResult.Error), null);
                     return;
                 }
 
@@ -347,7 +347,7 @@ namespace NKafka.Client.Internal
                 {
                     _topicMetadataRequests[topic.TopicName] = new MetadataRequestInfo(metadataRequestId.Value, metadataBroker);
                     topic.Status = KafkaClientTopicStatus.MetadataRequested;
-                }                
+                }
             }
 
             if (topic.Status == KafkaClientTopicStatus.MetadataRequested)
@@ -397,7 +397,7 @@ namespace NKafka.Client.Internal
                     {
                         //ignored
                     }
-                    return;                    
+                    return;
                 }
 
                 topic.ChangeMetadataState(true, null, metadata);
@@ -531,7 +531,7 @@ namespace NKafka.Client.Internal
                     {
                         //ignored
                     }
-                    return;                    
+                    return;
                 }
 
                 group.ChangeMetadataState(true, null, metadata);
@@ -696,7 +696,7 @@ namespace NKafka.Client.Internal
                         break;
                     case KafkaBrokerErrorCode.NotAuthorized:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.NotAuthorized;
-                        break;                    
+                        break;
                     case KafkaBrokerErrorCode.OperationRefused:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.TransportError;
                         break;
@@ -783,9 +783,21 @@ namespace NKafka.Client.Internal
                 }
                 partitions.Add(new KafkaTopicPartitionMetadata(responsePartition.PartitionId, partitionError, responsePartition.LeaderId));
             }
+            partitions.Sort(PartitionComprarer);
 
             return new KafkaTopicMetadata(responseTopic.TopicName, topicError, brokers, partitions);
         }
+
+        private class PartitionMetadataComprarer : IComparer<KafkaTopicPartitionMetadata>
+        {
+            public int Compare([NotNull] KafkaTopicPartitionMetadata x, [NotNull] KafkaTopicPartitionMetadata y)
+            {
+                return x.PartitionId.CompareTo(y.PartitionId);
+            }
+        }
+
+        [NotNull]
+        private static readonly PartitionMetadataComprarer PartitionComprarer = new PartitionMetadataComprarer();
 
         #endregion Topic metadata
 
@@ -836,7 +848,7 @@ namespace NKafka.Client.Internal
                         break;
                     case KafkaBrokerErrorCode.NotAuthorized:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.NotAuthorized;
-                        break;                    
+                        break;
                     case KafkaBrokerErrorCode.OperationRefused:
                         groupErrorCode = KafkaClientGroupMetadataErrorCode.TransportError;
                         break;
@@ -889,8 +901,7 @@ namespace NKafka.Client.Internal
         private sealed class MetadataRequestInfo
         {
             public readonly int RequestId;
-            [NotNull]
-            public readonly KafkaClientBroker Broker;
+            [NotNull] public readonly KafkaClientBroker Broker;
 
             public MetadataRequestInfo(int requestId, [NotNull] KafkaClientBroker broker)
             {

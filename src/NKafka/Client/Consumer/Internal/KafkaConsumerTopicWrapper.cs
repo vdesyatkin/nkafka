@@ -25,12 +25,9 @@ namespace NKafka.Client.Consumer.Internal
             _logger = logger;
         }
 
-        public IReadOnlyList<KafkaMessagePackage<TKey, TData>> Consume(int? maxMessageCount = null)
-        {
-            var packages = _topic.Consume(maxMessageCount);
-            var wrappedPackages = new List<KafkaMessagePackage<TKey, TData>>(packages.Count);
-
-            foreach (var package in packages)
+        public IEnumerable<KafkaMessagePackage<TKey, TData>> Consume(int? maxMessageCount = null)
+        {            
+            foreach (var package in _topic.Consume(maxMessageCount))
             {
                 var messages = package.Messages;                
 
@@ -53,11 +50,8 @@ namespace NKafka.Client.Consumer.Internal
                         }
                     }
                 }
-
-                wrappedPackages.Add(new KafkaMessagePackage<TKey, TData>(package.PackageId, package.PartitionId, package.BeginOffset, package.EndOffset, genericMessages));
-            }
-
-            return wrappedPackages;
+                yield return new KafkaMessagePackage<TKey, TData>(package.PackageId, package.PartitionId, package.BeginOffset, package.EndOffset, genericMessages);
+            }            
         }
 
         public void EnqueueCommit(long packageId)

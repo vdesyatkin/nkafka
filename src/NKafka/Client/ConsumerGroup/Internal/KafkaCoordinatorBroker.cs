@@ -571,7 +571,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         errorType = GroupErrorType.Error;
                         break;
                     case KafkaResponseErrorCode.UnknownMemberId:
-                        error = KafkaConsumerGroupErrorCode.Rebalance;
+                        error = KafkaConsumerGroupErrorCode.UnknownMemberId;
                         errorType = GroupErrorType.Rebalance;
                         break;
                     case KafkaResponseErrorCode.InvalidSessionTimeout:
@@ -941,7 +941,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         errorType = GroupErrorType.Rebalance;
                         break;
                     case KafkaResponseErrorCode.UnknownMemberId:
-                        error = KafkaConsumerGroupErrorCode.Rebalance;
+                        error = KafkaConsumerGroupErrorCode.UnknownMemberId;
                         errorType = GroupErrorType.Rebalance;
                         break;
                     case KafkaResponseErrorCode.RebalanceInProgress:
@@ -1016,7 +1016,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         errorType = GroupErrorType.Rebalance;
                         break;
                     case KafkaResponseErrorCode.UnknownMemberId:
-                        error = KafkaConsumerGroupErrorCode.Rebalance;
+                        error = KafkaConsumerGroupErrorCode.UnknownMemberId;
                         errorType = GroupErrorType.Rebalance;
                         break;
                     case KafkaResponseErrorCode.RebalanceInProgress:
@@ -1061,7 +1061,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         private bool TryHandleOffsetFetchResponse([NotNull] KafkaCoordinatorGroup group, [NotNull] KafkaOffsetFetchResponse response, string description)
-        {            
+        {
             var assignmentTopics = group.AssignmentData?.AssignedTopicPartitions;
             var responseTopics = response.Topics;
             if (responseTopics == null || responseTopics.Count == 0 || assignmentTopics == null)
@@ -1115,7 +1115,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                                 errorType = GroupErrorType.Rebalance;
                                 break;
                             case KafkaResponseErrorCode.UnknownMemberId:
-                                error = KafkaConsumerGroupErrorCode.Rebalance;
+                                error = KafkaConsumerGroupErrorCode.UnknownMemberId;
                                 errorType = GroupErrorType.Rebalance;
                                 break;
                             case KafkaResponseErrorCode.TopicAuthorizationFailed:
@@ -1303,7 +1303,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                                 errorType = GroupErrorType.Rebalance;
                                 break;
                             case KafkaResponseErrorCode.UnknownMemberId:
-                                error = KafkaConsumerGroupErrorCode.Rebalance;
+                                error = KafkaConsumerGroupErrorCode.UnknownMemberId;
                                 errorType = GroupErrorType.Rebalance;
                                 break;
                             case KafkaResponseErrorCode.RebalanceInProgress:
@@ -1538,7 +1538,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     break;
                 case GroupErrorType.Rebalance:
                     group.Status = KafkaCoordinatorGroupStatus.Rebalance;
-                    var sessionData = group.MemberData;
+                    var sessionData = errorCode != KafkaConsumerGroupErrorCode.UnknownMemberId ? group.MemberData : null;
                     group.ResetData();
                     if (sessionData != null)
                     {
