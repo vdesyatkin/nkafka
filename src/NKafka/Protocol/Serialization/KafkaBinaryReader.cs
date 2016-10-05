@@ -284,7 +284,7 @@ namespace NKafka.Protocol.Serialization
         {
             var size = ReadInt32();
             if (size == NullValue) return null;
-            if (size < 0 || size > _settings.StringSizeByteCountLimit)
+            if (size < 0 || size > _settings.DataSizeByteCountLimit)
             {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
             }
