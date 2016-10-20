@@ -236,7 +236,7 @@ namespace NKafka.Client.Consumer.Internal
                 }
                 var partitionClientCommitMessageTimestampUtc = partition.ClientCommitTimestampUtc;
 
-                var partitionServerCommitPendingCount = (partitionOffsetsInfo.CommitedServerOffset - partitionOffsetsInfo.CommitedServerOffset) ?? partitionClientCommitMessageCount;
+                var partitionServerCommitPendingCount = (partitionOffsetsInfo.CommitedClientOffset - partitionOffsetsInfo.CommitedServerOffset) ?? partitionClientCommitMessageCount;
                 if (partitionServerCommitPendingCount < 0)
                 {
                     partitionServerCommitPendingCount = 0;
