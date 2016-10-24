@@ -13,7 +13,7 @@ using NKafka.Protocol.API.Fetch;
 using NKafka.Protocol.API.Offset;
 
 namespace NKafka.Client.Consumer.Internal
-{    
+{
     internal sealed class KafkaConsumerBroker
     {
         [NotNull] private readonly KafkaBroker _broker;
@@ -30,8 +30,8 @@ namespace NKafka.Client.Consumer.Internal
         {
             _broker = broker;
             _clientBroker = clientBroker;
-            _topics = new ConcurrentDictionary<string, KafkaConsumerBrokerTopic>();         
-            _fetchRequests = new Dictionary<string, FetchRequestInfo>();   
+            _topics = new ConcurrentDictionary<string, KafkaConsumerBrokerTopic>();
+            _fetchRequests = new Dictionary<string, FetchRequestInfo>();
             _fetchDefaultTimeout = consumePeriod + TimeSpan.FromSeconds(5) + consumePeriod;
             _offsetsTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;
         }
@@ -45,7 +45,7 @@ namespace NKafka.Client.Consumer.Internal
                 var topicConsumerName = $"topic(consumer)[{topicName}][{groupName}]";
                 var brokerTopic = new KafkaConsumerBrokerTopic(topicName, topicConsumerName, topicPartition.Group, topicPartition.Settings);
                 topic = _topics.AddOrUpdate(topicName, brokerTopic, (oldKey, oldValue) => oldValue);
-            }            
+            }
 
             if (topic != null)
             {
@@ -68,7 +68,7 @@ namespace NKafka.Client.Consumer.Internal
             if (topic != null)
             {
                 KafkaConsumerBrokerPartition partition;
-                topic.Partitions.TryRemove(partitionId, out partition);                
+                topic.Partitions.TryRemove(partitionId, out partition);
             }
         }
 
@@ -90,12 +90,12 @@ namespace NKafka.Client.Consumer.Internal
                 var coordinatorPartitionOffsets = coordinator.GetPartitionOffsets(topic.TopicName);
 
                 foreach (var partitionPair in topic.Partitions)
-                {                    
+                {
                     var partition = partitionPair.Value;
                     if (partition == null) continue;
-                    
+
                     IKafkaConsumerCoordinatorOffsetsData coordinatorOffset = null;
-                    coordinatorPartitionOffsets?.TryGetValue(partition.PartitionId, out coordinatorOffset);                  
+                    coordinatorPartitionOffsets?.TryGetValue(partition.PartitionId, out coordinatorOffset);
                     if (coordinatorPartitionOffsets?.TryGetValue(partition.PartitionId, out coordinatorOffset) == true && coordinatorOffset != null)
                     {
                         partition.IsAssigned = true;
@@ -135,14 +135,14 @@ namespace NKafka.Client.Consumer.Internal
 
                     partition.Status = KafkaConsumerBrokerPartitionStatus.RearrangeRequired;
                     partition.Clear();
-                }              
+                }
             }
 
             _fetchRequests.Clear();
         }
 
         public void Consume(CancellationToken cancellation)
-        {            
+        {
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
@@ -187,10 +187,13 @@ namespace NKafka.Client.Consumer.Internal
 
             // prepare new fetch batch
             foreach (var partitionPair in topic.Partitions)
-            {                
+            {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
                 var partitionId = partition.PartitionId;
+
+                if (!IsConsumeEnabled) continue;
+                if (partition.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired) continue;
 
                 var coordinatorOffset = SyncPartitionWithCoordinator(partition, coordinatorPartitionOffsets);
 
@@ -202,7 +205,7 @@ namespace NKafka.Client.Consumer.Internal
                     if (catchUpOffset?.GroupServerOffset == null) continue;
                 }
 
-                if (!IsConsumeEnabled || coordinatorOffset == null) continue;                
+                if (coordinatorOffset == null) continue;
 
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(topic, partition)) continue;
@@ -248,7 +251,7 @@ namespace NKafka.Client.Consumer.Internal
             SendFetchRequest(topic, newFetchBatch);
         }
 
-        private IKafkaConsumerCoordinatorOffsetsData SyncPartitionWithCoordinator([NotNull] KafkaConsumerBrokerPartition partition, 
+        private IKafkaConsumerCoordinatorOffsetsData SyncPartitionWithCoordinator([NotNull] KafkaConsumerBrokerPartition partition,
             [CanBeNull] IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> coordinatorPartitionOffsets)
         {
             if (coordinatorPartitionOffsets == null)
@@ -303,7 +306,7 @@ namespace NKafka.Client.Consumer.Internal
         private IKafkaConsumerCoordinatorOffsetsData SyncPartitionWithCatchUpCoordinator(
             [NotNull] KafkaConsumerBrokerPartition partition,
             [CanBeNull] IReadOnlyDictionary<int, IKafkaConsumerCoordinatorOffsetsData> catchUpPartitionOffsets)
-        {                        
+        {
             if (catchUpPartitionOffsets == null)
             {
                 // catch-up group coordinator is not ready
@@ -323,7 +326,7 @@ namespace NKafka.Client.Consumer.Internal
         private bool TryPreparePartition([NotNull] KafkaConsumerBrokerTopic topic, [NotNull] KafkaConsumerBrokerPartition partition)
         {
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired) return false;
-                        
+
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.NotInitialized)
             {
                 partition.ResetData();
@@ -332,8 +335,8 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     return false;
                 }
-                
-                partition.Status = KafkaConsumerBrokerPartitionStatus.OffsetRequested;                
+
+                partition.Status = KafkaConsumerBrokerPartitionStatus.OffsetRequested;
             }
 
             if (partition.Status == KafkaConsumerBrokerPartitionStatus.NotInitialized ||
@@ -368,17 +371,17 @@ namespace NKafka.Client.Consumer.Internal
             }
 
             return false;
-        }        
+        }
 
         #region Topic offsets
 
         private bool TrySendRequestOffsets([NotNull] KafkaConsumerBrokerTopic topic, [NotNull] KafkaConsumerBrokerPartition partition)
         {
             var partitionRequest = new KafkaOffsetRequestTopicPartition(partition.PartitionId, null, 2);
-            var topicRequest = new KafkaOffsetRequestTopic(partition.TopicName, new [] { partitionRequest });
-            var request = new KafkaOffsetRequest(new[] {topicRequest});            
+            var topicRequest = new KafkaOffsetRequestTopic(partition.TopicName, new[] { partitionRequest });
+            var request = new KafkaOffsetRequest(new[] { topicRequest });
             var requestResult = _broker.Send(request, topic.TopicConsumerName, _offsetsTimeout);
-            
+
             if (requestResult.HasError || requestResult.Data == null)
             {
                 var brokerError = requestResult.Error ?? KafkaBrokerErrorCode.TransportError;
@@ -409,14 +412,14 @@ namespace NKafka.Client.Consumer.Internal
 
             if (response.Error != null || response.Data == null)
             {
-                var brokerError = response.Error ?? KafkaBrokerErrorCode.TransportError;                
+                var brokerError = response.Error ?? KafkaBrokerErrorCode.TransportError;
                 HandleBrokerError(partition, brokerError);
                 LogBrokerError(topic, brokerError, "ReceiveOffsetRequest");
                 return false;
             }
 
             partition.OffsetRequestId = null;
-                        
+
             var offsetResponseTopics = response.Data.Topics;
 
             if (offsetResponseTopics == null || offsetResponseTopics.Count == 0)
@@ -452,7 +455,7 @@ namespace NKafka.Client.Consumer.Internal
                         errorType = ConsumerErrorType.Rearrange;
                         break;
                     case KafkaResponseErrorCode.NotLeaderForPartition:
-                        errorCode = KafkaConsumerTopicPartitionErrorCode.NotLeaderForPartition;                        
+                        errorCode = KafkaConsumerTopicPartitionErrorCode.NotLeaderForPartition;
                         errorType = ConsumerErrorType.Rebalance;
                         break;
                     default:
@@ -473,7 +476,7 @@ namespace NKafka.Client.Consumer.Internal
                 SetPartitionError(partition, KafkaConsumerTopicPartitionErrorCode.ProtocolError, ConsumerErrorType.Error);
                 return false;
             }
-                        
+
             long? minOffset = null;
             long? maxOffset = null;
             foreach (var offset in offsets)
@@ -528,7 +531,7 @@ namespace NKafka.Client.Consumer.Internal
             }
 
             var fetchRequestId = fetchResult.Data;
-            _fetchRequests[topic.TopicName] = new FetchRequestInfo(fetchRequestId.Value, fetchBatch);            
+            _fetchRequests[topic.TopicName] = new FetchRequestInfo(fetchRequestId.Value, fetchBatch);
         }
 
         [NotNull]
@@ -563,7 +566,7 @@ namespace NKafka.Client.Consumer.Internal
                     {
                         continue;
                     }
-                    HandleBrokerError(partition, brokerError);                    
+                    HandleBrokerError(partition, brokerError);
                 }
                 LogBrokerError(topic, brokerError, "ReceiveFetchResponse");
                 return;
@@ -616,7 +619,7 @@ namespace NKafka.Client.Consumer.Internal
                                 errorType = ConsumerErrorType.Rearrange;
                                 break;
                         }
-                        
+
                         SetPartitionError(partition, errorCode, errorType);
                         LogProtocolError(partition, errorCode, errorType, "FetchResponse");
                         continue;
@@ -630,7 +633,7 @@ namespace NKafka.Client.Consumer.Internal
                     }
                 }
             }
-        }        
+        }
 
         private class FetchRequestInfo
         {
@@ -659,7 +662,7 @@ namespace NKafka.Client.Consumer.Internal
             var errorInfo = new KafkaConsumerTopicTransportErrorInfo(brokerError, errorDescription, _clientBroker);
             logger.OnTransportError(errorInfo);
         }
-        
+
         private void LogProtocolError([NotNull] KafkaConsumerBrokerPartition partition, KafkaConsumerTopicPartitionErrorCode error, ConsumerErrorType erorrType, string errorDescription)
         {
             var logger = partition.Logger;
@@ -731,12 +734,11 @@ namespace NKafka.Client.Consumer.Internal
                     break;
                 case KafkaBrokerErrorCode.NotAuthorized:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.NotAuthorized;
-                    break;                
+                    break;
                 case KafkaBrokerErrorCode.OperationRefused:
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.TransportError;
                     break;
-                case KafkaBrokerErrorCode.TooBigMessage: 
-                    // there are only command requests w/o data - network problem.
+                case KafkaBrokerErrorCode.TooBigMessage: // there are only command requests w/o data - network problem.
                     partitionErrorCode = KafkaConsumerTopicPartitionErrorCode.TransportError;
                     break;
                 case KafkaBrokerErrorCode.UnknownError:
@@ -750,7 +752,7 @@ namespace NKafka.Client.Consumer.Internal
             SetPartitionError(partition, partitionErrorCode, ConsumerErrorType.Rearrange);
         }
 
-        private void SetPartitionError([NotNull] KafkaConsumerBrokerPartition partition, 
+        private void SetPartitionError([NotNull] KafkaConsumerBrokerPartition partition,
             KafkaConsumerTopicPartitionErrorCode errorCode,
             ConsumerErrorType errorType)
         {
@@ -758,9 +760,9 @@ namespace NKafka.Client.Consumer.Internal
             switch (errorType)
             {
                 case ConsumerErrorType.Warning:
-                    break;                
-                case ConsumerErrorType.Error:     
-                    partition.ResetData();               
+                    break;
+                case ConsumerErrorType.Error:
+                    partition.ResetData();
                     partition.Status = KafkaConsumerBrokerPartitionStatus.Error;
                     break;
                 case ConsumerErrorType.Rebalance:

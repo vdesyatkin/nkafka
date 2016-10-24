@@ -34,30 +34,20 @@ namespace NKafka.Connection
             }
         }
 
-        [NotNull]
-        public KafkaProtocol Protocol => _kafkaProtocol;
+        [NotNull] public KafkaProtocol Protocol => _kafkaProtocol;
 
-        [NotNull]
-        private readonly string _name;
-        [NotNull]
-        private readonly string _host;
+        [NotNull] private readonly string _name;
+        [NotNull] private readonly string _host;
         private readonly int _port;
-        [NotNull]
-        private readonly KafkaProtocol _kafkaProtocol;
-        [NotNull]
-        private readonly KafkaConnectionSettings _settings;
-        [CanBeNull]
-        private readonly IKafkaBrokerLogger _logger;
+        [NotNull] private readonly KafkaProtocol _kafkaProtocol;
+        [NotNull] private readonly KafkaConnectionSettings _settings;
+        [CanBeNull] private readonly IKafkaBrokerLogger _logger;
 
-        [CanBeNull]
-        private ConnectionState _currentConnection;
-        [CanBeNull]
-        private ConnectionState _previousConnection;
+        [CanBeNull] private ConnectionState _currentConnection;
+        [CanBeNull] private ConnectionState _previousConnection;
 
-        [NotNull]
-        private readonly ConcurrentDictionary<int, RequestState> _requests;
-        [NotNull]
-        private readonly ResponseState _responseState;
+        [NotNull] private readonly ConcurrentDictionary<int, RequestState> _requests;
+        [NotNull] private readonly ResponseState _responseState;
 
         private volatile bool _isOpenned;
 
@@ -119,11 +109,11 @@ namespace NKafka.Connection
                 if (request.Response == null && request.Error == null)
                 {
                     var requestTimestampUtc = request.SentTimestampUtc ?? request.CreateTimestampUtc;
-                    if (DateTime.UtcNow >= requestTimestampUtc + request.Timeout)
+                    if (DateTime.UtcNow > requestTimestampUtc + request.Timeout)
                     {
                         if (request.Connection.IsDeprecated || request.Connection.IsClosed)
                         {
-                            request.Error = KafkaBrokerErrorCode.ConnectionMaintenance;                            
+                            request.Error = KafkaBrokerErrorCode.ConnectionMaintenance;
                         }
                         else
                         {
@@ -131,7 +121,7 @@ namespace NKafka.Connection
                             request.Connection.SendError = KafkaBrokerStateErrorCode.ClientTimeout;
                             LogConnectionError(KafkaBrokerErrorCode.ClientTimeout, "CheckTimeout",
                             KafkaConnectionErrorCode.ClientTimeout, request.RequestInfo);
-                        }                                              
+                        }
                     }
                 }
             }

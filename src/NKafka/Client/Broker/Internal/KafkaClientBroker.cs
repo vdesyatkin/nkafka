@@ -16,8 +16,8 @@ namespace NKafka.Client.Broker.Internal
     {
         public string Name { get; }
         public int WorkerId { get; }
-        public KafkaClientBrokerType BrokerType { get; }        
-        public KafkaBrokerMetadata BrokerMetadata { get; }        
+        public KafkaClientBrokerType BrokerType { get; }
+        public KafkaBrokerMetadata BrokerMetadata { get; }
 
         public bool IsEnabled => _broker.IsOpenned && _broker.Error == null;
         public bool IsStarted => _broker.IsOpenned;
@@ -31,10 +31,10 @@ namespace NKafka.Client.Broker.Internal
         [NotNull] private readonly KafkaConsumerBroker _consumer;
         [NotNull] private readonly KafkaCoordinatorBroker _coordinator;
 
-        private readonly TimeSpan _clientTimeout;        
+        private readonly TimeSpan _clientTimeout;
 
         public KafkaClientBroker([NotNull] KafkaProtocol protocol, int workerId,
-            KafkaClientBrokerType brokerType, [NotNull] KafkaBrokerMetadata metadata, 
+            KafkaClientBrokerType brokerType, [NotNull] KafkaBrokerMetadata metadata,
             [NotNull] KafkaClientSettings settings,
             [CanBeNull] IKafkaClientLogger logger)
         {
@@ -47,10 +47,10 @@ namespace NKafka.Client.Broker.Internal
             var host = metadata.Host ?? string.Empty;
             var port = metadata.Port;
             var brokerName = brokerType == KafkaClientBrokerType.MetadataBroker
-                ? $"broker(metdata)[{host}:{port}]"
+                ? $"broker(metadata)[{host}:{port}]"
                 : $"broker(id={brokerId})[{host}:{port}]";
             Name = brokerName;
-            
+
             var loggerWrapper = logger != null ? new KafkaClientBrokerLogger(this, logger) : null;
             var broker = new KafkaBroker(brokerName, host, port, protocol, settings.ConnectionSettings, loggerWrapper);
             _broker = broker;
@@ -59,7 +59,7 @@ namespace NKafka.Client.Broker.Internal
             _groups = new ConcurrentDictionary<string, KafkaClientBrokerGroup>();
             _producer = new KafkaProducerBroker(broker, this, settings.WorkerPeriod);
             _consumer = new KafkaConsumerBroker(broker, this, settings.WorkerPeriod);
-            _coordinator = new KafkaCoordinatorBroker(broker, this, settings.WorkerPeriod);            
+            _coordinator = new KafkaCoordinatorBroker(broker, this, settings.WorkerPeriod);
 
             var workerPeriod = settings.WorkerPeriod;
             if (workerPeriod < TimeSpan.FromMilliseconds(100))
@@ -224,15 +224,16 @@ namespace NKafka.Client.Broker.Internal
 
             if (group.IsUnplugRequired)
             {
-                group.Status = KafkaClientBrokerGroupStatus.Unplugged;
                 KafkaClientBrokerGroup removedGroup;
                 _groups.TryRemove(group.GroupName, out removedGroup);
                 _coordinator.RemoveGroup(group.GroupName);
+                group.Status = KafkaClientBrokerGroupStatus.Unplugged;
                 return;
             }
 
             if (group.Status == KafkaClientBrokerGroupStatus.Unplugged)
             {
+                group.Coordinator.Status = KafkaCoordinatorGroupStatus.NotInitialized;
                 _coordinator.AddGroup(group.GroupName, group.Coordinator);
                 group.Status = KafkaClientBrokerGroupStatus.Plugged;
             }
@@ -246,21 +247,21 @@ namespace NKafka.Client.Broker.Internal
             }
         }
 
-        public KafkaBrokerResult<int?> SendRequest<TRequest>([NotNull] TRequest request, [NotNull] string sender) 
+        public KafkaBrokerResult<int?> SendRequest<TRequest>([NotNull] TRequest request, [NotNull] string sender)
             where TRequest : class, IKafkaRequest
         {
             return _broker.Send(request, sender, _clientTimeout);
         }
 
-        public KafkaBrokerResult<TResponse> GetResponse<TResponse>(int requestId) 
+        public KafkaBrokerResult<TResponse> GetResponse<TResponse>(int requestId)
             where TResponse : class, IKafkaResponse
         {
             return _broker.Receive<TResponse>(requestId);
         }
 
         public KafkaClientBrokerInfo GetDiagnosticsInfo()
-        {           
-            return new KafkaClientBrokerInfo(Name, BrokerType, BrokerMetadata, _broker.IsOpenned, _broker.Error, 
+        {
+            return new KafkaClientBrokerInfo(Name, BrokerType, BrokerMetadata, _broker.IsOpenned, _broker.Error,
                 _broker.ConnectionTimestampUtc, _broker.LastActivityTimestampUtc, DateTime.UtcNow);
         }
     }

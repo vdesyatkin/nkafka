@@ -26,12 +26,12 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentDictionary<long, KafkaConsumerTopicPackageInfo> _packages;
         private long _currentPackageId;
 
-        public KafkaConsumerTopic([NotNull] string topicName, 
+        public KafkaConsumerTopic([NotNull] string topicName,
             [NotNull] string groupName, [CanBeNull] string catchUpGroupName,
             [NotNull] KafkaConsumerSettings settings,
             [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler,
             [CanBeNull] IKafkaConsumerTopicLogger logger)
-        { 
+        {
             TopicName = topicName;
             GroupName = groupName;
             CatchUpGroupName = catchUpGroupName;
@@ -51,14 +51,14 @@ namespace NKafka.Client.Consumer.Internal
         }
 
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartition> partitions)
-        {            
+        {
             var topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>(partitions.Count);
 
             foreach (var partition in partitions)
-            {         
+            {
                 topicPartitions[partition.PartitonId] = partition;
             }
-           
+
             _topicPartitions = topicPartitions;
         }
 
@@ -84,7 +84,7 @@ namespace NKafka.Client.Consumer.Internal
                 long endOffset = 0;
 
                 KafkaMessageAndOffset messageAndOffset;
-                while (partitionMessages.Count < partitionConsumePendingCount && partitionBroker.TryConsumeMessage(out messageAndOffset))
+                while (partitionMessages.Count <= partitionConsumePendingCount && partitionBroker.TryConsumeMessage(out messageAndOffset))
                 {
                     if (messageAndOffset == null) continue;
 
@@ -127,7 +127,7 @@ namespace NKafka.Client.Consumer.Internal
 
             KafkaConsumerTopicPartition partition;
             if (_topicPartitions.TryGetValue(package.PartitionId, out partition))
-            {                
+            {
                 partition?.SetCommitClientOffset(package.BeginOffset, package.EndOffset);
             }
 
@@ -149,7 +149,7 @@ namespace NKafka.Client.Consumer.Internal
             {
                 bool? isReady = null;
                 foreach (var partitionPair in _topicPartitions)
-                {                    
+                {
                     var partitionBroker = partitionPair.Value?.BrokerPartition;
                     if (partitionBroker == null || !partitionBroker.IsAssigned) continue;
                     isReady = (isReady ?? true) && partitionBroker.IsReady;
@@ -209,10 +209,10 @@ namespace NKafka.Client.Consumer.Internal
                 if (partition == null) continue;
 
                 var partitionBroker = partition.BrokerPartition;
-                
+
                 var partitionIsAssigned = partitionBroker.IsAssigned;
                 var partitionIsReady = partitionBroker.IsReady;
-                var partitionIsSynchronized = partitionBroker.IsSynchronized;         
+                var partitionIsSynchronized = partitionBroker.IsSynchronized;
 
                 var partitionOffsetsInfo = partitionBroker.GetOffsetsInfo();
 
@@ -261,7 +261,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     topicClientCommitMessageTimestampUtc = partitionClientCommitMessageTimestampUtc;
                 }
-                
+
                 topicTotalServerCommitedMessageCount += partitionServerCommitMessageCount;
                 if (topicServerCommitMessageTimestampUtc == null || topicServerCommitMessageTimestampUtc < partitionServerCommitMessageTimestampUtc)
                 {
@@ -269,7 +269,7 @@ namespace NKafka.Client.Consumer.Internal
                 }
 
                 if (partitionIsAssigned)
-                {                    
+                {
                     topicIsReady = (topicIsReady ?? true) && partitionIsReady;
                     topicIsSynchronized = topicIsSynchronized && partitionIsSynchronized;
                     topicReceivePendingCount += partitionReceivePendingCount ?? 0;
@@ -295,7 +295,7 @@ namespace NKafka.Client.Consumer.Internal
                 topicBufferedMessageSizeBytes += partitionBufferedMessageSizeBytes;
 
                 var partitionMessageSizeInfo = new KafkaConsumerTopicMessageSizeInfo(
-                    partitionTotalReceivedMessageSizeBytes, partitionTotalConsumedMessageSizeBytes, 
+                    partitionTotalReceivedMessageSizeBytes, partitionTotalConsumedMessageSizeBytes,
                     partitionConsumePendingMessageSizeBytes, partitionBufferedMessageSizeBytes);
 
                 var partitionInfo = new KafkaConsumerTopicPartitionInfo(partition.PartitonId,
@@ -327,7 +327,7 @@ namespace NKafka.Client.Consumer.Internal
                 topicIsReady = (topicIsReady == true) && (catchUpGroupInfo?.IsReady == true);
             }
 
-            return new KafkaConsumerTopicInfo(TopicName, 
+            return new KafkaConsumerTopicInfo(TopicName,
                 topicIsReady == true, topicIsSynchronized,
                 metadataInfo, consumerGroupInfo, catchUpGroupInfo,
                 topicMessageCountInfo,
@@ -344,7 +344,7 @@ namespace NKafka.Client.Consumer.Internal
 
             public readonly long BeginOffset;
 
-            public readonly long EndOffset;            
+            public readonly long EndOffset;
 
             public KafkaConsumerTopicPackageInfo(int partitionId, long beginOffset, long endOffset)
             {
@@ -352,6 +352,6 @@ namespace NKafka.Client.Consumer.Internal
                 BeginOffset = beginOffset;
                 EndOffset = endOffset;
             }
-        }        
+        }
     }
 }
