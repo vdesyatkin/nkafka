@@ -13,7 +13,7 @@ namespace NKafka.Client.Consumer
         bool IsSynchronized { get; }
 
         [NotNull, ItemNotNull]
-        IEnumerable<KafkaMessagePackage> Consume(int? maxMessageCount = null);
+        IReadOnlyList<KafkaMessagePackage> Consume(int? maxMessageCount = null);
         void EnqueueCommit(long packageId);
 
         [NotNull]
@@ -29,7 +29,7 @@ namespace NKafka.Client.Consumer
         bool IsSynchronized { get; }
 
         [NotNull, ItemNotNull]
-        IEnumerable<KafkaMessagePackage<TKey, TData>> Consume(int? maxMessageCount = null);
+        IReadOnlyList<KafkaMessagePackage<TKey, TData>> Consume(int? maxMessageCount = null);
         void EnqueueCommit(long packageId);
         [NotNull]
         KafkaConsumerTopicInfo GetDiagnosticsInfo();

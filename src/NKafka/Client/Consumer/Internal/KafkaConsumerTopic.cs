@@ -67,9 +67,11 @@ namespace NKafka.Client.Consumer.Internal
             _group = new KafkaConsumerGroupData(groupCoordinator, catchUpGroupCoordinator);
         }
 
-        public IEnumerable<KafkaMessagePackage> Consume(int? maxMessageCount = null)
+        public IReadOnlyList<KafkaMessagePackage> Consume(int? maxMessageCount = null)
         {
             var totalMessageCount = 0;
+
+            var result = new List<KafkaMessagePackage>(100);
 
             foreach (var partitionPair in _topicPartitions)
             {
@@ -80,8 +82,8 @@ namespace NKafka.Client.Consumer.Internal
                 var partitionConsumePendingCount = partitionBroker.ConsumePendingMessageCount;
                 var partitionMessages = new List<KafkaMessage>(partitionConsumePendingCount);
 
-                long beginOffset = 0;
-                long endOffset = 0;
+                long minOffset = long.MaxValue;
+                long maxOffset = 0;                
 
                 KafkaMessageAndOffset messageAndOffset;
                 while (partitionMessages.Count <= partitionConsumePendingCount && partitionBroker.TryConsumeMessage(out messageAndOffset))
@@ -90,12 +92,16 @@ namespace NKafka.Client.Consumer.Internal
 
                     var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data, messageAndOffset.TiemestampUtc);
 
-                    if (partitionMessages.Count == 0)
-                    {
-                        beginOffset = messageAndOffset.Offset;
-                    }
                     partitionMessages.Add(message);
-                    endOffset = messageAndOffset.Offset;
+
+                    if (messageAndOffset.Offset < minOffset)
+                    {                        
+                        minOffset = messageAndOffset.Offset;
+                    }
+                    if (messageAndOffset.Offset > maxOffset)
+                    {
+                        maxOffset = messageAndOffset.Offset;
+                    }
 
                     totalMessageCount++;
                     if (totalMessageCount >= maxMessageCount)
@@ -106,8 +112,8 @@ namespace NKafka.Client.Consumer.Internal
                 if (partitionMessages.Count > 0)
                 {
                     var packageId = Interlocked.Increment(ref _currentPackageId);
-                    _packages[packageId] = new KafkaConsumerTopicPackageInfo(partition.PartitonId, beginOffset, endOffset);
-                    yield return new KafkaMessagePackage(packageId, partition.PartitonId, beginOffset, endOffset, partitionMessages);
+                    _packages[packageId] = new KafkaConsumerTopicPackageInfo(partition.PartitonId, partitionMessages.Count, maxOffset);
+                    result.Add(new KafkaMessagePackage(packageId, partition.PartitonId, minOffset, maxOffset, partitionMessages));
                 }
 
                 if (totalMessageCount >= maxMessageCount)
@@ -115,6 +121,8 @@ namespace NKafka.Client.Consumer.Internal
                     break;
                 }
             }
+
+            return result;
         }
 
         public void EnqueueCommit(long packageId)
@@ -128,7 +136,7 @@ namespace NKafka.Client.Consumer.Internal
             KafkaConsumerTopicPartition partition;
             if (_topicPartitions.TryGetValue(package.PartitionId, out partition))
             {
-                partition?.SetCommitClientOffset(package.BeginOffset, package.EndOffset);
+                partition?.SetCommitClientOffset(package.MaxOffset, package.MessageCount);
             }
 
             _packages.TryRemove(packageId, out package);
@@ -346,15 +354,15 @@ namespace NKafka.Client.Consumer.Internal
         {
             public readonly int PartitionId;
 
-            public readonly long BeginOffset;
+            public readonly int MessageCount;
 
-            public readonly long EndOffset;
+            public readonly long MaxOffset;
 
-            public KafkaConsumerTopicPackageInfo(int partitionId, long beginOffset, long endOffset)
+            public KafkaConsumerTopicPackageInfo(int partitionId, int messageCount, long maxOffset)
             {
                 PartitionId = partitionId;
-                BeginOffset = beginOffset;
-                EndOffset = endOffset;
+                MessageCount = messageCount;
+                MaxOffset = maxOffset;
             }
         }
     }

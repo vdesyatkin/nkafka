@@ -7,15 +7,15 @@ namespace NKafka.Client.Consumer.Internal
 {
     internal sealed class KafkaConsumerTopicPartition
     {
-        public readonly int PartitonId;        
-        
-        [NotNull] public readonly KafkaConsumerBrokerPartition BrokerPartition;        
+        public readonly int PartitonId;
+
+        [NotNull] public readonly KafkaConsumerBrokerPartition BrokerPartition;
 
         public long TotalClientCommitedCount => _totalClientCommitedCount;
         public DateTime? ClientCommitTimestampUtc { get; private set; }
 
-        public DateTime? CommitServerOffsetTimestampUtc => BrokerPartition.CommitServerOffsetTimestampUtc;        
-                        
+        public DateTime? CommitServerOffsetTimestampUtc => BrokerPartition.CommitServerOffsetTimestampUtc;
+
         private long _totalClientCommitedCount;
 
         public KafkaConsumerTopicPartition([NotNull] string topicName, int partitionId,
@@ -23,15 +23,15 @@ namespace NKafka.Client.Consumer.Internal
             [NotNull] KafkaConsumerSettings settings,
             [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler,
             [CanBeNull] IKafkaConsumerTopicLogger logger)
-        {            
-            PartitonId = partitionId;            
-            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, group, settings, fallbackHandler, logger);  
+        {
+            PartitonId = partitionId;
+            BrokerPartition = new KafkaConsumerBrokerPartition(topicName, PartitonId, group, settings, fallbackHandler, logger);
         }
 
-        public void SetCommitClientOffset(long beginOffset, long endOffset)
+        public void SetCommitClientOffset(long commitedOffset, int messageCount)
         {
-            BrokerPartition.SetCommitClientOffset(endOffset);
-            Interlocked.Add(ref _totalClientCommitedCount, endOffset - beginOffset + 1);
+            BrokerPartition.SetCommitClientOffset(commitedOffset);
+            Interlocked.Add(ref _totalClientCommitedCount, messageCount);
             ClientCommitTimestampUtc = DateTime.UtcNow;
         }
 
