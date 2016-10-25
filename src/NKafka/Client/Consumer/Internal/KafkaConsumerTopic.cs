@@ -242,6 +242,10 @@ namespace NKafka.Client.Consumer.Internal
                     partitionServerCommitPendingCount = 0;
                 }
                 var partitionServerCommitMessageCount = partitionClientCommitMessageCount - partitionServerCommitPendingCount;
+                if (partitionServerCommitMessageCount < 0)
+                {
+                    partitionServerCommitMessageCount = 0;
+                }
                 var partitionServerCommitMessageTimestampUtc = partition.CommitServerOffsetTimestampUtc;
 
                 topicTotalReceivedMessageCount += partitionTotalReceivedCount;

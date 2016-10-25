@@ -30,9 +30,14 @@ namespace NKafka.Client.Consumer.Internal
 
         public void SetCommitClientOffset(long beginOffset, long endOffset)
         {
-            BrokerPartition.SetCommitClientOffset(endOffset);
-            Interlocked.Add(ref _totalClientCommitedCount, endOffset - beginOffset + 1);
-            ClientCommitTimestampUtc = DateTime.UtcNow;
+            BrokerPartition.SetCommitClientOffset(endOffset);            
+            var newCommitedCount = _totalClientCommitedCount + endOffset - beginOffset + 1;
+            long currentCommitedCount;
+            while (newCommitedCount > (currentCommitedCount = _totalClientCommitedCount))
+            {
+                Interlocked.CompareExchange(ref _totalClientCommitedCount, newCommitedCount, currentCommitedCount);
+                ClientCommitTimestampUtc = DateTime.UtcNow;
+            }
         }
                 
         public long? GetCommitClientOffset()

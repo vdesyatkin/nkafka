@@ -263,9 +263,10 @@ namespace NKafka.Client.Consumer.Internal
                 }
                 return;
             }
-            while (offset > _currentCommitClientOffset)
+            long currentOffset;
+            while (offset > (currentOffset = _currentCommitClientOffset))
             {
-                Interlocked.CompareExchange(ref _currentCommitClientOffset, offset, _currentCommitClientOffset);
+                Interlocked.CompareExchange(ref _currentCommitClientOffset, offset, currentOffset);
             }
         }
 
@@ -286,8 +287,13 @@ namespace NKafka.Client.Consumer.Internal
 
         public void SetCommitServerOffset(long? offset, DateTime timestampUtc)
         {
-            _currentCommitServerOffset = offset ?? UnknownOffset;
-            CommitServerOffsetTimestampUtc = timestampUtc;
+            var newOffset = offset ?? UnknownOffset;
+            long currentOffset;
+            while (newOffset > (currentOffset = _currentCommitServerOffset))
+            {
+                Interlocked.CompareExchange(ref _currentCommitServerOffset, newOffset, currentOffset);
+                CommitServerOffsetTimestampUtc = timestampUtc;
+            }
         }
 
         #endregion CommitServerOffset
