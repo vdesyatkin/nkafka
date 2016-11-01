@@ -301,7 +301,7 @@ namespace NKafka.Client.Consumer.Internal
                 var partitionConsumePendingMessageSizeBytes = partitionBroker.ConsumePendingMessageSizeBytes;
                 var partitionBufferedMessageSizeBytes = partitionBroker.BufferedMessageSizeBytes;
 
-                topicTotalReceivedMessageSizeBytes += partitionBufferedMessageSizeBytes;
+                topicTotalReceivedMessageSizeBytes += partitionTotalReceivedMessageSizeBytes;
                 topicTotalConsumedMessageSizeBytes += partitionTotalConsumedMessageSizeBytes;
                 topicConsumePendingMessageSizeBytes += partitionConsumePendingMessageSizeBytes;
                 topicBufferedMessageSizeBytes += partitionBufferedMessageSizeBytes;
