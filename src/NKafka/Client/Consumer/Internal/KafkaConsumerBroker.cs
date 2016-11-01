@@ -191,9 +191,7 @@ namespace NKafka.Client.Consumer.Internal
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
                 var partitionId = partition.PartitionId;
-                
-                if (partition.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired) continue;
-
+                                
                 var coordinatorOffset = SyncPartitionWithCoordinator(partition, coordinatorPartitionOffsets);
 
                 IKafkaConsumerCoordinatorOffsetsData catchUpOffset = null;
