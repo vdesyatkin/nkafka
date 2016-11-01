@@ -90,7 +90,7 @@ namespace NKafka.Client.Consumer.Internal
                 {
                     if (messageAndOffset == null) continue;
 
-                    var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data, messageAndOffset.TiemestampUtc);
+                    var message = new KafkaMessage(messageAndOffset.Key, messageAndOffset.Data, messageAndOffset.TimestampUtc);
 
                     partitionMessages.Add(message);
 

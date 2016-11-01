@@ -191,8 +191,7 @@ namespace NKafka.Client.Consumer.Internal
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
                 var partitionId = partition.PartitionId;
-
-                if (!IsConsumeEnabled) continue;
+                
                 if (partition.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired) continue;
 
                 var coordinatorOffset = SyncPartitionWithCoordinator(partition, coordinatorPartitionOffsets);
@@ -209,6 +208,7 @@ namespace NKafka.Client.Consumer.Internal
 
                 if (oldFetchBatch.ContainsKey(partitionId)) continue;
                 if (!TryPreparePartition(topic, partition)) continue;
+                if (!IsConsumeEnabled) continue;
 
                 var currentReceivedOffset = partition.GetReceivedClientOffset();
                 var minAvailableOffset = partition.GetMinAvailableServerOffset();

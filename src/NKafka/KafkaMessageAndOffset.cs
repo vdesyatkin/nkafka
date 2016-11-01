@@ -12,13 +12,14 @@ namespace NKafka
 
         public readonly byte[] Data;
 
-        public readonly DateTime? TiemestampUtc;
+        public readonly DateTime? TimestampUtc;
 
         public KafkaMessageAndOffset(long offset, byte[] key, byte[] data, DateTime? timestampUtc)
         {
             Offset = offset;
             Key = key;
             Data = data;
+            TimestampUtc = timestampUtc;
         }
     }    
 }
