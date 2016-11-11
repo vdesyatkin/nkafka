@@ -17,7 +17,7 @@ namespace NKafka.Client.Consumer.Diagnostics
 
         [NotNull] public readonly KafkaClientTopicMetadataInfo MetadataInfo;
 
-        [NotNull] public readonly KafkaConsumerGroupInfo ConsumerGroupInfo;
+        [CanBeNull] public readonly KafkaConsumerGroupInfo ConsumerGroupInfo;
 
         [CanBeNull] public readonly KafkaConsumerGroupInfo CatchUpGroupInfo;
 
@@ -32,7 +32,7 @@ namespace NKafka.Client.Consumer.Diagnostics
         public KafkaConsumerTopicInfo([NotNull] string topicName, 
             bool isReady, bool isSynchronized,
             [NotNull] KafkaClientTopicMetadataInfo metadataInfo,
-            [NotNull] KafkaConsumerGroupInfo consumerGroupInfo, [CanBeNull] KafkaConsumerGroupInfo catchUpGroupInfo,
+            [CanBeNull] KafkaConsumerGroupInfo consumerGroupInfo, [CanBeNull] KafkaConsumerGroupInfo catchUpGroupInfo,
             [NotNull] KafkaConsumerTopicMessageCountInfo messageCountInfo,
             [NotNull] KafkaConsumerTopicMessageSizeInfo messageSizeInfo,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaConsumerTopicPartitionInfo> partitions, 
