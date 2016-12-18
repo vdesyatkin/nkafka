@@ -204,7 +204,7 @@ namespace NKafka.Protocol
                 [KafkaRequestType.Produce] = KafkaRequestVersion.V2,
 
                 [KafkaRequestType.GroupCoordinator] = KafkaRequestVersion.V0,
-                [KafkaRequestType.JoinGroup] = KafkaRequestVersion.V0,
+                [KafkaRequestType.JoinGroup] = KafkaRequestVersion.V0, //todo V1 KIP-62: Allow consumer to send heartbeats from a background thread
                 [KafkaRequestType.SyncGroup] = KafkaRequestVersion.V0,
                 [KafkaRequestType.Heartbeat] = KafkaRequestVersion.V0,
                 [KafkaRequestType.LeaveGroup] = KafkaRequestVersion.V0,
@@ -330,7 +330,7 @@ namespace NKafka.Protocol
                 case KafkaRequestType.Fetch:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaFetchApi(requestVersion));
                 case KafkaRequestType.JoinGroup:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaJoinGroupApi());
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaJoinGroupApi(requestVersion));
                 case KafkaRequestType.SyncGroup:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaSyncGroupApi());
                 case KafkaRequestType.LeaveGroup:

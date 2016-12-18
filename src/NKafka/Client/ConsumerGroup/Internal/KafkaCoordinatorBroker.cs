@@ -542,7 +542,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
             if (protocols.Count == 0) return null;
 
             var sessionTimeout = group.CustomSessionTimeout ?? group.Settings.GroupSessionTimeout;
-            var request = new KafkaJoinGroupRequest(group.GroupName, group.MemberData?.MemberId ?? string.Empty, sessionTimeout, protocols);
+            var rebalanceTimeout = sessionTimeout; //todo KIP-62: Allow consumer to send heartbeats from a background thread
+            var request = new KafkaJoinGroupRequest(group.GroupName, group.MemberData?.MemberId ?? string.Empty, sessionTimeout, rebalanceTimeout, protocols);
             return request;
         }
 

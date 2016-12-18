@@ -17,7 +17,7 @@ namespace NKafka.Client.ConsumerGroup
         public static readonly TimeSpan DefaultOffsetFetchRequestServerTimeout = TimeSpan.FromSeconds(5);
         public static readonly TimeSpan DefaultOffsetCommitRequestServerTimeout = TimeSpan.FromSeconds(10);
 
-        public static readonly TimeSpan DefaultGroupSessionTimeout = TimeSpan.FromSeconds(30);
+        public static readonly TimeSpan DefaultGroupSessionTimeout = TimeSpan.FromSeconds(30);        
         public static readonly TimeSpan MinGroupSessionTimeout = TimeSpan.FromSeconds(6);
         public static readonly TimeSpan MaxGroupSessionTimeout = TimeSpan.FromSeconds(30);
 
@@ -38,7 +38,7 @@ namespace NKafka.Client.ConsumerGroup
         /// <summary>
         /// 6-30 seconds by default
         /// </summary>        
-        private TimeSpan? _groupSessionTimeout;
+        private TimeSpan? _groupSessionTimeout;        
         private TimeSpan? _heartbeatPeriod;
         private TimeSpan? _offsetCommitPeriod;
         private TimeSpan? _offsetCommitRetentionTime;
@@ -100,7 +100,7 @@ namespace NKafka.Client.ConsumerGroup
         {
             _groupSessionTimeout = timeout;
             return this;
-        }
+        }        
 
         [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetHeartbeatPeriod(TimeSpan period)
@@ -183,7 +183,7 @@ namespace NKafka.Client.ConsumerGroup
             var offsetFetchServerTimeout = _offsetFetchServerTimeout ?? DefaultOffsetFetchRequestServerTimeout;
             var offsetCommitServerTimeout = _offsetCommitServerTimeout ?? DefaultOffsetCommitRequestServerTimeout;
 
-            var groupSessionTimeout = _groupSessionTimeout ?? DefaultGroupSessionTimeout;
+            var groupSessionTimeout = _groupSessionTimeout ?? DefaultGroupSessionTimeout;            
             var heartbeatPeriod = _heartbeatPeriod ?? DefaultHeartbeatGroupRequestServerTimeout;
             var offsetCommitPeriod = _offsetCommitPeriod ?? DefaultOffsetCommitPeriod;
             var offsetCommitRetentionTime = _offsetCommitRetentionTime ?? DefaultOffsetCommitRetentionTime;
@@ -202,7 +202,7 @@ namespace NKafka.Client.ConsumerGroup
                 heartbeatServerTimeout,
                 offsetFetchServerTimeout,
                 offsetCommitServerTimeout,
-                groupSessionTimeout,
+                groupSessionTimeout,                
                 heartbeatPeriod,
                 offsetCommitPeriod,
                 offsetCommitRetentionTime,

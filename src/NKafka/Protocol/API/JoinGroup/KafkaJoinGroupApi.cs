@@ -10,16 +10,27 @@ namespace NKafka.Protocol.API.JoinGroup
 
         private const string DefaultProtocolType = "consumer";
         private const string UnknownMember = "";
-        
+
+        private readonly KafkaRequestVersion _requestVersion;
+
+        public KafkaJoinGroupApi(KafkaRequestVersion requestVersion)
+        {
+            _requestVersion = requestVersion;
+        }
+
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)
         {
             WriteJoinGroupRequest(writer, (KafkaJoinGroupRequest)request);
         }
 
-        private static void WriteJoinGroupRequest([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaJoinGroupRequest request)
+        private void WriteJoinGroupRequest([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaJoinGroupRequest request)
         {
             writer.WriteString(request.GroupName);
             writer.WriteInt32((int)request.SessionTimeout.TotalMilliseconds);
+            if (_requestVersion >= KafkaRequestVersion.V1)
+            {
+                writer.WriteInt32((int)request.RebalanceTimeout.TotalMilliseconds);
+            }
             writer.WriteString(request.MemberId ?? UnknownMember);
             writer.WriteString(DefaultProtocolType);
             writer.WriteCollection(request.Protocols, WriteJoinGroupRequestProtocol);
