@@ -12,6 +12,8 @@ namespace NKafka.Client.Internal
     {
         [NotNull] public readonly string TopicName;
 
+        [CanBeNull] private string _clusterId;
+
         [NotNull, ItemNotNull] public IReadOnlyList<KafkaClientTopicPartition> Partitions { get; private set; }
         
         public KafkaClientTopicStatus Status;
@@ -28,12 +30,12 @@ namespace NKafka.Client.Internal
             Producer = producer;
             Consumer = consumer;
             Partitions = new KafkaClientTopicPartition[0];
-            _metadataInfo = new KafkaClientTopicMetadataInfo(topicName, false, null, null, DateTime.UtcNow);
+            _metadataInfo = new KafkaClientTopicMetadataInfo(topicName, null, false, null, null, DateTime.UtcNow);
         }
 
         public void ChangeMetadataState(bool isReady, KafkaClientTopicMetadataErrorCode? errorCode, [CanBeNull] KafkaTopicMetadata metadata)
         {
-            _metadataInfo = new KafkaClientTopicMetadataInfo(TopicName, isReady, errorCode, metadata, DateTime.UtcNow);
+            _metadataInfo = new KafkaClientTopicMetadataInfo(TopicName, _clusterId, isReady, errorCode, metadata, DateTime.UtcNow);
             if (isReady && metadata != null)
             {
                 ApplyMetadata(metadata);
@@ -54,6 +56,8 @@ namespace NKafka.Client.Internal
         
         private void ApplyMetadata([NotNull] KafkaTopicMetadata topicMetadata)
         {
+            _clusterId = topicMetadata.ClusterId;
+
             var partitionBrokers = new Dictionary<int, KafkaBrokerMetadata>(topicMetadata.Brokers.Count);
             foreach (var brokerMetadata in topicMetadata.Brokers)
             {

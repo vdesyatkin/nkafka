@@ -11,6 +11,11 @@ namespace NKafka.Protocol.API.TopicMetadata
     public sealed class KafkaTopicMetadataResponse : IKafkaResponse
     {
         /// <summary>
+        /// The cluster id that this broker belongs to.
+        /// </summary>
+        public readonly string ClusterId;
+
+        /// <summary>
         /// The broker id of the controller broker.
         /// </summary>
         public readonly int? ControllerBrokerId;
@@ -25,14 +30,17 @@ namespace NKafka.Protocol.API.TopicMetadata
         /// </summary>
         public readonly IReadOnlyList<KafkaTopicMetadataResponseTopic> Topics;
 
+        /// <param name="clusterId">The cluster id that this broker belongs to.</param>
         /// <param name="controllerBrokerId">The broker id of the controller broker.</param>
         /// <param name="brokers">Brokers metadata.</param>
         /// <param name="topics">Topics metadata.</param>
         public KafkaTopicMetadataResponse(
-            int? controllerBrokerId,
+            string clusterId,
+            int? controllerBrokerId,            
             IReadOnlyList<KafkaTopicMetadataResponseBroker> brokers,
             IReadOnlyList<KafkaTopicMetadataResponseTopic> topics)
         {
+            ClusterId = clusterId;
             ControllerBrokerId = controllerBrokerId;
             Brokers = brokers;
             Topics = topics;

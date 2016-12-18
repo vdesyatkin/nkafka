@@ -44,13 +44,14 @@ namespace NKafka.Protocol.API.TopicMetadata
         private KafkaTopicMetadataResponse ReadTopicMetadataResponse([NotNull] KafkaBinaryReader reader)
         {
             var brokers = reader.ReadCollection(ReadResponseBroker);
+            var clusterId = _requestVersion >= KafkaRequestVersion.V2 ? reader.ReadString() : null;
             var controllerBrokerId = _requestVersion >= KafkaRequestVersion.V1 ? reader.ReadInt32() : (int?)null;
             if (controllerBrokerId < 0)
             {
                 controllerBrokerId = null;
             }
             var topics = reader.ReadCollection(ReadResponseTopic);
-            return new KafkaTopicMetadataResponse(controllerBrokerId, brokers, topics);
+            return new KafkaTopicMetadataResponse(clusterId, controllerBrokerId, brokers, topics);
         }
 
         private KafkaTopicMetadataResponseBroker ReadResponseBroker([NotNull] KafkaBinaryReader reader)

@@ -722,12 +722,13 @@ namespace NKafka.Client.Internal
             hasError = false;
             var responseBrokers = responseData.Brokers ?? new KafkaTopicMetadataResponseBroker[0];
             var responseTopics = responseData.Topics ?? new KafkaTopicMetadataResponseTopic[0];
+            var clusterId = responseData.ClusterId;
 
             var responseTopic = responseTopics.Count >= 1 ? responseTopics[0] : null;
             if (string.IsNullOrEmpty(responseTopic?.TopicName))
             {
                 hasError = true;
-                return new KafkaTopicMetadata(topicName, KafkaTopicMetadataErrorCode.InvalidTopic, new KafkaBrokerMetadata[0], new KafkaTopicPartitionMetadata[0]);
+                return new KafkaTopicMetadata(topicName, clusterId, KafkaTopicMetadataErrorCode.InvalidTopic, new KafkaBrokerMetadata[0], new KafkaTopicPartitionMetadata[0]);
             }
 
             KafkaTopicMetadataErrorCode? topicError = null;
@@ -785,7 +786,7 @@ namespace NKafka.Client.Internal
             }
             partitions.Sort(PartitionComprarer);
 
-            return new KafkaTopicMetadata(responseTopic.TopicName, topicError, brokers, partitions);
+            return new KafkaTopicMetadata(responseTopic.TopicName, clusterId, topicError, brokers, partitions);
         }
 
         private class PartitionMetadataComprarer : IComparer<KafkaTopicPartitionMetadata>

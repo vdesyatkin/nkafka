@@ -26,7 +26,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentDictionary<long, KafkaConsumerTopicPackageInfo> _packages;
         private long _currentPackageId;
 
-        public KafkaConsumerTopic([NotNull] string topicName,
+        public KafkaConsumerTopic([NotNull] string topicName,            
             [NotNull] string groupName, [CanBeNull] string catchUpGroupName,
             [NotNull] KafkaConsumerSettings settings,
             [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler,
@@ -40,7 +40,7 @@ namespace NKafka.Client.Consumer.Internal
             _logger = logger;
             _topicPartitions = new Dictionary<int, KafkaConsumerTopicPartition>();
             _packages = new ConcurrentDictionary<long, KafkaConsumerTopicPackageInfo>();
-            TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, false, null, null, DateTime.UtcNow);
+            TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, null, false, null, null, DateTime.UtcNow);
         }
 
         [CanBeNull]

@@ -200,7 +200,7 @@ namespace NKafka.Protocol
         {
             var requests = new Dictionary<KafkaRequestType, KafkaRequestVersion>
             {
-                [KafkaRequestType.TopicMetadata] = KafkaRequestVersion.V1,
+                [KafkaRequestType.TopicMetadata] = KafkaRequestVersion.V2,
                 [KafkaRequestType.Produce] = KafkaRequestVersion.V2,
 
                 [KafkaRequestType.GroupCoordinator] = KafkaRequestVersion.V0,

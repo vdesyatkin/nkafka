@@ -19,7 +19,7 @@ namespace NKafka.Client.Producer.Internal
         [NotNull] private IReadOnlyList<int> _topicPartitionIds;
         [NotNull] private IReadOnlyDictionary<int, KafkaProducerTopicPartition> _topicPartitions;
 
-        public KafkaProducerTopic([NotNull] string topicName,
+        public KafkaProducerTopic([NotNull] string topicName,            
             [NotNull] KafkaProducerSettings settings,
             [NotNull] IKafkaProducerTopicBuffer buffer,
             [CanBeNull] IKafkaProducerTopicLogger logger)
@@ -30,7 +30,7 @@ namespace NKafka.Client.Producer.Internal
             _logger = logger;
             _topicPartitions = new Dictionary<int, KafkaProducerTopicPartition>();
             _topicPartitionIds = new int[0];
-            TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, false, null, null, DateTime.UtcNow);
+            TopicMetadataInfo = new KafkaClientTopicMetadataInfo(topicName, null, false, null, null, DateTime.UtcNow);
         }
 
         [NotNull]
