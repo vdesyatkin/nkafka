@@ -8,6 +8,7 @@ namespace NKafka.Client.Consumer
     {
         public KafkaConsumerBeginBehavior BeginBehavior;
         public readonly int TopicBatchMinSizeBytes;
+        public readonly int? TopicBatchMaxSizeBytes;
         public readonly int PartitionBatchMaxSizeBytes;
         public readonly TimeSpan FetchServerWaitTime;
         public readonly TimeSpan? FetchTimeout;
@@ -18,6 +19,7 @@ namespace NKafka.Client.Consumer
         public KafkaConsumerSettings(
           KafkaConsumerBeginBehavior beginBehavior,
           int topicBatchMinSizeBytes,
+          int? topicBatchMaxSizeBytes,
           int partitionBatchMaxSizeBytes,
           TimeSpan fetchServerWaitTime,
           TimeSpan? fetchTimeout,
@@ -28,6 +30,7 @@ namespace NKafka.Client.Consumer
         {
             BeginBehavior = beginBehavior;
             TopicBatchMinSizeBytes = topicBatchMinSizeBytes;
+            TopicBatchMaxSizeBytes = topicBatchMaxSizeBytes;
             PartitionBatchMaxSizeBytes = partitionBatchMaxSizeBytes;
             FetchServerWaitTime = fetchServerWaitTime;
             FetchTimeout = fetchTimeout;

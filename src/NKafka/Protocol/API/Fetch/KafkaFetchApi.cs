@@ -37,11 +37,15 @@ namespace NKafka.Protocol.API.Fetch
             WriteFetchRequest(writer, (KafkaFetchRequest)request);
         }
 
-        private static void WriteFetchRequest([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaFetchRequest request)
+        private void WriteFetchRequest([NotNull] KafkaBinaryWriter writer, [NotNull] KafkaFetchRequest request)
         {
             writer.WriteNullableInt32(request.ReplicaId);
             writer.WriteInt32((int)(request.MaxWaitTime.TotalMilliseconds));
             writer.WriteInt32(request.MinBytes);
+            if (_requestVersion >= KafkaRequestVersion.V3)
+            {
+                writer.WriteInt32(request.MaxBytes ?? int.MaxValue);
+            }
             writer.WriteCollection(request.Topics, WriteFetchRequestTopic);
         }
 

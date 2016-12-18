@@ -544,7 +544,9 @@ namespace NKafka.Client.Consumer.Internal
                 partitionRequests.Add(new KafkaFetchRequestTopicPartition(partitionId, patitionOffset, topic.Settings.PartitionBatchMaxSizeBytes));
             }
             var topicRequest = new KafkaFetchRequestTopic(topic.TopicName, partitionRequests);
-            var fetchRequest = new KafkaFetchRequest(topic.Settings.FetchServerWaitTime, topic.Settings.TopicBatchMinSizeBytes, new[] { topicRequest });
+            var fetchRequest = topic.Settings.TopicBatchMaxSizeBytes.HasValue
+                ? new KafkaFetchRequest(topic.Settings.FetchServerWaitTime, topic.Settings.TopicBatchMinSizeBytes, topic.Settings.TopicBatchMaxSizeBytes.Value, new[] {topicRequest})
+                : new KafkaFetchRequest(topic.Settings.FetchServerWaitTime, topic.Settings.TopicBatchMinSizeBytes, new[] {topicRequest});
 
             return fetchRequest;
         }

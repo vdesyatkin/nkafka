@@ -43,21 +43,40 @@ namespace NKafka.Protocol.API.Fetch
         public readonly int MinBytes;
 
         /// <summary>
+        /// Maximum bytes to accumulate in the response. 
+        /// Note that this is not an absolute maximum, if the first message in the first non-empty partition of the fetch is larger than this value, 
+        /// the message will still be returned to ensure that progress can be made.
+        /// </summary>
+        public readonly int? MaxBytes;
+
+        /// <summary>
         /// Topics.
         /// </summary>
-        public readonly IReadOnlyList<KafkaFetchRequestTopic> Topics;
+        public readonly IReadOnlyList<KafkaFetchRequestTopic> Topics;      
 
-        public KafkaFetchRequest(TimeSpan maxWaitTime, int minBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)
+        public KafkaFetchRequest(TimeSpan maxWaitTime, int minBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)            
         {
             MaxWaitTime = maxWaitTime;
-            MinBytes = minBytes;
+            MinBytes = minBytes;            
             Topics = topics;
         }
+        public KafkaFetchRequest(TimeSpan maxWaitTime, int minBytes, int maxBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)
+           : this(maxWaitTime, minBytes,  topics)
+        {            
+            MaxBytes = maxBytes;            
+        }
+
 
         public KafkaFetchRequest(int replicaId, TimeSpan maxWaitTime, int minBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)
             : this(maxWaitTime, minBytes, topics)
         {
             ReplicaId = replicaId;
+        }
+
+        public KafkaFetchRequest(int replicaId, TimeSpan maxWaitTime, int minBytes, int maxBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)
+            : this(maxWaitTime, minBytes, maxBytes, topics)
+        {
+            ReplicaId = replicaId;            
         }
     }
 }

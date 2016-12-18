@@ -191,9 +191,32 @@ namespace NKafka.Protocol
             {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.IOError, exception);
             }            
-        }       
+        }
 
         #region Configuration
+
+        [NotNull]
+        private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateV0101ApiSupports()
+        {
+            var requests = new Dictionary<KafkaRequestType, KafkaRequestVersion>
+            {
+                [KafkaRequestType.TopicMetadata] = KafkaRequestVersion.V1,
+                [KafkaRequestType.Produce] = KafkaRequestVersion.V2,
+
+                [KafkaRequestType.GroupCoordinator] = KafkaRequestVersion.V0,
+                [KafkaRequestType.JoinGroup] = KafkaRequestVersion.V0,
+                [KafkaRequestType.SyncGroup] = KafkaRequestVersion.V0,
+                [KafkaRequestType.Heartbeat] = KafkaRequestVersion.V0,
+                [KafkaRequestType.LeaveGroup] = KafkaRequestVersion.V0,
+
+                [KafkaRequestType.Offset] = KafkaRequestVersion.V0,
+                [KafkaRequestType.OffsetFetch] = KafkaRequestVersion.V1,
+
+                [KafkaRequestType.Fetch] = KafkaRequestVersion.V3,
+                [KafkaRequestType.OffsetCommit] = KafkaRequestVersion.V2
+            };
+            return requests;
+        }
 
         [NotNull]
         private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateV010ApiSupports()

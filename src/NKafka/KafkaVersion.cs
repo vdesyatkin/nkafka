@@ -6,9 +6,10 @@ namespace NKafka
     // ReSharper disable InconsistentNaming
     public enum KafkaVersion
     {        
-        V0_8 = 8,
-        V0_9 = 9,
-        V0_10 = 10    
+        V0_8 = 80,
+        V0_9 = 90,
+        V0_10 = 100,
+        V0_10_1 = 110
     }
     // ReSharper restore InconsistentNaming
 }

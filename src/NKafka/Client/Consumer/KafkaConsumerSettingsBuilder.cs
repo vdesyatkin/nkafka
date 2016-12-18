@@ -19,6 +19,7 @@ namespace NKafka.Client.Consumer
 
         private KafkaConsumerBeginBehavior? _beginBehavior;
         private int? _topicBatchMinSizeBytes;
+        private int? _topicBatchMaxSizeBytes;
         private int? _partitionBatchMaxSizeBytes;
         private TimeSpan? _fetchServerWaitTime;
         private TimeSpan? _fetchTimeout;
@@ -37,6 +38,13 @@ namespace NKafka.Client.Consumer
         public KafkaConsumerSettingsBuilder SetTopicBatchMinSizeBytes(int sizeBytes)
         {
             _topicBatchMinSizeBytes = sizeBytes;
+            return this;
+        }
+
+        [NotNull]
+        public KafkaConsumerSettingsBuilder SetTopicBatchMaxSizeBytes(int sizeBytes)
+        {
+            _topicBatchMaxSizeBytes = sizeBytes;
             return this;
         }
 
@@ -86,6 +94,7 @@ namespace NKafka.Client.Consumer
         {
             var beginBehavior = _beginBehavior ?? DefaultBeginBehavior;
             var topicBatchMinSizeBytes = _topicBatchMinSizeBytes ?? DefaultTopicBatchMinSizeBytes;
+            var topicBatchMaxSizeBytes = _topicBatchMaxSizeBytes;
             var partitionBatchMaxSizeBytes = _partitionBatchMaxSizeBytes ?? DefaultPartitionBatchMaxSizeBytes;
             var fetchServerWaitTime = _fetchServerWaitTime ?? DefaultFetchServerWaitTime;
             var fetchTimeout = _fetchTimeout;
@@ -102,6 +111,7 @@ namespace NKafka.Client.Consumer
             return new KafkaConsumerSettings(
                 beginBehavior,
                 topicBatchMinSizeBytes,
+                topicBatchMaxSizeBytes,
                 partitionBatchMaxSizeBytes,
                 fetchServerWaitTime,
                 fetchTimeout,
