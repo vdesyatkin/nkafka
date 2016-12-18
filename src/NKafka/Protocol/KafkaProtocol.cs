@@ -209,7 +209,7 @@ namespace NKafka.Protocol
                 [KafkaRequestType.Heartbeat] = KafkaRequestVersion.V0,
                 [KafkaRequestType.LeaveGroup] = KafkaRequestVersion.V0,
 
-                [KafkaRequestType.Offset] = KafkaRequestVersion.V0,
+                [KafkaRequestType.Offset] = KafkaRequestVersion.V0, //todo V1 KIP-79 - ListOffsetRequest/ListOffsetResponse v1 and add timestamp search methods to the new consumer
                 [KafkaRequestType.OffsetFetch] = KafkaRequestVersion.V1,
 
                 [KafkaRequestType.Fetch] = KafkaRequestVersion.V3,
