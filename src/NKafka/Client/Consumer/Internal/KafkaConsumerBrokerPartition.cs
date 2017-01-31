@@ -178,6 +178,7 @@ namespace NKafka.Client.Consumer.Internal
                 Interlocked.Add(ref _catchUpPendingMessageSizeBytes, -messageSize);
                 Interlocked.Add(ref _consumePendingMessageSizeBytes, messageSize);
 
+                _catchUpMesagesQueue.Dequeue();
                 _consumeMessagesQueue.Enqueue(message);
             }
         }
