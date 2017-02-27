@@ -18,6 +18,7 @@ namespace NKafka.Metadata
             BrokerId = brokerId;
             Host = host;
             Port = port;
+            Rack = rack;
         }
     }
 }
