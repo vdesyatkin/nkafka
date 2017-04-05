@@ -827,7 +827,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     continue;
                 }
 
-                // preprae members for topic
+                // prepare members for topic
                 var assignmentRequestMembers = new List<KafkaConsumerAssignmentRequestMember>(members.Count);
                 foreach (var member in members)
                 {
