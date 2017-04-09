@@ -21,7 +21,7 @@ namespace NKafka.Client.ConsumerGroup
         public static readonly TimeSpan MinGroupSessionTimeout = TimeSpan.FromSeconds(6);
         public static readonly TimeSpan MaxGroupSessionTimeout = TimeSpan.FromSeconds(30);
 
-        public static readonly TimeSpan DefaultGroupRebalanceTimeout = TimeSpan.FromMinutes(2);
+        public static readonly TimeSpan DefaultGroupRebalanceTimeout = TimeSpan.FromMinutes(1);
         public static readonly TimeSpan MinGroupRebalanceTimeout = TimeSpan.FromSeconds(6);
         public static readonly TimeSpan MaxGroupRebalanceTimeout = TimeSpan.FromSeconds(300);
 
