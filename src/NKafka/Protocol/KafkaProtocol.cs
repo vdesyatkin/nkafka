@@ -40,7 +40,7 @@ namespace NKafka.Protocol
         {
             if (message == null) return 0;
 
-            var messageSize = _kafkaVersion == KafkaVersion.V0_10 ? 22 : 14; // header
+            var messageSize = _kafkaVersion >= KafkaVersion.V0_10 ? 22 : 14; // header
             if (message.Key != null)
             {
                 messageSize += message.Key.Length;
@@ -204,7 +204,7 @@ namespace NKafka.Protocol
                 [KafkaRequestType.Produce] = KafkaRequestVersion.V2,
 
                 [KafkaRequestType.GroupCoordinator] = KafkaRequestVersion.V0,
-                [KafkaRequestType.JoinGroup] = KafkaRequestVersion.V0, //todo V1 KIP-62: Allow consumer to send heartbeats from a background thread
+                [KafkaRequestType.JoinGroup] = KafkaRequestVersion.V1,
                 [KafkaRequestType.SyncGroup] = KafkaRequestVersion.V0,
                 [KafkaRequestType.Heartbeat] = KafkaRequestVersion.V0,
                 [KafkaRequestType.LeaveGroup] = KafkaRequestVersion.V0,
@@ -287,6 +287,9 @@ namespace NKafka.Protocol
             IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> supportedRequests;
             switch (kafkaVersion)
             {
+                case KafkaVersion.V0_10_1:
+                    supportedRequests = CreateV0101ApiSupports();
+                    break;
                 case KafkaVersion.V0_10:
                     supportedRequests = CreateV010ApiSupports();
                     break;

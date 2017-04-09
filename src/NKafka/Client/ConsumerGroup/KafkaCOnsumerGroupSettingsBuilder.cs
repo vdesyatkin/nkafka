@@ -10,16 +10,20 @@ namespace NKafka.Client.ConsumerGroup
     public sealed class KafkaConsumerGroupSettingsBuilder
     {
         // https://kafka.apache.org/documentation.html#brokerconfigs       
-        
+
         public static readonly TimeSpan DefaultJoinGroupRequestServerTimeout = TimeSpan.FromMinutes(2);
         public static readonly TimeSpan DefaultSyncGroupRequestServerTimeout = TimeSpan.FromMinutes(1);
-        public static readonly TimeSpan DefaultHeartbeatGroupRequestServerTimeout = TimeSpan.FromSeconds(5);
-        public static readonly TimeSpan DefaultOffsetFetchRequestServerTimeout = TimeSpan.FromSeconds(5);
-        public static readonly TimeSpan DefaultOffsetCommitRequestServerTimeout = TimeSpan.FromSeconds(10);
+        public static readonly TimeSpan DefaultHeartbeatGroupRequestServerTimeout = TimeSpan.FromSeconds(20);
+        public static readonly TimeSpan DefaultOffsetFetchRequestServerTimeout = TimeSpan.FromSeconds(20);
+        public static readonly TimeSpan DefaultOffsetCommitRequestServerTimeout = TimeSpan.FromSeconds(20);
 
-        public static readonly TimeSpan DefaultGroupSessionTimeout = TimeSpan.FromSeconds(30);        
+        public static readonly TimeSpan DefaultGroupSessionTimeout = TimeSpan.FromSeconds(30);
         public static readonly TimeSpan MinGroupSessionTimeout = TimeSpan.FromSeconds(6);
         public static readonly TimeSpan MaxGroupSessionTimeout = TimeSpan.FromSeconds(30);
+
+        public static readonly TimeSpan DefaultGroupRebalanceTimeout = TimeSpan.FromMinutes(2);
+        public static readonly TimeSpan MinGroupRebalanceTimeout = TimeSpan.FromSeconds(6);
+        public static readonly TimeSpan MaxGroupRebalanceTimeout = TimeSpan.FromSeconds(300);
 
         public static readonly TimeSpan DefaultHeartbeatPeriod = TimeSpan.FromSeconds(3);
         public static readonly TimeSpan DefaultOffsetCommitPeriod = TimeSpan.FromSeconds(10);
@@ -27,7 +31,8 @@ namespace NKafka.Client.ConsumerGroup
 
         public static readonly TimeSpan ErrorRetryPeriod = TimeSpan.FromSeconds(10);
 
-        [NotNull] public static readonly KafkaConsumerGroupSettings Default = new KafkaConsumerGroupSettingsBuilder().Build();
+        [NotNull]
+        public static readonly KafkaConsumerGroupSettings Default = new KafkaConsumerGroupSettingsBuilder().Build();
 
         private TimeSpan? _joinGroupServerTimeout;
         private TimeSpan? _syncGroupServerTimeout;
@@ -38,7 +43,8 @@ namespace NKafka.Client.ConsumerGroup
         /// <summary>
         /// 6-30 seconds by default
         /// </summary>        
-        private TimeSpan? _groupSessionTimeout;        
+        private TimeSpan? _groupSessionTimeout;
+        private TimeSpan? _groupRebalanceTimeout;
         private TimeSpan? _heartbeatPeriod;
         private TimeSpan? _offsetCommitPeriod;
         private TimeSpan? _offsetCommitRetentionTime;
@@ -47,7 +53,7 @@ namespace NKafka.Client.ConsumerGroup
 
         [NotNull]
         private List<KafkaConsumerGroupSettingsProtocol> _protocols;
-        private string _offsetCommitMetadta;        
+        private string _offsetCommitMetadta;
 
         public static readonly KafkaConsumerAssignmentStrategyInfo DefaultStrategy =
             new KafkaConsumerAssignmentStrategyInfo("round_robin", new KafkaConsumerAssignmentRoundRobinStrategy());
@@ -100,7 +106,14 @@ namespace NKafka.Client.ConsumerGroup
         {
             _groupSessionTimeout = timeout;
             return this;
-        }        
+        }
+
+        [NotNull]
+        public KafkaConsumerGroupSettingsBuilder SetGroupRebalanceTimeout(TimeSpan timeout)
+        {
+            _groupRebalanceTimeout = timeout;
+            return this;
+        }
 
         [NotNull]
         public KafkaConsumerGroupSettingsBuilder SetHeartbeatPeriod(TimeSpan period)
@@ -183,7 +196,8 @@ namespace NKafka.Client.ConsumerGroup
             var offsetFetchServerTimeout = _offsetFetchServerTimeout ?? DefaultOffsetFetchRequestServerTimeout;
             var offsetCommitServerTimeout = _offsetCommitServerTimeout ?? DefaultOffsetCommitRequestServerTimeout;
 
-            var groupSessionTimeout = _groupSessionTimeout ?? DefaultGroupSessionTimeout;            
+            var groupSessionTimeout = _groupSessionTimeout ?? DefaultGroupSessionTimeout;
+            var groupRebalanceTimeout = _groupRebalanceTimeout ?? DefaultGroupRebalanceTimeout;
             var heartbeatPeriod = _heartbeatPeriod ?? DefaultHeartbeatGroupRequestServerTimeout;
             var offsetCommitPeriod = _offsetCommitPeriod ?? DefaultOffsetCommitPeriod;
             var offsetCommitRetentionTime = _offsetCommitRetentionTime ?? DefaultOffsetCommitRetentionTime;
@@ -202,7 +216,8 @@ namespace NKafka.Client.ConsumerGroup
                 heartbeatServerTimeout,
                 offsetFetchServerTimeout,
                 offsetCommitServerTimeout,
-                groupSessionTimeout,                
+                groupSessionTimeout,
+                groupRebalanceTimeout,
                 heartbeatPeriod,
                 offsetCommitPeriod,
                 offsetCommitRetentionTime,

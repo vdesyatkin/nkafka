@@ -9,7 +9,7 @@ namespace NKafka.Client
     [PublicAPI]
     public sealed class KafkaClientSettingsBuilder
     {
-        public static readonly KafkaVersion DefaultKafkaVersion = KafkaVersion.V0_10;
+        public static readonly KafkaVersion DefaultKafkaVersion = KafkaVersion.V0_10_1;
         public static readonly string DefaultClientId = "nkafka";
         public static readonly int DefaultWorkerThreadCount = 1;
         public static readonly TimeSpan DefaultWorkerPeriod = TimeSpan.FromMilliseconds(1000);
