@@ -179,8 +179,16 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     var joinRequest = CreateJoinGroupRequest(group);
                     if (joinRequest == null) return;
 
+                    var joinGroupServerTimeout = group.Settings.GroupRebalanceTimeout +
+                                                 group.Settings.GroupSessionTimeout;
+
+                    if (group.Settings.JoinGroupServerTimeout > joinGroupServerTimeout)
+                    {
+                        joinGroupServerTimeout = group.Settings.JoinGroupServerTimeout;
+                    }
+
                     if (!TrySendRequest(group, joinRequest, "SendJoinGroupRequest",
-                            _joinGroupRequests, _coordinatorClientTimeout + group.Settings.JoinGroupServerTimeout))
+                            _joinGroupRequests, _coordinatorClientTimeout + joinGroupServerTimeout))
                     {
                         return;
                     }

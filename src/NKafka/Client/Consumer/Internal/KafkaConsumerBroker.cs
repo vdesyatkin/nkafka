@@ -246,7 +246,7 @@ namespace NKafka.Client.Consumer.Internal
 
             if (newFetchBatch.Count == 0) return;
 
-            SendFetchRequest(topic, newFetchBatch);
+            _fetchRequests[topic.TopicName] = SendFetchRequest(topic, newFetchBatch);
         }
 
         private IKafkaConsumerCoordinatorOffsetsData SyncPartitionWithCoordinator([NotNull] KafkaConsumerBrokerPartition partition,
@@ -505,7 +505,7 @@ namespace NKafka.Client.Consumer.Internal
 
         #region Fetch
 
-        private void SendFetchRequest([NotNull] KafkaConsumerBrokerTopic topic,
+        private FetchRequestInfo SendFetchRequest([NotNull] KafkaConsumerBrokerTopic topic,
             [NotNull] Dictionary<int, long> fetchBatch)
         {
             var fetchRequest = CreateFetchRequest(topic, fetchBatch);
@@ -525,11 +525,11 @@ namespace NKafka.Client.Consumer.Internal
                     HandleBrokerError(partition, brokerError);
                     LogBrokerError(topic, brokerError, "SendFetchRequest");
                 }
-                return;
+                return null;
             }
 
             var fetchRequestId = fetchResult.Data;
-            _fetchRequests[topic.TopicName] = new FetchRequestInfo(fetchRequestId.Value, fetchBatch);
+            return new FetchRequestInfo(fetchRequestId.Value, fetchBatch);
         }
 
         [NotNull]
