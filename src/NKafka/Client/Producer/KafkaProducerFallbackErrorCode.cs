@@ -7,6 +7,9 @@ namespace NKafka.Client.Producer
     {
         ClientStopped = 0,
         MessageSizeTooLarge = 1,
-        MessageSizeLargerThanBatchMaxSize = 2
+        MessageSizeLargerThanBatchMaxSize = 2,
+        SerializationError = 3,
+        PartitioningError = 4,
+        PartitionNotFound = 5
     }
 }

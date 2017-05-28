@@ -21,7 +21,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull] public readonly KafkaConsumerGroupSettings Settings;
         [CanBeNull] public readonly IKafkaCoordinatorGroupLogger Logger;
         [NotNull] public readonly IReadOnlyDictionary<string, KafkaClientTopic> Topics;
-        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;       
+        [NotNull, ItemNotNull] public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;
 
         public KafkaCoordinatorGroupStatus Status;
         public bool IsReady => Status == KafkaCoordinatorGroupStatus.Ready;
@@ -34,30 +34,32 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [CanBeNull] public KafkaCoordinatorGroupAssignmentData AssignmentData { get; private set; }
         [CanBeNull] public KafkaCoordinatorGroupOffsetsData OffsetsData { get; private set; }
 
-        [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> TopicMetadataPartitionIds;
-               
+        [NotNull]
+        public readonly Dictionary<string, IReadOnlyList<int>> TopicMetadataPartitionIds;
+
         public DateTime HeartbeatTimestampUtc;
         public TimeSpan HeartbeatPeriod { get; private set; }
         public TimeSpan? CustomSessionTimeout { get; private set; }
 
         public DateTime CommitTimestampUtc;
         public readonly TimeSpan CommitPeriod;
-        [CanBeNull] public string CommitMetadata { get; private set; }
+        [CanBeNull]
+        public string CommitMetadata { get; private set; }
 
         public KafkaCoordinatorGroup([NotNull] string groupName, [NotNull] string groupCoordinatorName,
-            KafkaConsumerGroupType groupType, 
-            [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics, 
+            KafkaConsumerGroupType groupType,
+            [NotNull, ItemNotNull] IReadOnlyList<KafkaClientTopic> topics,
             [NotNull] KafkaConsumerGroupSettings settings,
             [CanBeNull] IKafkaCoordinatorGroupLogger logger)
         {
             GroupName = groupName;
             GroupCoordinatorName = groupCoordinatorName;
             GroupType = groupType;
-            TopicMetadataPartitionIds = new Dictionary<string, IReadOnlyList<int>>();            
+            TopicMetadataPartitionIds = new Dictionary<string, IReadOnlyList<int>>();
             Settings = settings;
-            Logger = logger;       
-            
-            CommitPeriod = settings.OffsetCommitPeriod;            
+            Logger = logger;
+
+            CommitPeriod = settings.OffsetCommitPeriod;
 
             var topicsDictionary = new Dictionary<string, KafkaClientTopic>(topics.Count);
             foreach (var topic in topics)
@@ -118,7 +120,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             return null;
         }
-        
+
         public KafkaConsumerGroupInfo GetDiagnosticsInfo()
         {
             var memberData = MemberData;
@@ -151,7 +153,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 }
 
                 protcolInfo = new KafkaConsumerGroupProtocolInfo(protocolName, protocolVersion, assignmentStrategyName, protocolTimestampUtc);
-            }            
+            }
 
             KafkaConsumerGroupOffsetsInfo offsetsInfo = null;
             if (offsetsData != null)
@@ -161,7 +163,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 {
                     var topic = topicPair.Value;
                     var topicName = topicPair.Key;
-                    if (topic == null || topicName == null) continue;                    
+                    if (topic == null || topicName == null) continue;
 
                     var partitionInfos = new List<KafkaConsumerGroupOffsetsPartitionInfo>(topic.Partitions.Count);
                     foreach (var partitionPair in topic.Partitions)
@@ -169,8 +171,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                         var partition = partitionPair.Value;
                         if (partition == null) continue;
                         var partitionId = partitionPair.Key;
-                                                
-                        var partitionInfo = new KafkaConsumerGroupOffsetsPartitionInfo(partitionId, 
+
+                        var partitionInfo = new KafkaConsumerGroupOffsetsPartitionInfo(partitionId,
                             partition.GroupClientOffset, partition.GroupServerOffset, partition.TimestampUtc);
                         partitionInfos.Add(partitionInfo);
                     }
@@ -192,7 +194,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                         var partitionInfos = new List<KafkaConsumerGroupOffsetsPartitionInfo>(topicPartitions.Count);
                         foreach (var partitionId in topicPartitions)
-                        {                            
+                        {
                             var partitionInfo = new KafkaConsumerGroupOffsetsPartitionInfo(partitionId,
                                 null, null, assignmentData.TimestampUtc);
                             partitionInfos.Add(partitionInfo);
@@ -216,13 +218,14 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 case KafkaCoordinatorGroupStatus.JoinGroupRequested:
                     status = KafkaConsumerGroupStatus.JoinGroup;
                     break;
-                case KafkaCoordinatorGroupStatus.JoinedAsMember:                    
+                case KafkaCoordinatorGroupStatus.JoinedAsMember:
                 case KafkaCoordinatorGroupStatus.AdditionalTopicsRequired:
                 case KafkaCoordinatorGroupStatus.AdditionalTopicsMetadataRequested:
                 case KafkaCoordinatorGroupStatus.JoinedAsLeader:
                     status = KafkaConsumerGroupStatus.Assigning;
                     break;
-                case KafkaCoordinatorGroupStatus.SyncGroupRequested:
+                case KafkaCoordinatorGroupStatus.SyncGroupRequestedAsLeader:
+                case KafkaCoordinatorGroupStatus.SyncGroupRequestedAsMember:
                     status = KafkaConsumerGroupStatus.SyncGroup;
                     break;
                 case KafkaCoordinatorGroupStatus.FirstHeartbeatRequired:
@@ -246,7 +249,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             var isSessionReady = status == KafkaConsumerGroupStatus.Ready;
 
-            var sessionInfo = new KafkaConsumerGroupSessionInfo(GroupName,                
+            var sessionInfo = new KafkaConsumerGroupSessionInfo(GroupName,
                 status,
                 Error,
                 ErrorTimestampUtc,
@@ -254,7 +257,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 protcolInfo,
                 offsetsInfo,
                 DateTime.UtcNow
-                );
+            );
 
             var metadataInfo = GroupMetadataInfo;
             var isReady = isSessionReady && (metadataInfo?.IsReady == true);
@@ -265,18 +268,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
         public void SetError(KafkaConsumerGroupErrorCode errorCode)
         {
             ErrorTimestampUtc = DateTime.UtcNow;
-            Error = errorCode;            
+            Error = errorCode;
         }
-        
+
         public void ResetError()
-        {            
+        {
             Error = null;
         }
 
         public void SetMemberData(int generationId, string memberId, bool isLeader)
         {
             MemberData = new KafkaCoordinatorGroupMemberData(generationId, memberId, isLeader, DateTime.UtcNow);
-        }        
+        }
 
         public void SetProtocolData(string protocolName, short? protocolVersion)
         {
@@ -302,8 +305,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         public void SetSessionTimeout(TimeSpan sessionTimeout)
-        {            
-            CustomSessionTimeout = sessionTimeout; 
+        {
+            CustomSessionTimeout = sessionTimeout;
             UpdateHeartbeatPeriod(sessionTimeout);
         }
 
@@ -330,7 +333,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         {
             CustomSessionTimeout = null;
             UpdateHeartbeatPeriod(Settings.GroupSessionTimeout);
-            CommitMetadata = Settings.OffsetCommitMetadata;          
+            CommitMetadata = Settings.OffsetCommitMetadata;
         }
 
         public void ResetData()
@@ -347,7 +350,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         {
             ResetSettings();
             ResetData();
-            ResetError();            
+            ResetError();
         }
     }
 }

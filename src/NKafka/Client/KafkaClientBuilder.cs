@@ -19,13 +19,13 @@ namespace NKafka.Client
 
         [NotNull, ItemNotNull] private readonly List<KafkaProducerTopic> _topicProducers;
         [NotNull, ItemNotNull] private readonly List<KafkaConsumerTopic> _topicConsumers;
-        [NotNull] private readonly Dictionary<string, KafkaConsumerGroup> _consumerGroups;        
+        [NotNull] private readonly Dictionary<string, KafkaConsumerGroup> _consumerGroups;
         [NotNull] private readonly KafkaClientSettings _settings;
 
         [CanBeNull] private IKafkaClientLogger _logger;
 
         public KafkaClientBuilder([NotNull] KafkaBrokerInfo metadataBroker)
-             : this(new KafkaClientSettingsBuilder(metadataBroker).Build())
+            : this(new KafkaClientSettingsBuilder(metadataBroker).Build())
         {
         }
 
@@ -43,7 +43,7 @@ namespace NKafka.Client
         }
 
         [NotNull]
-        public IKafkaProducerTopic CreateTopicProducer([NotNull] string topicName,             
+        public IKafkaProducerTopic CreateTopicProducer([NotNull] string topicName,
             [CanBeNull] IKafkaProducerPartitioner partitioner = null,
             [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler = null,
             [CanBeNull] IKafkaProducerLogger logger = null,
@@ -54,7 +54,7 @@ namespace NKafka.Client
             partitioner = partitioner ?? new KafkaRandomPartitioner();
 
             var bufferLogger = logger != null ? new KafkaProducerTopicBufferLogger(logger) : null;
-            var topicBuffer = new KafkaProducerTopicBuffer(partitioner, fallbackHandler, bufferLogger);
+            var topicBuffer = new KafkaProducerTopicBuffer(topicName, partitioner, fallbackHandler, bufferLogger);
 
             settings = settings ?? KafkaProducerSettingsBuilder.Default;
             var topicLogger = logger != null ? new KafkaProducerTopicLogger(logger) : null;
@@ -62,26 +62,26 @@ namespace NKafka.Client
             var topic = new KafkaProducerTopic(topicName, settings, topicBuffer, topicLogger);
 
             _topicProducers.Add(topic);
-            var facade  = new KafkaProducerTopicFacade(topicName, topicBuffer, topic);
+            var facade = new KafkaProducerTopicFacade(topicName, topicBuffer, topic);
             bufferLogger?.SetTopic(facade);
             topicLogger?.SetTopic(facade);
             return facade;
         }
 
         [NotNull]
-        public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,                      
-           [NotNull] IKafkaSerializer<TKey, TData> serializer,
-           [CanBeNull] IKafkaProducerPartitioner<TKey, TData> partitioner,
-           [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler = null,
-           [CanBeNull] IKafkaProducerLogger<TKey, TData> logger = null,
-           [CanBeNull] KafkaProducerSettings settings = null)
+        public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,
+            [NotNull] IKafkaSerializer<TKey, TData> serializer,
+            [CanBeNull] IKafkaProducerPartitioner<TKey, TData> partitioner = null,
+            [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler = null,
+            [CanBeNull] IKafkaProducerLogger<TKey, TData> logger = null,
+            [CanBeNull] KafkaProducerSettings settings = null)
         {
             // ReSharper disable once ConstantNullCoalescingCondition
             topicName = topicName ?? string.Empty;
             partitioner = partitioner ?? new KafkaRandomPartitioner<TKey, TData>();
-            
+
             var bufferLogger = logger != null ? new KafkaProducerTopicBufferLogger<TKey, TData>(logger) : null;
-            var topicBuffer = new KafkaProducerTopicBuffer<TKey, TData>(partitioner, serializer, fallbackHandler, bufferLogger);
+            var topicBuffer = new KafkaProducerTopicBuffer<TKey, TData>(topicName, partitioner, serializer, fallbackHandler, bufferLogger);
 
             settings = settings ?? KafkaProducerSettingsBuilder.Default;
             var topicLogger = logger != null ? new KafkaProducerTopicLogger<TKey, TData>(logger) : null;
@@ -110,8 +110,9 @@ namespace NKafka.Client
             settings = settings ?? KafkaConsumerSettingsBuilder.Default;
             var topicLogger = logger != null ? new KafkaConsumerTopicLogger(logger) : null;
 
-            var topic = new KafkaConsumerTopic(topicName, 
-                groupName, null, 
+
+            var topic = new KafkaConsumerTopic(topicName,
+                groupName, null,
                 settings,
                 fallbackHandler,
                 topicLogger);
@@ -123,12 +124,12 @@ namespace NKafka.Client
         }
 
         [NotNull]
-        public IKafkaConsumerTopic<TKey,TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName, [NotNull] IKafkaConsumerGroup group,
+        public IKafkaConsumerTopic<TKey, TData> CreateTopicConsumer<TKey, TData>([NotNull] string topicName, [NotNull] IKafkaConsumerGroup group,
             [NotNull] IKafkaSerializer<TKey, TData> serializer,
             [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler = null,
             [CanBeNull] IKafkaConsumerLogger<TKey, TData> logger = null,
             [CanBeNull] KafkaConsumerSettings settings = null
-           )
+        )
         {
             // ReSharper disable ConstantNullCoalescingCondition
             topicName = topicName ?? string.Empty;
@@ -140,8 +141,8 @@ namespace NKafka.Client
             var topicLogger = logger != null ? new KafkaConsumerTopicLogger<TKey, TData>(logger) : null;
             var topicBufferLogger = logger != null ? new KafkaConsumerTopicBufferLogger<TKey, TData>(logger) : null;
 
-            var topic = new KafkaConsumerTopic(topicName, 
-                groupName, null, 
+            var topic = new KafkaConsumerTopic(topicName,
+                groupName, null,
                 settings,
                 fallbackHandler,
                 topicLogger);
@@ -149,13 +150,13 @@ namespace NKafka.Client
 
             topicLogger?.SetTopic(wrapper);
             topicBufferLogger?.SetTopic(wrapper);
-            
+
             _topicConsumers.Add(topic);
             return wrapper;
         }
 
         [NotNull]
-        public IKafkaConsumerTopic CreateTopicCatchUpConsumer([NotNull] string topicName, 
+        public IKafkaConsumerTopic CreateTopicCatchUpConsumer([NotNull] string topicName,
             [NotNull] IKafkaConsumerGroup consumerGroup,
             [NotNull] IKafkaConsumerGroup catchUpGroup,
             [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler = null,
@@ -167,7 +168,7 @@ namespace NKafka.Client
             // ReSharper disable ConstantConditionalAccessQualifier
             var consumerGroupName = consumerGroup?.GroupName ?? string.Empty;
             var catchupGroupName = catchUpGroup?.GroupName ?? string.Empty;
-            // ReSharper restore ConstantConditionalAccessQualifier  
+            // ReSharper restore ConstantConditionalAccessQualifier
             // ReSharper restore ConstantNullCoalescingCondition
 
             settings = settings ?? KafkaConsumerSettingsBuilder.Default;
@@ -186,14 +187,14 @@ namespace NKafka.Client
         }
 
         [NotNull]
-        public IKafkaConsumerTopic<TKey, TData> CreateTopicCatchUpConsumer<TKey, TData>([NotNull] string topicName, 
+        public IKafkaConsumerTopic<TKey, TData> CreateTopicCatchUpConsumer<TKey, TData>([NotNull] string topicName,
             [NotNull] IKafkaConsumerGroup consumerGroup,
             [NotNull] IKafkaConsumerGroup catchUpGroup,
             [NotNull] IKafkaSerializer<TKey, TData> serializer,
             [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler = null,
             [CanBeNull] IKafkaConsumerLogger<TKey, TData> logger = null,
             [CanBeNull] KafkaConsumerSettings settings = null
-           )
+        )
         {
             // ReSharper disable ConstantNullCoalescingCondition
             topicName = topicName ?? string.Empty;
@@ -201,7 +202,7 @@ namespace NKafka.Client
             var consumerGroupName = consumerGroup?.GroupName ?? string.Empty;
             var catchupGroupName = catchUpGroup?.GroupName ?? string.Empty;
             // ReSharper restore ConstantConditionalAccessQualifier
-            // ReSharper restore ConstantConditionalAccessQualifier
+            // ReSharper restore ConstantNullCoalescingCondition
 
             settings = settings ?? KafkaConsumerSettingsBuilder.Default;
             var topicLogger = logger != null ? new KafkaConsumerTopicLogger<TKey, TData>(logger) : null;
@@ -221,7 +222,8 @@ namespace NKafka.Client
             return wrapper;
         }
 
-        public IKafkaConsumerGroup CreateConsumerGroup([NotNull] string groupName, KafkaConsumerGroupType groupType, 
+        [NotNull]
+        public IKafkaConsumerGroup CreateConsumerGroup([NotNull] string groupName, KafkaConsumerGroupType groupType,
             [CanBeNull] IKafkaConsumerGroupLogger logger = null,
             [CanBeNull] KafkaConsumerGroupSettings settings = null)
         {
@@ -233,8 +235,8 @@ namespace NKafka.Client
             {
                 return currentGroup;
             }
-                        
-            settings = settings ?? KafkaConsumerGroupSettingsBuilder.Default;            
+
+            settings = settings ?? KafkaConsumerGroupSettingsBuilder.Default;
 
             var group = new KafkaConsumerGroup(groupName, groupType, settings, logger);
             _consumerGroups[groupName] = group;
@@ -251,7 +253,7 @@ namespace NKafka.Client
 
         [NotNull]
         public IKafkaClient Build()
-        {            
+        {
             var topicNames = new HashSet<string>();
 
             var producers = new Dictionary<string, KafkaProducerTopic>(_topicProducers.Count);
@@ -261,7 +263,7 @@ namespace NKafka.Client
                 producers[producer.TopicName] = producer;
             }
 
-            var consumers = new Dictionary<string, KafkaConsumerTopic>(_topicConsumers.Count);            
+            var consumers = new Dictionary<string, KafkaConsumerTopic>(_topicConsumers.Count);
             foreach (var consumer in _topicConsumers)
             {
                 topicNames.Add(consumer.TopicName);
@@ -269,7 +271,7 @@ namespace NKafka.Client
             }
 
             // create topics and groupping by consumer group
-            var topics = new List<KafkaClientTopic>(topicNames.Count);            
+            var topics = new List<KafkaClientTopic>(topicNames.Count);
             var groupTopicsDictionary = new Dictionary<string, List<KafkaClientTopic>>(_topicConsumers.Count);
             foreach (var topicName in topicNames)
             {
@@ -286,7 +288,7 @@ namespace NKafka.Client
 
                 var groupName = consumer?.GroupName;
                 if (!string.IsNullOrEmpty(groupName))
-                {            
+                {
                     if (!_consumerGroups.ContainsKey(groupName)) continue;
 
                     List<KafkaClientTopic> groupTopicList;
@@ -331,7 +333,7 @@ namespace NKafka.Client
 
                 var groupLogger = group.Logger != null ? new KafkaCoordinatorGroupLogger(group.Logger) : null;
                 groupLogger?.SetGroup(group);
-                var clientGroup = new KafkaClientGroup(groupName, group.GroupType, groupTopics, group.Settings, groupLogger);                
+                var clientGroup = new KafkaClientGroup(groupName, group.GroupType, groupTopics, group.Settings, groupLogger);
                 group.ClientGroup = clientGroup;
 
                 groups.Add(clientGroup);

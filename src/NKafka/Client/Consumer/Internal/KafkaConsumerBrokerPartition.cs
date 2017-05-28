@@ -11,7 +11,7 @@ namespace NKafka.Client.Consumer.Internal
     internal sealed class KafkaConsumerBrokerPartition
     {
         [NotNull] public readonly string TopicName;
-        [NotNull] public readonly KafkaConsumerGroupData Group;        
+        [NotNull] public readonly KafkaConsumerGroupData Group;
 
         public readonly int PartitionId;
         [NotNull] public readonly KafkaConsumerSettings Settings;
@@ -19,7 +19,7 @@ namespace NKafka.Client.Consumer.Internal
         [CanBeNull] public readonly IKafkaConsumerTopicLogger Logger;
 
         public KafkaConsumerBrokerPartitionStatus Status;
-        public bool IsAssigned;
+        public bool? IsAssigned;
         public bool IsReady => Status == KafkaConsumerBrokerPartitionStatus.Ready && Error == null;
         public bool IsSynchronized => _currentCommitClientOffset <= _currentCommitServerOffset;
 
@@ -36,7 +36,7 @@ namespace NKafka.Client.Consumer.Internal
         public long ConsumePendingMessageSizeBytes => _consumePendingMessageSizeBytes;
         public long BufferedMessageSizeBytes => _consumePendingMessageSizeBytes + _catchUpPendingMessageSizeBytes;
         public long TotalConsumedMessageCount => _totalConsumedMessageCount;
-        public long TotalConsumedMessageSizeBytes => _totalConsumedMessageSizeBytes;        
+        public long TotalConsumedMessageSizeBytes => _totalConsumedMessageSizeBytes;
 
         private long _currentReceivedClientOffset;
         private long _currentMinAvailableServerOffset;
@@ -59,11 +59,11 @@ namespace NKafka.Client.Consumer.Internal
         private long _catchUpPendingMessageSizeBytes;
 
         public int? OffsetRequestId;
-        
+
         [NotNull] private readonly ConcurrentQueue<KafkaMessageAndOffset> _consumeMessagesQueue;
         [NotNull] private readonly Queue<KafkaMessageAndOffset> _catchUpMesagesQueue;
 
-        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId, 
+        public KafkaConsumerBrokerPartition([NotNull] string topicName, int partitionId,
             [NotNull] KafkaConsumerGroupData group,
             [NotNull] KafkaConsumerSettings settings,
             [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler,
@@ -74,7 +74,7 @@ namespace NKafka.Client.Consumer.Internal
             Settings = settings;
             Group = group;
             FallbackHandler = fallbackHandler;
-            Logger = logger;   
+            Logger = logger;
 
             _consumeMessagesQueue = new ConcurrentQueue<KafkaMessageAndOffset>();
             _catchUpMesagesQueue = new Queue<KafkaMessageAndOffset>();
@@ -111,7 +111,7 @@ namespace NKafka.Client.Consumer.Internal
 
             foreach (var message in messages)
             {
-                var messageSize = GetMessageSize(message);                
+                var messageSize = GetMessageSize(message);
 
                 if (message.Offset <= lastOffset) continue;
 
@@ -120,19 +120,19 @@ namespace NKafka.Client.Consumer.Internal
                 Interlocked.Increment(ref _totalReceivedMessageCount);
 
                 if (catchUpOffset != UnknownOffset && message.Offset > catchUpOffset)
-                {                    
+                {
                     Interlocked.Add(ref _catchUpPendingMessageSizeBytes, messageSize);
                     Interlocked.Increment(ref _catchUpPendingMessageCount);
                     _catchUpMesagesQueue.Enqueue(message);
                 }
                 else
-                {                    
+                {
                     Interlocked.Add(ref _consumePendingMessageSizeBytes, messageSize);
                     Interlocked.Increment(ref _consumePendingMessageCount);
                     _consumeMessagesQueue.Enqueue(message);
                 }
             }
-            
+
             _currentReceivedClientOffset = lastOffset;
             ReceiveTimestampUtc = DateTime.UtcNow;
         }
@@ -149,7 +149,7 @@ namespace NKafka.Client.Consumer.Internal
             ConsumeTimestampUtc = DateTime.UtcNow;
             if (message == null) return true;
 
-            var messageSize = GetMessageSize(message);            
+            var messageSize = GetMessageSize(message);
             Interlocked.Add(ref _consumePendingMessageSizeBytes, -messageSize);
             Interlocked.Add(ref _totalConsumedMessageSizeBytes, messageSize);
             return true;
@@ -172,12 +172,13 @@ namespace NKafka.Client.Consumer.Internal
                 }
 
                 Interlocked.Decrement(ref _catchUpPendingMessageCount);
-                Interlocked.Increment(ref _consumePendingMessageCount);                
+                Interlocked.Increment(ref _consumePendingMessageCount);
 
                 var messageSize = GetMessageSize(message);
                 Interlocked.Add(ref _catchUpPendingMessageSizeBytes, -messageSize);
                 Interlocked.Add(ref _consumePendingMessageSizeBytes, messageSize);
 
+                _catchUpMesagesQueue.Dequeue();
                 _consumeMessagesQueue.Enqueue(message);
             }
         }
@@ -187,7 +188,7 @@ namespace NKafka.Client.Consumer.Internal
         public long? GetReceivedClientOffset()
         {
             var currenReceivedClientOffset = _currentReceivedClientOffset;
-            return currenReceivedClientOffset != UnknownOffset ? currenReceivedClientOffset : (long?) null;
+            return currenReceivedClientOffset != UnknownOffset ? currenReceivedClientOffset : (long?)null;
         }
 
         #endregion ReceivedClientOffset
@@ -202,7 +203,7 @@ namespace NKafka.Client.Consumer.Internal
 
         public void SetMinAvailableServerOffset(long offset)
         {
-            _currentMinAvailableServerOffset = offset;            
+            _currentMinAvailableServerOffset = offset;
         }
 
         #endregion MinAvailableServerOffset
@@ -240,29 +241,11 @@ namespace NKafka.Client.Consumer.Internal
         public long? GetCommitClientOffset()
         {
             var currenCommitClientOffset = _currentCommitClientOffset;
-            return currenCommitClientOffset != UnknownOffset ? currenCommitClientOffset : (long?) null;
+            return currenCommitClientOffset != UnknownOffset ? currenCommitClientOffset : (long?)null;
         }
 
         public void SetCommitClientOffset(long offset)
         {
-            if (!IsAssigned)
-            {
-                var fallbackHandler = FallbackHandler;
-                if (fallbackHandler != null)
-                {
-                    var fallbackInfo = new KafkaConsumerFallbackInfo(TopicName, PartitionId,
-                        KafkaConsumerFallbackErrorCode.UnassignedBeforeCommit, offset, _currentCommitServerOffset);
-                    try
-                    {
-                        fallbackHandler.OnСommitFallback(fallbackInfo);
-                    }
-                    catch (Exception)
-                    {
-                        //ignored
-                    }
-                }
-                return;
-            }
             long currentOffset;
             while (offset > (currentOffset = _currentCommitClientOffset))
             {
@@ -350,7 +333,7 @@ namespace NKafka.Client.Consumer.Internal
             {
             }
             _consumePendingMessageCount = 0;
-            _catchUpPendingMessageCount = 0;            
+            _catchUpPendingMessageCount = 0;
         }
 
         private static int GetMessageSize([CanBeNull] KafkaMessageAndOffset message)

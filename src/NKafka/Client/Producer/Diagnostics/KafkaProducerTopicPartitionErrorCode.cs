@@ -1,23 +1,22 @@
 ﻿using JetBrains.Annotations;
 
 namespace NKafka.Client.Producer.Diagnostics
-{    
+{
     [PublicAPI]
     public enum KafkaProducerTopicPartitionErrorCode
     {
         UnknownError = 0,
 
         ConnectionClosed = -1,
-        ClientMaintenance = -2,        
-        TransportError = -3,
-        ProtocolError = -4,
-        ClientTimeout = -5,
-        ClientError = -6,
+        TransportError = -2,
+        ProtocolError = -3,
+        ClientTimeout = -4,
+        ClientError = -5,
 
-        HostUnreachable = -7,
-        HostNotAvailable = -8,
-        NotAuthorized = -9,
-        TransportRequestTooLarge = -10,
+        HostUnreachable = -6,
+        HostNotAvailable = -7,
+        NotAuthorized = -8,
+        TransportRequestTooLarge = -9,
 
         /// <summary>
         /// This request is for a topic or partition that does not exist on this broker.

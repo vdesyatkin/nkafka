@@ -7,11 +7,11 @@ namespace NKafka.Client.ConsumerGroup
     [PublicAPI]
     public sealed class KafkaConsumerGroupSettings
     {
-        public readonly TimeSpan JoinGroupServerTimeout;
-        public readonly TimeSpan SyncGroupServerTimeout;
-        public readonly TimeSpan HeartbeatServerTimeout;
-        public readonly TimeSpan OffsetFetchServerTimeout;
-        public readonly TimeSpan OffsetCommitServerTimeout;
+        public readonly TimeSpan JoinGroupTimeout;
+        public readonly TimeSpan SyncGroupTimeout;
+        public readonly TimeSpan HeartbeatTimeout;
+        public readonly TimeSpan OffsetFetchTimeout;
+        public readonly TimeSpan OffsetCommitTimeout;
 
         public readonly TimeSpan GroupSessionTimeout;
         public readonly TimeSpan GroupRebalanceTimeout;
@@ -24,8 +24,8 @@ namespace NKafka.Client.ConsumerGroup
         public readonly IReadOnlyList<KafkaConsumerGroupSettingsProtocol> Protocols;
         public readonly string OffsetCommitMetadata;
 
-        public KafkaConsumerGroupSettings(TimeSpan joinGroupServerTimeout, TimeSpan syncGroupServerTimeout,
-            TimeSpan heartbeatServerTimeout, TimeSpan offsetFetchServerTimeout, TimeSpan offsetCommitServerTimeout,
+        public KafkaConsumerGroupSettings(TimeSpan joinGroupTimeout, TimeSpan syncGroupTimeout,
+            TimeSpan heartbeatTimeout, TimeSpan offsetFetchTimeout, TimeSpan offsetCommitTimeout,
             TimeSpan groupSessionTimeout, TimeSpan groupRebalanceTimeout,
             TimeSpan heartbeatPeriod, TimeSpan offsetCommitPeriod,
             TimeSpan offsetCommitRetentionTime,
@@ -33,11 +33,11 @@ namespace NKafka.Client.ConsumerGroup
             IReadOnlyList<KafkaConsumerGroupSettingsProtocol> protocols,
             string offsetCommitMetadata)
         {
-            JoinGroupServerTimeout = joinGroupServerTimeout;
-            SyncGroupServerTimeout = syncGroupServerTimeout;
-            HeartbeatServerTimeout = heartbeatServerTimeout;
-            OffsetFetchServerTimeout = offsetFetchServerTimeout;
-            OffsetCommitServerTimeout = offsetCommitServerTimeout;
+            JoinGroupTimeout = joinGroupTimeout;
+            SyncGroupTimeout = syncGroupTimeout;
+            HeartbeatTimeout = heartbeatTimeout;
+            OffsetFetchTimeout = offsetFetchTimeout;
+            OffsetCommitTimeout = offsetCommitTimeout;
             GroupSessionTimeout = groupSessionTimeout;
             GroupRebalanceTimeout = groupRebalanceTimeout;
             HeartbeatPeriod = heartbeatPeriod;

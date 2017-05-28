@@ -120,7 +120,7 @@ namespace NKafka.Connection
                             request.Error = KafkaBrokerErrorCode.ClientTimeout;
                             request.Connection.SendError = KafkaBrokerStateErrorCode.ClientTimeout;
                             LogConnectionError(KafkaBrokerErrorCode.ClientTimeout, "CheckTimeout",
-                            KafkaConnectionErrorCode.ClientTimeout, request.RequestInfo);
+                                request.Connection, KafkaConnectionErrorCode.ClientTimeout, request.RequestInfo);
                         }
                     }
                 }
@@ -258,8 +258,8 @@ namespace NKafka.Connection
             if (_settings.TransportLatency > TimeSpan.Zero)
             {
                 timeout = timeout +
-                    _settings.TransportLatency + //request
-                    _settings.TransportLatency; //response
+                          _settings.TransportLatency + //request
+                          _settings.TransportLatency; //response
             }
 
             var requestId = Interlocked.Increment(ref _currentRequestId);
@@ -297,7 +297,8 @@ namespace NKafka.Connection
                 var error = ConvertError(connection, connectionException);
                 connection.SendError = ConvertStateError(connection, connectionException);
 
-                LogConnectionError(error, "BeginWriteRequest", connectionException, requestInfo);
+                LogConnectionError(error, "BeginWriteRequest",
+                    connection, connectionException, requestInfo);
                 return error;
             }
         }
@@ -352,7 +353,8 @@ namespace NKafka.Connection
                 if (connection.IsDeprecated) return;
 
                 connection.SendError = ConvertStateError(connection, connectionException);
-                LogConnectionError(error, "EndWriteRequest", connectionException, requestState.RequestInfo);
+                LogConnectionError(error, "EndWriteRequest",
+                    connection, connectionException, requestState.RequestInfo);
                 return;
             }
 
@@ -407,8 +409,6 @@ namespace NKafka.Connection
                 }
                 catch (KafkaConnectionException connectionException)
                 {
-                    if (connection.IsDeprecated) return;
-
                     connection.ReceiveError = ConvertStateError(connection, connectionException);
                     LogConnectionError("EndReadResponseHeader", connection, connectionException);
                     return;
@@ -436,8 +436,6 @@ namespace NKafka.Connection
                         }
                         catch (KafkaConnectionException connectionException)
                         {
-                            if (connection.IsDeprecated) return;
-
                             connection.ReceiveError = ConvertStateError(connection, connectionException);
                             LogConnectionError("EndRepeatedReadResponseHeader", connection, connectionException);
                             return;
@@ -485,8 +483,6 @@ namespace NKafka.Connection
                             }
                             catch (KafkaConnectionException connectionException)
                             {
-                                if (connection.IsDeprecated) return;
-
                                 connection.ReceiveError = ConvertStateError(connection, connectionException);
                                 LogConnectionError("ReadUnexpectedResponse", connection, connectionException);
                                 return;
@@ -512,7 +508,8 @@ namespace NKafka.Connection
                             if (connection.IsDeprecated) return;
 
                             connection.ReceiveError = ConvertStateError(connection, connectionException);
-                            LogConnectionError(error, "ReadResponse", connectionException, requestState.RequestInfo);
+                            LogConnectionError(error, "ReadResponse",
+                                connection, connectionException, requestState.RequestInfo);
                             return;
                         }
 
@@ -562,8 +559,6 @@ namespace NKafka.Connection
                     }
                     catch (KafkaConnectionException connectionException)
                     {
-                        if (connection.IsDeprecated) return;
-
                         connection.ReceiveError = ConvertStateError(connection, connectionException);
                         LogConnectionError("CheckDataAvailability", connection, connectionException);
                     }
@@ -606,26 +601,32 @@ namespace NKafka.Connection
             logger.OnProtocolError(errorInfo);
         }
 
-        private void LogConnectionError(KafkaBrokerErrorCode errorCode, string errorDescription, [NotNull] KafkaConnectionException connectionException,
+        private void LogConnectionError(KafkaBrokerErrorCode errorCode, string errorDescription,
+            [NotNull] ConnectionState state,
+            [NotNull] KafkaConnectionException connectionException,
             [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
         {
             if (!_isOpenned) return;
 
             var logger = _logger;
             if (logger == null) return;
+            if (state.IsDeprecated) return;
 
             var errorInfo = new KafkaBrokerTransportErrorInfo(errorCode, errorDescription,
                 connectionException.ErrorInfo, requestInfo, connectionException.InnerException);
             logger.OnTransportError(errorInfo);
         }
 
-        private void LogConnectionError(KafkaBrokerErrorCode errorCode, string errorDescription, KafkaConnectionErrorCode connectionErrorCode,
+        private void LogConnectionError(KafkaBrokerErrorCode errorCode, string errorDescription,
+            [NotNull] ConnectionState state,
+            KafkaConnectionErrorCode connectionErrorCode,
             [CanBeNull] KafkaBrokerRequestInfo requestInfo = null)
         {
             if (!_isOpenned) return;
 
             var logger = _logger;
             if (logger == null) return;
+            if (state.IsDeprecated) return;
 
             var connectionErrorInfo = new KafkaConnectionErrorInfo(connectionErrorCode, null);
             var errorInfo = new KafkaBrokerTransportErrorInfo(errorCode, errorDescription,
@@ -642,6 +643,7 @@ namespace NKafka.Connection
 
             var logger = _logger;
             if (logger == null) return;
+            if (state.IsDeprecated) return;
 
             var errorCode = ConvertError(state, connectionException);
             var errorInfo = new KafkaBrokerTransportErrorInfo(errorCode, errorDescription,

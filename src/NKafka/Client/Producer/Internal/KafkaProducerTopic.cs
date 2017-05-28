@@ -9,23 +9,30 @@ namespace NKafka.Client.Producer.Internal
 {
     internal sealed class KafkaProducerTopic
     {
-        [NotNull] public readonly string TopicName;
-        [NotNull] public KafkaClientTopicMetadataInfo TopicMetadataInfo;
+        [NotNull]
+        public readonly string TopicName;
+        [NotNull]
+        public KafkaClientTopicMetadataInfo TopicMetadataInfo;
 
-        [NotNull] private readonly KafkaProducerSettings _settings;
-        [CanBeNull] private readonly IKafkaProducerTopicLogger _logger;
+        [NotNull]
+        private readonly KafkaProducerSettings _settings;
+        [CanBeNull]
+        private readonly IKafkaProducerTopicLogger _logger;
 
-        [NotNull] private readonly IKafkaProducerTopicBuffer _buffer;
-        [NotNull] private IReadOnlyList<int> _topicPartitionIds;
-        [NotNull] private IReadOnlyDictionary<int, KafkaProducerTopicPartition> _topicPartitions;
+        [NotNull]
+        private readonly IKafkaProducerTopicBuffer _buffer;
+        [NotNull]
+        private IReadOnlyList<int> _topicPartitionIds;
+        [NotNull]
+        private IReadOnlyDictionary<int, KafkaProducerTopicPartition> _topicPartitions;
 
-        public KafkaProducerTopic([NotNull] string topicName,            
+        public KafkaProducerTopic([NotNull] string topicName,
             [NotNull] KafkaProducerSettings settings,
             [NotNull] IKafkaProducerTopicBuffer buffer,
             [CanBeNull] IKafkaProducerTopicLogger logger)
         {
             TopicName = topicName;
-            _settings = settings;            
+            _settings = settings;
             _buffer = buffer;
             _logger = logger;
             _topicPartitions = new Dictionary<int, KafkaProducerTopicPartition>();
@@ -38,11 +45,11 @@ namespace NKafka.Client.Producer.Internal
         {
             return new KafkaProducerTopicPartition(TopicName, partitionId, _settings, _buffer.FallbackHandler, _logger);
         }
-        
+
         public void ApplyPartitions([NotNull, ItemNotNull] IReadOnlyList<KafkaProducerTopicPartition> partitions)
         {
             var topicPartitionIds = new List<int>(partitions.Count);
-            var topicPartitions = new Dictionary<int, KafkaProducerTopicPartition>(partitions.Count);            
+            var topicPartitions = new Dictionary<int, KafkaProducerTopicPartition>(partitions.Count);
 
             foreach (var partition in partitions)
             {
@@ -53,10 +60,11 @@ namespace NKafka.Client.Producer.Internal
             _topicPartitionIds = topicPartitionIds;
             _topicPartitions = topicPartitions;
         }
-        
+
         public void DistributeMessagesByPartitions()
         {
-            _buffer.DistributeMessagesByPartitions(_topicPartitionIds, _topicPartitions);
+            var distributedCount = _buffer.DistributeMessagesByPartitions(_topicPartitionIds, _topicPartitions);
+            KafkaClientTrace.Trace($"[buffer({_buffer.TopicName})] Distributed {distributedCount} Pending {_buffer.EnqueuedCount}");
         }
 
         #region Diagnostics
@@ -97,11 +105,11 @@ namespace NKafka.Client.Producer.Internal
         public KafkaProducerTopicInfo GetDiagnosticsInfo()
         {
             var partitionInfos = new List<KafkaProducerTopicPartitionInfo>(_topicPartitions.Count);
-            
+
             long topicTotalEnqueuedMessageCount = 0;
 
-            long topicTotalFallbackMessageCount = 0;            
-            var topicSendMessageTimestampUtc = (DateTime?) null;
+            long topicTotalFallbackMessageCount = 0;
+            var topicSendMessageTimestampUtc = (DateTime?)null;
 
             long topicSendPendingMessageCount = 0;
             long topicRetrySendPendingMessageCount = 0;
@@ -114,13 +122,13 @@ namespace NKafka.Client.Producer.Internal
 
             bool? topicIsReady = null;
             bool topicIsSynchronized = true;
-            
+
             foreach (var partitionPair in _topicPartitions)
             {
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
-                
-                var partitionBroker = partition.BrokerPartition;                
+
+                var partitionBroker = partition.BrokerPartition;
 
                 var partitionTotalEnqueuedMessageCount = partitionBroker.TotalEnqueuedMessageCount;
                 var partitionEnqueueTimestampUtc = partitionBroker.EnqueueTimestampUtc;
@@ -128,11 +136,11 @@ namespace NKafka.Client.Producer.Internal
                 var partitionFallbackMessageCount = partitionBroker.TotalFallbackMessageCount;
                 var partitionFallbackMessageTimestampUtc = partitionBroker.FallbackTimestampUtc;
 
-                var partitionSendPendingMessageCount = partitionBroker.SendPendingMessageMessageCount;
+                var partitionSendPendingMessageCount = partitionBroker.SendPendingMessageCount;
                 var partitionRetrySendPendingMessageCount = partitionBroker.RetrySendPendingMessageCount;
                 var partitionTotalSentMessageCount = partitionBroker.TotalSentMessageCount;
                 var partitionSendMessageTimestampUtc = partitionBroker.SendMessageTimestampUtc;
-                
+
                 topicTotalEnqueuedMessageCount += partitionTotalEnqueuedMessageCount;
 
                 topicTotalFallbackMessageCount += partitionFallbackMessageCount;
@@ -143,21 +151,21 @@ namespace NKafka.Client.Producer.Internal
 
                 topicSendPendingMessageCount += partitionSendPendingMessageCount;
                 topicRetrySendPendingMessageCount += partitionRetrySendPendingMessageCount;
-                topicTotalSentMessageCount += partitionTotalSentMessageCount;                
+                topicTotalSentMessageCount += partitionTotalSentMessageCount;
                 if (topicSendMessageTimestampUtc == null || topicSendMessageTimestampUtc < partitionSendMessageTimestampUtc)
                 {
                     topicSendMessageTimestampUtc = partitionSendMessageTimestampUtc;
-                }                
+                }
 
                 var partitionMessageCountInfo = new KafkaProducerTopicMessageCountInfo(
                     partitionTotalEnqueuedMessageCount, partitionEnqueueTimestampUtc,
-                    partitionSendPendingMessageCount, partitionRetrySendPendingMessageCount, 
+                    partitionSendPendingMessageCount, partitionRetrySendPendingMessageCount,
                     partitionTotalSentMessageCount, partitionSendMessageTimestampUtc,
                     partitionFallbackMessageCount, partitionFallbackMessageTimestampUtc);
 
                 var partitionTotalEnqueuedMessageSizeBytes = partitionBroker.TotalEnqueuedMessageSizeBytes;
                 var partitionTotalSentMessageSizeBytes = partitionBroker.TotalSentMessageSizeBytes;
-                var partitionSendPendingMessageSizeBytes = partitionBroker.SendPendingMessageMessageSizeBytes;
+                var partitionSendPendingMessageSizeBytes = partitionBroker.SendPendingMessageSizeBytes;
 
                 topicTotalEnqueuedMessageSizeBytes += partitionTotalEnqueuedMessageSizeBytes;
                 topicTotalSentMessageSizeBytes += partitionTotalSentMessageSizeBytes;
@@ -177,7 +185,7 @@ namespace NKafka.Client.Producer.Internal
                     partitionBroker.Error, partitionBroker.ErrorTimestampUtc,
                     partitionMessageCountInfo,
                     partitionMessageSizeInfo,
-                    partitionBroker.LimitInfo); 
+                    partitionBroker.LimitInfo);
                 partitionInfos.Add(partitionInfo);
             }
 
@@ -201,7 +209,7 @@ namespace NKafka.Client.Producer.Internal
             return new KafkaProducerTopicInfo(
                 TopicName,
                 topicIsReady == true, topicIsSynchronized,
-                metadataInfo,                                
+                metadataInfo,
                 topicMessageCountInfo,
                 topicMessageSizeInfo,
                 partitionInfos,

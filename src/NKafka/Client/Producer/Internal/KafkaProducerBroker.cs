@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using JetBrains.Annotations;
 using NKafka.Client.Broker;
@@ -14,26 +15,25 @@ using NKafka.Protocol.API.Produce;
 namespace NKafka.Client.Producer.Internal
 {
     internal sealed class KafkaProducerBroker
-    {        
+    {
         [NotNull] private readonly KafkaBroker _broker;
         [NotNull] private readonly IKafkaClientBroker _clientBroker;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaProducerBrokerTopic> _topics;
         [NotNull] private readonly Dictionary<string, ProduceBatchSet> _produceRequests;
 
-        private readonly TimeSpan _produceClientTimeout;       
-        
-        public KafkaProducerBroker([NotNull] KafkaBroker broker, [NotNull] IKafkaClientBroker clientBroker, TimeSpan producePeriod)
+        public KafkaProducerBroker([NotNull] KafkaBroker broker, [NotNull] IKafkaClientBroker clientBroker)
         {
             _broker = broker;
             _clientBroker = clientBroker;
-            _topics = new ConcurrentDictionary<string, KafkaProducerBrokerTopic>();                                    
+            _topics = new ConcurrentDictionary<string, KafkaProducerBrokerTopic>();
 
             _produceRequests = new Dictionary<string, ProduceBatchSet>();
-            _produceClientTimeout = producePeriod + TimeSpan.FromSeconds(1) + producePeriod;            
         }
 
         public void AddTopicPartition([NotNull] string topicName, [NotNull] KafkaProducerBrokerPartition topicPartition)
         {
+            KafkaClientTrace.Trace($"[producer({topicName}, {topicPartition.PartitionId})] Partition added");
+
             KafkaProducerBrokerTopic topic;
             if (!_topics.TryGetValue(topicName, out topic) || topic == null)
             {
@@ -54,6 +54,8 @@ namespace NKafka.Client.Producer.Internal
 
         public void RemoveTopicPartition([NotNull] string topicName, int partitionId)
         {
+            KafkaClientTrace.Trace($"[producer({topicName}, {partitionId})] Partition removed");
+
             KafkaProducerBrokerTopic topic;
             if (!_topics.TryGetValue(topicName, out topic) || topic == null)
             {
@@ -65,7 +67,7 @@ namespace NKafka.Client.Producer.Internal
         }
 
         public void Start()
-        {            
+        {
         }
 
         public void Stop()
@@ -74,12 +76,14 @@ namespace NKafka.Client.Producer.Internal
             {
                 var topic = topicPair.Value;
                 if (topic == null) continue;
-                
+
+                KafkaClientTrace.Trace($"[producer({topic.TopicName})] Stop");
+
                 var batches = CreateTopicBatches(topic, new HashSet<int>());
                 foreach (var batch in batches)
                 {
                     var batchRequest = CreateProduceRequest(topic, batch);
-                    _broker.SendWithoutResponse(batchRequest, topic.TopicProducerName, batch.ByteCount*2);
+                    _broker.SendWithoutResponse(batchRequest, topic.TopicProducerName, batch.ByteCount * 2);
                 }
 
                 foreach (var partitionPair in topic.Partitions)
@@ -96,7 +100,7 @@ namespace NKafka.Client.Producer.Internal
         }
 
         public void Produce(CancellationToken cancellation)
-        {            
+        {
             foreach (var topicPair in _topics)
             {
                 var topic = topicPair.Value;
@@ -104,7 +108,7 @@ namespace NKafka.Client.Producer.Internal
 
                 if (cancellation.IsCancellationRequested) return;
                 ProduceTopic(topic, cancellation);
-            }            
+            }
         }
 
         private void ProduceTopic([NotNull]KafkaProducerBrokerTopic topic, CancellationToken cancellation)
@@ -115,7 +119,7 @@ namespace NKafka.Client.Producer.Internal
             if (!_produceRequests.TryGetValue(topic.TopicName, out batchSet) || batchSet == null)
             {
                 batchSet = new ProduceBatchSet();
-                _produceRequests[topic.TopicName] = batchSet;                
+                _produceRequests[topic.TopicName] = batchSet;
             }
 
             // process requests that have already sent
@@ -137,20 +141,24 @@ namespace NKafka.Client.Producer.Internal
             }
 
             // send batches
-            var newBatches = CreateTopicBatches(topic, batchSet.GetBusyPartitionSet());            
+            var newBatches = CreateTopicBatches(topic, batchSet.GetBusyPartitionSet());
             foreach (var batch in newBatches)
             {
                 var batchRequest = CreateProduceRequest(topic, batch);
-                var batchTimeout = _produceClientTimeout + topic.Settings.ProduceRequestServerTimeout;
+                var batchTimeout = topic.Settings.ProduceRequestClientTimeout;
+
+                KafkaClientTrace.Trace($"[producer({topic.TopicName}] Produce batch sending {batch.GetPartititonText()}, {batch.MessageCount} messages");
 
                 var batchRequestResult = _broker.Send(batchRequest, topic.TopicProducerName, batchTimeout, batch.ByteCount * 2);
-                
+
                 var batchRequestId = batchRequestResult.Data;
                 if (batchRequestId == null)
                 {
                     RollbackBatch(topic, batch, batchRequestResult.Error ?? KafkaBrokerErrorCode.TransportError, "SendProduceRequest");
                     continue;
                 }
+
+                KafkaClientTrace.Trace($"[producer({topic.TopicName}] Produce batch sent {batch.GetPartititonText()} partitions, {batch.MessageCount} messages");
 
                 batchSet.RequestBatches[batchRequestId.Value] = batch;
             }
@@ -165,15 +173,6 @@ namespace NKafka.Client.Producer.Internal
                 var partition = partitionPair.Value;
                 if (partition == null) continue;
 
-                if (partition.Status == KafkaProducerBrokerPartitionStatus.RearrangeRequired)
-                {
-                    continue;
-                }
-                if (partition.Status == KafkaProducerBrokerPartitionStatus.NotInitialized)
-                {
-                    partition.ResetData();
-                    partition.Status = KafkaProducerBrokerPartitionStatus.Ready;
-                }
                 partitionList.Add(partition);
             }
             var produceOffset = topic.ProducePartitionIndex;
@@ -183,7 +182,7 @@ namespace NKafka.Client.Producer.Internal
             }
 
             var requests = new List<ProduceBatch>();
-            var topicBatch = new ProduceBatch();            
+            var topicBatch = new ProduceBatch(partitionList.Count);
             var topicBatchSize = 0;
             var topicBatchMessageCount = 0;
             var topicBatchIsFilled = false;
@@ -193,8 +192,6 @@ namespace NKafka.Client.Producer.Internal
 
             for (var i = 0; i < partitionList.Count; i++)
             {
-                if (busyPartitionSet.Contains(i)) continue;
-
                 var index = i + produceOffset;
                 if (index >= partitionList.Count)
                 {
@@ -204,15 +201,30 @@ namespace NKafka.Client.Producer.Internal
                 var partition = partitionList[index];
                 if (partition == null) continue;
 
+                if (partition.Status == KafkaProducerBrokerPartitionStatus.RearrangeRequired)
+                {
+                    continue;
+                }
+
                 if (partition.Status == KafkaProducerBrokerPartitionStatus.Error)
                 {
-                    if (DateTime.UtcNow - partition.ErrorTimestampUtc > partition.Settings.ErrorRetryPeriod)
+                    if (DateTime.UtcNow - partition.ErrorTimestampUtc < partition.Settings.ErrorRetryPeriod)
                     {
                         continue;
                     }
+
+                    KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] Restore");
                 }
 
-                var partitionBatchSize = 0;                
+                if (partition.Status == KafkaProducerBrokerPartitionStatus.NotInitialized)
+                {
+                    partition.ResetData();
+                    partition.Status = KafkaProducerBrokerPartitionStatus.Ready;
+                }
+
+                if (busyPartitionSet.Contains(partition.PartitionId)) continue;
+
+                var partitionBatchSize = 0;
                 var partitionBatchMaxSize = partition.LimitInfo.MaxBatchSizeByteCount ?? topicBatchMaxSize;
 
                 List<KafkaMessage> topicPartionMessages;
@@ -223,31 +235,32 @@ namespace NKafka.Client.Producer.Internal
                 {
                     if (message == null)
                     {
+                        partition.DequeueMessage();
                         continue;
                     }
 
                     var messageSize = _broker.Protocol.GetMessageSize(message);
                     if (messageSize > partition.LimitInfo.MaxMessageSizeByteCount)
-                    {                        
-                        partition.FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.MessageSizeTooLarge);
+                    {
                         partition.DequeueMessage();
+                        partition.FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.MessageSizeTooLarge);
                         continue;
                     }
 
                     var messageSizeInBatch = _broker.Protocol.GetMessageSizeInBatch(message);
-                    if (messageSizeInBatch > partition.LimitInfo.MaxBatchSizeByteCount || 
+                    if (messageSizeInBatch > partition.LimitInfo.MaxBatchSizeByteCount ||
                         messageSizeInBatch > topicBatchMaxSize)
-                    {                        
-                        partition.FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.MessageSizeLargerThanBatchMaxSize);
+                    {
                         partition.DequeueMessage();
+                        partition.FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.MessageSizeLargerThanBatchMaxSize);
                         continue;
                     }
-                    
+
                     if (partitionBatchSize + messageSizeInBatch > partitionBatchMaxSize ||
                         topicBatchSize + messageSizeInBatch > topicBatchMaxSize)
                     {
                         // not enough space in batch
-                        continue;
+                        break;
                     }
 
                     // message is accepted to batch
@@ -255,13 +268,13 @@ namespace NKafka.Client.Producer.Internal
                     partitionBatchSize += messageSizeInBatch;
                     topicBatchSize += messageSizeInBatch;
                     topicBatchMessageCount++;
-                    
+
                     if (topicPartionMessages == null)
                     {
                         topicPartionMessages = new List<KafkaMessage>(1024); // empiric capacity value, may be need to save max message count for partition
                         topicBatch.Partitions[partition.PartitionId] = topicPartionMessages;
                     }
-                    topicPartionMessages.Add(message);                    
+                    topicPartionMessages.Add(message);
 
                     if (topicBatchSize >= topicBatchMaxSize)
                     {
@@ -279,9 +292,9 @@ namespace NKafka.Client.Producer.Internal
                 {
                     produceOffset = index + 1;
                     topicBatch.ByteCount = topicBatchSize;
-                    topicBatch.MessageCount = topicBatchMessageCount;                 
+                    topicBatch.MessageCount = topicBatchMessageCount;
                     requests.Add(topicBatch);
-                    topicBatch = new ProduceBatch();
+                    topicBatch = new ProduceBatch(partitionList.Count);
                     topicBatchSize = 0;
                     topicBatchMessageCount = 0;
                     topicBatchIsFilled = false;
@@ -303,25 +316,60 @@ namespace NKafka.Client.Producer.Internal
         private void HandleProduceResponse([NotNull] KafkaProducerBrokerTopic topic,
             [NotNull] ProduceBatch topicBatch, KafkaBrokerResult<KafkaProduceResponse> response)
         {
-            if (!response.HasData && !response.HasError) return;
+            if (!response.HasData && !response.HasError)
+            {
+                // has not received
+                return;
+            }
 
             if (response.HasError || !response.HasData || response.Data == null)
             {
                 var brokerError = response.Error ?? KafkaBrokerErrorCode.TransportError;
-                RollbackBatch(topic, topicBatch, brokerError, "ReceiveProduceResponse");                
+                RollbackBatch(topic, topicBatch, brokerError, "ReceiveProduceResponse.BrokerError");
                 return;
             }
 
             var responseTopics = response.Data.Topics;
-            if (responseTopics == null) return;
+            if (responseTopics == null || responseTopics.Count == 0)
+            {
+                RollbackBatch(topic, topicBatch, KafkaBrokerErrorCode.ProtocolError, "ReceiveProduceResponse.NoTopicsInResponse");
+                return;
+            }
 
             foreach (var responseTopic in responseTopics)
             {
                 var topicName = responseTopic?.TopicName;
-                if (topicName != topic.TopicName) continue;
+                if (topicName != topic.TopicName)
+                {
+                    RollbackBatch(topic, topicBatch, KafkaBrokerErrorCode.ProtocolError, "ReceiveProduceResponse.UnexpectedTopicName");
+                    continue;
+                }
 
                 var responsePartitions = responseTopic.Partitions;
-                if (responsePartitions == null) continue;
+                if (responsePartitions == null || responsePartitions.Count == 0)
+                {
+                    RollbackBatch(topic, topicBatch, KafkaBrokerErrorCode.ProtocolError, "ReceiveProduceResponse.NoPartitionsInResponse");
+                    continue;
+                }
+
+                // check protocol violation (it's important to rollback batch in this case even though the case is almost impossible)
+                foreach (var partitionResponse in responsePartitions)
+                {
+                    if (partitionResponse == null)
+                    {
+                        RollbackBatch(topic, topicBatch, KafkaBrokerErrorCode.ProtocolError, "ReceiveProduceResponse.EmptyPartition");
+                        continue;
+                    }
+                    var partitionId = partitionResponse.PartitionId;
+
+                    List<KafkaMessage> batchMessages;
+                    KafkaProducerBrokerPartition partition;
+                    if (!topic.Partitions.TryGetValue(partitionId, out partition) || partition == null ||
+                        !topicBatch.Partitions.TryGetValue(partitionId, out batchMessages) || batchMessages == null)
+                    {
+                        RollbackBatch(topic, topicBatch, KafkaBrokerErrorCode.ProtocolError, $"ReceiveProduceResponse.UnexpectedPartition({partitionId})");
+                    }
+                }
 
                 foreach (var partitionResponse in responsePartitions)
                 {
@@ -329,26 +377,33 @@ namespace NKafka.Client.Producer.Internal
                     var partitionId = partitionResponse.PartitionId;
 
                     KafkaProducerBrokerPartition partition;
-                    if (!topic.Partitions.TryGetValue(partitionId, out partition) || partition == null) continue;
-                   
-                    List<KafkaMessage> batchMessages;
-                    if (!topicBatch.Partitions.TryGetValue(partitionId, out batchMessages) || batchMessages == null) continue;
-
-                    if (!TryHandlePartitionResponse(partition, partitionResponse, batchMessages))
+                    if (!topic.Partitions.TryGetValue(partitionId, out partition) || partition == null)
                     {
                         continue;
                     }
 
-                    ResetPartitionError(partition);
+                    List<KafkaMessage> batchMessages;
+                    if (!topicBatch.Partitions.TryGetValue(partitionId, out batchMessages) || batchMessages == null)
+                    {
+                        continue;
+                    }
+
+                    if (!TryHandlePartitionResponse(topic, partition, partitionResponse, batchMessages))
+                    {
+                        continue;
+                    }
+
+                    ResetPartitionError(topic, partition);
                     partition.Status = KafkaProducerBrokerPartitionStatus.Ready;
                 }
             }
         }
 
-        private bool TryHandlePartitionResponse([NotNull] KafkaProducerBrokerPartition partition, 
-            [NotNull] KafkaProduceResponseTopicPartition response, 
+        private bool TryHandlePartitionResponse([NotNull] KafkaProducerBrokerTopic topic,
+            [NotNull] KafkaProducerBrokerPartition partition,
+            [NotNull] KafkaProduceResponseTopicPartition response,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> batchMessages)
-        {            
+        {
             if (response.ErrorCode != KafkaResponseErrorCode.NoError)
             {
                 KafkaProducerTopicPartitionErrorCode error;
@@ -411,8 +466,8 @@ namespace NKafka.Client.Producer.Internal
                         var batchSize = 0;
                         foreach (var message in batchMessages)
                         {
-                            batchSize += _broker.Protocol.GetMessageSize(message);                            
-                        }                        
+                            batchSize += _broker.Protocol.GetMessageSize(message);
+                        }
                         partition.SetMaxBatchSizeByteCount(batchSize - 1);
                         errorType = ProducerErrorType.Warning;
                         break;
@@ -426,7 +481,7 @@ namespace NKafka.Client.Producer.Internal
                         break;
                     case KafkaResponseErrorCode.InvalidRequiredAcks:
                         error = KafkaProducerTopicPartitionErrorCode.InvalidRequiredAcks;
-                        errorType = ProducerErrorType.Error;                        
+                        errorType = ProducerErrorType.Error;
                         break;
                     case KafkaResponseErrorCode.TopicAuthorizationFailed:
                         error = KafkaProducerTopicPartitionErrorCode.TopicAuthorizationFailed;
@@ -437,9 +492,15 @@ namespace NKafka.Client.Producer.Internal
                         errorType = ProducerErrorType.Rearrange;
                         break;
                 }
-                
-                SetPartitionError(partition, error, errorType);
-                partition.RollbackMessags(batchMessages);
+
+                KafkaClientTrace.Trace(errorType == ProducerErrorType.Rebalance
+                    ? $"[producer({topic.TopicName}, {partition.PartitionId})] [ERROR] ProtocolError {response.ErrorCode} type={errorType}"
+                    : $"[producer({topic.TopicName}, {partition.PartitionId})] [REBALANCE] {response.ErrorCode}");
+
+                SetPartitionError(topic, partition, error, errorType, "HandlePartitionResponse");
+
+                partition.RollbackMessages(batchMessages);
+                KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] Rollback batch {batchMessages.Count}, Retry queue {partition.RetrySendPendingMessageCount}");
 
                 var logger = partition.Logger;
                 if (logger != null)
@@ -461,14 +522,16 @@ namespace NKafka.Client.Producer.Internal
                 }
                 return false;
             }
-                   
+
             partition.ConfirmMessags(batchMessages);
+            KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] Produced {batchMessages.Count} Pending {partition.SendPendingMessageCount}");
+
             return true;
-        }       
+        }
 
         [NotNull]
         private KafkaProduceRequest CreateProduceRequest([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch)
-        {            
+        {
             var requestPartitions = new List<KafkaProduceRequestTopicPartition>(batch.Partitions.Count);
             foreach (var batchPartiton in batch.Partitions)
             {
@@ -478,30 +541,32 @@ namespace NKafka.Client.Producer.Internal
                 requestPartitions.Add(requestPartiton);
             }
             var requestTopic = new KafkaProduceRequestTopic(topic.TopicName, requestPartitions);
-            
-            var batchRequest = new KafkaProduceRequest(topic.Settings.ConsistencyLevel, topic.Settings.ProduceRequestServerTimeout, new [] { requestTopic});
+
+            var batchRequest = new KafkaProduceRequest(topic.Settings.ConsistencyLevel, topic.Settings.ProduceRequestServerTimeout, new[] { requestTopic });
             return batchRequest;
         }
 
         #region Error handling
 
-        private void ResetPartitionError([NotNull] KafkaProducerBrokerPartition partition)
+        private void ResetPartitionError([NotNull] KafkaProducerBrokerTopic topic, [NotNull] KafkaProducerBrokerPartition partition)
         {
             var error = partition.Error;
             var errorTimestamp = partition.ErrorTimestampUtc;
             partition.ResetError();
             if (error == null) return;
 
+            KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] Restore");
+
             var errorInfo = new KafkaProducerTopicErrorResetInfo(partition.PartitionId, error.Value, errorTimestamp, _clientBroker);
             partition.Logger?.OnPartitionErrorReset(errorInfo);
         }
 
-        private void HandleBrokerError(           
-           [NotNull] KafkaProducerBrokerPartition partition,
-           KafkaBrokerErrorCode brokerError)
-        {            
-            KafkaProducerTopicPartitionErrorCode partitionErrorCode;
-
+        private void HandleBrokerError([NotNull] KafkaProducerBrokerTopic topic,
+            [NotNull] KafkaProducerBrokerPartition partition,
+            KafkaBrokerErrorCode brokerError,
+            [NotNull] string description)
+        {
+            KafkaProducerTopicPartitionErrorCode? partitionErrorCode;
             var errorType = ProducerErrorType.Rearrange;
 
             switch (brokerError)
@@ -510,7 +575,8 @@ namespace NKafka.Client.Producer.Internal
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ConnectionClosed;
                     break;
                 case KafkaBrokerErrorCode.ConnectionMaintenance:
-                    partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ClientMaintenance;
+                    partitionErrorCode = null;
+                    errorType = ProducerErrorType.Error;
                     break;
                 case KafkaBrokerErrorCode.BadRequest:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.ProtocolError;
@@ -538,13 +604,12 @@ namespace NKafka.Client.Producer.Internal
                     break;
                 case KafkaBrokerErrorCode.NotAuthorized:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.NotAuthorized;
-                    break;                
+                    break;
                 case KafkaBrokerErrorCode.OperationRefused:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportError;
                     break;
                 case KafkaBrokerErrorCode.TooBigMessage:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.TransportRequestTooLarge;
-                    errorType = ProducerErrorType.Rearrange;
                     break;
                 case KafkaBrokerErrorCode.UnknownError:
                     partitionErrorCode = KafkaProducerTopicPartitionErrorCode.UnknownError;
@@ -554,38 +619,59 @@ namespace NKafka.Client.Producer.Internal
                     break;
             }
 
-            SetPartitionError(partition, partitionErrorCode, errorType);
+            if (partitionErrorCode != null)
+            {
+                KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] [ERROR] TransportError Code={brokerError} Description={description}");
+            }
+
+            SetPartitionError(topic, partition, partitionErrorCode, errorType, description);
         }
 
-        private void SetPartitionError([NotNull] KafkaProducerBrokerPartition partition,
-            KafkaProducerTopicPartitionErrorCode errorCode,
-            ProducerErrorType errorType)
+        private void SetPartitionError([NotNull] KafkaProducerBrokerTopic topic,
+            [NotNull] KafkaProducerBrokerPartition partition,
+            KafkaProducerTopicPartitionErrorCode? errorCode,
+            ProducerErrorType errorType,
+            [NotNull] string description)
         {
-            partition.SetError(errorCode);
+            if (errorCode != null)
+            {
+                partition.SetError(errorCode.Value);
+            }
             switch (errorType)
             {
                 case ProducerErrorType.Warning:
+                    KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] [ERROR] Warning Code={errorCode} Description={description}");
                     break;
-                case ProducerErrorType.Error:                    
+                case ProducerErrorType.Error:
                     partition.Status = KafkaProducerBrokerPartitionStatus.Error;
+                    KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] [ERROR] Error Code={errorCode} Description={description}");
                     break;
                 case ProducerErrorType.Rebalance:
+                    KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] [REBALANCE] Code={errorCode} Description={description}");
                     partition.ResetData();
                     partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
                     break;
                 case ProducerErrorType.Rearrange:
+                    KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] [ERROR] Rearrange Code={errorCode} Description={description}");
                     partition.ResetData();
                     partition.Status = KafkaProducerBrokerPartitionStatus.RearrangeRequired;
                     break;
             }
         }
 
-        private void RollbackBatch([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch, KafkaBrokerErrorCode brokerError, string errorDescription)
+        private void RollbackBatch([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch, KafkaBrokerErrorCode brokerError, string description)
         {
+            if (brokerError != KafkaBrokerErrorCode.ConnectionMaintenance)
+            {
+                KafkaClientTrace.Trace($"[producer({topic.TopicName}] [ERROR] TransportError {brokerError} Description={description}");
+            }
+
+            KafkaClientTrace.Trace($"[producer({topic.TopicName})] Rollback batch {batch.GetPartititonText()}");
+
             foreach (var batchPartition in batch.Partitions)
             {
                 var partitionId = batchPartition.Key;
-                var batchMessags = batchPartition.Value;
+                var batchMessages = batchPartition.Value;
 
                 KafkaProducerBrokerPartition partition;
                 if (!topic.Partitions.TryGetValue(partitionId, out partition) || partition == null)
@@ -593,22 +679,23 @@ namespace NKafka.Client.Producer.Internal
                     continue;
                 }
 
-                if (batchMessags != null)
+                if (batchMessages != null)
                 {
-                    partition.RollbackMessags(batchMessags);
+                    partition.RollbackMessages(batchMessages);
+                    KafkaClientTrace.Trace($"[producer({topic.TopicName}, {partition.PartitionId})] Rollback {batchMessages.Count} messages, Pending {partition.SendPendingMessageCount}, Retry queue {partition.RetrySendPendingMessageCount}");
                 }
 
-                HandleBrokerError(partition, brokerError);
+                HandleBrokerError(topic, partition, brokerError, description);
             }
 
             var logger = topic.Logger;
             if (logger != null && brokerError != KafkaBrokerErrorCode.ConnectionMaintenance)
             {
-                var errorInfo = new KafkaProducerTopicTransportErrorInfo(brokerError, errorDescription,
+                var errorInfo = new KafkaProducerTopicTransportErrorInfo(brokerError, description,
                     _clientBroker, batch.ByteCount, batch.MessageCount);
                 logger.OnTransportError(errorInfo);
             }
-        }       
+        }
 
         private enum ProducerErrorType
         {
@@ -624,14 +711,37 @@ namespace NKafka.Client.Producer.Internal
         {
             public int ByteCount;
 
-            public int MessageCount;        
+            public int MessageCount;
 
             [NotNull]
             public readonly Dictionary<int, List<KafkaMessage>> Partitions;
 
-            public ProduceBatch()
+            private string _partitionText;
+
+            public ProduceBatch(int partitionCount)
             {
-                Partitions = new Dictionary<int, List<KafkaMessage>>();
+                Partitions = new Dictionary<int, List<KafkaMessage>>(partitionCount);
+            }
+
+            public string GetPartititonText()
+            {
+                if (_partitionText != null) return _partitionText;
+
+                var builder = new StringBuilder(10);
+                builder.Append('(');
+                foreach (var partitionPair in Partitions)
+                {
+                    if (builder.Length > 1)
+                    {
+                        builder.Append(',');
+                    }
+                    builder.Append(partitionPair.Key);
+                    builder.Append(':');
+                    builder.Append(partitionPair.Value.Count);
+                }
+
+                _partitionText = builder.ToString();
+                return _partitionText;
             }
         }
 
@@ -660,6 +770,6 @@ namespace NKafka.Client.Producer.Internal
                 }
                 return result;
             }
-        }        
+        }
     }
 }

@@ -54,20 +54,22 @@ namespace NKafka.Client.Internal
             {
                 var worker = GetWorker(topic.TopicName.GetHashCode());
 
-                worker?.AssignTopic(topic);
+                worker.AssignTopic(topic);
             }
 
             foreach (var group in groups)
             {
                 var worker = GetWorker(group.GroupName.GetHashCode());
 
-                worker?.AssignGroup(group);
+                worker.AssignGroup(group);
             }
         }
-        
+
         public void Start()
         {
             if (Status == KafkaClientStatus.Started) return;
+
+            KafkaClientTrace.Trace("[client] Start");
 
             lock (_stateLocker)
             {
@@ -87,10 +89,12 @@ namespace NKafka.Client.Internal
                 Status = KafkaClientStatus.Started;
             }
         }
-        
+
         public void Stop()
         {
             if (Status == KafkaClientStatus.Stopped) return;
+
+            KafkaClientTrace.Trace("[client] Stop. Begin");
 
             lock (_stateLocker)
             {
@@ -101,6 +105,8 @@ namespace NKafka.Client.Internal
                     PauseWorkers();
                     Status = KafkaClientStatus.Paused;
                 }
+
+                KafkaClientTrace.Trace("[client] Stop. Paused workers");
 
                 foreach (var worker in _workers)
                 {
@@ -116,13 +122,17 @@ namespace NKafka.Client.Internal
                 }
                 Task.WhenAll(tasks.ToArray());
 
+                KafkaClientTrace.Trace("[client] Stop. Done");
+
                 Status = KafkaClientStatus.Stopped;
             }
         }
-        
+
         public void Pause()
         {
             if (Status == KafkaClientStatus.Stopped) return;
+
+            KafkaClientTrace.Trace("[client] Pause");
 
             lock (_stateLocker)
             {
@@ -134,11 +144,13 @@ namespace NKafka.Client.Internal
                     Status = KafkaClientStatus.Paused;
                 }
             }
-        }        
-       
+        }
+
         public bool PauseAndWaitFlush(TimeSpan flushTimeout)
         {
             if (Status == KafkaClientStatus.Stopped) return true;
+
+            KafkaClientTrace.Trace("[client] Pause and wait flush");
 
             lock (_stateLocker)
             {
@@ -149,6 +161,8 @@ namespace NKafka.Client.Internal
                     PauseWorkers();
                     Status = KafkaClientStatus.Paused;
                 }
+
+                KafkaClientTrace.Trace("[client] Pause and wait flush. Paused workers");
 
                 var cancellation = new CancellationTokenSource(flushTimeout);
                 var spinWait = new SpinWait();
@@ -166,6 +180,8 @@ namespace NKafka.Client.Internal
                     }
                     spinWait.SpinOnce();
                 }
+
+                KafkaClientTrace.Trace("[client] Pause and wait flush. Done");
 
                 return false;
             }
@@ -195,12 +211,16 @@ namespace NKafka.Client.Internal
 
         private void OnArrangeTopic([NotNull] string topicName, [NotNull, ItemNotNull] IReadOnlyCollection<KafkaClientBrokerPartition> partitions)
         {
+            KafkaClientTrace.Trace($"[client] Arrange topic {topicName}");
+
             foreach (var partition in partitions)
             {
                 var brokerId = partition.BrokerMetadata.BrokerId;
                 var worker = GetWorker(brokerId);
 
-                worker?.AssignTopicPartition(topicName, partition);
+                KafkaClientTrace.Trace($"[client] Arrange topic {topicName}, {partition.PartitionId} on broker {worker.WorkerId}");
+
+                worker.AssignTopicPartition(topicName, partition);
             }
         }
 
@@ -209,9 +229,12 @@ namespace NKafka.Client.Internal
             var brokerId = groupCoordinator.BrokerMetadata.BrokerId;
             var worker = GetWorker(brokerId);
 
-            worker?.AssignGroupCoordinator(groupName, groupCoordinator);
+            KafkaClientTrace.Trace($"[client] Arrange group {groupName} on worker {worker.WorkerId}");
+
+            worker.AssignGroupCoordinator(groupName, groupCoordinator);
         }
 
+        [NotNull]
         private KafkaClientWorker GetWorker(int key)
         {
             var index = Math.Abs(key) % _workers.Count;

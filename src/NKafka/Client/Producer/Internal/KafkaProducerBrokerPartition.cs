@@ -10,7 +10,7 @@ namespace NKafka.Client.Producer.Internal
 {
     internal sealed class KafkaProducerBrokerPartition
     {
-        public readonly int PartitionId;        
+        public readonly int PartitionId;
         [NotNull] public readonly KafkaProducerSettings Settings;
         [NotNull] private readonly string _topicName;
         [CanBeNull] private readonly IKafkaProducerFallbackHandler _fallbackHandler;
@@ -21,38 +21,41 @@ namespace NKafka.Client.Producer.Internal
         public bool IsSynchronized => _sendPendingMessageCount == 0;
         public KafkaProducerTopicPartitionErrorCode? Error { get; private set; }
         public DateTime? ErrorTimestampUtc { get; private set; }
-        [NotNull] public KafkaProducerTopicPartitionLimitInfo LimitInfo { get; private set; }
+        [NotNull]
+        public KafkaProducerTopicPartitionLimitInfo LimitInfo { get; private set; }
 
         public int RetrySendPendingMessageCount { get; private set; }
         public long TotalSentMessageCount { get; private set; }
         public long TotalSentMessageSizeBytes { get; private set; }
         public DateTime? SendMessageTimestampUtc { get; private set; }
 
-        public int SendPendingMessageMessageCount => _sendPendingMessageCount;
-        public long SendPendingMessageMessageSizeBytes => _sendPendingMessageSizeByteses;
+        public int SendPendingMessageCount => _sendPendingMessageCount;
+        public long SendPendingMessageSizeBytes => _sendPendingMessageSizeBytes;
         public long TotalEnqueuedMessageCount => _totalEnqueuedMessageCount;
         public long TotalEnqueuedMessageSizeBytes => _totalEnqueuedMessageSizeBytes;
         public DateTime? EnqueueTimestampUtc { get; private set; }
 
         private int _sendPendingMessageCount;
-        private long _sendPendingMessageSizeByteses;
+        private long _sendPendingMessageSizeBytes;
         private long _totalEnqueuedMessageCount;
         private long _totalEnqueuedMessageSizeBytes;
 
         public long TotalFallbackMessageCount { get; private set; }
         public DateTime? FallbackTimestampUtc { get; private set; }
 
-        [NotNull] private readonly ConcurrentQueue<KafkaMessage> _mainQueue;
-        [NotNull] private readonly Queue<KafkaMessage> _retryQueue;        
+        [NotNull]
+        private readonly ConcurrentQueue<KafkaMessage> _mainQueue;
+        [NotNull]
+        private readonly Queue<KafkaMessage> _retryQueue;
 
-        public KafkaProducerBrokerPartition([NotNull] string topicName, int partitionId, 
+        public KafkaProducerBrokerPartition([NotNull] string topicName, int partitionId,
             [NotNull] KafkaProducerSettings settings,
             [CanBeNull] IKafkaProducerFallbackHandler fallbackHandler,
             [CanBeNull] IKafkaProducerTopicLogger logger)
-        {     
+        {
             PartitionId = partitionId;
             _topicName = topicName;
-            Settings = settings;            
+            Settings = settings;
             _fallbackHandler = fallbackHandler;
             Logger = logger;
             _mainQueue = new ConcurrentQueue<KafkaMessage>();
@@ -66,7 +69,7 @@ namespace NKafka.Client.Producer.Internal
             Interlocked.Increment(ref _sendPendingMessageCount);
             Interlocked.Increment(ref _totalEnqueuedMessageCount);
             var messageSize = GetMessageSize(message);
-            Interlocked.Add(ref _sendPendingMessageSizeByteses, messageSize);
+            Interlocked.Add(ref _sendPendingMessageSizeBytes, messageSize);
             Interlocked.Add(ref _totalEnqueuedMessageSizeBytes, messageSize);
             EnqueueTimestampUtc = DateTime.UtcNow;
         }
@@ -78,7 +81,7 @@ namespace NKafka.Client.Producer.Internal
                 return _mainQueue.TryPeek(out message);
             }
 
-            message = _retryQueue.Peek();            
+            message = _retryQueue.Peek();
             return message != null;
         }
 
@@ -92,16 +95,16 @@ namespace NKafka.Client.Producer.Internal
             }
 
             _retryQueue.Dequeue();
-            RetrySendPendingMessageCount = _retryQueue.Count;            
+            RetrySendPendingMessageCount = _retryQueue.Count;
         }
 
-        public void RollbackMessags([NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> messages)
-        {                        
+        public void RollbackMessages([NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> messages)
+        {
             var oldQueue = _retryQueue.ToArray();
             _retryQueue.Clear();
 
             foreach (var message in messages)
-            {                
+            {
                 _retryQueue.Enqueue(message);
             }
             foreach (var message in oldQueue)
@@ -114,7 +117,7 @@ namespace NKafka.Client.Producer.Internal
         }
 
         public void ConfirmMessags([NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> messages)
-        {            
+        {
             TotalSentMessageCount += messages.Count;
             Interlocked.Add(ref _sendPendingMessageCount, -messages.Count);
 
@@ -123,7 +126,7 @@ namespace NKafka.Client.Producer.Internal
             {
                 messagesSize += GetMessageSize(message);
             }
-            Interlocked.Add(ref _sendPendingMessageSizeByteses, -messagesSize);
+            Interlocked.Add(ref _sendPendingMessageSizeBytes, -messagesSize);
 
             TotalSentMessageSizeBytes += messagesSize;
             SendMessageTimestampUtc = DateTime.UtcNow;
@@ -167,7 +170,7 @@ namespace NKafka.Client.Producer.Internal
         }
 
         public void ResetError()
-        {            
+        {
             Error = null;
         }
 
@@ -188,11 +191,10 @@ namespace NKafka.Client.Producer.Internal
                 message = _retryQueue.Dequeue();
                 if (message == null) continue;
                 FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.ClientStopped);
-            }            
-            
+            }
+
             while (_mainQueue.TryDequeue(out message))
             {
-                Interlocked.Decrement(ref _sendPendingMessageCount);
                 if (message == null) continue;
                 FallbackMessage(message, DateTime.UtcNow, KafkaProducerFallbackErrorCode.ClientStopped);
             }

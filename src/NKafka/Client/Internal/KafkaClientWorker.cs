@@ -17,24 +17,36 @@ namespace NKafka.Client.Internal
 {
     internal sealed class KafkaClientWorker
     {
-        private readonly int _workerId;
-        [NotNull] private readonly string _wokerName;
-        [NotNull] private readonly KafkaProtocol _protocol;
-        [NotNull] private readonly KafkaClientSettings _settings;
-        [CanBeNull] private readonly IKafkaClientLogger _logger;
+        public readonly int WorkerId;
+        [NotNull]
+        private readonly string _wokerName;
+        [NotNull]
+        private readonly KafkaProtocol _protocol;
+        [NotNull]
+        private readonly KafkaClientSettings _settings;
+        [CanBeNull]
+        private readonly IKafkaClientLogger _logger;
 
-        [NotNull] private readonly ConcurrentDictionary<string, KafkaClientTopic> _topics;
-        [NotNull] private readonly ConcurrentDictionary<string, MetadataRequestInfo> _topicMetadataRequests;
+        [NotNull]
+        private readonly ConcurrentDictionary<string, KafkaClientTopic> _topics;
+        [NotNull]
+        private readonly ConcurrentDictionary<string, MetadataRequestInfo> _topicMetadataRequests;
 
-        [NotNull] private readonly ConcurrentDictionary<string, KafkaClientGroup> _groups;
-        [NotNull] private readonly ConcurrentDictionary<string, MetadataRequestInfo> _groupMetadataRequests;
+        [NotNull]
+        private readonly ConcurrentDictionary<string, KafkaClientGroup> _groups;
+        [NotNull]
+        private readonly ConcurrentDictionary<string, MetadataRequestInfo> _groupMetadataRequests;
 
-        [NotNull] private readonly ConcurrentDictionary<int, KafkaClientBroker> _brokers;
-        [NotNull, ItemNotNull] private readonly IReadOnlyCollection<KafkaClientBroker> _metadataBrokers;
+        [NotNull]
+        private readonly ConcurrentDictionary<int, KafkaClientBroker> _brokers;
+        [NotNull, ItemNotNull]
+        private readonly IReadOnlyCollection<KafkaClientBroker> _metadataBrokers;
 
-        [NotNull] private Timer _workerTimer;
+        [NotNull]
+        private Timer _workerTimer;
         private readonly TimeSpan _workerPeriod;
-        [NotNull] private CancellationTokenSource _workerCancellation;
+        [NotNull]
+        private CancellationTokenSource _workerCancellation;
 
         public delegate void ArrangeTopicDelegate([NotNull] string topicName, [NotNull, ItemNotNull] IReadOnlyCollection<KafkaClientBrokerPartition> partitions);
         public event ArrangeTopicDelegate ArrangeTopic;
@@ -45,7 +57,7 @@ namespace NKafka.Client.Internal
         public KafkaClientWorker(int workerId, [NotNull] KafkaClientSettings settings,
             [CanBeNull] IKafkaClientLogger logger)
         {
-            _workerId = workerId;
+            WorkerId = workerId;
             _wokerName = $"worker(id={workerId})";
 
             _settings = settings;
@@ -117,16 +129,19 @@ namespace NKafka.Client.Internal
                 brokerInfos.Add(metadataBrokerInfo);
             }
 
-            return new KafkaClientWorkerInfo(_workerId, topicInfos, groupInfos, brokerInfos, DateTime.UtcNow);
+            return new KafkaClientWorkerInfo(WorkerId, topicInfos, groupInfos, brokerInfos, DateTime.UtcNow);
         }
 
         public void AssignTopic([NotNull] KafkaClientTopic topic)
         {
+            KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Assigned");
             _topics[topic.TopicName] = topic;
         }
 
         public void AssignTopicPartition([NotNull] string topicName, [NotNull] KafkaClientBrokerPartition topicPartition)
         {
+            KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topicName}, {topicPartition.PartitionId})] Assigned");
+
             var brokerId = topicPartition.BrokerMetadata.BrokerId;
             KafkaClientBroker broker;
             if (!_brokers.TryGetValue(brokerId, out broker) || broker == null)
@@ -140,11 +155,15 @@ namespace NKafka.Client.Internal
 
         public void AssignGroup([NotNull] KafkaClientGroup group)
         {
+            KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Assigned");
+
             _groups[group.GroupName] = group;
         }
 
         public void AssignGroupCoordinator([NotNull] string groupName, [NotNull] KafkaClientBrokerGroup groupCoordinator)
         {
+            KafkaClientTrace.Trace($"[worker.group({WorkerId}, {groupName})] Assigned coordinator");
+
             var brokerId = groupCoordinator.BrokerMetadata.BrokerId;
             KafkaClientBroker broker;
             if (!_brokers.TryGetValue(brokerId, out broker) || broker == null)
@@ -158,6 +177,7 @@ namespace NKafka.Client.Internal
 
         public void Pause()
         {
+            KafkaClientTrace.Trace($"[worker({WorkerId})] Pause");
             foreach (var broker in _brokers)
             {
                 broker.Value?.DisableConsume();
@@ -166,6 +186,7 @@ namespace NKafka.Client.Internal
 
         public void Resume()
         {
+            KafkaClientTrace.Trace($"[worker({WorkerId})] Resume");
             foreach (var broker in _brokers)
             {
                 broker.Value?.EnableConsume();
@@ -184,6 +205,8 @@ namespace NKafka.Client.Internal
 
         public void Start()
         {
+            KafkaClientTrace.Trace($"[worker({WorkerId})] Start");
+
             _workerCancellation = new CancellationTokenSource();
             var produceTimer = new Timer(Work);
             // ReSharper disable once InconsistentlySynchronizedField
@@ -193,6 +216,7 @@ namespace NKafka.Client.Internal
 
         public void BeginStop()
         {
+            KafkaClientTrace.Trace($"[worker({WorkerId})] Stop begin");
             try
             {
                 _workerCancellation.Cancel();
@@ -205,6 +229,7 @@ namespace NKafka.Client.Internal
 
         public void EndStop()
         {
+            KafkaClientTrace.Trace($"[worker({WorkerId})] Stop end");
             try
             {
                 var workerTimer = _workerTimer;
@@ -321,6 +346,8 @@ namespace NKafka.Client.Internal
             if (topic.Status == KafkaClientTopicStatus.MetadataError)
             {
                 if (DateTime.UtcNow - topic.MetadataInfo.TimestampUtc < _settings.MetadataErrorRetryPeriod) return;
+
+                KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Restore");
             }
 
             if (topic.Status == KafkaClientTopicStatus.NotInitialized ||
@@ -334,13 +361,20 @@ namespace NKafka.Client.Internal
                 }
 
                 var metadataRequest = CreateTopicMetadataRequest(topic.TopicName);
+
+                KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Metadata sending");
+
                 var metadataRequestResult = metadataBroker.SendRequest(metadataRequest, _wokerName);
                 if (metadataRequestResult.HasError)
                 {
+                    KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Metadata error");
+
                     topic.Status = KafkaClientTopicStatus.MetadataError;
                     topic.ChangeMetadataState(false, ConvertTopicMetadataRequestError(metadataRequestResult.Error), null);
                     return;
                 }
+
+                KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Metadata sent");
 
                 var metadataRequestId = metadataRequestResult.HasData ? metadataRequestResult.Data : null;
                 if (metadataRequestId.HasValue)
@@ -355,6 +389,8 @@ namespace NKafka.Client.Internal
                 MetadataRequestInfo metadataRequest;
                 if (!_topicMetadataRequests.TryGetValue(topic.TopicName, out metadataRequest) || metadataRequest == null)
                 {
+                    KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Metadata error");
+
                     topic.Status = KafkaClientTopicStatus.MetadataError;
                     return;
                 }
@@ -369,6 +405,7 @@ namespace NKafka.Client.Internal
 
                 if (topicMetadataResponse.HasError)
                 {
+                    KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Metadata error {topicMetadataResponse.Error}");
                     topic.Status = KafkaClientTopicStatus.MetadataError;
                     topic.ChangeMetadataState(false, ConvertTopicMetadataRequestError(topicMetadataResponse.Error), null);
                     return;
@@ -376,6 +413,8 @@ namespace NKafka.Client.Internal
 
                 if (!topicMetadataResponse.HasData || topicMetadataResponse.Data == null)
                 {
+                    KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Metadata error");
+
                     topic.Status = KafkaClientTopicStatus.MetadataError;
                     topic.ChangeMetadataState(false, KafkaClientTopicMetadataErrorCode.ProtocolError, null);
                     return;
@@ -386,6 +425,8 @@ namespace NKafka.Client.Internal
 
                 if (hasMetadataError)
                 {
+                    KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Metadata error");
+
                     topic.Status = KafkaClientTopicStatus.MetadataError;
                     topic.ChangeMetadataState(false, KafkaClientTopicMetadataErrorCode.MetadataError, metadata);
                     try
@@ -400,6 +441,7 @@ namespace NKafka.Client.Internal
                     return;
                 }
 
+                KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Metadata received");
                 topic.ChangeMetadataState(true, null, metadata);
 
                 var brokerPartitions = new List<KafkaClientBrokerPartition>(topic.Partitions.Count);
@@ -407,6 +449,8 @@ namespace NKafka.Client.Internal
                 {
                     brokerPartitions.Add(topicPartition.BrokerPartition);
                 }
+
+                KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Arrange");
 
                 ArrangeTopic?.Invoke(topic.TopicName, brokerPartitions);
                 topic.Status = KafkaClientTopicStatus.Ready;
@@ -420,6 +464,8 @@ namespace NKafka.Client.Internal
                 {
                     if (paritition.BrokerPartition.Status == KafkaClientBrokerPartitionStatus.RearrangeRequired)
                     {
+                        KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Rearrange");
+
                         topic.Status = KafkaClientTopicStatus.RearrangeRequired;
                         break;
                     }
@@ -428,6 +474,8 @@ namespace NKafka.Client.Internal
 
             if (topic.Status == KafkaClientTopicStatus.RearrangeRequired)
             {
+                KafkaClientTrace.Trace($"[worker.topic({WorkerId}, {topic.TopicName})] Unplug");
+
                 var areAllUnplugged = true;
                 foreach (var paritition in topic.Partitions)
                 {
@@ -450,6 +498,8 @@ namespace NKafka.Client.Internal
             if (group.Status == KafkaClientGroupStatus.MetadataError)
             {
                 if (DateTime.UtcNow - group.MetadataInfo.TimestampUtc < _settings.MetadataErrorRetryPeriod) return;
+
+                KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Restore");
             }
 
             if (cancellation.IsCancellationRequested) return;
@@ -465,13 +515,19 @@ namespace NKafka.Client.Internal
                 }
 
                 var metadataRequest = CreateGroupMetadataRequest(group.GroupName);
+
+                KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Metadata sending");
+
                 var metadataRequestResult = metadataBroker.SendRequest(metadataRequest, _wokerName);
                 if (metadataRequestResult.HasError)
                 {
+                    KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Metadata error {metadataRequestResult.Error}");
                     group.Status = KafkaClientGroupStatus.MetadataError;
                     group.ChangeMetadataState(false, ConvertGroupMetadataRequestError(metadataRequestResult.Error), null);
                     return;
                 }
+
+                KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Metadata sent");
 
                 var metadataRequestId = metadataRequestResult.HasData ? metadataRequestResult.Data : null;
                 if (metadataRequestId.HasValue)
@@ -485,10 +541,10 @@ namespace NKafka.Client.Internal
 
             if (group.Status == KafkaClientGroupStatus.MetadataRequested)
             {
-
                 MetadataRequestInfo metadataRequest;
                 if (!_groupMetadataRequests.TryGetValue(group.GroupName, out metadataRequest) || metadataRequest == null)
                 {
+                    KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Metadata error");
                     group.Status = KafkaClientGroupStatus.MetadataError;
                     return;
                 }
@@ -503,6 +559,7 @@ namespace NKafka.Client.Internal
 
                 if (groupMetadataResponse.HasError)
                 {
+                    KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Metadata error {groupMetadataResponse.Error}");
                     group.Status = KafkaClientGroupStatus.MetadataError;
                     group.ChangeMetadataState(false, ConvertGroupMetadataRequestError(groupMetadataResponse.Error), null);
                     return;
@@ -510,6 +567,7 @@ namespace NKafka.Client.Internal
 
                 if (!groupMetadataResponse.HasData || groupMetadataResponse.Data == null)
                 {
+                    KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Metadata error");
                     group.Status = KafkaClientGroupStatus.MetadataError;
                     group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.ProtocolError, null);
                     return;
@@ -520,6 +578,7 @@ namespace NKafka.Client.Internal
 
                 if (hasMetadataError)
                 {
+                    KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Metadata error");
                     group.Status = KafkaClientGroupStatus.MetadataError;
                     group.ChangeMetadataState(false, KafkaClientGroupMetadataErrorCode.MetadataError, metadata);
                     try
@@ -534,6 +593,7 @@ namespace NKafka.Client.Internal
                     return;
                 }
 
+                KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Metadata received");
                 group.ChangeMetadataState(true, null, metadata);
 
                 var groupCoordinator = group.BrokerGroup;
@@ -544,6 +604,7 @@ namespace NKafka.Client.Internal
                     return;
                 }
 
+                KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Arrange");
                 ArrangeGroup?.Invoke(group.GroupName, groupCoordinator);
                 group.Status = KafkaClientGroupStatus.Ready;
             }
@@ -552,6 +613,7 @@ namespace NKafka.Client.Internal
             {
                 if (group.BrokerGroup?.Status == KafkaClientBrokerGroupStatus.RearrangeRequired)
                 {
+                    KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Rearrange");
                     group.Status = KafkaClientGroupStatus.RearrangeRequired;
                 }
             }
@@ -566,6 +628,7 @@ namespace NKafka.Client.Internal
 
                 if (group.BrokerGroup?.Status == KafkaClientBrokerGroupStatus.Unplugged)
                 {
+                    KafkaClientTrace.Trace($"[worker.group({WorkerId}, {group.GroupName})] Plug");
                     group.Status = KafkaClientGroupStatus.NotInitialized;
                 }
             }
@@ -637,15 +700,17 @@ namespace NKafka.Client.Internal
         [NotNull]
         private KafkaClientBroker CreateBroker([NotNull]KafkaBrokerMetadata brokerMetadata)
         {
-            return new KafkaClientBroker(_protocol, _workerId, KafkaClientBrokerType.MessageBroker,
+            KafkaClientTrace.Trace($"[worker.borker({WorkerId}, {brokerMetadata.Host})] Create regular");
+            return new KafkaClientBroker(_protocol, WorkerId, KafkaClientBrokerType.MessageBroker,
                 brokerMetadata, _settings, _logger);
         }
 
         [NotNull]
         private KafkaClientBroker CreateMetadataBroker([NotNull]KafkaBrokerInfo brokerInfo)
         {
+            KafkaClientTrace.Trace($"[worker.borker({WorkerId}, {brokerInfo.Host})] Create metadata");
             var brokerMetadata = new KafkaBrokerMetadata(0, brokerInfo.Host, brokerInfo.Port, null);
-            return new KafkaClientBroker(_protocol, _workerId, KafkaClientBrokerType.MetadataBroker,
+            return new KafkaClientBroker(_protocol, WorkerId, KafkaClientBrokerType.MetadataBroker,
                 brokerMetadata, _settings, _logger);
         }
 
@@ -668,7 +733,7 @@ namespace NKafka.Client.Internal
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.ConnectionClosed;
                         break;
                     case KafkaBrokerErrorCode.ConnectionMaintenance:
-                        topicErrorCode = KafkaClientTopicMetadataErrorCode.ClientMaintenance;
+                        topicErrorCode = KafkaClientTopicMetadataErrorCode.TransportError;
                         break;
                     case KafkaBrokerErrorCode.BadRequest:
                         topicErrorCode = KafkaClientTopicMetadataErrorCode.ProtocolError;
@@ -791,9 +856,11 @@ namespace NKafka.Client.Internal
 
         private class PartitionMetadataComprarer : IComparer<KafkaTopicPartitionMetadata>
         {
-            public int Compare([NotNull] KafkaTopicPartitionMetadata x, [NotNull] KafkaTopicPartitionMetadata y)
+            public int Compare(KafkaTopicPartitionMetadata x, KafkaTopicPartitionMetadata y)
             {
+                // ReSharper disable PossibleNullReferenceException
                 return x.PartitionId.CompareTo(y.PartitionId);
+                // ReSharper restore PossibleNullReferenceException
             }
         }
 
@@ -902,7 +969,8 @@ namespace NKafka.Client.Internal
         private sealed class MetadataRequestInfo
         {
             public readonly int RequestId;
-            [NotNull] public readonly KafkaClientBroker Broker;
+            [NotNull]
+            public readonly KafkaClientBroker Broker;
 
             public MetadataRequestInfo(int requestId, [NotNull] KafkaClientBroker broker)
             {

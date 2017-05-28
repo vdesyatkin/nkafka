@@ -33,14 +33,12 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [NotNull] private readonly Dictionary<string, int> _offsetFetchRequests;
         [NotNull] private readonly Dictionary<string, int> _offsetCommitRequests;
 
-        private readonly TimeSpan _coordinatorClientTimeout;
-
         private const int DefaultGenerationId = -1;
         private const int DefaultProtocolVersion = -1;
         // ReSharper disable once InconsistentNaming
         private readonly string DefaultMemberId = string.Empty;
 
-        public KafkaCoordinatorBroker([NotNull] KafkaBroker broker, [NotNull] IKafkaClientBroker clientBroker, TimeSpan consumePeriod)
+        public KafkaCoordinatorBroker([NotNull] KafkaBroker broker, [NotNull] IKafkaClientBroker clientBroker)
         {
             _broker = broker;
             _clientBroker = clientBroker;
@@ -51,8 +49,6 @@ namespace NKafka.Client.ConsumerGroup.Internal
             _heartbeatRequests = new Dictionary<string, int>();
             _offsetFetchRequests = new Dictionary<string, int>();
             _offsetCommitRequests = new Dictionary<string, int>();
-
-            _coordinatorClientTimeout = consumePeriod + TimeSpan.FromSeconds(1) + consumePeriod;
         }
 
         public void RemoveGroup([NotNull] string groupName)
@@ -88,6 +84,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
             {
                 var group = groupPair.Value;
                 if (group == null) continue;
+
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Stop");
 
                 if (group.Status == KafkaCoordinatorGroupStatus.Ready)
                 {
@@ -125,6 +123,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (group.Status == KafkaCoordinatorGroupStatus.RearrangeRequired)
             {
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Rearrange required");
                 return;
             }
 
@@ -134,6 +133,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 {
                     return;
                 }
+
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Restore");
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.NotInitialized ||
@@ -176,23 +177,26 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
                 if (group.GroupType == KafkaConsumerGroupType.BalancedConsumers)
                 {
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Join sending");
+
                     var joinRequest = CreateJoinGroupRequest(group);
                     if (joinRequest == null) return;
 
-                    var joinGroupServerTimeout = group.Settings.GroupRebalanceTimeout +
-                                                 group.Settings.GroupSessionTimeout;
+                    var joinGroupTimeout = group.Settings.GroupRebalanceTimeout +
+                                           group.Settings.GroupSessionTimeout;
 
-                    if (group.Settings.JoinGroupServerTimeout > joinGroupServerTimeout)
+                    if (group.Settings.JoinGroupTimeout > joinGroupTimeout)
                     {
-                        joinGroupServerTimeout = group.Settings.JoinGroupServerTimeout;
+                        joinGroupTimeout = group.Settings.JoinGroupTimeout;
                     }
 
                     if (!TrySendRequest(group, joinRequest, "SendJoinGroupRequest",
-                            _joinGroupRequests, _coordinatorClientTimeout + joinGroupServerTimeout))
+                        _joinGroupRequests, joinGroupTimeout))
                     {
                         return;
                     }
 
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Join sent");
                     group.Status = KafkaCoordinatorGroupStatus.JoinGroupRequested;
                 }
             }
@@ -202,7 +206,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (cancellation.IsCancellationRequested) return;
 
                 if (!TryHandleResponse<KafkaJoinGroupResponse>(group, "ReceiveJoinGroupResponse",
-                        _joinGroupRequests, TryHandleJoinGroupResponse))
+                    _joinGroupRequests, TryHandleJoinGroupResponse,
+                    rollbackStatus: KafkaCoordinatorGroupStatus.NotInitialized))
                 {
                     return;
                 }
@@ -212,15 +217,18 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     var addtionalTopicNames = group.LeaderData?.AdditionalTopicNames;
                     if (addtionalTopicNames == null || addtionalTopicNames.Count == 0)
                     {
+                        KafkaClientTrace.Trace($"[group({group.GroupName})] Joined as a leader");
                         group.Status = KafkaCoordinatorGroupStatus.JoinedAsLeader;
                     }
                     else
                     {
+                        KafkaClientTrace.Trace($"[group({group.GroupName})] Joined as a leader (additional topics required)");
                         group.Status = KafkaCoordinatorGroupStatus.AdditionalTopicsRequired;
                     }
                 }
                 else
                 {
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Joined as a member");
                     group.Status = KafkaCoordinatorGroupStatus.JoinedAsMember;
                 }
             }
@@ -232,17 +240,21 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 var addtionalTopicNames = group.LeaderData?.AdditionalTopicNames;
                 if (addtionalTopicNames == null || addtionalTopicNames.Count == 0)
                 {
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Joined as a leader");
                     group.Status = KafkaCoordinatorGroupStatus.JoinedAsLeader;
                 }
                 else
                 {
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Additional topics metadata sending");
+
                     var topicMetadataRequest = new KafkaTopicMetadataRequest(addtionalTopicNames);
                     if (!TrySendRequest(group, topicMetadataRequest, "SendTopicMetadataRequest(additional topics)",
-                        _additionalTopicsRequests, _coordinatorClientTimeout))
+                        _additionalTopicsRequests, group.Settings.OffsetFetchTimeout))
                     {
                         return;
                     }
 
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Additional topics metadata sent");
                     group.Status = KafkaCoordinatorGroupStatus.AdditionalTopicsMetadataRequested;
                 }
             }
@@ -252,11 +264,13 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (cancellation.IsCancellationRequested) return;
 
                 if (!TryHandleResponse<KafkaTopicMetadataResponse>(group, "ReceiveSendTopicMetadataResponse(additional topics)",
-                        _additionalTopicsRequests, TryHandleAdditionalTopics))
+                    _additionalTopicsRequests, TryHandleAdditionalTopics,
+                    rollbackStatus: KafkaCoordinatorGroupStatus.AdditionalTopicsRequired))
                 {
                     return;
                 }
 
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Joined as a leader");
                 group.Status = KafkaCoordinatorGroupStatus.JoinedAsLeader;
             }
 
@@ -264,44 +278,62 @@ namespace NKafka.Client.ConsumerGroup.Internal
             {
                 if (cancellation.IsCancellationRequested) return;
 
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Leader assigning");
+
                 if (!TryAssignTopics(group, "Assignment"))
                 {
                     return;
                 }
 
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Sync sending");
+
                 var syncRequest = CreateSyncGroupRequest(group);
                 if (!TrySendRequest(group, syncRequest, "SendSyncGroupRequest(leader)",
-                        _syncGroupRequests, _coordinatorClientTimeout + group.Settings.SyncGroupServerTimeout))
+                    _syncGroupRequests, group.Settings.SyncGroupTimeout))
                 {
                     return;
                 }
 
-                group.Status = KafkaCoordinatorGroupStatus.SyncGroupRequested;
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Sync sent");
+
+                group.Status = KafkaCoordinatorGroupStatus.SyncGroupRequestedAsLeader;
             }
 
             if (group.Status == KafkaCoordinatorGroupStatus.JoinedAsMember)
             {
                 if (cancellation.IsCancellationRequested) return;
 
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Sync sending");
+
                 var syncRequest = CreateSyncGroupRequest(group);
                 if (!TrySendRequest(group, syncRequest, "SendSyncGroupRequst(member)",
-                        _syncGroupRequests, _coordinatorClientTimeout + group.Settings.SyncGroupServerTimeout))
+                    _syncGroupRequests, group.Settings.SyncGroupTimeout))
                 {
                     return;
                 }
 
-                group.Status = KafkaCoordinatorGroupStatus.SyncGroupRequested;
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Sync sent");
+
+                group.Status = KafkaCoordinatorGroupStatus.SyncGroupRequestedAsMember;
             }
 
-            if (group.Status == KafkaCoordinatorGroupStatus.SyncGroupRequested)
+            if (group.Status == KafkaCoordinatorGroupStatus.SyncGroupRequestedAsLeader ||
+                group.Status == KafkaCoordinatorGroupStatus.SyncGroupRequestedAsMember)
             {
                 if (cancellation.IsCancellationRequested) return;
 
+                var rollbackStatus = group.Status == KafkaCoordinatorGroupStatus.SyncGroupRequestedAsLeader
+                    ? KafkaCoordinatorGroupStatus.JoinedAsLeader
+                    : KafkaCoordinatorGroupStatus.JoinedAsMember;
+
                 if (!TryHandleResponse<KafkaSyncGroupResponse>(group, "ReceiveSyncGroupResponse",
-                        _syncGroupRequests, TryHandleSyncGroupResponse))
+                    _syncGroupRequests, TryHandleSyncGroupResponse,
+                    rollbackStatus: rollbackStatus))
                 {
                     return;
                 }
+
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Sync done");
 
                 group.Status = KafkaCoordinatorGroupStatus.FirstHeartbeatRequired;
             }
@@ -310,12 +342,17 @@ namespace NKafka.Client.ConsumerGroup.Internal
             {
                 if (cancellation.IsCancellationRequested) return;
 
+                KafkaClientTrace.Trace($"[group({group.GroupName})] First heartbeat sending");
+
+
                 var heartbeatRequest = CreateHeartbeatRequest(group);
                 if (!TrySendRequest(group, heartbeatRequest, "SendHeartbeatRequest(first)",
-                        _heartbeatRequests, _coordinatorClientTimeout + group.Settings.HeartbeatServerTimeout))
+                    _heartbeatRequests, group.Settings.HeartbeatTimeout))
                 {
                     return;
                 }
+
+                KafkaClientTrace.Trace($"[group({group.GroupName})] First heartbeat sent");
 
                 group.HeartbeatTimestampUtc = DateTime.UtcNow;
                 group.Status = KafkaCoordinatorGroupStatus.FirstHeatbeatRequested;
@@ -326,10 +363,13 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (cancellation.IsCancellationRequested) return;
 
                 if (!TryHandleResponse<KafkaHeartbeatResponse>(group, "ReceiveHeartbeatResponse(first)",
-                        _heartbeatRequests, TryHandleHeartbeatResponse))
+                    _heartbeatRequests, TryHandleHeartbeatResponse,
+                    rollbackStatus: KafkaCoordinatorGroupStatus.FirstHeartbeatRequired))
                 {
                     return;
                 }
+
+                KafkaClientTrace.Trace($"[group({group.GroupName})] First heartbeat done");
 
                 group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequired;
             }
@@ -339,14 +379,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
                  group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequired ||
                  group.Status == KafkaCoordinatorGroupStatus.OffsetFetchRequested))
             {
-
                 if (cancellation.IsCancellationRequested) return;
                 //regular heartbeat
 
                 if (_heartbeatRequests.ContainsKey(group.GroupName))
                 {
+                    var currentStatus = group.Status;
                     if (!TryHandleResponse<KafkaHeartbeatResponse>(group, "ReceiveHeartbeatResponse",
-                            _heartbeatRequests, TryHandleHeartbeatResponse))
+                        _heartbeatRequests, TryHandleHeartbeatResponse,
+                        rollbackStatus: currentStatus))
                     {
                         return;
                     }
@@ -355,12 +396,16 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (group.HeartbeatTimestampUtc + group.HeartbeatPeriod <= DateTime.UtcNow &&
                     !_heartbeatRequests.ContainsKey(group.GroupName))
                 {
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Heartbeat sending");
+
                     var heartbeatRequest = CreateHeartbeatRequest(group);
                     if (!TrySendRequest(group, heartbeatRequest, "SendHearbeatRequest",
-                            _heartbeatRequests, _coordinatorClientTimeout + group.Settings.HeartbeatServerTimeout))
+                        _heartbeatRequests, group.Settings.HeartbeatTimeout))
                     {
                         return;
                     }
+
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Heartbeat sent");
 
                     group.HeartbeatTimestampUtc = DateTime.UtcNow;
                 }
@@ -374,12 +419,16 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     || group.GroupType == KafkaConsumerGroupType.SingleConsumer
                     || group.GroupType == KafkaConsumerGroupType.Observer)
                 {
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Offset fetch sending");
+
                     var offsetFetchRequest = CreateOffsetFetchRequest(group);
                     if (!TrySendRequest(group, offsetFetchRequest, "SendOffsetFetchRequest",
-                            _offsetFetchRequests, _coordinatorClientTimeout + group.Settings.OffsetFetchServerTimeout))
+                        _offsetFetchRequests, group.Settings.OffsetFetchTimeout))
                     {
                         return;
                     }
+
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] Offset fetch sent");
 
                     group.Status = KafkaCoordinatorGroupStatus.OffsetFetchRequested;
                 }
@@ -411,10 +460,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
                 if (cancellation.IsCancellationRequested) return;
 
                 if (!TryHandleResponse<KafkaOffsetFetchResponse>(group, "ReceiveOffsetFetchResponse",
-                        _offsetFetchRequests, TryHandleOffsetFetchResponse))
+                    _offsetFetchRequests, TryHandleOffsetFetchResponse,
+                    rollbackStatus: KafkaCoordinatorGroupStatus.OffsetFetchRequired))
                 {
                     return;
                 }
+
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Offset fetch done");
+
+                KafkaClientTrace.Trace($"[group({group.GroupName})] Ready");
 
                 group.CommitTimestampUtc = DateTime.UtcNow;
                 group.Status = KafkaCoordinatorGroupStatus.Ready;
@@ -432,7 +486,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     if (_offsetCommitRequests.ContainsKey(group.GroupName))
                     {
                         if (!TryHandleResponse<KafkaOffsetCommitResponse>(group, "ReceiveOffsetCommitResponse",
-                                _offsetCommitRequests, TryHandleOffsetCommitResponse))
+                            _offsetCommitRequests, TryHandleOffsetCommitResponse,
+                            rollbackStatus: KafkaCoordinatorGroupStatus.Ready))
                         {
                             return;
                         }
@@ -443,14 +498,20 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     {
                         group.CommitTimestampUtc = DateTime.UtcNow;
 
+                        KafkaClientTrace.Trace($"[group({group.GroupName})] Commit pending");
+
                         var commitRequest = CreateOffsetCommitRequest(group);
                         if (commitRequest != null)
                         {
+                            KafkaClientTrace.Trace($"[group({group.GroupName})] Commit sending");
+
                             if (!TrySendRequest(group, commitRequest, "SendOffsetCommitRequest",
-                                    _offsetCommitRequests, _coordinatorClientTimeout + group.Settings.OffsetCommitServerTimeout))
+                                _offsetCommitRequests, group.Settings.OffsetCommitTimeout))
                             {
                                 return;
                             }
+
+                            KafkaClientTrace.Trace($"[group({group.GroupName})] Commit sent");
                         }
                     }
 
@@ -464,7 +525,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     if (_offsetFetchRequests.ContainsKey(group.GroupName))
                     {
                         if (!TryHandleResponse<KafkaOffsetFetchResponse>(group, "ReceiveOffsetFetchResponse",
-                                _offsetFetchRequests, TryHandleOffsetFetchResponse))
+                            _offsetFetchRequests, TryHandleOffsetFetchResponse,
+                            rollbackStatus: KafkaCoordinatorGroupStatus.Ready))
                         {
                             return;
                         }
@@ -475,12 +537,16 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     {
                         group.CommitTimestampUtc = DateTime.UtcNow;
 
+                        KafkaClientTrace.Trace($"[group({group.GroupName})] Catchup offset fetch sending");
+
                         var offsetFetchRequest = CreateOffsetFetchRequest(group);
                         if (!TrySendRequest(group, offsetFetchRequest, "SendOffsetFetchRequest",
-                                _offsetFetchRequests, _coordinatorClientTimeout + group.Settings.OffsetFetchServerTimeout))
+                            _offsetFetchRequests, group.Settings.OffsetFetchTimeout))
                         {
                             return;
                         }
+
+                        KafkaClientTrace.Trace($"[group({group.GroupName})] Catchup offset fetch sent");
                     }
 
                     ResetError(group);
@@ -1430,10 +1496,11 @@ namespace NKafka.Client.ConsumerGroup.Internal
             string description,
             [NotNull] Dictionary<string, int> requests,
             TimeSpan timeout
-            )
+        )
             where TRequest : class, IKafkaRequest
         {
             var requestResult = _broker.Send(request, group.GroupCoordinatorName, timeout);
+
             if (requestResult.HasError || requestResult.Data == null)
             {
                 HandleBrokerError(group, requestResult.Error ?? KafkaBrokerErrorCode.TransportError, description);
@@ -1449,13 +1516,16 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         private bool TryHandleResponse<TResponse>([NotNull] KafkaCoordinatorGroup group, string description,
             [NotNull] Dictionary<string, int> requests,
-            [NotNull] KafkaHandleResponseMethod<TResponse> handleMethod
-            )
+            [NotNull] KafkaHandleResponseMethod<TResponse> handleMethod,
+            KafkaCoordinatorGroupStatus rollbackStatus
+        )
             where TResponse : class, IKafkaResponse
         {
             int requestId;
             if (!requests.TryGetValue(group.GroupName, out requestId))
             {
+                KafkaClientTrace.Trace($"[group({group.GroupName})] [ERROR] Request {description} not found");
+
                 HandleProtocolError(group, KafkaConsumerGroupErrorCode.ClientError, GroupErrorType.Error, description);
                 LogProtocolError(group, KafkaConsumerGroupErrorCode.ClientError, GroupErrorType.Warning, $"{description}(no request");
                 return false;
@@ -1468,24 +1538,32 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
             if (response.Error != null || response.Data == null)
             {
-                HandleBrokerError(group, response.Error ?? KafkaBrokerErrorCode.TransportError, description);
+                HandleBrokerError(group, response.Error ?? KafkaBrokerErrorCode.TransportError, description, rollbackStatus);
                 return false;
             }
 
             return handleMethod(group, response.Data, description);
         }
 
-        private void HandleBrokerError([NotNull] KafkaCoordinatorGroup group, KafkaBrokerErrorCode brokerError, string errorDescription)
+        private void HandleBrokerError([NotNull] KafkaCoordinatorGroup group, KafkaBrokerErrorCode brokerError, string errorDescription,
+            KafkaCoordinatorGroupStatus? rollbackStatus = null)
         {
+            if (brokerError == KafkaBrokerErrorCode.ConnectionMaintenance)
+            {
+                if (rollbackStatus != null)
+                {
+                    KafkaClientTrace.Trace($"[group({group.GroupName})] [ROLLBACK] Status={rollbackStatus.Value} Description={errorDescription}");
+                    group.Status = rollbackStatus.Value;
+                }
+                return;
+            }
+
             KafkaConsumerGroupErrorCode sessionErrorCode;
 
             switch (brokerError)
             {
                 case KafkaBrokerErrorCode.ConnectionClosed:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.ConnectionClosed;
-                    break;
-                case KafkaBrokerErrorCode.ConnectionMaintenance:
-                    sessionErrorCode = KafkaConsumerGroupErrorCode.ClientMaintenance;
                     break;
                 case KafkaBrokerErrorCode.BadRequest:
                     sessionErrorCode = KafkaConsumerGroupErrorCode.ProtocolError;
@@ -1529,6 +1607,8 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     break;
             }
 
+            KafkaClientTrace.Trace($"[group({group.GroupName})] [ERROR] Code={sessionErrorCode} Description={errorDescription}");
+
             group.SetError(sessionErrorCode);
             group.ResetData();
             group.ResetSettings();
@@ -1538,7 +1618,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         }
 
         private void HandleProtocolError([NotNull] KafkaCoordinatorGroup group, KafkaConsumerGroupErrorCode errorCode,
-            GroupErrorType errorType, string description)
+            GroupErrorType errorType, string description, bool logError = true)
         {
             switch (errorType)
             {
@@ -1566,7 +1646,15 @@ namespace NKafka.Client.ConsumerGroup.Internal
                     group.Status = KafkaCoordinatorGroupStatus.RearrangeRequired;
                     break;
             }
-            LogProtocolError(group, errorCode, errorType, description);
+
+            KafkaClientTrace.Trace(errorType == GroupErrorType.Rebalance
+                ? $"[group({group.GroupName})] [REBALANCE] Code={errorCode} Description={description}"
+                : $"[group({group.GroupName})] [ERROR] Code={errorCode} Description={description}");
+
+            if (logError)
+            {
+                LogProtocolError(group, errorCode, errorType, description);
+            }
         }
 
         private enum GroupErrorType

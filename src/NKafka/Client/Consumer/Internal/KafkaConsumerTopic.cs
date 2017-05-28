@@ -26,7 +26,7 @@ namespace NKafka.Client.Consumer.Internal
         [NotNull] private readonly ConcurrentDictionary<long, KafkaConsumerTopicPackageInfo> _packages;
         private long _currentPackageId;
 
-        public KafkaConsumerTopic([NotNull] string topicName,            
+        public KafkaConsumerTopic([NotNull] string topicName,
             [NotNull] string groupName, [CanBeNull] string catchUpGroupName,
             [NotNull] KafkaConsumerSettings settings,
             [CanBeNull] IKafkaConsumerFallbackHandler fallbackHandler,
@@ -83,7 +83,7 @@ namespace NKafka.Client.Consumer.Internal
                 var partitionMessages = new List<KafkaMessage>(partitionConsumePendingCount);
 
                 long minOffset = long.MaxValue;
-                long maxOffset = 0;                
+                long maxOffset = 0;
 
                 KafkaMessageAndOffset messageAndOffset;
                 while (partitionMessages.Count <= partitionConsumePendingCount && partitionBroker.TryConsumeMessage(out messageAndOffset))
@@ -95,7 +95,7 @@ namespace NKafka.Client.Consumer.Internal
                     partitionMessages.Add(message);
 
                     if (messageAndOffset.Offset < minOffset)
-                    {                        
+                    {
                         minOffset = messageAndOffset.Offset;
                     }
                     if (messageAndOffset.Offset > maxOffset)
@@ -159,7 +159,7 @@ namespace NKafka.Client.Consumer.Internal
                 foreach (var partitionPair in _topicPartitions)
                 {
                     var partitionBroker = partitionPair.Value?.BrokerPartition;
-                    if (partitionBroker == null || !partitionBroker.IsAssigned) continue;
+                    if (partitionBroker == null || partitionBroker.IsAssigned != true) continue;
                     isReady = (isReady ?? true) && partitionBroker.IsReady;
                 }
 
@@ -218,7 +218,7 @@ namespace NKafka.Client.Consumer.Internal
 
                 var partitionBroker = partition.BrokerPartition;
 
-                var partitionIsAssigned = partitionBroker.IsAssigned;
+                var partitionIsAssigned = partitionBroker.IsAssigned == true;
                 var partitionIsReady = partitionBroker.IsReady;
                 var partitionIsSynchronized = partitionBroker.IsSynchronized;
 

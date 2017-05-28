@@ -61,6 +61,7 @@
     <Compile Include="Client\Consumer\Logging\KafkaConsumerTopicProtocolErrorInfo.cs" />
     <Compile Include="Client\Consumer\Logging\KafkaConsumerTopicSerializationErrorInfo.cs" />
     <Compile Include="Client\Consumer\Logging\KafkaConsumerTopicTransportErrorInfo.cs" />
+    <Compile Include="Client\KafkaClientTrace.cs" />
     <Compile Include="Client\Producer\IKafkaProducerLogger.cs" />
     <Compile Include="Client\Producer\KafkaKeyHashCodePartitioner.cs" />
     <Compile Include="Client\Producer\KafkaRandomPartitioner.cs" />

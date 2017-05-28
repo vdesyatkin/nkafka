@@ -1,22 +1,21 @@
 ﻿using JetBrains.Annotations;
 
 namespace NKafka.Client.Consumer.Diagnostics
-{    
+{
     [PublicAPI]
     public enum KafkaConsumerTopicPartitionErrorCode
     {
         UnknownError = 0,
 
         ConnectionClosed = -1,
-        ClientMaintenance = -2,
-        TransportError = -3,
-        ProtocolError = -4,
-        ClientTimeout = -5,
-        ClientError = -6,
+        TransportError = -2,
+        ProtocolError = -3,
+        ClientTimeout = -4,
+        ClientError = -5,
 
-        HostUnreachable = -7,
-        HostNotAvailable = -8,
-        NotAuthorized = -9,
+        HostUnreachable = -6,
+        HostNotAvailable = -7,
+        NotAuthorized = -8,
 
 
         /// <summary>

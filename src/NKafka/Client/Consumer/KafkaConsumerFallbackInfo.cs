@@ -1,12 +1,11 @@
 ﻿using JetBrains.Annotations;
 
 namespace NKafka.Client.Consumer
-{   
+{
     [PublicAPI]
     public sealed class KafkaConsumerFallbackInfo
     {
-        [NotNull]
-        public readonly string TopicName;
+        [NotNull] public readonly string TopicName;
 
         public readonly int PartitionId;
 
@@ -14,9 +13,11 @@ namespace NKafka.Client.Consumer
 
         public readonly long ClientCommitOffset;
 
-        public readonly long? ServerCommitOffset;        
+        public readonly long? ServerCommitOffset;
 
-        public KafkaConsumerFallbackInfo([NotNull] string topicName, int partitionId,            
+        public bool IsHandled;
+
+        public KafkaConsumerFallbackInfo([NotNull] string topicName, int partitionId,
             KafkaConsumerFallbackErrorCode reason,
             long clientCommitOffset, long? serverCommitOffset)
         {

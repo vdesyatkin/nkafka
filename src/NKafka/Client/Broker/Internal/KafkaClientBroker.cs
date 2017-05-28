@@ -22,7 +22,8 @@ namespace NKafka.Client.Broker.Internal
         public bool IsEnabled => _broker.IsOpenned && _broker.Error == null;
         public bool IsStarted => _broker.IsOpenned;
 
-        [CanBeNull] public IKafkaClientLogger Logger { get; }
+        [CanBeNull]
+        public IKafkaClientLogger Logger { get; }
 
         [NotNull] private readonly KafkaBroker _broker;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;
@@ -57,9 +58,9 @@ namespace NKafka.Client.Broker.Internal
 
             _topics = new ConcurrentDictionary<string, KafkaClientBrokerTopic>();
             _groups = new ConcurrentDictionary<string, KafkaClientBrokerGroup>();
-            _producer = new KafkaProducerBroker(broker, this, settings.WorkerPeriod);
-            _consumer = new KafkaConsumerBroker(broker, this, settings.WorkerPeriod);
-            _coordinator = new KafkaCoordinatorBroker(broker, this, settings.WorkerPeriod);
+            _producer = new KafkaProducerBroker(broker, this);
+            _consumer = new KafkaConsumerBroker(broker, this);
+            _coordinator = new KafkaCoordinatorBroker(broker, this);
 
             var workerPeriod = settings.WorkerPeriod;
             if (workerPeriod < TimeSpan.FromMilliseconds(100))
@@ -93,10 +94,10 @@ namespace NKafka.Client.Broker.Internal
             }
 
             if (cancellation.IsCancellationRequested) return;
-            _producer.Produce(cancellation);
+            _coordinator.Process(cancellation);
 
             if (cancellation.IsCancellationRequested) return;
-            _coordinator.Process(cancellation);
+            _producer.Produce(cancellation);
 
             if (cancellation.IsCancellationRequested) return;
             _consumer.Consume(cancellation);
@@ -128,6 +129,8 @@ namespace NKafka.Client.Broker.Internal
             _coordinator.Stop();
             _consumer.Stop();
 
+            KafkaClientTrace.Trace($"[worker({WorkerId})] Stop");
+
             foreach (var groupPair in _groups)
             {
                 var group = groupPair.Value;
@@ -154,6 +157,8 @@ namespace NKafka.Client.Broker.Internal
 
         public void AddTopicPartition([NotNull] string topicName, [NotNull] KafkaClientBrokerPartition topicPartition)
         {
+            KafkaClientTrace.Trace($"[broker.topic({WorkerId}, {topicName}, {topicPartition.PartitionId})] Add");
+
             KafkaClientBrokerTopic topic;
             if (!_topics.TryGetValue(topicName, out topic) || topic == null)
             {
@@ -168,6 +173,7 @@ namespace NKafka.Client.Broker.Internal
 
         public void AddGroupCoordinator([NotNull] string groupName, [NotNull] KafkaClientBrokerGroup group)
         {
+            KafkaClientTrace.Trace($"[broker.group({WorkerId}, {groupName})] Add");
             _groups[groupName] = group;
         }
 
@@ -183,6 +189,8 @@ namespace NKafka.Client.Broker.Internal
 
                 if (partition.IsUnplugRequired)
                 {
+                    KafkaClientTrace.Trace($"[broker.topic({WorkerId}, {topic.TopicName}, {partition.PartitionId})] Unplug");
+
                     partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
                     partition.Producer?.Unplug();
                     partition.Consumer?.Unplug();
@@ -195,6 +203,8 @@ namespace NKafka.Client.Broker.Internal
 
                 if (partition.Status == KafkaClientBrokerPartitionStatus.Unplugged)
                 {
+                    KafkaClientTrace.Trace($"[broker.topic({WorkerId}, {topic.TopicName}, {partition.PartitionId})] Plug");
+
                     if (partition.Producer != null)
                     {
                         _producer.AddTopicPartition(partition.TopicName, partition.Producer);
@@ -212,6 +222,7 @@ namespace NKafka.Client.Broker.Internal
                 {
                     if (partition.Producer?.Status == KafkaProducerBrokerPartitionStatus.RearrangeRequired || partition.Consumer?.Status == KafkaConsumerBrokerPartitionStatus.RearrangeRequired)
                     {
+                        KafkaClientTrace.Trace($"[broker.topic({WorkerId}, {topic.TopicName}, {partition.PartitionId})] Rearrange");
                         partition.Status = KafkaClientBrokerPartitionStatus.RearrangeRequired;
                     }
                 }
@@ -224,6 +235,8 @@ namespace NKafka.Client.Broker.Internal
 
             if (group.IsUnplugRequired)
             {
+                KafkaClientTrace.Trace($"[broker.group({WorkerId}, {group.GroupName})] Unplug");
+
                 KafkaClientBrokerGroup removedGroup;
                 _groups.TryRemove(group.GroupName, out removedGroup);
                 _coordinator.RemoveGroup(group.GroupName);
@@ -233,6 +246,8 @@ namespace NKafka.Client.Broker.Internal
 
             if (group.Status == KafkaClientBrokerGroupStatus.Unplugged)
             {
+                KafkaClientTrace.Trace($"[broker.group({WorkerId}, {group.GroupName})] Plug");
+
                 group.Coordinator.Status = KafkaCoordinatorGroupStatus.NotInitialized;
                 _coordinator.AddGroup(group.GroupName, group.Coordinator);
                 group.Status = KafkaClientBrokerGroupStatus.Plugged;
@@ -242,6 +257,7 @@ namespace NKafka.Client.Broker.Internal
             {
                 if (group.Coordinator.Status == KafkaCoordinatorGroupStatus.RearrangeRequired)
                 {
+                    KafkaClientTrace.Trace($"[broker.group({WorkerId}, {group.GroupName})] Rearrange");
                     group.Status = KafkaClientBrokerGroupStatus.RearrangeRequired;
                 }
             }
