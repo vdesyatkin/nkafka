@@ -5,7 +5,7 @@ namespace NKafka
     [PublicAPI]
     // ReSharper disable InconsistentNaming
     public enum KafkaVersion
-    {        
+    {
         V0_8 = 80,
         V0_9 = 90,
         V0_10 = 100,

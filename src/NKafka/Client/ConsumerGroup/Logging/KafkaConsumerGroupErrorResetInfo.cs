@@ -16,7 +16,7 @@ namespace NKafka.Client.ConsumerGroup.Logging
 
         public KafkaConsumerGroupErrorResetInfo(KafkaConsumerGroupErrorCode errorCode, DateTime? errorTimestampUtc,
             [NotNull] IKafkaClientBroker broker)
-        {            
+        {
             ErrorCode = errorCode;
             ErrorTimestampUtc = errorTimestampUtc;
             Broker = broker;

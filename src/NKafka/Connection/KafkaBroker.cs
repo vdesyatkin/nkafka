@@ -258,8 +258,8 @@ namespace NKafka.Connection
             if (_settings.TransportLatency > TimeSpan.Zero)
             {
                 timeout = timeout +
-                          _settings.TransportLatency + //request
-                          _settings.TransportLatency; //response
+                    _settings.TransportLatency + //request
+                    _settings.TransportLatency; //response
             }
 
             var requestId = Interlocked.Increment(ref _currentRequestId);

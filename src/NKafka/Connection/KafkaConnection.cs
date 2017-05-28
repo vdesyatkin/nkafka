@@ -15,7 +15,7 @@ namespace NKafka.Connection
         [NotNull] private readonly string _host;
         private readonly int _port;
 
-        [CanBeNull] private TcpClient _tcpClient;        
+        [CanBeNull] private TcpClient _tcpClient;
 
         public KafkaConnection([NotNull] string host, int port)
         {
@@ -27,10 +27,10 @@ namespace NKafka.Connection
         public void Open(CancellationToken cancellation)
         {
             try
-            {               
+            {
                 var tcpClient = new TcpClient();
                 var asyncConnectResult = tcpClient.BeginConnect(_host, _port, null, null);
-                WaitHandle.WaitAny(new[] {asyncConnectResult.AsyncWaitHandle, cancellation.WaitHandle});
+                WaitHandle.WaitAny(new[] { asyncConnectResult.AsyncWaitHandle, cancellation.WaitHandle });
                 if (cancellation.IsCancellationRequested)
                 {
                     throw new KafkaConnectionException(this, KafkaConnectionErrorCode.Cancelled);
@@ -59,24 +59,24 @@ namespace NKafka.Connection
             catch (Exception exception)
             {
                 throw ConvertException(exception);
-            }            
+            }
         }
-        
+
         /// <exception cref="KafkaConnectionException"/>
         public void Close()
-        {           
+        {
             var tcpClient = _tcpClient;
             _tcpClient = null;
 
             try
-            {                
+            {
                 tcpClient?.Close();
             }
             catch (Exception exception)
             {
                 throw ConvertException(exception);
-            }                     
-        }        
+            }
+        }
 
         /// <exception cref="KafkaConnectionException"/>
         [PublicAPI]
@@ -217,7 +217,7 @@ namespace NKafka.Connection
                 return stream.EndRead(asyncResult);
             }
             catch (KafkaConnectionException)
-            {                
+            {
                 throw;
             }
             catch (Exception exception)
@@ -263,7 +263,7 @@ namespace NKafka.Connection
             }
 
             if (stream == null)
-            {                
+            {
                 throw new KafkaConnectionException(this, KafkaConnectionErrorCode.ConnectionClosed);
             }
 

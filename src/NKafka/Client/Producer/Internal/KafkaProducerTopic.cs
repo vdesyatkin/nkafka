@@ -9,22 +9,15 @@ namespace NKafka.Client.Producer.Internal
 {
     internal sealed class KafkaProducerTopic
     {
-        [NotNull]
-        public readonly string TopicName;
-        [NotNull]
-        public KafkaClientTopicMetadataInfo TopicMetadataInfo;
+        [NotNull] public readonly string TopicName;
+        [NotNull] public KafkaClientTopicMetadataInfo TopicMetadataInfo;
 
-        [NotNull]
-        private readonly KafkaProducerSettings _settings;
-        [CanBeNull]
-        private readonly IKafkaProducerTopicLogger _logger;
+        [NotNull] private readonly KafkaProducerSettings _settings;
+        [CanBeNull] private readonly IKafkaProducerTopicLogger _logger;
 
-        [NotNull]
-        private readonly IKafkaProducerTopicBuffer _buffer;
-        [NotNull]
-        private IReadOnlyList<int> _topicPartitionIds;
-        [NotNull]
-        private IReadOnlyDictionary<int, KafkaProducerTopicPartition> _topicPartitions;
+        [NotNull] private readonly IKafkaProducerTopicBuffer _buffer;
+        [NotNull] private IReadOnlyList<int> _topicPartitionIds;
+        [NotNull] private IReadOnlyDictionary<int, KafkaProducerTopicPartition> _topicPartitions;
 
         public KafkaProducerTopic([NotNull] string topicName,
             [NotNull] KafkaProducerSettings settings,
@@ -109,7 +102,7 @@ namespace NKafka.Client.Producer.Internal
             long topicTotalEnqueuedMessageCount = 0;
 
             long topicTotalFallbackMessageCount = 0;
-            var topicSendMessageTimestampUtc = (DateTime?)null;
+            var topicSendMessageTimestampUtc = (DateTime?) null;
 
             long topicSendPendingMessageCount = 0;
             long topicRetrySendPendingMessageCount = 0;

@@ -117,17 +117,12 @@ namespace NKafka.Client.Producer.Internal
         public int EnqueuedCount => _enqueuedCount;
         public DateTime? EnqueueTimestampUtc => _enqueueTimestampUtc;
         public IKafkaProducerFallbackHandler FallbackHandler { get; }
-        [CanBeNull]
-        private readonly IKafkaProducerFallbackHandler<TKey, TData> _fallbackHandler;
+        [CanBeNull] private readonly IKafkaProducerFallbackHandler<TKey, TData> _fallbackHandler;
 
-        [NotNull]
-        private readonly IKafkaProducerPartitioner<TKey, TData> _partitioner;
-        [CanBeNull]
-        private readonly IKafkaSerializer<TKey, TData> _serializer;
-        [CanBeNull]
-        private readonly IKafkaProducerTopicBufferLogger<TKey, TData> _logger;
-        [NotNull]
-        private readonly ConcurrentQueue<KafkaMessage<TKey, TData>> _messageQueue;
+        [NotNull] private readonly IKafkaProducerPartitioner<TKey, TData> _partitioner;
+        [CanBeNull] private readonly IKafkaSerializer<TKey, TData> _serializer;
+        [CanBeNull] private readonly IKafkaProducerTopicBufferLogger<TKey, TData> _logger;
+        [NotNull] private readonly ConcurrentQueue<KafkaMessage<TKey, TData>> _messageQueue;
 
         private int _enqueuedCount;
         private DateTime? _enqueueTimestampUtc;
@@ -247,10 +242,8 @@ namespace NKafka.Client.Producer.Internal
 
         private class FallbackAdapter : IKafkaProducerFallbackHandler
         {
-            [NotNull]
-            private readonly IKafkaProducerFallbackHandler<TKey, TData> _fallbackHandler;
-            [NotNull]
-            private readonly IKafkaSerializer<TKey, TData> _serializer;
+            [NotNull] private readonly IKafkaProducerFallbackHandler<TKey, TData> _fallbackHandler;
+            [NotNull] private readonly IKafkaSerializer<TKey, TData> _serializer;
 
             public FallbackAdapter([NotNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler,
                 [NotNull] IKafkaSerializer<TKey, TData> serializer)

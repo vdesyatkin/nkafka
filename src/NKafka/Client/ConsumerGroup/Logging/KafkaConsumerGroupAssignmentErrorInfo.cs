@@ -12,8 +12,7 @@ namespace NKafka.Client.ConsumerGroup.Logging
 
         [CanBeNull] public readonly Exception Exception;
 
-        [NotNull]
-        public readonly IKafkaClientBroker Broker;
+        [NotNull] public readonly IKafkaClientBroker Broker;
 
         public KafkaConsumerGroupAssignmentErrorInfo([NotNull] KafkaConsumerAssignmentRequest assignmentRequest, [NotNull] IKafkaClientBroker broker, [CanBeNull] Exception exception)
         {

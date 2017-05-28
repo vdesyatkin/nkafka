@@ -34,8 +34,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
         [CanBeNull] public KafkaCoordinatorGroupAssignmentData AssignmentData { get; private set; }
         [CanBeNull] public KafkaCoordinatorGroupOffsetsData OffsetsData { get; private set; }
 
-        [NotNull]
-        public readonly Dictionary<string, IReadOnlyList<int>> TopicMetadataPartitionIds;
+        [NotNull] public readonly Dictionary<string, IReadOnlyList<int>> TopicMetadataPartitionIds;
 
         public DateTime HeartbeatTimestampUtc;
         public TimeSpan HeartbeatPeriod { get; private set; }
@@ -43,8 +42,7 @@ namespace NKafka.Client.ConsumerGroup.Internal
 
         public DateTime CommitTimestampUtc;
         public readonly TimeSpan CommitPeriod;
-        [CanBeNull]
-        public string CommitMetadata { get; private set; }
+        [CanBeNull] public string CommitMetadata { get; private set; }
 
         public KafkaCoordinatorGroup([NotNull] string groupName, [NotNull] string groupCoordinatorName,
             KafkaConsumerGroupType groupType,

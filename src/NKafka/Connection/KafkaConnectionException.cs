@@ -10,22 +10,22 @@ namespace NKafka.Connection
     {
         [NotNull] public readonly KafkaConnection Connection;
 
-        [NotNull] public readonly KafkaConnectionErrorInfo ErrorInfo;        
+        [NotNull] public readonly KafkaConnectionErrorInfo ErrorInfo;
 
-        public KafkaConnectionException([NotNull] KafkaConnection connection, KafkaConnectionErrorCode errorCode) 
+        public KafkaConnectionException([NotNull] KafkaConnection connection, KafkaConnectionErrorCode errorCode)
             : base(errorCode.ToString())
         {
             Connection = connection;
             ErrorInfo = new KafkaConnectionErrorInfo(errorCode, null);
         }
 
-        public KafkaConnectionException([NotNull] KafkaConnection connection, KafkaConnectionErrorCode errorCode, 
+        public KafkaConnectionException([NotNull] KafkaConnection connection, KafkaConnectionErrorCode errorCode,
             [CanBeNull] Exception innerException,
-            [CanBeNull] KafkaConnectionSocketErrorInfo socketError = null) 
+            [CanBeNull] KafkaConnectionSocketErrorInfo socketError = null)
             : base(innerException != null ? $"[{errorCode}] {innerException.Message})" : errorCode.ToString(), innerException)
         {
             Connection = connection;
-            ErrorInfo = new KafkaConnectionErrorInfo(errorCode, socketError);            
+            ErrorInfo = new KafkaConnectionErrorInfo(errorCode, socketError);
         }
     }
 }

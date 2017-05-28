@@ -7,8 +7,7 @@ namespace NKafka.Client.Consumer
     [PublicAPI]
     public interface IKafkaConsumerTopic
     {
-        [NotNull]
-        string TopicName { get; }
+        [NotNull] string TopicName { get; }
         bool IsReady { get; }
         bool IsSynchronized { get; }
 
@@ -16,8 +15,7 @@ namespace NKafka.Client.Consumer
         IReadOnlyList<KafkaMessagePackage> Consume(int? maxMessageCount = null);
         void EnqueueCommit(long packageId);
 
-        [NotNull]
-        KafkaConsumerTopicInfo GetDiagnosticsInfo();
+        [NotNull] KafkaConsumerTopicInfo GetDiagnosticsInfo();
     }
 
     [PublicAPI]
@@ -31,7 +29,6 @@ namespace NKafka.Client.Consumer
         [NotNull, ItemNotNull]
         IReadOnlyList<KafkaMessagePackage<TKey, TData>> Consume(int? maxMessageCount = null);
         void EnqueueCommit(long packageId);
-        [NotNull]
-        KafkaConsumerTopicInfo GetDiagnosticsInfo();
+        [NotNull] KafkaConsumerTopicInfo GetDiagnosticsInfo();
     }
 }

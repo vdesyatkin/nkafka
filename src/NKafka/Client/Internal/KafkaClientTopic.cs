@@ -15,7 +15,7 @@ namespace NKafka.Client.Internal
         [CanBeNull] private string _clusterId;
 
         [NotNull, ItemNotNull] public IReadOnlyList<KafkaClientTopicPartition> Partitions { get; private set; }
-        
+
         public KafkaClientTopicStatus Status;
 
         [CanBeNull] public readonly KafkaProducerTopic Producer;
@@ -53,7 +53,7 @@ namespace NKafka.Client.Internal
                 consumer.TopicMetadataInfo = _metadataInfo;
             }
         }
-        
+
         private void ApplyMetadata([NotNull] KafkaTopicMetadata topicMetadata)
         {
             _clusterId = topicMetadata.ClusterId;
@@ -62,7 +62,7 @@ namespace NKafka.Client.Internal
             foreach (var brokerMetadata in topicMetadata.Brokers)
             {
                 partitionBrokers[brokerMetadata.BrokerId] = brokerMetadata;
-            }            
+            }
 
             var oldPartitions = new Dictionary<int, KafkaClientTopicPartition>(Partitions.Count);
             foreach (var partition in Partitions)
@@ -102,7 +102,7 @@ namespace NKafka.Client.Internal
                 {
                     producerPartitions.Add(producerPartition);
                 }
-                
+
                 if (consumerPartition != null)
                 {
                     consumerPartitions.Add(consumerPartition);

@@ -18,16 +18,16 @@ namespace NKafka.Client.Consumer
         public readonly TimeSpan ErrorRetryPeriod;
 
         public KafkaConsumerSettings(
-            KafkaConsumerBeginBehavior beginBehavior,
-            int topicBatchMinSizeBytes,
-            int? topicBatchMaxSizeBytes,
-            int partitionBatchMaxSizeBytes,
-            TimeSpan fetchServerWaitTime,
-            TimeSpan fetchClientTimeout,
-            TimeSpan offestRequestTimeout,
-            long bufferMaxSizeBytes,
-            int? bufferMaxMesageCount,
-            TimeSpan errorRetryPeriod
+          KafkaConsumerBeginBehavior beginBehavior,
+          int topicBatchMinSizeBytes,
+          int? topicBatchMaxSizeBytes,
+          int partitionBatchMaxSizeBytes,
+          TimeSpan fetchServerWaitTime,
+          TimeSpan fetchClientTimeout,
+          TimeSpan offestRequestTimeout,
+          long bufferMaxSizeBytes,
+          int? bufferMaxMesageCount,
+          TimeSpan errorRetryPeriod
         )
         {
             BeginBehavior = beginBehavior;

@@ -33,7 +33,7 @@ namespace NKafka.Client.Consumer.Internal
 
             foreach (var package in packages)
             {
-                var messages = package.Messages;                
+                var messages = package.Messages;
 
                 var genericMessages = new List<KafkaMessage<TKey, TData>>(messages.Count);
                 foreach (var message in messages)

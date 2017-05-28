@@ -188,7 +188,7 @@ namespace NKafka.Client.Consumer.Internal
         public long? GetReceivedClientOffset()
         {
             var currenReceivedClientOffset = _currentReceivedClientOffset;
-            return currenReceivedClientOffset != UnknownOffset ? currenReceivedClientOffset : (long?)null;
+            return currenReceivedClientOffset != UnknownOffset ? currenReceivedClientOffset : (long?) null;
         }
 
         #endregion ReceivedClientOffset
@@ -241,7 +241,7 @@ namespace NKafka.Client.Consumer.Internal
         public long? GetCommitClientOffset()
         {
             var currenCommitClientOffset = _currentCommitClientOffset;
-            return currenCommitClientOffset != UnknownOffset ? currenCommitClientOffset : (long?)null;
+            return currenCommitClientOffset != UnknownOffset ? currenCommitClientOffset : (long?) null;
         }
 
         public void SetCommitClientOffset(long offset)

@@ -7,11 +7,9 @@ namespace NKafka.Client.Diagnostics
     [PublicAPI]
     public sealed class KafkaClientTopicMetadataInfo
     {
-        [NotNull]
-        public readonly string TopicName;
+        [NotNull] public readonly string TopicName;
 
-        [CanBeNull]
-        public readonly string ClusterId;
+        [CanBeNull] public readonly string ClusterId;
 
         public readonly bool IsReady;
 
@@ -21,15 +19,15 @@ namespace NKafka.Client.Diagnostics
 
         public readonly DateTime TimestampUtc;
 
-        public KafkaClientTopicMetadataInfo([NotNull] string topicName, 
+        public KafkaClientTopicMetadataInfo([NotNull] string topicName,
             [CanBeNull] string clusterId,
-            bool isReady, 
-            KafkaClientTopicMetadataErrorCode? error, 
+            bool isReady,
+            KafkaClientTopicMetadataErrorCode? error,
             [CanBeNull] KafkaTopicMetadata topicMetadata,
             DateTime timestampUtc)
         {
-            TopicName = topicName;           
-            ClusterId = clusterId; 
+            TopicName = topicName;
+            ClusterId = clusterId;
             IsReady = isReady;
             Error = error;
             TopicMetadata = topicMetadata;

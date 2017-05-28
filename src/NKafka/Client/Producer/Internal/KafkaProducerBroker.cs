@@ -562,9 +562,9 @@ namespace NKafka.Client.Producer.Internal
         }
 
         private void HandleBrokerError([NotNull] KafkaProducerBrokerTopic topic,
-            [NotNull] KafkaProducerBrokerPartition partition,
-            KafkaBrokerErrorCode brokerError,
-            [NotNull] string description)
+           [NotNull] KafkaProducerBrokerPartition partition,
+           KafkaBrokerErrorCode brokerError,
+           [NotNull] string description)
         {
             KafkaProducerTopicPartitionErrorCode? partitionErrorCode;
             var errorType = ProducerErrorType.Rearrange;

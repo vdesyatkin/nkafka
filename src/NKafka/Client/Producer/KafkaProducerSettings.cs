@@ -17,15 +17,15 @@ namespace NKafka.Client.Producer
         public readonly TimeSpan ErrorRetryPeriod;
 
         public KafkaProducerSettings(
-            KafkaConsistencyLevel consistencyLevel,
-            KafkaCodecType codecType,
-            int messageMaxSizeByteCount,
-            int partitionBatchPreferredSizeByteCount,
-            int partitionBatchMaxSizeByteCount,
-            int produceRequestMaxSizeByteCount,
-            TimeSpan produceRequestServerTimeout,
-            TimeSpan produceRequestClientTimeout,
-            TimeSpan errorRetryPeriod
+          KafkaConsistencyLevel consistencyLevel,
+          KafkaCodecType codecType,
+          int messageMaxSizeByteCount,
+          int partitionBatchPreferredSizeByteCount,
+          int partitionBatchMaxSizeByteCount,
+          int produceRequestMaxSizeByteCount,
+          TimeSpan produceRequestServerTimeout,
+          TimeSpan produceRequestClientTimeout,
+          TimeSpan errorRetryPeriod
         )
         {
             ConsistencyLevel = consistencyLevel;

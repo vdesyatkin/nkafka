@@ -6,8 +6,7 @@ namespace NKafka.Metadata
     [PublicAPI]
     public sealed class KafkaTopicMetadata
     {
-        [NotNull]
-        public readonly string TopicName;
+        [NotNull] public readonly string TopicName;
 
         public readonly string ClusterId;
 
@@ -23,7 +22,7 @@ namespace NKafka.Metadata
             KafkaTopicMetadataErrorCode? error,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaBrokerMetadata> brokers,
             [NotNull, ItemNotNull] IReadOnlyList<KafkaTopicPartitionMetadata> partitions)
-        {            
+        {
             TopicName = topicName;
             ClusterId = clusterId;
             Error = error;

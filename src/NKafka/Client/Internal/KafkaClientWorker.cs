@@ -18,35 +18,23 @@ namespace NKafka.Client.Internal
     internal sealed class KafkaClientWorker
     {
         public readonly int WorkerId;
-        [NotNull]
-        private readonly string _wokerName;
-        [NotNull]
-        private readonly KafkaProtocol _protocol;
-        [NotNull]
-        private readonly KafkaClientSettings _settings;
-        [CanBeNull]
-        private readonly IKafkaClientLogger _logger;
+        [NotNull] private readonly string _wokerName;
+        [NotNull] private readonly KafkaProtocol _protocol;
+        [NotNull] private readonly KafkaClientSettings _settings;
+        [CanBeNull] private readonly IKafkaClientLogger _logger;
 
-        [NotNull]
-        private readonly ConcurrentDictionary<string, KafkaClientTopic> _topics;
-        [NotNull]
-        private readonly ConcurrentDictionary<string, MetadataRequestInfo> _topicMetadataRequests;
+        [NotNull] private readonly ConcurrentDictionary<string, KafkaClientTopic> _topics;
+        [NotNull] private readonly ConcurrentDictionary<string, MetadataRequestInfo> _topicMetadataRequests;
 
-        [NotNull]
-        private readonly ConcurrentDictionary<string, KafkaClientGroup> _groups;
-        [NotNull]
-        private readonly ConcurrentDictionary<string, MetadataRequestInfo> _groupMetadataRequests;
+        [NotNull] private readonly ConcurrentDictionary<string, KafkaClientGroup> _groups;
+        [NotNull] private readonly ConcurrentDictionary<string, MetadataRequestInfo> _groupMetadataRequests;
 
-        [NotNull]
-        private readonly ConcurrentDictionary<int, KafkaClientBroker> _brokers;
-        [NotNull, ItemNotNull]
-        private readonly IReadOnlyCollection<KafkaClientBroker> _metadataBrokers;
+        [NotNull] private readonly ConcurrentDictionary<int, KafkaClientBroker> _brokers;
+        [NotNull, ItemNotNull] private readonly IReadOnlyCollection<KafkaClientBroker> _metadataBrokers;
 
-        [NotNull]
-        private Timer _workerTimer;
+        [NotNull] private Timer _workerTimer;
         private readonly TimeSpan _workerPeriod;
-        [NotNull]
-        private CancellationTokenSource _workerCancellation;
+        [NotNull] private CancellationTokenSource _workerCancellation;
 
         public delegate void ArrangeTopicDelegate([NotNull] string topicName, [NotNull, ItemNotNull] IReadOnlyCollection<KafkaClientBrokerPartition> partitions);
         public event ArrangeTopicDelegate ArrangeTopic;

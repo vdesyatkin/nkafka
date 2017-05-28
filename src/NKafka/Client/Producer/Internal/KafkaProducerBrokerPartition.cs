@@ -21,8 +21,7 @@ namespace NKafka.Client.Producer.Internal
         public bool IsSynchronized => _sendPendingMessageCount == 0;
         public KafkaProducerTopicPartitionErrorCode? Error { get; private set; }
         public DateTime? ErrorTimestampUtc { get; private set; }
-        [NotNull]
-        public KafkaProducerTopicPartitionLimitInfo LimitInfo { get; private set; }
+        [NotNull] public KafkaProducerTopicPartitionLimitInfo LimitInfo { get; private set; }
 
         public int RetrySendPendingMessageCount { get; private set; }
         public long TotalSentMessageCount { get; private set; }
@@ -43,10 +42,8 @@ namespace NKafka.Client.Producer.Internal
         public long TotalFallbackMessageCount { get; private set; }
         public DateTime? FallbackTimestampUtc { get; private set; }
 
-        [NotNull]
-        private readonly ConcurrentQueue<KafkaMessage> _mainQueue;
-        [NotNull]
-        private readonly Queue<KafkaMessage> _retryQueue;
+        [NotNull] private readonly ConcurrentQueue<KafkaMessage> _mainQueue;
+        [NotNull] private readonly Queue<KafkaMessage> _retryQueue;
 
         public KafkaProducerBrokerPartition([NotNull] string topicName, int partitionId,
             [NotNull] KafkaProducerSettings settings,

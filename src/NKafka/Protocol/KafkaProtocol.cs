@@ -25,14 +25,14 @@ namespace NKafka.Protocol
         [NotNull] private readonly KafkaProtocolConfiguration _configuration;
         [NotNull] private readonly KafkaProtocolSettings _settings;
         [CanBeNull] private readonly string _clientId;
-        
-        private const int DefaultDataCapacity = 100;        
+
+        private const int DefaultDataCapacity = 100;
 
         public KafkaProtocol(KafkaVersion kafkaVersion, [NotNull] KafkaProtocolSettings settings, [CanBeNull] string clientId)
         {
             _kafkaVersion = kafkaVersion;
             _clientId = clientId;
-            _settings = settings;            
+            _settings = settings;
             _configuration = CreateConfiguration(kafkaVersion);
         }
 
@@ -64,16 +64,17 @@ namespace NKafka.Protocol
         public KafkaRequestType? GetRequestType<TRequest>() where TRequest : IKafkaRequest
         {
             KafkaRequestType requestType;
-            return StaticRequestTypes.TryGetValue(typeof (TRequest), out requestType) ? requestType : (KafkaRequestType?)null;
+            return StaticRequestTypes.TryGetValue(typeof(TRequest), out requestType) ? requestType : (KafkaRequestType?)null;
         }
 
         /// <exception cref="KafkaProtocolException"/>
-        [NotNull] public byte[] WriteRequest([NotNull] IKafkaRequest request, KafkaRequestType requestType, int correlationId, int? dataCapacity = null)
+        [NotNull]
+        public byte[] WriteRequest([NotNull] IKafkaRequest request, KafkaRequestType requestType, int correlationId, int? dataCapacity = null)
         {
             if (request == null)
             {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidRequestType);
-            }         
+            }
 
             KafkaRequestConfiguration requestConfiguration;
             if (!_configuration.Requests.TryGetValue(requestType, out requestConfiguration) || requestConfiguration == null)
@@ -87,8 +88,8 @@ namespace NKafka.Protocol
                 {
                     writer.BeginWriteSize();
 
-                    writer.WriteInt16((short) requestConfiguration.RequestType);
-                    writer.WriteInt16((short) requestConfiguration.RequestVersion);
+                    writer.WriteInt16((short)requestConfiguration.RequestType);
+                    writer.WriteInt16((short)requestConfiguration.RequestVersion);
                     writer.WriteInt32(correlationId);
                     writer.WriteString(_clientId);
 
@@ -108,12 +109,13 @@ namespace NKafka.Protocol
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.IOError, exception);
             }
         }
-        
+
         /// <exception cref="KafkaProtocolException"/>
-        [NotNull] public KafkaResponseHeader ReadResponseHeader(byte[] data, int offset, int count)
-        {            
-            if (data == null)                
-            {                       
+        [NotNull]
+        public KafkaResponseHeader ReadResponseHeader(byte[] data, int offset, int count)
+        {
+            if (data == null)
+            {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidDataSize);
             }
             if (offset < 0 || offset >= data.Length)
@@ -150,12 +152,13 @@ namespace NKafka.Protocol
             catch (Exception exception)
             {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.IOError, exception);
-            }           
+            }
         }
 
         /// <exception cref="KafkaProtocolException"/>
-        [NotNull] public IKafkaResponse ReadResponse(KafkaRequestType requestType, byte[] data, int offset, int count)
-        {            
+        [NotNull]
+        public IKafkaResponse ReadResponse(KafkaRequestType requestType, byte[] data, int offset, int count)
+        {
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse            
             if (data == null)
             {
@@ -184,13 +187,13 @@ namespace NKafka.Protocol
                 }
             }
             catch (KafkaProtocolException)
-            {                
+            {
                 throw;
             }
             catch (Exception exception)
             {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.IOError, exception);
-            }            
+            }
         }
 
         #region Configuration
@@ -278,7 +281,7 @@ namespace NKafka.Protocol
         [NotNull]
         private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateEmptyApiSupports()
         {
-            return new Dictionary<KafkaRequestType, KafkaRequestVersion>();            
+            return new Dictionary<KafkaRequestType, KafkaRequestVersion>();
         }
 
         [NotNull]
@@ -325,9 +328,9 @@ namespace NKafka.Protocol
                 case KafkaRequestType.TopicMetadata:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaTopicMetadataApi(requestVersion));
                 case KafkaRequestType.GroupCoordinator:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaGroupCoordinatorApi());                        
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaGroupCoordinatorApi());
                 case KafkaRequestType.Produce:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaProduceApi(requestVersion));                        
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaProduceApi(requestVersion));
                 case KafkaRequestType.Offset:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetApi());
                 case KafkaRequestType.Fetch:
@@ -352,7 +355,7 @@ namespace NKafka.Protocol
         {
             public readonly KafkaRequestType RequestType;
             public readonly KafkaRequestVersion RequestVersion;
-            [NotNull] public readonly IKafkaRequestApi RequestApi;            
+            [NotNull] public readonly IKafkaRequestApi RequestApi;
 
             public KafkaRequestConfiguration(KafkaRequestType requestType, KafkaRequestVersion requestVersion,
                 [NotNull] IKafkaRequestApi requestApi)
@@ -361,12 +364,12 @@ namespace NKafka.Protocol
                 RequestVersion = requestVersion;
                 RequestApi = requestApi;
             }
-        }        
+        }
 
         private sealed class KafkaProtocolConfiguration
         {
             [NotNull]
-            public readonly IReadOnlyDictionary<KafkaRequestType, KafkaRequestConfiguration> Requests;            
+            public readonly IReadOnlyDictionary<KafkaRequestType, KafkaRequestConfiguration> Requests;
 
             public KafkaProtocolConfiguration([NotNull] IReadOnlyDictionary<KafkaRequestType, KafkaRequestConfiguration> requests)
             {
@@ -381,17 +384,17 @@ namespace NKafka.Protocol
         [NotNull]
         private static readonly Dictionary<Type, KafkaRequestType> StaticRequestTypes = new Dictionary<Type, KafkaRequestType>
         {
-            [typeof (KafkaProduceRequest)] = KafkaRequestType.Produce,
-            [typeof (KafkaFetchRequest)] = KafkaRequestType.Fetch,
-            [typeof (KafkaOffsetRequest)] = KafkaRequestType.Offset,
-            [typeof (KafkaTopicMetadataRequest)] = KafkaRequestType.TopicMetadata,
-            [typeof (KafkaOffsetCommitRequest)] = KafkaRequestType.OffsetCommit,
-            [typeof (KafkaOffsetFetchRequest)] = KafkaRequestType.OffsetFetch,
-            [typeof (KafkaGroupCoordinatorRequest)] = KafkaRequestType.GroupCoordinator,
-            [typeof (KafkaJoinGroupRequest)] = KafkaRequestType.JoinGroup,
-            [typeof (KafkaHeartbeatRequest)] = KafkaRequestType.Heartbeat,
-            [typeof (KafkaLeaveGroupRequest)] = KafkaRequestType.LeaveGroup,
-            [typeof (KafkaSyncGroupRequest)] = KafkaRequestType.SyncGroup
+            [typeof(KafkaProduceRequest)] = KafkaRequestType.Produce,
+            [typeof(KafkaFetchRequest)] = KafkaRequestType.Fetch,
+            [typeof(KafkaOffsetRequest)] = KafkaRequestType.Offset,
+            [typeof(KafkaTopicMetadataRequest)] = KafkaRequestType.TopicMetadata,
+            [typeof(KafkaOffsetCommitRequest)] = KafkaRequestType.OffsetCommit,
+            [typeof(KafkaOffsetFetchRequest)] = KafkaRequestType.OffsetFetch,
+            [typeof(KafkaGroupCoordinatorRequest)] = KafkaRequestType.GroupCoordinator,
+            [typeof(KafkaJoinGroupRequest)] = KafkaRequestType.JoinGroup,
+            [typeof(KafkaHeartbeatRequest)] = KafkaRequestType.Heartbeat,
+            [typeof(KafkaLeaveGroupRequest)] = KafkaRequestType.LeaveGroup,
+            [typeof(KafkaSyncGroupRequest)] = KafkaRequestType.SyncGroup
         };
 
         #endregion

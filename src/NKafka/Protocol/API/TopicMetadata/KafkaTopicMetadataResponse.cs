@@ -36,7 +36,7 @@ namespace NKafka.Protocol.API.TopicMetadata
         /// <param name="topics">Topics metadata.</param>
         public KafkaTopicMetadataResponse(
             string clusterId,
-            int? controllerBrokerId,            
+            int? controllerBrokerId,
             IReadOnlyList<KafkaTopicMetadataResponseBroker> brokers,
             IReadOnlyList<KafkaTopicMetadataResponseTopic> topics)
         {

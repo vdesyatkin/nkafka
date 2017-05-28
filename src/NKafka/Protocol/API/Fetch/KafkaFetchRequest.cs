@@ -52,20 +52,20 @@ namespace NKafka.Protocol.API.Fetch
         /// <summary>
         /// Topics.
         /// </summary>
-        public readonly IReadOnlyList<KafkaFetchRequestTopic> Topics;      
+        public readonly IReadOnlyList<KafkaFetchRequestTopic> Topics;
 
-        public KafkaFetchRequest(TimeSpan maxWaitTime, int minBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)            
+        public KafkaFetchRequest(TimeSpan maxWaitTime, int minBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)
         {
             MaxWaitTime = maxWaitTime;
-            MinBytes = minBytes;            
+            MinBytes = minBytes;
             Topics = topics;
         }
-        public KafkaFetchRequest(TimeSpan maxWaitTime, int minBytes, int maxBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)
-           : this(maxWaitTime, minBytes,  topics)
-        {            
-            MaxBytes = maxBytes;            
-        }
 
+        public KafkaFetchRequest(TimeSpan maxWaitTime, int minBytes, int maxBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)
+           : this(maxWaitTime, minBytes, topics)
+        {
+            MaxBytes = maxBytes;
+        }
 
         public KafkaFetchRequest(int replicaId, TimeSpan maxWaitTime, int minBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)
             : this(maxWaitTime, minBytes, topics)
@@ -76,7 +76,7 @@ namespace NKafka.Protocol.API.Fetch
         public KafkaFetchRequest(int replicaId, TimeSpan maxWaitTime, int minBytes, int maxBytes, IReadOnlyList<KafkaFetchRequestTopic> topics)
             : this(maxWaitTime, minBytes, maxBytes, topics)
         {
-            ReplicaId = replicaId;            
+            ReplicaId = replicaId;
         }
     }
 }

@@ -5,18 +5,19 @@ namespace NKafka.Connection
 {
     [PublicAPI]
     public sealed class KafkaConnectionSettingsBuilder
-    {        
+    {
         public readonly TimeSpan DefaultRegularReconnectionPeriod = TimeSpan.FromMinutes(30);
         public readonly TimeSpan DefaultErrorStateReconnectPeriod = TimeSpan.FromSeconds(15);
         public readonly TimeSpan DefaultHeartbeatPeriod = TimeSpan.FromSeconds(30);
         public readonly TimeSpan DefaultTransportLatency = TimeSpan.FromSeconds(1);
 
-        [NotNull] public static KafkaConnectionSettings Default = new KafkaConnectionSettingsBuilder().Build();
+        [NotNull] 
+		public static KafkaConnectionSettings Default = new KafkaConnectionSettingsBuilder().Build();
 
         private TimeSpan? _regularReconnectPeriod;
         private TimeSpan? _errorStateReconnectPeriod;
         private TimeSpan? _heartbeatPeriod;
-        private TimeSpan? _transportLatency;        
+        private TimeSpan? _transportLatency;
 
         [NotNull]
         public KafkaConnectionSettingsBuilder SetRegularReconnectPeriod(TimeSpan period)

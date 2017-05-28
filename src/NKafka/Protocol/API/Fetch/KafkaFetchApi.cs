@@ -7,7 +7,7 @@ namespace NKafka.Protocol.API.Fetch
 {
     [PublicAPI]
     internal sealed class KafkaFetchApi : IKafkaRequestApi
-    {        
+    {
         const byte MessageMagicByteV09 = 0;
         const byte MessageMagicByteV010 = 1;
 
@@ -15,7 +15,7 @@ namespace NKafka.Protocol.API.Fetch
 
         const byte MessageAttributeCodecMask = 0x7;
         const byte MessageCodecNoneAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecNone;
-        const byte MessageCodecGZipAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecGzip;        
+        const byte MessageCodecGZipAttribute = MessageAttributeCodecMask & (byte)KafkaCodecType.CodecGzip;
 
         const byte MessageAttributeTimestampMask = 0x8;
         const byte MessageTimestampLogAppendTimeAttribute = MessageAttributeTimestampMask & (byte)KafkaTimestampType.LogAppendTime << 3;
@@ -26,7 +26,7 @@ namespace NKafka.Protocol.API.Fetch
         private readonly KafkaRequestVersion _requestVersion;
 
         public KafkaFetchApi(KafkaRequestVersion requestVersion)
-        {            
+        {
             _requestVersion = requestVersion;
         }
 
@@ -65,7 +65,7 @@ namespace NKafka.Protocol.API.Fetch
         #endregion FetchRequest
 
         #region FetchResponse
-        
+
         public IKafkaResponse ReadResponse(KafkaBinaryReader reader)
         {
             return ReadFetchResponse(reader);
@@ -80,11 +80,11 @@ namespace NKafka.Protocol.API.Fetch
         }
 
         private KafkaFetchResponseTopic ReadFetchResponseTopic([NotNull] KafkaBinaryReader reader)
-        {            
+        {
             var topicName = reader.ReadString();
             var partitions = reader.ReadCollection(ReadFetchResponseTopicPartition);
 
-            return new KafkaFetchResponseTopic(topicName, partitions);            
+            return new KafkaFetchResponseTopic(topicName, partitions);
         }
 
         private KafkaFetchResponseTopicPartition ReadFetchResponseTopicPartition([NotNull] KafkaBinaryReader reader)
@@ -99,7 +99,7 @@ namespace NKafka.Protocol.API.Fetch
 
             var messageSetRequiredSize = reader.BeginReadSize();
             var messageSetActualSize = 0;
-            
+
             while (reader.CanRead() && (messageSetActualSize < messageSetRequiredSize))
             {
                 if (messageSetRequiredSize - messageSetActualSize < MessageHeaderSize)
@@ -123,7 +123,7 @@ namespace NKafka.Protocol.API.Fetch
                 }
 
                 var messageRequiredCrc = reader.BeginReadCrc32();
-                
+
                 var messageMagicByte = reader.ReadInt8();
                 var messageAttribute = reader.ReadInt8();
                 var messageTimestampUtc = messageMagicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
@@ -159,7 +159,7 @@ namespace NKafka.Protocol.API.Fetch
                             nestedMessageSetActualSize = reader.EndReadGZipData();
                             break;
                         }
-                        
+
                         var nestedMessageRequiredCrc = reader.BeginReadCrc32();
 
                         var nestedMessageMagicByte = reader.ReadInt8();
@@ -169,7 +169,7 @@ namespace NKafka.Protocol.API.Fetch
                         }
 
                         var nestedMessageAttribute = reader.ReadInt8();
-                        var nestedMessageTimestampUtc = messageMagicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;                        
+                        var nestedMessageTimestampUtc = messageMagicByte == MessageMagicByteV010 ? reader.ReadNulalbleTimestampUtc() : null;
                         var nestedMessageKey = reader.ReadByteArray();
                         var nestedMessageValue = reader.ReadByteArray();
 
@@ -177,7 +177,7 @@ namespace NKafka.Protocol.API.Fetch
                         var nestedMessageActualSize = reader.EndReadSize();
 
                         if (nestedMessageActualSize != nestedMessageRequiredSize)
-                        {                            
+                        {
                             throw new KafkaProtocolException(KafkaProtocolErrorCode.UnexpectedMessageSize);
                         }
 
@@ -185,7 +185,7 @@ namespace NKafka.Protocol.API.Fetch
                         {
                             throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageCrc);
                         }
-                        
+
                         var nestedMessage = new KafkaMessageAndOffset(nestedMessageOffset, nestedMessageKey, nestedMessageValue, nestedMessageTimestampUtc);
                         messages.Add(nestedMessage);
                         nestedMessageSetActualSize = reader.EndReadGZipData();
@@ -225,7 +225,7 @@ namespace NKafka.Protocol.API.Fetch
                     if (messageActualCrc != messageRequiredCrc)
                     {
                         throw new KafkaProtocolException(KafkaProtocolErrorCode.InvalidMessageCrc);
-                    }                    
+                    }
                     var message = new KafkaMessageAndOffset(messageOffset, messageKey, value, messageTimestampUtc);
                     messages.Add(message);
                 }
@@ -236,7 +236,7 @@ namespace NKafka.Protocol.API.Fetch
             {
                 throw new KafkaProtocolException(KafkaProtocolErrorCode.UnexpectedDataSize);
             }
-            
+
             return new KafkaFetchResponseTopicPartition(partitionId, errorCode, highwaterMarkOffset, messages);
             // ReSharper enable UnusedVariable
         }

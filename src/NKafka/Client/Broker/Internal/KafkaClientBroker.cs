@@ -22,8 +22,7 @@ namespace NKafka.Client.Broker.Internal
         public bool IsEnabled => _broker.IsOpenned && _broker.Error == null;
         public bool IsStarted => _broker.IsOpenned;
 
-        [CanBeNull]
-        public IKafkaClientLogger Logger { get; }
+        [CanBeNull] public IKafkaClientLogger Logger { get; }
 
         [NotNull] private readonly KafkaBroker _broker;
         [NotNull] private readonly ConcurrentDictionary<string, KafkaClientBrokerTopic> _topics;

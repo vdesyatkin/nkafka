@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace NKafka.Client.Producer
-{   
+{
     [PublicAPI]
     public class KafkaKeyHashCodePartitioner<TKey, TData> : IKafkaProducerPartitioner<TKey, TData>
     {

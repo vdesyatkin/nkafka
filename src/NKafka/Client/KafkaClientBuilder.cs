@@ -70,11 +70,11 @@ namespace NKafka.Client
 
         [NotNull]
         public IKafkaProducerTopic<TKey, TData> CreateTopicProducer<TKey, TData>([NotNull] string topicName,
-            [NotNull] IKafkaSerializer<TKey, TData> serializer,
-            [CanBeNull] IKafkaProducerPartitioner<TKey, TData> partitioner = null,
-            [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler = null,
-            [CanBeNull] IKafkaProducerLogger<TKey, TData> logger = null,
-            [CanBeNull] KafkaProducerSettings settings = null)
+           [NotNull] IKafkaSerializer<TKey, TData> serializer,
+           [CanBeNull] IKafkaProducerPartitioner<TKey, TData> partitioner = null,
+           [CanBeNull] IKafkaProducerFallbackHandler<TKey, TData> fallbackHandler = null,
+           [CanBeNull] IKafkaProducerLogger<TKey, TData> logger = null,
+           [CanBeNull] KafkaProducerSettings settings = null)
         {
             // ReSharper disable once ConstantNullCoalescingCondition
             topicName = topicName ?? string.Empty;

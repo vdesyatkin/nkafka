@@ -17,8 +17,7 @@ namespace NKafka.Client.Consumer
         public static readonly long DefaultBufferMaxSizeBytes = 100 * DefaultPartitionBatchMaxSizeBytes;
         public static readonly TimeSpan DefaultErrorRetryPeriod = TimeSpan.FromSeconds(10);
 
-        [NotNull]
-        public static readonly KafkaConsumerSettings Default = new KafkaConsumerSettingsBuilder().Build();
+        [NotNull] public static readonly KafkaConsumerSettings Default = new KafkaConsumerSettingsBuilder().Build();
 
         private KafkaConsumerBeginBehavior? _beginBehavior;
         private int? _topicBatchMinSizeBytes;
