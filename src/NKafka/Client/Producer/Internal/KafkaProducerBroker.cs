@@ -49,6 +49,7 @@ namespace NKafka.Client.Producer.Internal
                 {
                     topic.Logger = topicPartition.Logger;
                 }
+                topic.AssignedPartitionIds.Add(topicPartition.PartitionId);
             }
         }
 
@@ -62,8 +63,7 @@ namespace NKafka.Client.Producer.Internal
                 return;
             }
 
-            KafkaProducerBrokerPartition partition;
-            topic.Partitions.TryRemove(partitionId, out partition);
+            topic.AssignedPartitionIds.Remove(partitionId);
         }
 
         public void Start()
@@ -79,7 +79,7 @@ namespace NKafka.Client.Producer.Internal
 
                 KafkaClientTrace.Trace($"[producer({topic.TopicName})] Stop");
 
-                var batches = CreateTopicBatches(topic, new HashSet<int>());
+                var batches = CreateTopicBatches(topic, isForcing: true);
                 foreach (var batch in batches)
                 {
                     var batchRequest = CreateProduceRequest(topic, batch);
@@ -141,7 +141,7 @@ namespace NKafka.Client.Producer.Internal
             }
 
             // send batches
-            var newBatches = CreateTopicBatches(topic, batchSet.GetBusyPartitionSet());
+            var newBatches = CreateTopicBatches(topic);
             foreach (var batch in newBatches)
             {
                 var batchRequest = CreateProduceRequest(topic, batch);
@@ -165,7 +165,7 @@ namespace NKafka.Client.Producer.Internal
         }
 
         [NotNull, ItemNotNull]
-        private IReadOnlyList<ProduceBatch> CreateTopicBatches([NotNull]KafkaProducerBrokerTopic topic, [NotNull] HashSet<int> busyPartitionSet)
+        private IReadOnlyList<ProduceBatch> CreateTopicBatches([NotNull]KafkaProducerBrokerTopic topic, bool isForcing = false)
         {
             var partitionList = new List<KafkaProducerBrokerPartition>(100);
             foreach (var partitionPair in topic.Partitions)
@@ -201,6 +201,11 @@ namespace NKafka.Client.Producer.Internal
                 var partition = partitionList[index];
                 if (partition == null) continue;
 
+                if (!topic.AssignedPartitionIds.Contains(partition.PartitionId))
+                {
+                    continue;
+                }
+
                 if (partition.Status == KafkaProducerBrokerPartitionStatus.RearrangeRequired)
                 {
                     continue;
@@ -208,7 +213,7 @@ namespace NKafka.Client.Producer.Internal
 
                 if (partition.Status == KafkaProducerBrokerPartitionStatus.Error)
                 {
-                    if (DateTime.UtcNow - partition.ErrorTimestampUtc < partition.Settings.ErrorRetryPeriod)
+                    if (!isForcing && (DateTime.UtcNow - partition.ErrorTimestampUtc < partition.Settings.ErrorRetryPeriod))
                     {
                         continue;
                     }
@@ -222,7 +227,10 @@ namespace NKafka.Client.Producer.Internal
                     partition.Status = KafkaProducerBrokerPartitionStatus.Ready;
                 }
 
-                if (busyPartitionSet.Contains(partition.PartitionId)) continue;
+                if (!isForcing && !partition.TryLock())
+                {
+                    continue;
+                }
 
                 var partitionBatchSize = 0;
                 var partitionBatchMaxSize = partition.LimitInfo.MaxBatchSizeByteCount ?? topicBatchMaxSize;
@@ -286,6 +294,11 @@ namespace NKafka.Client.Producer.Internal
                     {
                         break;
                     }
+                }
+
+                if (topicPartionMessages == null || topicPartionMessages.Count == 0)
+                {
+                    partition.Unlock();
                 }
 
                 if (topicBatchIsFilled)
@@ -562,9 +575,9 @@ namespace NKafka.Client.Producer.Internal
         }
 
         private void HandleBrokerError([NotNull] KafkaProducerBrokerTopic topic,
-           [NotNull] KafkaProducerBrokerPartition partition,
-           KafkaBrokerErrorCode brokerError,
-           [NotNull] string description)
+            [NotNull] KafkaProducerBrokerPartition partition,
+            KafkaBrokerErrorCode brokerError,
+            [NotNull] string description)
         {
             KafkaProducerTopicPartitionErrorCode? partitionErrorCode;
             var errorType = ProducerErrorType.Rearrange;
@@ -659,7 +672,7 @@ namespace NKafka.Client.Producer.Internal
             }
         }
 
-        private void RollbackBatch([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch, KafkaBrokerErrorCode brokerError, string description)
+        private void RollbackBatch([NotNull] KafkaProducerBrokerTopic topic, [NotNull] ProduceBatch batch, KafkaBrokerErrorCode brokerError, [NotNull] string description)
         {
             if (brokerError != KafkaBrokerErrorCode.ConnectionMaintenance)
             {
@@ -730,15 +743,16 @@ namespace NKafka.Client.Producer.Internal
                 var builder = new StringBuilder(10);
                 builder.Append('(');
                 foreach (var partitionPair in Partitions)
-                {
+                {                    
                     if (builder.Length > 1)
                     {
                         builder.Append(',');
                     }
                     builder.Append(partitionPair.Key);
                     builder.Append(':');
-                    builder.Append(partitionPair.Value.Count);
+                    builder.Append(partitionPair.Value?.Count ?? -1);
                 }
+                builder.Append(')');
 
                 _partitionText = builder.ToString();
                 return _partitionText;
@@ -753,22 +767,6 @@ namespace NKafka.Client.Producer.Internal
             public ProduceBatchSet()
             {
                 RequestBatches = new Dictionary<int, ProduceBatch>();
-            }
-
-            [NotNull]
-            public HashSet<int> GetBusyPartitionSet()
-            {
-                var result = new HashSet<int>();
-                foreach (var request in RequestBatches)
-                {
-                    if (request.Value == null) continue;
-
-                    foreach (var partition in request.Value.Partitions)
-                    {
-                        result.Add(partition.Key);
-                    }
-                }
-                return result;
             }
         }
     }

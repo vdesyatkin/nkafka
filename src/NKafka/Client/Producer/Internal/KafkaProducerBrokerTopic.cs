@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using NKafka.Client.Producer.Logging;
 
@@ -13,7 +14,9 @@ namespace NKafka.Client.Producer.Internal
 
         [NotNull] public readonly ConcurrentDictionary<int, KafkaProducerBrokerPartition> Partitions;
 
-        public int ProducePartitionIndex;        
+        [NotNull] public readonly HashSet<int> AssignedPartitionIds;
+
+        public int ProducePartitionIndex;
 
         [CanBeNull] public IKafkaProducerTopicLogger Logger;
 
@@ -21,8 +24,9 @@ namespace NKafka.Client.Producer.Internal
         {
             TopicName = topicName;
             TopicProducerName = topicProducerName;
-            Settings = settings;                      
+            Settings = settings;
             Partitions = new ConcurrentDictionary<int, KafkaProducerBrokerPartition>();
-        }        
+            AssignedPartitionIds = new HashSet<int>();
+        }
     }
 }

@@ -188,15 +188,18 @@ namespace NKafka.Client.Broker.Internal
 
                 if (partition.IsUnplugRequired)
                 {
-                    KafkaClientTrace.Trace($"[broker.topic({WorkerId}, {topic.TopicName}, {partition.PartitionId})] Unplug");
+                    if (partition.Status != KafkaClientBrokerPartitionStatus.Unplugged)
+                    {
+                        KafkaClientTrace.Trace($"[broker.topic({WorkerId}, {topic.TopicName}, {partition.PartitionId})] Unplug");
 
-                    partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
-                    partition.Producer?.Unplug();
-                    partition.Consumer?.Unplug();
-                    var partitionId = partition.PartitionId;
-                    topic.Partitions.TryRemove(partitionPair.Key, out partition);
-                    _producer.RemoveTopicPartition(topic.TopicName, partitionId);
-                    _consumer.RemoveTopicPartition(topic.TopicName, partitionId);
+                        partition.Status = KafkaClientBrokerPartitionStatus.Unplugged;
+                        partition.Producer?.Unplug();
+                        partition.Consumer?.Unplug();
+                        var partitionId = partition.PartitionId;
+                        topic.Partitions.TryRemove(partitionPair.Key, out partition);
+                        _producer.RemoveTopicPartition(topic.TopicName, partitionId);
+                        _consumer.RemoveTopicPartition(topic.TopicName, partitionId);
+                    }
                     continue;
                 }
 
