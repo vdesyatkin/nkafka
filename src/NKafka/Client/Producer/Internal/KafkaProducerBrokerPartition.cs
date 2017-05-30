@@ -23,6 +23,8 @@ namespace NKafka.Client.Producer.Internal
         public DateTime? ErrorTimestampUtc { get; private set; }
         [NotNull] public KafkaProducerTopicPartitionLimitInfo LimitInfo { get; private set; }
 
+        private bool _isLocked; // while response pending
+
         public int RetrySendPendingMessageCount { get; private set; }
         public long TotalSentMessageCount { get; private set; }
         public long TotalSentMessageSizeBytes { get; private set; }
@@ -71,6 +73,18 @@ namespace NKafka.Client.Producer.Internal
             EnqueueTimestampUtc = DateTime.UtcNow;
         }
 
+        public bool TryLock()
+        {
+            if (_isLocked) return false;
+            _isLocked = true;
+            return true;
+        }
+
+        public void Unlock()
+        {
+            _isLocked = false;
+        }
+
         public bool TryPeekMessage(out KafkaMessage message)
         {
             if (_retryQueue.Count == 0)
@@ -111,6 +125,8 @@ namespace NKafka.Client.Producer.Internal
             }
 
             RetrySendPendingMessageCount = _retryQueue.Count;
+
+            Unlock();
         }
 
         public void ConfirmMessags([NotNull, ItemNotNull] IReadOnlyList<KafkaMessage> messages)
@@ -127,6 +143,8 @@ namespace NKafka.Client.Producer.Internal
 
             TotalSentMessageSizeBytes += messagesSize;
             SendMessageTimestampUtc = DateTime.UtcNow;
+
+            Unlock();
         }
 
         public void FallbackMessage([NotNull] KafkaMessage message, DateTime timestampUtc, KafkaProducerFallbackErrorCode reason)
