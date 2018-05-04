@@ -8,9 +8,12 @@ namespace NKafka.Protocol.API.OffsetFetch
     {
         public readonly IReadOnlyList<KafkaOffsetFetchResponseTopic> Topics;
 
-        public KafkaOffsetFetchResponse(IReadOnlyList<KafkaOffsetFetchResponseTopic> topics)
+        public readonly KafkaResponseErrorCode ErrorCode;
+
+        public KafkaOffsetFetchResponse(IReadOnlyList<KafkaOffsetFetchResponseTopic> topics, KafkaResponseErrorCode errorCode)
         {
             Topics = topics;
+            ErrorCode = errorCode;
         }
     }
 }

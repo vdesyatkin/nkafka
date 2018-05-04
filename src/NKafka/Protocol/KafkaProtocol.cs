@@ -199,6 +199,29 @@ namespace NKafka.Protocol
         #region Configuration
 
         [NotNull]
+        private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateV0102ApiSupports()
+        {
+            var requests = new Dictionary<KafkaRequestType, KafkaRequestVersion>
+            {
+                [KafkaRequestType.TopicMetadata] = KafkaRequestVersion.V2,
+                [KafkaRequestType.Produce] = KafkaRequestVersion.V2,
+
+                [KafkaRequestType.GroupCoordinator] = KafkaRequestVersion.V0,
+                [KafkaRequestType.JoinGroup] = KafkaRequestVersion.V1,
+                [KafkaRequestType.SyncGroup] = KafkaRequestVersion.V0,
+                [KafkaRequestType.Heartbeat] = KafkaRequestVersion.V0,
+                [KafkaRequestType.LeaveGroup] = KafkaRequestVersion.V0,
+
+                [KafkaRequestType.Offset] = KafkaRequestVersion.V0, //todo V1 KIP-79 - ListOffsetRequest/ListOffsetResponse v1 and add timestamp search methods to the new consumer
+                [KafkaRequestType.OffsetFetch] = KafkaRequestVersion.V2,
+
+                [KafkaRequestType.Fetch] = KafkaRequestVersion.V3,
+                [KafkaRequestType.OffsetCommit] = KafkaRequestVersion.V2
+            };
+            return requests;
+        }
+
+        [NotNull]
         private static IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> CreateV0101ApiSupports()
         {
             var requests = new Dictionary<KafkaRequestType, KafkaRequestVersion>
@@ -290,6 +313,9 @@ namespace NKafka.Protocol
             IReadOnlyDictionary<KafkaRequestType, KafkaRequestVersion> supportedRequests;
             switch (kafkaVersion)
             {
+                case KafkaVersion.V0_10_2:
+                    supportedRequests = CreateV0102ApiSupports();
+                    break;
                 case KafkaVersion.V0_10_1:
                     supportedRequests = CreateV0101ApiSupports();
                     break;
@@ -344,7 +370,7 @@ namespace NKafka.Protocol
                 case KafkaRequestType.Heartbeat:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaHearbeatApi());
                 case KafkaRequestType.OffsetFetch:
-                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetFetchApi());
+                    return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetFetchApi(requestVersion));
                 case KafkaRequestType.OffsetCommit:
                     return new KafkaRequestConfiguration(requestType, requestVersion, new KafkaOffsetCommitApi());
             }

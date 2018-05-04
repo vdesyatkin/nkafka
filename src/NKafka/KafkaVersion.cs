@@ -9,7 +9,8 @@ namespace NKafka
         V0_8 = 80,
         V0_9 = 90,
         V0_10 = 100,
-        V0_10_1 = 110
+        V0_10_1 = 110,
+        V0_10_2 = 120
     }
     // ReSharper restore InconsistentNaming
 }
