@@ -45,6 +45,7 @@ namespace NKafka
         {
             Key = key;
             Data = data;
+			TimestampUtc = timestampUtc;
         }
     }
 }

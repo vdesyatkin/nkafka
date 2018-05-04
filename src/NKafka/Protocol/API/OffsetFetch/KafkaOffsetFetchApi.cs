@@ -6,6 +6,13 @@ namespace NKafka.Protocol.API.OffsetFetch
     [PublicAPI]
     internal sealed class KafkaOffsetFetchApi : IKafkaRequestApi
     {        
+        private readonly KafkaRequestVersion _requestVersion;
+
+        public KafkaOffsetFetchApi(KafkaRequestVersion requestVersion)
+        {            
+            _requestVersion = requestVersion;
+        }
+
         #region OffsetFetchRequest
         
         public void WriteRequest(KafkaBinaryWriter writer, IKafkaRequest request)
@@ -35,10 +42,11 @@ namespace NKafka.Protocol.API.OffsetFetch
         }
 
         [NotNull]
-        private static KafkaOffsetFetchResponse ReadOffsetFetchResponse([NotNull] KafkaBinaryReader reader)
+        private KafkaOffsetFetchResponse ReadOffsetFetchResponse([NotNull] KafkaBinaryReader reader)
         {            
             var topics = reader.ReadCollection(ReadOffsetFetchResponseTopic);
-            return new KafkaOffsetFetchResponse(topics);
+            var errorCode = _requestVersion >= KafkaRequestVersion.V2 ? (KafkaResponseErrorCode) reader.ReadInt16() : KafkaResponseErrorCode.NoError;
+            return new KafkaOffsetFetchResponse(topics, errorCode);
         }
 
         private static KafkaOffsetFetchResponseTopic ReadOffsetFetchResponseTopic([NotNull] KafkaBinaryReader reader)
